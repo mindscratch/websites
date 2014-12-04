@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/math/rand/rng.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/math/rand/rng.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package rand
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">/*
+<span id="L8" class="ln">     8</span>	 * Uniform distribution
+<span id="L9" class="ln">     9</span>	 *
+<span id="L10" class="ln">    10</span>	 * algorithm by
+<span id="L11" class="ln">    11</span>	 * DP Mitchell and JA Reeds
+<span id="L12" class="ln">    12</span>	 */</span>
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	const (
+<span id="L15" class="ln">    15</span>		_LEN  = 607
+<span id="L16" class="ln">    16</span>		_TAP  = 273
+<span id="L17" class="ln">    17</span>		_MAX  = 1 &lt;&lt; 63
+<span id="L18" class="ln">    18</span>		_MASK = _MAX - 1
+<span id="L19" class="ln">    19</span>		_A    = 48271
+<span id="L20" class="ln">    20</span>		_M    = (1 &lt;&lt; 31) - 1
+<span id="L21" class="ln">    21</span>		_Q    = 44488
+<span id="L22" class="ln">    22</span>		_R    = 3399
+<span id="L23" class="ln">    23</span>	)
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	var (
+<span id="L26" class="ln">    26</span>		<span class="comment">// cooked random numbers</span>
+<span id="L27" class="ln">    27</span>		<span class="comment">// the state of the rng</span>
+<span id="L28" class="ln">    28</span>		<span class="comment">// after 780e10 iterations</span>
+<span id="L29" class="ln">    29</span>		rng_cooked [_LEN]int64 = [...]int64{
+<span id="L30" class="ln">    30</span>			5041579894721019882, 4646389086726545243, 1395769623340756751, 5333664234075297259,
+<span id="L31" class="ln">    31</span>			2875692520355975054, 9033628115061424579, 7143218595135194537, 4812947590706362721,
+<span id="L32" class="ln">    32</span>			7937252194349799378, 5307299880338848416, 8209348851763925077, 2115741599318814044,
+<span id="L33" class="ln">    33</span>			4593015457530856296, 8140875735541888011, 3319429241265089026, 8619815648190321034,
+<span id="L34" class="ln">    34</span>			1727074043483619500, 113108499721038619, 4569519971459345583, 5062833859075314731,
+<span id="L35" class="ln">    35</span>			2387618771259064424, 2716131344356686112, 6559392774825876886, 7650093201692370310,
+<span id="L36" class="ln">    36</span>			7684323884043752161, 257867835996031390, 6593456519409015164, 271327514973697897,
+<span id="L37" class="ln">    37</span>			2789386447340118284, 1065192797246149621, 3344507881999356393, 4459797941780066633,
+<span id="L38" class="ln">    38</span>			7465081662728599889, 1014950805555097187, 4449440729345990775, 3481109366438502643,
+<span id="L39" class="ln">    39</span>			2418672789110888383, 5796562887576294778, 4484266064449540171, 3738982361971787048,
+<span id="L40" class="ln">    40</span>			4523597184512354423, 10530508058128498, 8633833783282346118, 2625309929628791628,
+<span id="L41" class="ln">    41</span>			8660405965245884302, 10162832508971942, 6540714680961817391, 7031802312784620857,
+<span id="L42" class="ln">    42</span>			6240911277345944669, 831864355460801054, 8004434137542152891, 2116287251661052151,
+<span id="L43" class="ln">    43</span>			2202309800992166967, 9161020366945053561, 4069299552407763864, 4936383537992622449,
+<span id="L44" class="ln">    44</span>			457351505131524928, 342195045928179354, 2847771682816600509, 2068020115986376518,
+<span id="L45" class="ln">    45</span>			4368649989588021065, 887231587095185257, 5563591506886576496, 6816225200251950296,
+<span id="L46" class="ln">    46</span>			5616972787034086048, 8471809303394836566, 1686575021641186857, 4045484338074262002,
+<span id="L47" class="ln">    47</span>			4244156215201778923, 7848217333783577387, 5632136521049761902, 833283142057835272,
+<span id="L48" class="ln">    48</span>			9029726508369077193, 3243583134664087292, 4316371101804477087, 8937849979965997980,
+<span id="L49" class="ln">    49</span>			6446940406810434101, 1679342092332374735, 6050638460742422078, 6993520719509581582,
+<span id="L50" class="ln">    50</span>			7640877852514293609, 5881353426285907985, 812786550756860885, 4541845584483343330,
+<span id="L51" class="ln">    51</span>			2725470216277009086, 4980675660146853729, 5210769080603236061, 8894283318990530821,
+<span id="L52" class="ln">    52</span>			6326442804750084282, 1495812843684243920, 7069751578799128019, 7370257291860230865,
+<span id="L53" class="ln">    53</span>			6756929275356942261, 4706794511633873654, 7824520467827898663, 8549875090542453214,
+<span id="L54" class="ln">    54</span>			33650829478596156, 1328918435751322643, 7297902601803624459, 1011190183918857495,
+<span id="L55" class="ln">    55</span>			2238025036817854944, 5147159997473910359, 896512091560522982, 2659470849286379941,
+<span id="L56" class="ln">    56</span>			6097729358393448602, 1731725986304753684, 4106255841983812711, 8327155210721535508,
+<span id="L57" class="ln">    57</span>			8477511620686074402, 5803876044675762232, 8435417780860221662, 5988852856651071244,
+<span id="L58" class="ln">    58</span>			4715837297103951910, 7566171971264485114, 505808562678895611, 5070098180695063370,
+<span id="L59" class="ln">    59</span>			842110666775871513, 572156825025677802, 1791881013492340891, 3393267094866038768,
+<span id="L60" class="ln">    60</span>			3778721850472236509, 2352769483186201278, 1292459583847367458, 8897907043675088419,
+<span id="L61" class="ln">    61</span>			5781809037144163536, 2733958794029492513, 5092019688680754699, 8996124554772526841,
+<span id="L62" class="ln">    62</span>			4234737173186232084, 5027558287275472836, 4635198586344772304, 8687338893267139351,
+<span id="L63" class="ln">    63</span>			5907508150730407386, 784756255473944452, 972392927514829904, 5422057694808175112,
+<span id="L64" class="ln">    64</span>			5158420642969283891, 9048531678558643225, 2407211146698877100, 7583282216521099569,
+<span id="L65" class="ln">    65</span>			3940796514530962282, 3341174631045206375, 3095313889586102949, 7405321895688238710,
+<span id="L66" class="ln">    66</span>			5832080132947175283, 7890064875145919662, 8184139210799583195, 1149859861409226130,
+<span id="L67" class="ln">    67</span>			1464597243840211302, 4641648007187991873, 3516491885471466898, 956288521791657692,
+<span id="L68" class="ln">    68</span>			6657089965014657519, 5220884358887979358, 1796677326474620641, 5340761970648932916,
+<span id="L69" class="ln">    69</span>			1147977171614181568, 5066037465548252321, 2574765911837859848, 1085848279845204775,
+<span id="L70" class="ln">    70</span>			3350107529868390359, 6116438694366558490, 2107701075971293812, 1803294065921269267,
+<span id="L71" class="ln">    71</span>			2469478054175558874, 7368243281019965984, 3791908367843677526, 185046971116456637,
+<span id="L72" class="ln">    72</span>			2257095756513439648, 7217693971077460129, 909049953079504259, 7196649268545224266,
+<span id="L73" class="ln">    73</span>			5637660345400869599, 3955544945427965183, 8057528650917418961, 4139268440301127643,
+<span id="L74" class="ln">    74</span>			6621926588513568059, 1373361136802681441, 6527366231383600011, 3507654575162700890,
+<span id="L75" class="ln">    75</span>			9202058512774729859, 1954818376891585542, 6640380907130175705, 8299563319178235687,
+<span id="L76" class="ln">    76</span>			3901867355218954373, 7046310742295574065, 6847195391333990232, 1572638100518868053,
+<span id="L77" class="ln">    77</span>			8850422670118399721, 3631909142291992901, 5158881091950831288, 2882958317343121593,
+<span id="L78" class="ln">    78</span>			4763258931815816403, 6280052734341785344, 4243789408204964850, 2043464728020827976,
+<span id="L79" class="ln">    79</span>			6545300466022085465, 4562580375758598164, 5495451168795427352, 1738312861590151095,
+<span id="L80" class="ln">    80</span>			553004618757816492, 6895160632757959823, 8233623922264685171, 7139506338801360852,
+<span id="L81" class="ln">    81</span>			8550891222387991669, 5535668688139305547, 2430933853350256242, 5401941257863201076,
+<span id="L82" class="ln">    82</span>			8159640039107728799, 6157493831600770366, 7632066283658143750, 6308328381617103346,
+<span id="L83" class="ln">    83</span>			3681878764086140361, 3289686137190109749, 6587997200611086848, 244714774258135476,
+<span id="L84" class="ln">    84</span>			4079788377417136100, 8090302575944624335, 2945117363431356361, 864324395848741045,
+<span id="L85" class="ln">    85</span>			3009039260312620700, 8430027460082534031, 401084700045993341, 7254622446438694921,
+<span id="L86" class="ln">    86</span>			4707864159563588614, 5640248530963493951, 5982507712689997893, 3315098242282210105,
+<span id="L87" class="ln">    87</span>			5503847578771918426, 3941971367175193882, 8118566580304798074, 3839261274019871296,
+<span id="L88" class="ln">    88</span>			7062410411742090847, 741381002980207668, 6027994129690250817, 2497829994150063930,
+<span id="L89" class="ln">    89</span>			6251390334426228834, 1368930247903518833, 8809096399316380241, 6492004350391900708,
+<span id="L90" class="ln">    90</span>			2462145737463489636, 404828418920299174, 4153026434231690595, 261785715255475940,
+<span id="L91" class="ln">    91</span>			5464715384600071357, 592710404378763017, 6764129236657751224, 8513655718539357449,
+<span id="L92" class="ln">    92</span>			5820343663801914208, 385298524683789911, 5224135003438199467, 6303131641338802145,
+<span id="L93" class="ln">    93</span>			7150122561309371392, 368107899140673753, 3115186834558311558, 2915636353584281051,
+<span id="L94" class="ln">    94</span>			4782583894627718279, 6718292300699989587, 8387085186914375220, 3387513132024756289,
+<span id="L95" class="ln">    95</span>			4654329375432538231, 8930667561363381602, 5374373436876319273, 7623042350483453954,
+<span id="L96" class="ln">    96</span>			7725442901813263321, 9186225467561587250, 4091027289597503355, 2357631606492579800,
+<span id="L97" class="ln">    97</span>			2530936820058611833, 1636551876240043639, 5564664674334965799, 1452244145334316253,
+<span id="L98" class="ln">    98</span>			2061642381019690829, 1279580266495294036, 9108481583171221009, 6023278686734049809,
+<span id="L99" class="ln">    99</span>			5007630032676973346, 2153168792952589781, 6720334534964750538, 6041546491134794105,
+<span id="L100" class="ln">   100</span>			3433922409283786309, 2285479922797300912, 3110614940896576130, 6366559590722842893,
+<span id="L101" class="ln">   101</span>			5418791419666136509, 7163298419643543757, 4891138053923696990, 580618510277907015,
+<span id="L102" class="ln">   102</span>			1684034065251686769, 4429514767357295841, 330346578555450005, 1119637995812174675,
+<span id="L103" class="ln">   103</span>			7177515271653460134, 4589042248470800257, 7693288629059004563, 143607045258444228,
+<span id="L104" class="ln">   104</span>			246994305896273627, 866417324803099287, 6473547110565816071, 3092379936208876896,
+<span id="L105" class="ln">   105</span>			2058427839513754051, 5133784708526867938, 8785882556301281247, 6149332666841167611,
+<span id="L106" class="ln">   106</span>			8585842181454472135, 6137678347805511274, 2070447184436970006, 5708223427705576541,
+<span id="L107" class="ln">   107</span>			5999657892458244504, 4358391411789012426, 325123008708389849, 6837621693887290924,
+<span id="L108" class="ln">   108</span>			4843721905315627004, 6010651222149276415, 5398352198963874652, 4602025990114250980,
+<span id="L109" class="ln">   109</span>			1044646352569048800, 9106614159853161675, 829256115228593269, 4919284369102997000,
+<span id="L110" class="ln">   110</span>			2681532557646850893, 3681559472488511871, 5307999518958214035, 6334130388442829274,
+<span id="L111" class="ln">   111</span>			2658708232916537604, 1163313865052186287, 581945337509520675, 3648778920718647903,
+<span id="L112" class="ln">   112</span>			4423673246306544414, 1620799783996955743, 220828013409515943, 8150384699999389761,
+<span id="L113" class="ln">   113</span>			4287360518296753003, 4590000184845883843, 5513660857261085186, 6964829100392774275,
+<span id="L114" class="ln">   114</span>			478991688350776035, 8746140185685648781, 228500091334420247, 1356187007457302238,
+<span id="L115" class="ln">   115</span>			3019253992034194581, 3152601605678500003, 430152752706002213, 5559581553696971176,
+<span id="L116" class="ln">   116</span>			4916432985369275664, 663574931734554391, 3420773838927732076, 2868348622579915573,
+<span id="L117" class="ln">   117</span>			1999319134044418520, 3328689518636282723, 2587672709781371173, 1517255313529399333,
+<span id="L118" class="ln">   118</span>			3092343956317362483, 3662252519007064108, 972445599196498113, 7664865435875959367,
+<span id="L119" class="ln">   119</span>			1708913533482282562, 6917817162668868494, 3217629022545312900, 2570043027221707107,
+<span id="L120" class="ln">   120</span>			8739788839543624613, 2488075924621352812, 4694002395387436668, 4559628481798514356,
+<span id="L121" class="ln">   121</span>			2997203966153298104, 1282559373026354493, 240113143146674385, 8665713329246516443,
+<span id="L122" class="ln">   122</span>			628141331766346752, 4571950817186770476, 1472811188152235408, 7596648026010355826,
+<span id="L123" class="ln">   123</span>			6091219417754424743, 7834161864828164065, 7103445518877254909, 4390861237357459201,
+<span id="L124" class="ln">   124</span>			4442653864240571734, 8903482404847331368, 622261699494173647, 6037261250297213248,
+<span id="L125" class="ln">   125</span>			504404948065709118, 7275215526217113061, 1011176780856001400, 2194750105623461063,
+<span id="L126" class="ln">   126</span>			2623071828615234808, 5157313728073836108, 3738405111966602044, 2539767524076729570,
+<span id="L127" class="ln">   127</span>			2467284396349269342, 5256026990536851868, 7841086888628396109, 6640857538655893162,
+<span id="L128" class="ln">   128</span>			1202087339038317498, 2113514992440715978, 7534350895342931403, 4925284734898484745,
+<span id="L129" class="ln">   129</span>			5145623771477493805, 8225140880134972332, 2719520354384050532, 9132346697815513771,
+<span id="L130" class="ln">   130</span>			4332154495710163773, 7137789594094346916, 6994721091344268833, 6667228574869048934,
+<span id="L131" class="ln">   131</span>			655440045726677499, 59934747298466858, 6124974028078036405, 8957774780655365418,
+<span id="L132" class="ln">   132</span>			2332206071942466437, 1701056712286369627, 3154897383618636503, 1637766181387607527,
+<span id="L133" class="ln">   133</span>			2460521277767576533, 197309393502684135, 643677854385267315, 2543179307861934850,
+<span id="L134" class="ln">   134</span>			4350769010207485119, 4754652089410667672, 2015595502641514512, 7999059458976458608,
+<span id="L135" class="ln">   135</span>			4287946071480840813, 8362686366770308971, 6486469209321732151, 3617727845841796026,
+<span id="L136" class="ln">   136</span>			7554353525834302244, 4450022655153542367, 1605195740213535749, 5327014565305508387,
+<span id="L137" class="ln">   137</span>			4626575813550328320, 2692222020597705149, 241045573717249868, 5098046974627094010,
+<span id="L138" class="ln">   138</span>			7916882295460730264, 884817090297530579, 5329160409530630596, 7790979528857726136,
+<span id="L139" class="ln">   139</span>			4955070238059373407, 4918537275422674302, 3008076183950404629, 3007769226071157901,
+<span id="L140" class="ln">   140</span>			2470346235617803020, 8928702772696731736, 7856187920214445904, 4474874585391974885,
+<span id="L141" class="ln">   141</span>			7900176660600710914, 2140571127916226672, 2425445057265199971, 2486055153341847830,
+<span id="L142" class="ln">   142</span>			4186670094382025798, 1883939007446035042, 8808666044074867985, 3734134241178479257,
+<span id="L143" class="ln">   143</span>			4065968871360089196, 6953124200385847784, 1305686814738899057, 1637739099014457647,
+<span id="L144" class="ln">   144</span>			3656125660947993209, 3966759634633167020, 3106378204088556331, 6328899822778449810,
+<span id="L145" class="ln">   145</span>			4565385105440252958, 1979884289539493806, 2331793186920865425, 3783206694208922581,
+<span id="L146" class="ln">   146</span>			8464961209802336085, 2843963751609577687, 3030678195484896323, 4793717574095772604,
+<span id="L147" class="ln">   147</span>			4459239494808162889, 402587895800087237, 8057891408711167515, 4541888170938985079,
+<span id="L148" class="ln">   148</span>			1042662272908816815, 5557303057122568958, 2647678726283249984, 2144477441549833761,
+<span id="L149" class="ln">   149</span>			5806352215355387087, 7117771003473903623, 5916597177708541638, 462597715452321361,
+<span id="L150" class="ln">   150</span>			8833658097025758785, 5970273481425315300, 563813119381731307, 2768349550652697015,
+<span id="L151" class="ln">   151</span>			1598828206250873866, 5206393647403558110, 6235043485709261823, 3152217402014639496,
+<span id="L152" class="ln">   152</span>			8469693267274066490, 125672920241807416, 5311079624024060938, 6663754932310491587,
+<span id="L153" class="ln">   153</span>			8736848295048751716, 4488039774992061878, 5923302823487327109, 140891791083103236,
+<span id="L154" class="ln">   154</span>			7414942793393574290, 7990420780896957397, 4317817392807076702, 3625184369705367340,
+<span id="L155" class="ln">   155</span>			2740722765288122703, 5743100009702758344, 5997898640509039159, 8854493341352484163,
+<span id="L156" class="ln">   156</span>			5242208035432907801, 701338899890987198, 7609280429197514109, 3020985755112334161,
+<span id="L157" class="ln">   157</span>			6651322707055512866, 2635195723621160615, 5144520864246028816, 1035086515727829828,
+<span id="L158" class="ln">   158</span>			1567242097116389047, 8172389260191636581, 6337820351429292273, 2163012566996458925,
+<span id="L159" class="ln">   159</span>			2743190902890262681, 1906367633221323427, 6011544915663598137, 5932255307352610768,
+<span id="L160" class="ln">   160</span>			2241128460406315459, 895504896216695588, 3094483003111372717, 4583857460292963101,
+<span id="L161" class="ln">   161</span>			9079887171656594975, 8839289181930711403, 5762740387243057873, 4225072055348026230,
+<span id="L162" class="ln">   162</span>			1838220598389033063, 3801620336801580414, 8823526620080073856, 1776617605585100335,
+<span id="L163" class="ln">   163</span>			7899055018877642622, 5421679761463003041, 5521102963086275121, 4248279443559365898,
+<span id="L164" class="ln">   164</span>			8735487530905098534, 1760527091573692978, 7142485049657745894, 8222656872927218123,
+<span id="L165" class="ln">   165</span>			4969531564923704323, 3394475942196872480, 6424174453260338141, 359248545074932887,
+<span id="L166" class="ln">   166</span>			3273651282831730598, 6797106199797138596, 3030918217665093212, 145600834617314036,
+<span id="L167" class="ln">   167</span>			6036575856065626233, 740416251634527158, 7080427635449935582, 6951781370868335478,
+<span id="L168" class="ln">   168</span>			399922722363687927, 294902314447253185, 7844950936339178523, 880320858634709042,
+<span id="L169" class="ln">   169</span>			6192655680808675579, 411604686384710388, 9026808440365124461, 6440783557497587732,
+<span id="L170" class="ln">   170</span>			4615674634722404292, 539897290441580544, 2096238225866883852, 8751955639408182687,
+<span id="L171" class="ln">   171</span>			1907224908052289603, 7381039757301768559, 6157238513393239656, 7749994231914157575,
+<span id="L172" class="ln">   172</span>			8629571604380892756, 5280433031239081479, 7101611890139813254, 2479018537985767835,
+<span id="L173" class="ln">   173</span>			7169176924412769570, 7942066497793203302, 1357759729055557688, 2278447439451174845,
+<span id="L174" class="ln">   174</span>			3625338785743880657, 6477479539006708521, 8976185375579272206, 5511371554711836120,
+<span id="L175" class="ln">   175</span>			1326024180520890843, 7537449876596048829, 5464680203499696154, 3189671183162196045,
+<span id="L176" class="ln">   176</span>			6346751753565857109, 241159987320630307, 3095793449658682053, 8978332846736310159,
+<span id="L177" class="ln">   177</span>			2902794662273147216, 7208698530190629697, 7276901792339343736, 1732385229314443140,
+<span id="L178" class="ln">   178</span>			4133292154170828382, 2918308698224194548, 1519461397937144458, 5293934712616591764,
+<span id="L179" class="ln">   179</span>			4922828954023452664, 2879211533496425641, 5896236396443472108, 8465043815351752425,
+<span id="L180" class="ln">   180</span>			7329020396871624740, 8915471717014488588, 2944902635677463047, 7052079073493465134,
+<span id="L181" class="ln">   181</span>			8382142935188824023, 9103922860780351547, 4152330101494654406,
+<span id="L182" class="ln">   182</span>		}
+<span id="L183" class="ln">   183</span>	)
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>	type rngSource struct {
+<span id="L186" class="ln">   186</span>		tap  int         <span class="comment">// index into vec</span>
+<span id="L187" class="ln">   187</span>		feed int         <span class="comment">// index into vec</span>
+<span id="L188" class="ln">   188</span>		vec  [_LEN]int64 <span class="comment">// current feedback register</span>
+<span id="L189" class="ln">   189</span>	}
+<span id="L190" class="ln">   190</span>	
+<span id="L191" class="ln">   191</span>	<span class="comment">// seed rng x[n+1] = 48271 * x[n] mod (2**31 - 1)</span>
+<span id="L192" class="ln">   192</span>	func seedrand(x int32) int32 {
+<span id="L193" class="ln">   193</span>		hi := x / _Q
+<span id="L194" class="ln">   194</span>		lo := x % _Q
+<span id="L195" class="ln">   195</span>		x = _A*lo - _R*hi
+<span id="L196" class="ln">   196</span>		if x &lt; 0 {
+<span id="L197" class="ln">   197</span>			x += _M
+<span id="L198" class="ln">   198</span>		}
+<span id="L199" class="ln">   199</span>		return x
+<span id="L200" class="ln">   200</span>	}
+<span id="L201" class="ln">   201</span>	
+<span id="L202" class="ln">   202</span>	<span class="comment">// Seed uses the provided seed value to initialize the generator to a deterministic state.</span>
+<span id="L203" class="ln">   203</span>	func (rng *rngSource) Seed(seed int64) {
+<span id="L204" class="ln">   204</span>		rng.tap = 0
+<span id="L205" class="ln">   205</span>		rng.feed = _LEN - _TAP
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>		seed = seed % _M
+<span id="L208" class="ln">   208</span>		if seed &lt; 0 {
+<span id="L209" class="ln">   209</span>			seed += _M
+<span id="L210" class="ln">   210</span>		}
+<span id="L211" class="ln">   211</span>		if seed == 0 {
+<span id="L212" class="ln">   212</span>			seed = 89482311
+<span id="L213" class="ln">   213</span>		}
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>		x := int32(seed)
+<span id="L216" class="ln">   216</span>		for i := -20; i &lt; _LEN; i++ {
+<span id="L217" class="ln">   217</span>			x = seedrand(x)
+<span id="L218" class="ln">   218</span>			if i &gt;= 0 {
+<span id="L219" class="ln">   219</span>				var u int64
+<span id="L220" class="ln">   220</span>				u = int64(x) &lt;&lt; 40
+<span id="L221" class="ln">   221</span>				x = seedrand(x)
+<span id="L222" class="ln">   222</span>				u ^= int64(x) &lt;&lt; 20
+<span id="L223" class="ln">   223</span>				x = seedrand(x)
+<span id="L224" class="ln">   224</span>				u ^= int64(x)
+<span id="L225" class="ln">   225</span>				u ^= rng_cooked[i]
+<span id="L226" class="ln">   226</span>				rng.vec[i] = u &amp; _MASK
+<span id="L227" class="ln">   227</span>			}
+<span id="L228" class="ln">   228</span>		}
+<span id="L229" class="ln">   229</span>	}
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>	<span class="comment">// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.</span>
+<span id="L232" class="ln">   232</span>	func (rng *rngSource) Int63() int64 {
+<span id="L233" class="ln">   233</span>		rng.tap--
+<span id="L234" class="ln">   234</span>		if rng.tap &lt; 0 {
+<span id="L235" class="ln">   235</span>			rng.tap += _LEN
+<span id="L236" class="ln">   236</span>		}
+<span id="L237" class="ln">   237</span>	
+<span id="L238" class="ln">   238</span>		rng.feed--
+<span id="L239" class="ln">   239</span>		if rng.feed &lt; 0 {
+<span id="L240" class="ln">   240</span>			rng.feed += _LEN
+<span id="L241" class="ln">   241</span>		}
+<span id="L242" class="ln">   242</span>	
+<span id="L243" class="ln">   243</span>		x := (rng.vec[rng.feed] + rng.vec[rng.tap]) &amp; _MASK
+<span id="L244" class="ln">   244</span>		rng.vec[rng.feed] = x
+<span id="L245" class="ln">   245</span>		return x
+<span id="L246" class="ln">   246</span>	}
+<span id="L247" class="ln">   247</span>	
+</pre><p><a href="rng.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

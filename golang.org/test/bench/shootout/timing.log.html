@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>test/bench/shootout/timing.log - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file test/bench/shootout/timing.log</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	All tests on r45 or r70
+<span id="L2" class="ln">     2</span>	
+<span id="L3" class="ln">     3</span>	Aug 3 2009
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	First version of fasta. Translation of fasta.c, fetched from
+<span id="L6" class="ln">     6</span>		http://shootout.alioth.debian.org/u32q/benchmark.php?test=fasta&amp;lang=gpp&amp;id=4
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	fasta -n 25000000
+<span id="L9" class="ln">     9</span>		gcc -O2 fasta.c	5.98u 0.00s 6.01r
+<span id="L10" class="ln">    10</span>		gccgo -O2 fasta.go	8.82u 0.02s 8.85r
+<span id="L11" class="ln">    11</span>		6g fasta.go	13.50u 0.02s 13.53r
+<span id="L12" class="ln">    12</span>		6g -B fata.go	12.99u 0.02s 13.02r
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	Aug 4 2009
+<span id="L15" class="ln">    15</span>	[added timing.sh]
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	# myrandom:
+<span id="L18" class="ln">    18</span>	#   hand-written optimization of integer division
+<span id="L19" class="ln">    19</span>	#   use int32-&gt;float conversion
+<span id="L20" class="ln">    20</span>	fasta -n 25000000
+<span id="L21" class="ln">    21</span>		# probably I/O library inefficiencies
+<span id="L22" class="ln">    22</span>		gcc -O2 fasta.c	5.99u 0.00s 6.00r 
+<span id="L23" class="ln">    23</span>		gccgo -O2 fasta.go	8.82u 0.02s 8.85r
+<span id="L24" class="ln">    24</span>		gc fasta	10.70u 0.00s 10.77r
+<span id="L25" class="ln">    25</span>		gc_B fasta	10.09u 0.03s 10.12r
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L28" class="ln">    28</span>		# we don&#39;t know - memory cache behavior?
+<span id="L29" class="ln">    29</span>		gcc -O2 reverse-complement.c	2.04u 0.94s 10.54r
+<span id="L30" class="ln">    30</span>		gccgo -O2 reverse-complement.go	6.54u 0.63s 7.17r
+<span id="L31" class="ln">    31</span>		gc reverse-complement	6.55u 0.70s 7.26r
+<span id="L32" class="ln">    32</span>		gc_B reverse-complement	6.32u 0.70s 7.10r
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	nbody 50000000
+<span id="L35" class="ln">    35</span>		# math.Sqrt needs to be in assembly; inlining is probably the other 50%
+<span id="L36" class="ln">    36</span>		gcc -O2 nbody.c	21.61u 0.01s 24.80r
+<span id="L37" class="ln">    37</span>		gccgo -O2 nbody.go	118.55u 0.02s 120.32r
+<span id="L38" class="ln">    38</span>		gc nbody	100.84u 0.00s 100.85r
+<span id="L39" class="ln">    39</span>		gc_B nbody	103.33u 0.00s 103.39r
+<span id="L40" class="ln">    40</span>	[
+<span id="L41" class="ln">    41</span>	hacked Sqrt in assembler
+<span id="L42" class="ln">    42</span>		gc nbody	31.97u 0.00s 32.01r
+<span id="L43" class="ln">    43</span>	]
+<span id="L44" class="ln">    44</span>	
+<span id="L45" class="ln">    45</span>	binary-tree 15 # too slow to use 20
+<span id="L46" class="ln">    46</span>		# memory allocation and garbage collection
+<span id="L47" class="ln">    47</span>		gcc -O2 binary-tree.c -lm	0.86u 0.00s 0.87r
+<span id="L48" class="ln">    48</span>		gccgo -O2 binary-tree.go	1.69u 0.46s 2.15r
+<span id="L49" class="ln">    49</span>		gccgo -O2 binary-tree-freelist.go	8.48u 0.00s 8.48r
+<span id="L50" class="ln">    50</span>		gc binary-tree	9.60u 0.01s 9.62r
+<span id="L51" class="ln">    51</span>		gc binary-tree-freelist	0.48u 0.01s 0.50r
+<span id="L52" class="ln">    52</span>	
+<span id="L53" class="ln">    53</span>	August 5, 2009
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>	fannkuch 12
+<span id="L56" class="ln">    56</span>		# bounds checking is half the difference
+<span id="L57" class="ln">    57</span>		# rest might be registerization
+<span id="L58" class="ln">    58</span>		gcc -O2 fannkuch.c	60.09u 0.01s 60.32r
+<span id="L59" class="ln">    59</span>		gccgo -O2 fannkuch.go	64.89u 0.00s 64.92r
+<span id="L60" class="ln">    60</span>		gc fannkuch	124.59u 0.00s 124.67r
+<span id="L61" class="ln">    61</span>		gc_B fannkuch	91.14u 0.00s 91.16r
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>	regex-dna 100000
+<span id="L64" class="ln">    64</span>		# regexp code is slow on trivial regexp
+<span id="L65" class="ln">    65</span>		gcc -O2 regex-dna.c -lpcre	0.92u 0.00s 0.99r
+<span id="L66" class="ln">    66</span>		gc regexp-dna	26.94u 0.18s 28.75r
+<span id="L67" class="ln">    67</span>		gc_B regexp-dna	26.51u 0.09s 26.75r
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	spectral-norm 5500
+<span id="L70" class="ln">    70</span>		gcc -O2 spectral-norm.c -lm	11.54u 0.00s 11.55r
+<span id="L71" class="ln">    71</span>		gccgo -O2 spectral-norm.go	12.20u 0.00s 12.23r
+<span id="L72" class="ln">    72</span>		gc spectral-norm	50.23u 0.00s 50.36r
+<span id="L73" class="ln">    73</span>		gc_B spectral-norm	49.69u 0.01s 49.83r
+<span id="L74" class="ln">    74</span>		gc spectral-norm-parallel	24.47u 0.03s 11.05r  # has shift &gt;&gt;1 not div /2
+<span id="L75" class="ln">    75</span>		[using &gt;&gt;1 instead of /2 : gc gives 24.33u 0.00s 24.33r]
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	August 6, 2009
+<span id="L78" class="ln">    78</span>	
+<span id="L79" class="ln">    79</span>	k-nucleotide 5000000
+<span id="L80" class="ln">    80</span>		# string maps are slower than glib string maps
+<span id="L81" class="ln">    81</span>		gcc -O2 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include k-nucleotide.c -lglib-2.0	k-nucleotide.c: 10.72u 0.01s 10.74r
+<span id="L82" class="ln">    82</span>		gccgo -O2 k-nucleotide.go	21.64u 0.83s 22.78r
+<span id="L83" class="ln">    83</span>		gc k-nucleotide	16.08u 0.06s 16.50r
+<span id="L84" class="ln">    84</span>		gc_B k-nucleotide	17.32u 0.02s 17.37r
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>	mandelbrot 5500
+<span id="L87" class="ln">    87</span>		# floating point code generator should use more registers
+<span id="L88" class="ln">    88</span>		gcc -O2 mandelbrot.c	56.13u 0.02s 56.17r
+<span id="L89" class="ln">    89</span>		gccgo -O2 mandelbrot.go	57.49u 0.01s 57.51r
+<span id="L90" class="ln">    90</span>		gc mandelbrot	74.32u 0.00s 74.35r
+<span id="L91" class="ln">    91</span>		gc_B mandelbrot	74.28u 0.01s 74.31r
+<span id="L92" class="ln">    92</span>	
+<span id="L93" class="ln">    93</span>	meteor 2100
+<span id="L94" class="ln">    94</span>		# we don&#39;t know
+<span id="L95" class="ln">    95</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.10r
+<span id="L96" class="ln">    96</span>		gccgo -O2 meteor-contest.go	0.12u 0.00s 0.14r
+<span id="L97" class="ln">    97</span>		gc meteor-contest	0.24u 0.00s 0.26r
+<span id="L98" class="ln">    98</span>		gc_B meteor-contest	0.23u 0.00s 0.24r
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>	pidigits 10000
+<span id="L101" class="ln">   101</span>		# bignum is slower than gmp
+<span id="L102" class="ln">   102</span>		gcc -O2 pidigits.c -lgmp	2.60u 0.00s 2.62r
+<span id="L103" class="ln">   103</span>		gc pidigits	77.69u 0.14s 78.18r
+<span id="L104" class="ln">   104</span>		gc_B pidigits	74.26u 0.18s 75.41r
+<span id="L105" class="ln">   105</span>		gc_B pidigits	68.48u 0.20s 69.31r   # special case: no bounds checking in bignum
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>	August 7 2009
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>	# New gc does better division by powers of 2.  Significant improvements:
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>	spectral-norm 5500
+<span id="L112" class="ln">   112</span>		# floating point code generator should use more registers; possibly inline evalA
+<span id="L113" class="ln">   113</span>		gcc -O2 spectral-norm.c -lm	11.50u 0.00s 11.50r
+<span id="L114" class="ln">   114</span>		gccgo -O2 spectral-norm.go	12.02u 0.00s 12.02r
+<span id="L115" class="ln">   115</span>		gc spectral-norm	23.98u 0.00s 24.00r	# new time is 0.48 times old time, 52% faster
+<span id="L116" class="ln">   116</span>		gc_B spectral-norm	23.71u 0.01s 23.72r	# ditto
+<span id="L117" class="ln">   117</span>		gc spectral-norm-parallel	24.04u 0.00s 6.26r  # /2 put back.  note: 4x faster (on r70, idle)
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	k-nucleotide 1000000
+<span id="L120" class="ln">   120</span>		# string maps are slower than glib string maps
+<span id="L121" class="ln">   121</span>		gcc -O2 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include k-nucleotide.c -lglib-2.0	10.82u 0.04s 10.87r
+<span id="L122" class="ln">   122</span>		gccgo -O2 k-nucleotide.go	22.73u 0.89s 23.63r
+<span id="L123" class="ln">   123</span>		gc k-nucleotide	15.97u 0.03s 16.04r
+<span id="L124" class="ln">   124</span>		gc_B k-nucleotide	15.86u 0.06s 15.93r	# 8.5% faster, but probably due to weird cache effeccts in previous version
+<span id="L125" class="ln">   125</span>	
+<span id="L126" class="ln">   126</span>	pidigits 10000
+<span id="L127" class="ln">   127</span>		# bignum is slower than gmp
+<span id="L128" class="ln">   128</span>		gcc -O2 pidigits.c -lgmp	2.58u 0.00s 2.58r
+<span id="L129" class="ln">   129</span>		gc pidigits	71.24u 0.04s 71.28r	# 8.5% faster
+<span id="L130" class="ln">   130</span>		gc_B pidigits	71.25u 0.03s 71.29r	# 4% faster
+<span id="L131" class="ln">   131</span>	
+<span id="L132" class="ln">   132</span>	threadring 50000000
+<span id="L133" class="ln">   133</span>		gcc -O2 threadring.c -lpthread	35.51u 160.21s 199.50r
+<span id="L134" class="ln">   134</span>		gccgo -O2 threadring.go	90.33u 459.95s 448.03r
+<span id="L135" class="ln">   135</span>		gc threadring	33.11u 0.00s 33.14r
+<span id="L136" class="ln">   136</span>		GOMAXPROCS=4 gc threadring	114.48u 226.65s 371.59r
+<span id="L137" class="ln">   137</span>		# change wait code to do &lt;-make(chan int) instead of time.Sleep
+<span id="L138" class="ln">   138</span>		gc threadring	28.41u 0.01s 29.35r
+<span id="L139" class="ln">   139</span>		GOMAXPROCS=4 gc threadring	112.59u 232.83s 384.72r
+<span id="L140" class="ln">   140</span>		
+<span id="L141" class="ln">   141</span>	chameneos 6000000
+<span id="L142" class="ln">   142</span>		gcc -O2 chameneosredux.c -lpthread	18.14u 276.52s 76.93r
+<span id="L143" class="ln">   143</span>		gc chameneosredux	20.19u 0.01s 20.23r
+<span id="L144" class="ln">   144</span>	
+<span id="L145" class="ln">   145</span>	Aug 10 2009
+<span id="L146" class="ln">   146</span>	
+<span id="L147" class="ln">   147</span>	# new 6g with better fp registers, fast div and mod of integers
+<span id="L148" class="ln">   148</span>	# complete set of timings listed. significant changes marked ***
+<span id="L149" class="ln">   149</span>	
+<span id="L150" class="ln">   150</span>	fasta -n 25000000
+<span id="L151" class="ln">   151</span>		# probably I/O library inefficiencies
+<span id="L152" class="ln">   152</span>		gcc -O2 fasta.c	5.96u 0.00s 5.97r
+<span id="L153" class="ln">   153</span>		gc fasta	10.59u 0.01s 10.61r
+<span id="L154" class="ln">   154</span>		gc_B fasta	9.92u 0.02s 9.95r
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L157" class="ln">   157</span>		# we don&#39;t know - memory cache behavior?
+<span id="L158" class="ln">   158</span>		gcc -O2 reverse-complement.c	1.96u 1.56s 16.23r
+<span id="L159" class="ln">   159</span>		gccgo -O2 reverse-complement.go	6.41u 0.62s 7.05r
+<span id="L160" class="ln">   160</span>		gc reverse-complement	6.46u 0.70s 7.17r
+<span id="L161" class="ln">   161</span>		gc_B reverse-complement	6.22u 0.72s 6.95r
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>	nbody 50000000
+<span id="L164" class="ln">   164</span>		# math.Sqrt needs to be in assembly; inlining is probably the other 50%
+<span id="L165" class="ln">   165</span>		gcc -O2 nbody.c	21.26u 0.01s 21.28r
+<span id="L166" class="ln">   166</span>		gccgo -O2 nbody.go	116.68u 0.07s 116.80r
+<span id="L167" class="ln">   167</span>		gc nbody	86.64u 0.01s 86.68r	# -14%
+<span id="L168" class="ln">   168</span>		gc_B nbody	85.72u 0.02s 85.77r	# *** -17%
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>	binary-tree 15 # too slow to use 20
+<span id="L171" class="ln">   171</span>		# memory allocation and garbage collection
+<span id="L172" class="ln">   172</span>		gcc -O2 binary-tree.c -lm	0.87u 0.00s 0.87r
+<span id="L173" class="ln">   173</span>		gccgo -O2 binary-tree.go	1.61u 0.47s 2.09r
+<span id="L174" class="ln">   174</span>		gccgo -O2 binary-tree-freelist.go	0.00u 0.00s 0.01r
+<span id="L175" class="ln">   175</span>		gc binary-tree	9.11u 0.01s 9.13r	# *** -5%
+<span id="L176" class="ln">   176</span>		gc binary-tree-freelist	0.47u 0.01s 0.48r
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>	fannkuch 12
+<span id="L179" class="ln">   179</span>		# bounds checking is half the difference
+<span id="L180" class="ln">   180</span>		# rest might be registerization
+<span id="L181" class="ln">   181</span>		gcc -O2 fannkuch.c	59.92u 0.00s 59.94r
+<span id="L182" class="ln">   182</span>		gccgo -O2 fannkuch.go	65.54u 0.00s 65.58r
+<span id="L183" class="ln">   183</span>		gc fannkuch	123.98u 0.01s 124.04r
+<span id="L184" class="ln">   184</span>		gc_B fannkuch	90.75u 0.00s 90.78r
+<span id="L185" class="ln">   185</span>	
+<span id="L186" class="ln">   186</span>	regex-dna 100000
+<span id="L187" class="ln">   187</span>		# regexp code is slow on trivial regexp
+<span id="L188" class="ln">   188</span>		gcc -O2 regex-dna.c -lpcre	0.91u 0.00s 0.92r
+<span id="L189" class="ln">   189</span>		gc regex-dna	27.25u 0.02s 27.28r
+<span id="L190" class="ln">   190</span>		gc_B regex-dna	29.51u 0.03s 29.55r
+<span id="L191" class="ln">   191</span>	
+<span id="L192" class="ln">   192</span>	spectral-norm 5500
+<span id="L193" class="ln">   193</span>		# possibly inline evalA
+<span id="L194" class="ln">   194</span>		gcc -O2 spectral-norm.c -lm	11.57u 0.00s 11.57r
+<span id="L195" class="ln">   195</span>		gccgo -O2 spectral-norm.go	12.07u 0.01s 12.08r
+<span id="L196" class="ln">   196</span>		gc spectral-norm	23.99u 0.00s 24.00r
+<span id="L197" class="ln">   197</span>		gc_B spectral-norm	23.73u 0.00s 23.75r
+<span id="L198" class="ln">   198</span>	
+<span id="L199" class="ln">   199</span>	k-nucleotide 1000000
+<span id="L200" class="ln">   200</span>		# string maps are slower than glib string maps
+<span id="L201" class="ln">   201</span>		gcc -O2 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include k-nucleotide.c -lglib-2.0	10.63u 0.02s 10.69r
+<span id="L202" class="ln">   202</span>		gccgo -O2 k-nucleotide.go	23.19u 0.91s 24.12r
+<span id="L203" class="ln">   203</span>		gc k-nucleotide	16.73u 0.04s 16.78r	# *** +5% (but this one seems to vary by more than that)
+<span id="L204" class="ln">   204</span>		gc_B k-nucleotide	16.46u 0.04s 16.51r	# *** +5%
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	mandelbrot 16000
+<span id="L207" class="ln">   207</span>		gcc -O2 mandelbrot.c	56.16u 0.00s 56.16r
+<span id="L208" class="ln">   208</span>		gccgo -O2 mandelbrot.go	57.41u 0.01s 57.42r
+<span id="L209" class="ln">   209</span>		gc mandelbrot	64.05u 0.02s 64.08r	# *** -14%
+<span id="L210" class="ln">   210</span>		gc_B mandelbrot	64.10u 0.02s 64.14r	# *** -14%
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>	meteor 2100
+<span id="L213" class="ln">   213</span>		# we don&#39;t know
+<span id="L214" class="ln">   214</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.10r
+<span id="L215" class="ln">   215</span>		gccgo -O2 meteor-contest.go	0.12u 0.00s 0.12r
+<span id="L216" class="ln">   216</span>		gc meteor-contest	0.18u 0.00s 0.20r	# *** -25%
+<span id="L217" class="ln">   217</span>		gc_B meteor-contest	0.17u 0.00s 0.18r	# *** -24%
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>	pidigits 10000
+<span id="L220" class="ln">   220</span>		# bignum is slower than gmp
+<span id="L221" class="ln">   221</span>		gcc -O2 pidigits.c -lgmp	2.57u 0.00s 2.57r
+<span id="L222" class="ln">   222</span>		gc pidigits	71.82u 0.04s 71.89r
+<span id="L223" class="ln">   223</span>		gc_B pidigits	71.84u 0.08s 71.98r
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>	threadring 50000000
+<span id="L226" class="ln">   226</span>		gcc -O2 threadring.c -lpthread	30.91u 164.33s 204.57r
+<span id="L227" class="ln">   227</span>		gccgo -O2 threadring.go	87.12u 460.04s 447.61r
+<span id="L228" class="ln">   228</span>		gc threadring	38.55u 0.00s 38.56r	# *** +16%
+<span id="L229" class="ln">   229</span>	
+<span id="L230" class="ln">   230</span>	chameneos 6000000
+<span id="L231" class="ln">   231</span>		gcc -O2 chameneosredux.c -lpthread	17.93u 323.65s 88.47r
+<span id="L232" class="ln">   232</span>		gc chameneosredux	21.72u 0.00s 21.73r
+<span id="L233" class="ln">   233</span>	
+<span id="L234" class="ln">   234</span>	August 10 2009
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	# In-place versions for some bignum operations.
+<span id="L237" class="ln">   237</span>	pidigits 10000
+<span id="L238" class="ln">   238</span>		gcc -O2 pidigits.c -lgmp	2.56u 0.00s 2.57r
+<span id="L239" class="ln">   239</span>		gc pidigits	55.22u 0.04s 55.29r	# *** -23%
+<span id="L240" class="ln">   240</span>		gc_B pidigits	55.49u 0.02s 55.60r	# *** -23%
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>	September 3 2009
+<span id="L243" class="ln">   243</span>	
+<span id="L244" class="ln">   244</span>	# New 6g inlines slices, has a few other tweaks.
+<span id="L245" class="ln">   245</span>	# Complete rerun. Significant changes marked.
+<span id="L246" class="ln">   246</span>	
+<span id="L247" class="ln">   247</span>	fasta -n 25000000
+<span id="L248" class="ln">   248</span>		# probably I/O library inefficiencies
+<span id="L249" class="ln">   249</span>		gcc -O2 fasta.c	5.96u 0.00s 5.96r
+<span id="L250" class="ln">   250</span>		gc fasta	10.63u 0.02s 10.66r
+<span id="L251" class="ln">   251</span>		gc_B fasta	9.92u 0.01s 9.94r
+<span id="L252" class="ln">   252</span>	
+<span id="L253" class="ln">   253</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L254" class="ln">   254</span>		# we don&#39;t know - memory cache behavior?
+<span id="L255" class="ln">   255</span>		gcc -O2 reverse-complement.c	1.92u 0.33s 2.93r
+<span id="L256" class="ln">   256</span>		gccgo -O2 reverse-complement.go	6.76u 0.72s 7.58r	# +5%
+<span id="L257" class="ln">   257</span>		gc reverse-complement	6.59u 0.70s 7.29r	# +2%
+<span id="L258" class="ln">   258</span>		gc_B reverse-complement	5.57u 0.80s 6.37r	# -10%
+<span id="L259" class="ln">   259</span>	
+<span id="L260" class="ln">   260</span>	nbody 50000000
+<span id="L261" class="ln">   261</span>		# math.Sqrt needs to be in assembly; inlining is probably the other 50%
+<span id="L262" class="ln">   262</span>		# also loop alignment appears to be critical
+<span id="L263" class="ln">   263</span>		gcc -O2 nbody.c	21.28u 0.00s 21.28r
+<span id="L264" class="ln">   264</span>		gccgo -O2 nbody.go	119.21u 0.00s 119.22r	# +2%
+<span id="L265" class="ln">   265</span>		gc nbody	109.72u 0.00s 109.78r	# + 28% *****
+<span id="L266" class="ln">   266</span>		gc_B nbody	85.90u 0.00s 85.91r
+<span id="L267" class="ln">   267</span>	
+<span id="L268" class="ln">   268</span>	binary-tree 15 # too slow to use 20
+<span id="L269" class="ln">   269</span>		# memory allocation and garbage collection
+<span id="L270" class="ln">   270</span>		gcc -O2 binary-tree.c -lm	0.86u 0.00s 0.87r
+<span id="L271" class="ln">   271</span>		gccgo -O2 binary-tree.go	1.88u 0.54s 2.42r	# +17%
+<span id="L272" class="ln">   272</span>		gccgo -O2 binary-tree-freelist.go	0.01u 0.01s 0.02r
+<span id="L273" class="ln">   273</span>		gc binary-tree	8.94u 0.01s 8.96r	# -2%
+<span id="L274" class="ln">   274</span>		gc binary-tree-freelist	0.47u 0.01s 0.48r
+<span id="L275" class="ln">   275</span>	
+<span id="L276" class="ln">   276</span>	fannkuch 12
+<span id="L277" class="ln">   277</span>		# bounds checking is half the difference
+<span id="L278" class="ln">   278</span>		# rest might be registerization
+<span id="L279" class="ln">   279</span>		gcc -O2 fannkuch.c	60.12u 0.00s 60.12r
+<span id="L280" class="ln">   280</span>		gccgo -O2 fannkuch.go	92.62u 0.00s 92.66r		# +41% ***
+<span id="L281" class="ln">   281</span>		gc fannkuch	123.90u 0.00s 123.92r
+<span id="L282" class="ln">   282</span>		gc_B fannkuch	89.71u 0.00s 89.74r	# -1%
+<span id="L283" class="ln">   283</span>	
+<span id="L284" class="ln">   284</span>	regex-dna 100000
+<span id="L285" class="ln">   285</span>		# regexp code is slow on trivial regexp
+<span id="L286" class="ln">   286</span>		gcc -O2 regex-dna.c -lpcre	0.88u 0.00s 0.88r
+<span id="L287" class="ln">   287</span>		gc regex-dna	25.77u 0.01s 25.79r		# -5%
+<span id="L288" class="ln">   288</span>		gc_B regex-dna	26.05u 0.02s 26.09r	# -12% ***
+<span id="L289" class="ln">   289</span>	
+<span id="L290" class="ln">   290</span>	spectral-norm 5500
+<span id="L291" class="ln">   291</span>		# possibly inline evalA
+<span id="L292" class="ln">   292</span>		gcc -O2 spectral-norm.c -lm	11.51u 0.00s 11.51r
+<span id="L293" class="ln">   293</span>		gccgo -O2 spectral-norm.go	11.95u 0.00s 11.96r
+<span id="L294" class="ln">   294</span>		gc spectral-norm	24.23u 0.00s 24.23r
+<span id="L295" class="ln">   295</span>		gc_B spectral-norm	23.83u 0.00s 23.84r
+<span id="L296" class="ln">   296</span>	
+<span id="L297" class="ln">   297</span>	k-nucleotide 1000000
+<span id="L298" class="ln">   298</span>		# string maps are slower than glib string maps
+<span id="L299" class="ln">   299</span>		gcc -O2 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include k-nucleotide.c -lglib-2.0	10.68u 0.04s 10.72r
+<span id="L300" class="ln">   300</span>		gccgo -O2 k-nucleotide.go	23.03u 0.88s 23.92r
+<span id="L301" class="ln">   301</span>		gc k-nucleotide	15.79u 0.05s 15.85r	# -5% (but this one seems to vary by more than that)
+<span id="L302" class="ln">   302</span>		gc_B k-nucleotide	17.88u 0.05s 17.95r # +8% (ditto)
+<span id="L303" class="ln">   303</span>	
+<span id="L304" class="ln">   304</span>	mandelbrot 16000
+<span id="L305" class="ln">   305</span>		gcc -O2 mandelbrot.c	56.17u 0.02s 56.20r
+<span id="L306" class="ln">   306</span>		gccgo -O2 mandelbrot.go	56.74u 0.02s 56.79r	 # -1%
+<span id="L307" class="ln">   307</span>		gc mandelbrot	63.31u 0.01s 63.35r	# -1%
+<span id="L308" class="ln">   308</span>		gc_B mandelbrot	63.29u 0.00s 63.31r	# -1%
+<span id="L309" class="ln">   309</span>	
+<span id="L310" class="ln">   310</span>	meteor 2100
+<span id="L311" class="ln">   311</span>		# we don&#39;t know
+<span id="L312" class="ln">   312</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.10r
+<span id="L313" class="ln">   313</span>		gccgo -O2 meteor-contest.go	0.11u 0.00s 0.12r
+<span id="L314" class="ln">   314</span>		gc meteor-contest	0.18u 0.00s 0.19r
+<span id="L315" class="ln">   315</span>		gc_B meteor-contest	0.17u 0.00s 0.18r
+<span id="L316" class="ln">   316</span>	
+<span id="L317" class="ln">   317</span>	pidigits 10000
+<span id="L318" class="ln">   318</span>		# bignum is slower than gmp
+<span id="L319" class="ln">   319</span>		gcc -O2 pidigits.c -lgmp	2.56u 0.00s 2.57r
+<span id="L320" class="ln">   320</span>		gc pidigits	55.87u 0.03s 55.91r
+<span id="L321" class="ln">   321</span>		gc_B pidigits	55.93u 0.03s 55.99r
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>	# these tests are compared using real time, since they run multiple processors
+<span id="L324" class="ln">   324</span>	# accuracy probably low
+<span id="L325" class="ln">   325</span>	threadring 50000000
+<span id="L326" class="ln">   326</span>		gcc -O2 threadring.c -lpthread	26.31u 164.69s 199.92r	# -2%
+<span id="L327" class="ln">   327</span>		gccgo -O2 threadring.go	87.90u 487.26s 472.81r	# +6%
+<span id="L328" class="ln">   328</span>		gc threadring	28.89u 0.00s 28.90r	# -25% ***
+<span id="L329" class="ln">   329</span>	
+<span id="L330" class="ln">   330</span>	chameneos 6000000
+<span id="L331" class="ln">   331</span>		gcc -O2 chameneosredux.c -lpthread	16.41u 296.91s 81.17r	# -8%
+<span id="L332" class="ln">   332</span>		gc chameneosredux	19.97u 0.00s 19.97r	# -8%
+<span id="L333" class="ln">   333</span>	
+<span id="L334" class="ln">   334</span>	Sep 22, 2009
+<span id="L335" class="ln">   335</span>	
+<span id="L336" class="ln">   336</span>	# 6g inlines sliceslice in most cases.
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>	fasta -n 25000000
+<span id="L339" class="ln">   339</span>		# probably I/O library inefficiencies
+<span id="L340" class="ln">   340</span>		gc fasta	10.24u 0.00s 10.25r	# -4%
+<span id="L341" class="ln">   341</span>		gc_B fasta	9.68u 0.01s 9.69r	# -3%
+<span id="L342" class="ln">   342</span>	
+<span id="L343" class="ln">   343</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L344" class="ln">   344</span>		# we don&#39;t know - memory cache behavior?
+<span id="L345" class="ln">   345</span>		gc reverse-complement	6.67u 0.69s 7.37r	# +1%
+<span id="L346" class="ln">   346</span>		gc_B reverse-complement	6.00u 0.64s 6.65r	# +7%
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>	nbody -n 50000000
+<span id="L349" class="ln">   349</span>		# math.Sqrt needs to be in assembly; inlining is probably the other 50%
+<span id="L350" class="ln">   350</span>		# also loop alignment appears to be critical
+<span id="L351" class="ln">   351</span>		gc nbody	86.27u 0.00s 86.29r	# -21%
+<span id="L352" class="ln">   352</span>		gc_B nbody	104.52u 0.00s 104.54r	# +22%
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>	fannkuch 12
+<span id="L355" class="ln">   355</span>		# bounds checking is half the difference
+<span id="L356" class="ln">   356</span>		# rest might be registerization
+<span id="L357" class="ln">   357</span>		gc fannkuch	128.36u 0.00s 128.37r	# +4%
+<span id="L358" class="ln">   358</span>		gc_B fannkuch	89.32u 0.00s 89.34r
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>	regex-dna 100000
+<span id="L361" class="ln">   361</span>		# regexp code is slow on trivial regexp
+<span id="L362" class="ln">   362</span>		gc regex-dna	24.82u 0.01s 24.86r	# -4%
+<span id="L363" class="ln">   363</span>		gc_B regex-dna	24.55u 0.01s 24.57r	# -6%
+<span id="L364" class="ln">   364</span>	
+<span id="L365" class="ln">   365</span>	spectral-norm 5500
+<span id="L366" class="ln">   366</span>		# possibly inline evalA
+<span id="L367" class="ln">   367</span>		gc spectral-norm	24.05u 0.00s 24.07r	# -1%
+<span id="L368" class="ln">   368</span>		gc_B spectral-norm	23.60u 0.00s 23.65r	 # -1%
+<span id="L369" class="ln">   369</span>	
+<span id="L370" class="ln">   370</span>	k-nucleotide 1000000
+<span id="L371" class="ln">   371</span>		# string maps are slower than glib string maps
+<span id="L372" class="ln">   372</span>		gc k-nucleotide	17.84u 0.04s 17.89r	# +13% but mysterious variation continues
+<span id="L373" class="ln">   373</span>		gc_B k-nucleotide	15.56u 0.08s 15.65r	# -13% (ditto)
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>	mandelbrot 16000
+<span id="L376" class="ln">   376</span>		gc mandelbrot	64.08u 0.01s 64.11r	# +1%
+<span id="L377" class="ln">   377</span>		gc_B mandelbrot	64.04u 0.00s 64.05r	# +1%
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>	pidigits 10000
+<span id="L380" class="ln">   380</span>		# bignum is slower than gmp
+<span id="L381" class="ln">   381</span>		gc pidigits	58.68u 0.02s 58.72r	# +5%
+<span id="L382" class="ln">   382</span>		gc_B pidigits	58.86u 0.05s 58.99r	# +5%
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>	# these tests are compared using real time, since they run multiple processors
+<span id="L385" class="ln">   385</span>	# accuracy probably low
+<span id="L386" class="ln">   386</span>	threadring 50000000
+<span id="L387" class="ln">   387</span>		gc threadring	32.70u 0.02s 32.77r	# +13%
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>	chameneos 6000000
+<span id="L390" class="ln">   390</span>		gc chameneosredux	26.62u 0.00s 26.63r	# +13%
+<span id="L391" class="ln">   391</span>	
+<span id="L392" class="ln">   392</span>	Sep 24, 2009
+<span id="L393" class="ln">   393</span>	
+<span id="L394" class="ln">   394</span>	# Sqrt now in assembler for 6g.
+<span id="L395" class="ln">   395</span>	nbody -n 50000000
+<span id="L396" class="ln">   396</span>		# remember, at least for 6g, alignment of loops may be important
+<span id="L397" class="ln">   397</span>		gcc -O2 nbody.c	21.24u 0.00s 21.25r
+<span id="L398" class="ln">   398</span>		gccgo -O2 nbody.go	121.03u 0.00s 121.04r
+<span id="L399" class="ln">   399</span>		gc nbody	30.26u 0.00s 30.27r	# -65% ***
+<span id="L400" class="ln">   400</span>		gc_B nbody	30.20u 0.02s 30.22r	# -72% *** 
+<span id="L401" class="ln">   401</span>	
+<span id="L402" class="ln">   402</span>	Nov 13 2009
+<span id="L403" class="ln">   403</span>	
+<span id="L404" class="ln">   404</span>	# fix bug in regexp; take performance hit.  good regexps will come in time.
+<span id="L405" class="ln">   405</span>	regex-dna 100000
+<span id="L406" class="ln">   406</span>		gcc -O2 regex-dna.c -lpcre	0.92u 0.00s 0.94r
+<span id="L407" class="ln">   407</span>		gc regex-dna	29.78u 0.03s 29.83r
+<span id="L408" class="ln">   408</span>		gc_B regex-dna	32.63u 0.03s 32.74r
+<span id="L409" class="ln">   409</span>	
+<span id="L410" class="ln">   410</span>	Nov 24 2009
+<span id="L411" class="ln">   411</span>	
+<span id="L412" class="ln">   412</span>	# Roger Peppe&#39;s rewrite of the benchmark
+<span id="L413" class="ln">   413</span>	chameneos 6000000
+<span id="L414" class="ln">   414</span>		gcc -O2 chameneosredux.c -lpthread	18.00u 303.29s 83.64r
+<span id="L415" class="ln">   415</span>		gc chameneosredux	12.10u 0.00s 12.10r  # 2.22X faster
+<span id="L416" class="ln">   416</span>	
+<span id="L417" class="ln">   417</span>	Jan 6, 2010
+<span id="L418" class="ln">   418</span>	
+<span id="L419" class="ln">   419</span>	# Long-overdue update.  All numbers included in this complete run.
+<span id="L420" class="ln">   420</span>	# Some programs (e.g. reverse-complement) rewritten for speed.
+<span id="L421" class="ln">   421</span>	# Regular expressions much faster in common cases (although still far behind PCRE)
+<span id="L422" class="ln">   422</span>	# Bignum stuff improved
+<span id="L423" class="ln">   423</span>	# Better (but sometimes slower) locking in channels.
+<span id="L424" class="ln">   424</span>	
+<span id="L425" class="ln">   425</span>	fasta -n 25000000
+<span id="L426" class="ln">   426</span>		gcc -O2 fasta.c	5.99u 0.01s 6.00r
+<span id="L427" class="ln">   427</span>		gc fasta	9.11u 0.00s 9.12r	# -11%
+<span id="L428" class="ln">   428</span>		gc_B fasta	8.60u 0.00s 8.62r	# +12% ??
+<span id="L429" class="ln">   429</span>	
+<span id="L430" class="ln">   430</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L431" class="ln">   431</span>		gcc -O2 reverse-complement.c	2.00u 0.80s 9.54r
+<span id="L432" class="ln">   432</span>	#	gccgo -O2 reverse-complement.go	4.57u 0.35s 4.94r	# 33% faster
+<span id="L433" class="ln">   433</span>		gc reverse-complement	2.01u 0.38s 2.40r	# 3.3X faster
+<span id="L434" class="ln">   434</span>		gc_B reverse-complement	1.88u 0.36s 2.24r	# 3.2X faster
+<span id="L435" class="ln">   435</span>	GOGC=off
+<span id="L436" class="ln">   436</span>		gc reverse-complement	2.01u 0.35s 2.37r
+<span id="L437" class="ln">   437</span>		gc_B reverse-complement	1.86u 0.32s 2.19r
+<span id="L438" class="ln">   438</span>	
+<span id="L439" class="ln">   439</span>	nbody -n 50000000
+<span id="L440" class="ln">   440</span>		gcc -O2 nbody.c	21.28u 0.00s 21.31r
+<span id="L441" class="ln">   441</span>		gccgo -O2 nbody.go	80.02u 0.00s 80.05r	# 33% faster
+<span id="L442" class="ln">   442</span>		gc nbody	30.13u 0.00s 30.13r
+<span id="L443" class="ln">   443</span>		gc_B nbody	29.89u 0.01s 29.91r
+<span id="L444" class="ln">   444</span>	
+<span id="L445" class="ln">   445</span>	binary-tree 15 # too slow to use 20
+<span id="L446" class="ln">   446</span>		gcc -O2 binary-tree.c -lm	0.86u 0.00s 0.87r
+<span id="L447" class="ln">   447</span>		gccgo -O2 binary-tree.go	4.82u 0.41s 5.24r	# 2.5X slower
+<span id="L448" class="ln">   448</span>		gc binary-tree	7.23u 0.01s 7.25r	# # -19%
+<span id="L449" class="ln">   449</span>		gc binary-tree-freelist	0.43u 0.00s 0.44r	# -9%
+<span id="L450" class="ln">   450</span>	
+<span id="L451" class="ln">   451</span>	fannkuch 12
+<span id="L452" class="ln">   452</span>		gcc -O2 fannkuch.c	60.17u 0.00s 60.17r
+<span id="L453" class="ln">   453</span>		gccgo -O2 fannkuch.go	78.47u 0.01s 78.49r
+<span id="L454" class="ln">   454</span>		gc fannkuch	128.86u 0.00s 128.96r
+<span id="L455" class="ln">   455</span>		gc_B fannkuch	90.17u 0.00s 90.21r
+<span id="L456" class="ln">   456</span>	
+<span id="L457" class="ln">   457</span>	regex-dna 100000
+<span id="L458" class="ln">   458</span>		gcc -O2 regex-dna.c -lpcre	0.90u 0.00s 0.92r
+<span id="L459" class="ln">   459</span>		gc regex-dna	9.48u 0.01s 9.50r	# 3.1X faster
+<span id="L460" class="ln">   460</span>		gc_B regex-dna	9.08u 0.00s 9.10r	# 3.6X faster
+<span id="L461" class="ln">   461</span>	
+<span id="L462" class="ln">   462</span>	spectral-norm 5500
+<span id="L463" class="ln">   463</span>		gcc -O2 spectral-norm.c -lm	11.48u 0.00s 11.48r
+<span id="L464" class="ln">   464</span>		gccgo -O2 spectral-norm.go	11.68u 0.00s 11.70r
+<span id="L465" class="ln">   465</span>		gc spectral-norm	23.98u 0.00s 23.99r
+<span id="L466" class="ln">   466</span>		gc_B spectral-norm	23.68u 0.00s 23.69r
+<span id="L467" class="ln">   467</span>	
+<span id="L468" class="ln">   468</span>	k-nucleotide 1000000
+<span id="L469" class="ln">   469</span>		gcc -O2 k-nucleotide.c	10.85u 0.04s 10.90r
+<span id="L470" class="ln">   470</span>		gccgo -O2 k-nucleotide.go	25.26u 0.87s 26.14r
+<span id="L471" class="ln">   471</span>		gc k-nucleotide	15.28u 0.06s 15.37r	# restored; mysterious variation continues
+<span id="L472" class="ln">   472</span>		gc_B k-nucleotide	15.97u 0.03s 16.00r
+<span id="L473" class="ln">   473</span>	
+<span id="L474" class="ln">   474</span>	mandelbrot 16000
+<span id="L475" class="ln">   475</span>		gcc -O2 mandelbrot.c	56.12u 0.01s 56.15r
+<span id="L476" class="ln">   476</span>		gccgo -O2 mandelbrot.go	56.86u 0.01s 56.89r
+<span id="L477" class="ln">   477</span>		gc mandelbrot	66.05u 0.00s 66.07r	# -3%
+<span id="L478" class="ln">   478</span>		gc_B mandelbrot	66.06u 0.00s 66.07r	# -3%
+<span id="L479" class="ln">   479</span>	
+<span id="L480" class="ln">   480</span>	meteor 2100
+<span id="L481" class="ln">   481</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.10r
+<span id="L482" class="ln">   482</span>		gccgo -O2 meteor-contest.go	0.12u 0.00s 0.12r
+<span id="L483" class="ln">   483</span>		gc meteor-contest	0.17u 0.00s 0.17r
+<span id="L484" class="ln">   484</span>		gc_B meteor-contest	0.15u 0.00s 0.16r
+<span id="L485" class="ln">   485</span>	
+<span id="L486" class="ln">   486</span>	pidigits 10000
+<span id="L487" class="ln">   487</span>		gcc -O2 pidigits.c -lgmp	2.57u 0.00s 2.59r
+<span id="L488" class="ln">   488</span>		gc pidigits	38.27u 0.02s 38.30r	# 1.5X faster
+<span id="L489" class="ln">   489</span>		gc_B pidigits	38.27u 0.02s 38.31r	# 1.5X faster
+<span id="L490" class="ln">   490</span>	
+<span id="L491" class="ln">   491</span>	threadring 50000000
+<span id="L492" class="ln">   492</span>		gcc -O2 threadring.c	37.11u 170.59s 212.75r
+<span id="L493" class="ln">   493</span>		gccgo -O2 threadring.go	89.67u 447.56s 442.55r	# -6.5%
+<span id="L494" class="ln">   494</span>		gc threadring	36.08u 0.04s 36.15r	# +10%
+<span id="L495" class="ln">   495</span>	
+<span id="L496" class="ln">   496</span>	chameneos 6000000
+<span id="L497" class="ln">   497</span>		gcc -O2 chameneosredux.c -lpthread	19.02u 331.08s 90.79r
+<span id="L498" class="ln">   498</span>		gc chameneosredux	12.54u 0.00s 12.55r
+<span id="L499" class="ln">   499</span>	
+<span id="L500" class="ln">   500</span>	Oct 19, 2010
+<span id="L501" class="ln">   501</span>	
+<span id="L502" class="ln">   502</span>	# Another long-overdue update. Some of the code is new; parallel versions
+<span id="L503" class="ln">   503</span>	# of some are added.  A few significant improvements.
+<span id="L504" class="ln">   504</span>	
+<span id="L505" class="ln">   505</span>	fasta -n 25000000
+<span id="L506" class="ln">   506</span>		gcc -O2 fasta.c	4.92u 0.00s 4.93r
+<span id="L507" class="ln">   507</span>		gccgo -O2 fasta.go	3.31u 0.00s 3.34r  # new code
+<span id="L508" class="ln">   508</span>		gc fasta	3.68u 0.00s 3.69r  # 2.5X faster with no code
+<span id="L509" class="ln">   509</span>		gc_B fasta	3.68u 0.00s 3.69r  # 2.3X faster with no code
+<span id="L510" class="ln">   510</span>	
+<span id="L511" class="ln">   511</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L512" class="ln">   512</span>		gcc -O2 reverse-complement.c	1.93u 0.81s 11.24r
+<span id="L513" class="ln">   513</span>		gccgo -O2 reverse-complement.go	1.58u 0.43s 2.04r  # first run with new code?
+<span id="L514" class="ln">   514</span>		gc reverse-complement	1.84u 0.34s 2.20r  # 10% faster
+<span id="L515" class="ln">   515</span>		gc_B reverse-complement	1.85u 0.32s 2.18r
+<span id="L516" class="ln">   516</span>	
+<span id="L517" class="ln">   517</span>	nbody -n 50000000
+<span id="L518" class="ln">   518</span>		gcc -O2 nbody.c	21.35u 0.00s 21.36r
+<span id="L519" class="ln">   519</span>		gccgo -O2 nbody.go	21.62u 0.00s 21.66r  # 3.7X faster - why??
+<span id="L520" class="ln">   520</span>		gc nbody	29.78u 0.00s 29.79r
+<span id="L521" class="ln">   521</span>		gc_B nbody	29.72u 0.00s 29.72r
+<span id="L522" class="ln">   522</span>	
+<span id="L523" class="ln">   523</span>	binary-tree 15 # too slow to use 20
+<span id="L524" class="ln">   524</span>		gcc -O2 binary-tree.c -lm	0.86u 0.00s 0.88r
+<span id="L525" class="ln">   525</span>		gccgo -O2 binary-tree.go	4.05u 0.02s 4.08r  # 28% faster
+<span id="L526" class="ln">   526</span>		gccgo -O2 binary-tree-freelist	0.34u 0.08s 0.34r
+<span id="L527" class="ln">   527</span>		gc binary-tree	5.94u 0.00s 5.95r  # 20% faster
+<span id="L528" class="ln">   528</span>		gc binary-tree-freelist	0.50u 0.01s 0.54r
+<span id="L529" class="ln">   529</span>	
+<span id="L530" class="ln">   530</span>	fannkuch 12
+<span id="L531" class="ln">   531</span>		gcc -O2 fannkuch.c	60.45u 0.00s 60.45r
+<span id="L532" class="ln">   532</span>		gccgo -O2 fannkuch.go	64.64u 0.00s 64.64r
+<span id="L533" class="ln">   533</span>		gccgo -O2 fannkuch-parallel.go	115.63u 0.00s 31.58r
+<span id="L534" class="ln">   534</span>		gc fannkuch	126.52u 0.04s 126.68r
+<span id="L535" class="ln">   535</span>		gc fannkuch-parallel	238.82u 0.10s 65.93r  # GOMAXPROCS=4
+<span id="L536" class="ln">   536</span>		gc_B fannkuch	88.99u 0.00s 89.02r
+<span id="L537" class="ln">   537</span>	
+<span id="L538" class="ln">   538</span>	regex-dna 100000
+<span id="L539" class="ln">   539</span>		gcc -O2 regex-dna.c -lpcre	0.89u 0.00s 0.89r
+<span id="L540" class="ln">   540</span>		gc regex-dna	8.99u 0.02s 9.03r
+<span id="L541" class="ln">   541</span>		gc regex-dna-parallel	8.94u 0.02s 3.68r  # GOMAXPROCS=4
+<span id="L542" class="ln">   542</span>		gc_B regex-dna	9.12u 0.00s 9.14r
+<span id="L543" class="ln">   543</span>	
+<span id="L544" class="ln">   544</span>	spectral-norm 5500
+<span id="L545" class="ln">   545</span>		gcc -O2 spectral-norm.c -lm	11.55u 0.00s 11.57r
+<span id="L546" class="ln">   546</span>		gccgo -O2 spectral-norm.go	11.73u 0.00s 11.75r
+<span id="L547" class="ln">   547</span>		gc spectral-norm	23.74u 0.00s 23.79r
+<span id="L548" class="ln">   548</span>		gc_B spectral-norm	24.49u 0.02s 24.54r
+<span id="L549" class="ln">   549</span>	
+<span id="L550" class="ln">   550</span>	k-nucleotide 1000000
+<span id="L551" class="ln">   551</span>		gcc -O2 k-nucleotide.c	11.44u 0.06s 11.50r
+<span id="L552" class="ln">   552</span>		gccgo -O2 k-nucleotide.go	8.65u 0.04s 8.71r
+<span id="L553" class="ln">   553</span>		gccgo -O2 k-nucleotide-parallel.go	8.75u 0.03s 2.97r # set GOMAXPROCS=4
+<span id="L554" class="ln">   554</span>		gc k-nucleotide	14.92u 0.05s 15.01r
+<span id="L555" class="ln">   555</span>		gc k-nucleotide-parallel	16.96u 0.06s 6.53r  # set GOMAXPROCS=4
+<span id="L556" class="ln">   556</span>		gc_B k-nucleotide	15.97u 0.03s 16.08r
+<span id="L557" class="ln">   557</span>	
+<span id="L558" class="ln">   558</span>	mandelbrot 16000
+<span id="L559" class="ln">   559</span>		gcc -O2 mandelbrot.c	56.32u 0.00s 56.35r
+<span id="L560" class="ln">   560</span>		gccgo -O2 mandelbrot.go	55.62u 0.02s 55.77r
+<span id="L561" class="ln">   561</span>		gc mandelbrot	64.85u 0.01s 64.94r
+<span id="L562" class="ln">   562</span>		gc_B mandelbrot	65.02u 0.01s 65.14r
+<span id="L563" class="ln">   563</span>	
+<span id="L564" class="ln">   564</span>	meteor 2100
+<span id="L565" class="ln">   565</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.10r
+<span id="L566" class="ln">   566</span>		gccgo -O2 meteor-contest.go	0.10u 0.00s 0.11r
+<span id="L567" class="ln">   567</span>		gc meteor-contest	0.17u 0.00s 0.18r
+<span id="L568" class="ln">   568</span>		gc_B meteor-contest	0.16u 0.00s 0.16r
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>	pidigits 10000
+<span id="L571" class="ln">   571</span>		gcc -O2 pidigits.c -lgmp	2.58u 0.00s 2.59r
+<span id="L572" class="ln">   572</span>		gccgo -O2 pidigits.go	14.06u 0.01s 14.09r # first run?
+<span id="L573" class="ln">   573</span>		gc pidigits	8.47u 0.05s 8.55r # 4.5X faster due to package big
+<span id="L574" class="ln">   574</span>		gc_B pidigits	8.33u 0.01s 8.36r # 4.5X faster due to package big
+<span id="L575" class="ln">   575</span>	
+<span id="L576" class="ln">   576</span>	threadring 50000000
+<span id="L577" class="ln">   577</span>		gcc -O2 threadring.c	28.18u 153.19s 186.47r
+<span id="L578" class="ln">   578</span>		gccgo -O2 threadring.go	110.10u 516.48s 515.25r
+<span id="L579" class="ln">   579</span>		gc threadring	40.39u 0.00s 40.40r
+<span id="L580" class="ln">   580</span>	
+<span id="L581" class="ln">   581</span>	chameneos 6000000
+<span id="L582" class="ln">   582</span>		gcc -O2 chameneosredux.c -lpthread	18.20u 301.55s 83.10r
+<span id="L583" class="ln">   583</span>		gccgo -O2 chameneosredux.go	52.22u 324.54s 201.21r
+<span id="L584" class="ln">   584</span>		gc chameneosredux	13.52u 0.00s 13.54r
+<span id="L585" class="ln">   585</span>	
+<span id="L586" class="ln">   586</span>	Dec 14, 2010
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>	# Improved regex code (same algorithm) gets ~30%.
+<span id="L589" class="ln">   589</span>	
+<span id="L590" class="ln">   590</span>	regex-dna 100000
+<span id="L591" class="ln">   591</span>		gcc -O2 regex-dna.c -lpcre	0.77u 0.01s 0.78r
+<span id="L592" class="ln">   592</span>		gc regex-dna	6.80u 0.00s 6.81r
+<span id="L593" class="ln">   593</span>		gc regex-dna-parallel	6.82u 0.01s 2.75r
+<span id="L594" class="ln">   594</span>		gc_B regex-dna	6.69u 0.02s 6.70r
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>	Feb 15, 2011
+<span id="L597" class="ln">   597</span>	
+<span id="L598" class="ln">   598</span>	# Improved GC, still single-threaded but more efficient
+<span id="L599" class="ln">   599</span>	
+<span id="L600" class="ln">   600</span>	fasta -n 25000000
+<span id="L601" class="ln">   601</span>		gcc -O2 fasta.c	3.40u 0.00s 3.40r
+<span id="L602" class="ln">   602</span>		gccgo -O2 fasta.go	3.51u 0.00s 3.50r
+<span id="L603" class="ln">   603</span>		gc fasta	3.66u 0.01s 3.66r
+<span id="L604" class="ln">   604</span>		gc_B fasta	3.66u 0.00s 3.66r
+<span id="L605" class="ln">   605</span>	
+<span id="L606" class="ln">   606</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L607" class="ln">   607</span>		gcc -O2 reverse-complement.c	1.86u 1.29s 4.93r
+<span id="L608" class="ln">   608</span>		gccgo -O2 reverse-complement.go	2.18u 0.41s 2.60r
+<span id="L609" class="ln">   609</span>		gc reverse-complement	1.67u 0.48s 2.15r
+<span id="L610" class="ln">   610</span>		gc_B reverse-complement	1.71u 0.45s 2.15r
+<span id="L611" class="ln">   611</span>	
+<span id="L612" class="ln">   612</span>	nbody -n 50000000
+<span id="L613" class="ln">   613</span>		gcc -O2 -lm nbody.c	21.64u 0.00s 21.64r
+<span id="L614" class="ln">   614</span>		gccgo -O2 nbody.go	21.46u 0.00s 21.45r
+<span id="L615" class="ln">   615</span>		gc nbody	29.07u 0.00s 29.06r
+<span id="L616" class="ln">   616</span>		gc_B nbody	31.61u 0.00s 31.61r
+<span id="L617" class="ln">   617</span>	
+<span id="L618" class="ln">   618</span>	binary-tree 15 # too slow to use 20
+<span id="L619" class="ln">   619</span>		gcc -O2 binary-tree.c -lm	0.88u 0.00s 0.87r
+<span id="L620" class="ln">   620</span>		gccgo -O2 binary-tree.go	2.74u 0.07s 2.81r
+<span id="L621" class="ln">   621</span>		gccgo -O2 binary-tree-freelist.go	0.01u 0.00s 0.00r
+<span id="L622" class="ln">   622</span>		gc binary-tree	4.22u 0.02s 4.24r
+<span id="L623" class="ln">   623</span>		gc binary-tree-freelist	0.54u 0.02s 0.55r
+<span id="L624" class="ln">   624</span>	
+<span id="L625" class="ln">   625</span>	fannkuch 12
+<span id="L626" class="ln">   626</span>		gcc -O2 fannkuch.c	57.64u 0.00s 57.64r
+<span id="L627" class="ln">   627</span>		gccgo -O2 fannkuch.go	65.79u 0.00s 65.82r
+<span id="L628" class="ln">   628</span>		gccgo -O2 fannkuch-parallel.go	160.91u 0.02s 43.90r
+<span id="L629" class="ln">   629</span>		gc fannkuch	126.36u 0.03s 126.53r
+<span id="L630" class="ln">   630</span>		gc fannkuch-parallel	175.23u 0.04s 45.49r
+<span id="L631" class="ln">   631</span>		gc_B fannkuch	89.23u 0.00s 89.24r
+<span id="L632" class="ln">   632</span>	
+<span id="L633" class="ln">   633</span>	regex-dna 100000
+<span id="L634" class="ln">   634</span>		gcc -O2 regex-dna.c -lpcre	0.77u 0.01s 0.80r
+<span id="L635" class="ln">   635</span>		gccgo -O2 regex-dna.go	12.38u 0.10s 12.52r
+<span id="L636" class="ln">   636</span>		gccgo -O2 regex-dna-parallel.go	43.96u 4.64s 15.11r
+<span id="L637" class="ln">   637</span>		gc regex-dna	7.03u 0.01s 7.05r
+<span id="L638" class="ln">   638</span>		gc regex-dna-parallel	6.85u 0.05s 2.70r
+<span id="L639" class="ln">   639</span>		gc_B regex-dna	6.87u 0.02s 6.89r
+<span id="L640" class="ln">   640</span>	
+<span id="L641" class="ln">   641</span>	spectral-norm 5500
+<span id="L642" class="ln">   642</span>		gcc -O2 spectral-norm.c -lm	12.29u 0.00s 12.28r
+<span id="L643" class="ln">   643</span>		gccgo -O2 spectral-norm.go	11.79u 0.00s 11.79r
+<span id="L644" class="ln">   644</span>		gc spectral-norm	24.00u 0.02s 24.05r
+<span id="L645" class="ln">   645</span>		gc_B spectral-norm	24.59u 0.01s 24.59r
+<span id="L646" class="ln">   646</span>	
+<span id="L647" class="ln">   647</span>	k-nucleotide 1000000
+<span id="L648" class="ln">   648</span>		gcc -O2 k-nucleotide.c	9.75u 0.07s 9.82r
+<span id="L649" class="ln">   649</span>		gccgo -O2 k-nucleotide.go	8.92u 0.06s 8.98r
+<span id="L650" class="ln">   650</span>		gccgo -O2 k-nucleotide-parallel.go	8.40u 0.04s 2.76r
+<span id="L651" class="ln">   651</span>		gc k-nucleotide	17.01u 0.03s 17.04r
+<span id="L652" class="ln">   652</span>		gc k-nucleotide-parallel	16.51u 0.08s 6.21r
+<span id="L653" class="ln">   653</span>		gc_B k-nucleotide	16.94u 0.08s 17.02r
+<span id="L654" class="ln">   654</span>	
+<span id="L655" class="ln">   655</span>	mandelbrot 16000
+<span id="L656" class="ln">   656</span>		gcc -O2 mandelbrot.c	54.60u 0.00s 54.66r
+<span id="L657" class="ln">   657</span>		gccgo -O2 mandelbrot.go	59.38u 0.00s 59.41r
+<span id="L658" class="ln">   658</span>		gc mandelbrot	64.93u 0.04s 65.08r
+<span id="L659" class="ln">   659</span>		gc_B mandelbrot	64.85u 0.03s 64.92r
+<span id="L660" class="ln">   660</span>	
+<span id="L661" class="ln">   661</span>	meteor 2098
+<span id="L662" class="ln">   662</span>		gcc -O2 meteor-contest.c	0.10u 0.01s 0.10r
+<span id="L663" class="ln">   663</span>		gccgo -O2 meteor-contest.go	0.11u 0.00s 0.11r
+<span id="L664" class="ln">   664</span>		gc meteor-contest	0.18u 0.00s 0.17r
+<span id="L665" class="ln">   665</span>		gc_B meteor-contest	0.17u 0.00s 0.16r
+<span id="L666" class="ln">   666</span>	
+<span id="L667" class="ln">   667</span>	pidigits 10000
+<span id="L668" class="ln">   668</span>		gcc -O2 pidigits.c -lgmp	2.24u 0.00s 2.23r
+<span id="L669" class="ln">   669</span>		gccgo -O2 pidigits.go	14.05u 0.00s 14.06r
+<span id="L670" class="ln">   670</span>		gc pidigits	6.34u 0.05s 6.38r
+<span id="L671" class="ln">   671</span>		gc_B pidigits	6.37u 0.02s 6.38r
+<span id="L672" class="ln">   672</span>	
+<span id="L673" class="ln">   673</span>	threadring 50000000
+<span id="L674" class="ln">   674</span>		gcc -O2 threadring.c	30.50u 258.05s 325.72r
+<span id="L675" class="ln">   675</span>		gccgo -O2 threadring.go	92.87u 748.39s 728.46r
+<span id="L676" class="ln">   676</span>		gc threadring	38.03u 0.01s 38.04r
+<span id="L677" class="ln">   677</span>	
+<span id="L678" class="ln">   678</span>	# Apr 15, 2011
+<span id="L679" class="ln">   679</span>	# Move to new machine, Intel Xeon E5520@2.27GHz.
+<span id="L680" class="ln">   680</span>	# (Was Opteron(tm) Processor 8214 HE)
+<span id="L681" class="ln">   681</span>	
+<span id="L682" class="ln">   682</span>	fasta -n 25000000
+<span id="L683" class="ln">   683</span>	OLD:
+<span id="L684" class="ln">   684</span>		gcc -O2 fasta.c	3.39u 0.04s 3.42r
+<span id="L685" class="ln">   685</span>		gccgo -O2 fasta.go	3.52u 0.00s 3.52r
+<span id="L686" class="ln">   686</span>		gc fasta	3.63u 0.04s 3.67r
+<span id="L687" class="ln">   687</span>		gc_B fasta	3.66u 0.00s 3.66r
+<span id="L688" class="ln">   688</span>	NEW:
+<span id="L689" class="ln">   689</span>		gcc -O2 fasta.c	1.45u 0.02s 1.47r
+<span id="L690" class="ln">   690</span>		gccgo -O2 fasta.go	1.51u 0.01s 1.51r
+<span id="L691" class="ln">   691</span>		gc fasta	2.04u 0.00s 2.04r
+<span id="L692" class="ln">   692</span>		gc_B fasta	2.05u 0.00s 2.04r
+<span id="L693" class="ln">   693</span>	
+<span id="L694" class="ln">   694</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L695" class="ln">   695</span>	OLD:
+<span id="L696" class="ln">   696</span>		gcc -O2 reverse-complement.c	1.87u 1.51s 7.02r
+<span id="L697" class="ln">   697</span>		gccgo -O2 reverse-complement.go	1.56u 0.54s 3.37r
+<span id="L698" class="ln">   698</span>		gc reverse-complement	1.73u 0.36s 2.08r
+<span id="L699" class="ln">   699</span>		gc_B reverse-complement	1.75u 0.37s 2.12r
+<span id="L700" class="ln">   700</span>	NEW:
+<span id="L701" class="ln">   701</span>		gcc -O2 reverse-complement.c	1.20u 0.47s 12.96r
+<span id="L702" class="ln">   702</span>		gccgo -O2 reverse-complement.go	0.88u 0.14s 1.01r
+<span id="L703" class="ln">   703</span>		gc reverse-complement	1.13u 0.17s 1.30r
+<span id="L704" class="ln">   704</span>		gc_B reverse-complement	1.11u 0.09s 1.20r
+<span id="L705" class="ln">   705</span>	
+<span id="L706" class="ln">   706</span>	nbody -n 50000000
+<span id="L707" class="ln">   707</span>	OLD:
+<span id="L708" class="ln">   708</span>		gcc -O2 -lm nbody.c	21.90u 0.00s 21.92r
+<span id="L709" class="ln">   709</span>		gccgo -O2 nbody.go	23.12u 0.03s 23.19r
+<span id="L710" class="ln">   710</span>		gc nbody	29.07u 0.00s 29.07r
+<span id="L711" class="ln">   711</span>		gc_B nbody	31.84u 0.00s 31.85r
+<span id="L712" class="ln">   712</span>	NEW:
+<span id="L713" class="ln">   713</span>		gcc -O2 -lm nbody.c	13.01u 0.00s 13.03r
+<span id="L714" class="ln">   714</span>		gccgo -O2 nbody.go	13.35u 0.00s 13.37r
+<span id="L715" class="ln">   715</span>		gc nbody	21.78u 0.00s 21.82r
+<span id="L716" class="ln">   716</span>		gc_B nbody	21.72u 0.00s 21.76r
+<span id="L717" class="ln">   717</span>	
+<span id="L718" class="ln">   718</span>	binary-tree 15 # too slow to use 20
+<span id="L719" class="ln">   719</span>	OLD:
+<span id="L720" class="ln">   720</span>		gcc -O2 binary-tree.c -lm	0.83u 0.02s 0.84r
+<span id="L721" class="ln">   721</span>		gccgo -O2 binary-tree.go	2.61u 0.02s 2.62r
+<span id="L722" class="ln">   722</span>		gccgo -O2 binary-tree-freelist.go	0.32u 0.01s 0.32r
+<span id="L723" class="ln">   723</span>		gc binary-tree	3.93u 0.04s 3.97r
+<span id="L724" class="ln">   724</span>		gc binary-tree-freelist	0.47u 0.03s 0.50r
+<span id="L725" class="ln">   725</span>	NEW:
+<span id="L726" class="ln">   726</span>		gcc -O2 binary-tree.c -lm	0.60u 0.00s 0.59r
+<span id="L727" class="ln">   727</span>		gccgo -O2 binary-tree.go	1.53u 0.00s 1.52r
+<span id="L728" class="ln">   728</span>		gccgo -O2 binary-tree-freelist.go	0.01u 0.00s 0.00r
+<span id="L729" class="ln">   729</span>		gc binary-tree	1.93u 0.02s 1.95r
+<span id="L730" class="ln">   730</span>		gc binary-tree-freelist	0.32u 0.01s 0.32r
+<span id="L731" class="ln">   731</span>	
+<span id="L732" class="ln">   732</span>	fannkuch 12
+<span id="L733" class="ln">   733</span>	OLD:
+<span id="L734" class="ln">   734</span>		gcc -O2 fannkuch.c	57.64u 0.00s 57.64r
+<span id="L735" class="ln">   735</span>		gccgo -O2 fannkuch.go	65.56u 0.01s 65.65r
+<span id="L736" class="ln">   736</span>		gccgo -O2 fannkuch-parallel.go	179.12u 0.00s 49.82r
+<span id="L737" class="ln">   737</span>		gc fannkuch	126.39u 0.00s 126.39r
+<span id="L738" class="ln">   738</span>		gc fannkuch-parallel	172.49u 0.02s 45.44r
+<span id="L739" class="ln">   739</span>		gc_B fannkuch	89.30u 0.00s 89.28r
+<span id="L740" class="ln">   740</span>	NEW:
+<span id="L741" class="ln">   741</span>		gcc -O2 fannkuch.c	45.17u 0.00s 45.26r
+<span id="L742" class="ln">   742</span>		gccgo -O2 fannkuch.go	53.63u 0.00s 53.73r
+<span id="L743" class="ln">   743</span>		gccgo -O2 fannkuch-parallel.go	216.72u 0.00s 58.42r
+<span id="L744" class="ln">   744</span>		gc fannkuch	108.21u 0.00s 108.44r
+<span id="L745" class="ln">   745</span>		gc fannkuch-parallel	227.20u 0.00s 57.27r
+<span id="L746" class="ln">   746</span>		gc_B fannkuch	56.14u 0.00s 56.26r
+<span id="L747" class="ln">   747</span>	
+<span id="L748" class="ln">   748</span>	regex-dna 100000
+<span id="L749" class="ln">   749</span>	OLD:
+<span id="L750" class="ln">   750</span>		gcc -O2 regex-dna.c -lpcre	0.77u 0.01s 0.78r
+<span id="L751" class="ln">   751</span>		gccgo -O2 regex-dna.go	10.15u 0.02s 10.23r
+<span id="L752" class="ln">   752</span>		gccgo -O2 regex-dna-parallel.go	33.81u 3.22s 11.62r
+<span id="L753" class="ln">   753</span>		gc regex-dna	6.52u 0.04s 6.56r
+<span id="L754" class="ln">   754</span>		gc regex-dna-parallel	6.84u 0.03s 2.70r
+<span id="L755" class="ln">   755</span>		gc_B regex-dna	6.83u 0.01s 6.84r
+<span id="L756" class="ln">   756</span>	NEW:
+<span id="L757" class="ln">   757</span>		gcc -O2 regex-dna.c -lpcre	0.47u 0.00s 0.47r
+<span id="L758" class="ln">   758</span>		gccgo -O2 regex-dna.go	6.00u 0.00s 6.00r
+<span id="L759" class="ln">   759</span>		gccgo -O2 regex-dna-parallel.go	44.54u 1.57s 6.51r
+<span id="L760" class="ln">   760</span>		gc regex-dna	5.41u 0.01s 5.42r
+<span id="L761" class="ln">   761</span>		gc regex-dna-parallel	5.62u 0.01s 2.20r
+<span id="L762" class="ln">   762</span>		gc_B regex-dna	5.50u 0.00s 5.50r
+<span id="L763" class="ln">   763</span>	
+<span id="L764" class="ln">   764</span>	spectral-norm 5500
+<span id="L765" class="ln">   765</span>	OLD:
+<span id="L766" class="ln">   766</span>		gcc -O2 spectral-norm.c -lm	12.29u 0.00s 12.28r
+<span id="L767" class="ln">   767</span>		gccgo -O2 spectral-norm.go	11.56u 0.00s 11.55r
+<span id="L768" class="ln">   768</span>		gc spectral-norm	23.98u 0.00s 24.00r
+<span id="L769" class="ln">   769</span>		gc_B spectral-norm	24.62u 0.00s 24.65r
+<span id="L770" class="ln">   770</span>	NEW:
+<span id="L771" class="ln">   771</span>		gcc -O2 spectral-norm.c -lm	15.79u 0.00s 15.82r
+<span id="L772" class="ln">   772</span>		gccgo -O2 spectral-norm.go	15.32u 0.00s 15.35r
+<span id="L773" class="ln">   773</span>		gc spectral-norm	19.62u 0.01s 19.67r
+<span id="L774" class="ln">   774</span>		gc_B spectral-norm	19.62u 0.00s 19.66r
+<span id="L775" class="ln">   775</span>	
+<span id="L776" class="ln">   776</span>	k-nucleotide 1000000
+<span id="L777" class="ln">   777</span>	OLD:
+<span id="L778" class="ln">   778</span>		gcc -O2 k-nucleotide.c	9.82u 0.06s 9.87r
+<span id="L779" class="ln">   779</span>		gccgo -O2 k-nucleotide.go	8.30u 0.02s 8.32r
+<span id="L780" class="ln">   780</span>		gccgo -O2 k-nucleotide-parallel.go	8.84u 0.05s 3.02r
+<span id="L781" class="ln">   781</span>		gc k-nucleotide	15.38u 0.07s 15.44r
+<span id="L782" class="ln">   782</span>		gc k-nucleotide-parallel	16.40u 0.03s 5.93r
+<span id="L783" class="ln">   783</span>		gc_B k-nucleotide	15.19u 0.05s 15.23r
+<span id="L784" class="ln">   784</span>	NEW:
+<span id="L785" class="ln">   785</span>		gcc -O2 -k-nucleotide.c	4.88u 0.03s 4.92r
+<span id="L786" class="ln">   786</span>		gccgo -O2 k-nucleotide.go	5.94u 0.01s 5.96r
+<span id="L787" class="ln">   787</span>		gccgo -O2 k-nucleotide-parallel.go	6.44u 0.03s 1.47r
+<span id="L788" class="ln">   788</span>		gc k-nucleotide	9.61u 0.01s 9.63r
+<span id="L789" class="ln">   789</span>		gc k-nucleotide-parallel	9.70u 0.00s 3.39r
+<span id="L790" class="ln">   790</span>		gc_B k-nucleotide	9.19u 0.03s 9.23r
+<span id="L791" class="ln">   791</span>	
+<span id="L792" class="ln">   792</span>	mandelbrot 16000
+<span id="L793" class="ln">   793</span>	OLD:
+<span id="L794" class="ln">   794</span>		gcc -O2 mandelbrot.c	54.54u 0.00s 54.56r
+<span id="L795" class="ln">   795</span>		gccgo -O2 mandelbrot.go	59.63u 0.03s 59.67r
+<span id="L796" class="ln">   796</span>		gc mandelbrot	64.82u 0.00s 64.83r
+<span id="L797" class="ln">   797</span>		gc_B mandelbrot	64.84u 0.00s 64.91r
+<span id="L798" class="ln">   798</span>	NEW:
+<span id="L799" class="ln">   799</span>		gcc -O2 mandelbrot.c	36.07u 0.01s 36.15r
+<span id="L800" class="ln">   800</span>		gccgo -O2 mandelbrot.go	43.57u 0.00s 43.66r
+<span id="L801" class="ln">   801</span>		gc mandelbrot	60.66u 0.00s 60.79r
+<span id="L802" class="ln">   802</span>		gc_B mandelbrot	60.90u 0.00s 61.03r
+<span id="L803" class="ln">   803</span>	
+<span id="L804" class="ln">   804</span>	meteor 2098
+<span id="L805" class="ln">   805</span>	OLD:
+<span id="L806" class="ln">   806</span>		gcc -O2 meteor-contest.c	0.11u 0.00s 0.10r
+<span id="L807" class="ln">   807</span>		gccgo -O2 meteor-contest.go	0.10u 0.01s 0.10r
+<span id="L808" class="ln">   808</span>		gc meteor-contest	0.18u 0.00s 0.17r
+<span id="L809" class="ln">   809</span>		gc_B meteor-contest	0.17u 0.00s 0.16r
+<span id="L810" class="ln">   810</span>	NEW:
+<span id="L811" class="ln">   811</span>		gcc -O2 meteor-contest.c	0.10u 0.00s 0.09r
+<span id="L812" class="ln">   812</span>		gccgo -O2 meteor-contest.go	0.10u 0.00s 0.09r
+<span id="L813" class="ln">   813</span>		gc meteor-contest	0.14u 0.00s 0.14r
+<span id="L814" class="ln">   814</span>		gc_B meteor-contest	0.13u 0.00s 0.13r
+<span id="L815" class="ln">   815</span>	
+<span id="L816" class="ln">   816</span>	pidigits 10000
+<span id="L817" class="ln">   817</span>	OLD:
+<span id="L818" class="ln">   818</span>		gcc -O2 pidigits.c -lgmp	2.22u 0.00s 2.21r
+<span id="L819" class="ln">   819</span>		gccgo -O2 pidigits.go	13.39u 0.00s 13.40r
+<span id="L820" class="ln">   820</span>		gc pidigits	6.42u 0.04s 6.45r
+<span id="L821" class="ln">   821</span>		gc_B pidigits	6.45u 0.02s 6.47r
+<span id="L822" class="ln">   822</span>	NEW:
+<span id="L823" class="ln">   823</span>		gcc -O2 pidigits.c -lgmp	2.27u 0.00s 2.29r
+<span id="L824" class="ln">   824</span>		gccgo -O2 pidigits.go	9.21u 0.00s 9.22r
+<span id="L825" class="ln">   825</span>		gc pidigits	3.60u 0.00s 3.60r
+<span id="L826" class="ln">   826</span>		gc_B pidigits	3.56u 0.02s 3.58r
+<span id="L827" class="ln">   827</span>	
+<span id="L828" class="ln">   828</span>	threadring 50000000
+<span id="L829" class="ln">   829</span>	OLD:
+<span id="L830" class="ln">   830</span>		gcc -O2 threadring.c -lpthread	34.51u 267.95s 336.12r
+<span id="L831" class="ln">   831</span>		gccgo -O2 threadring.go	103.51u 588.57s 627.16r
+<span id="L832" class="ln">   832</span>		gc threadring	54.68u 0.00s 54.73r
+<span id="L833" class="ln">   833</span>	NEW:
+<span id="L834" class="ln">   834</span>		gcc -O2 threadring.c 32.00u 259.39s 369.74r
+<span id="L835" class="ln">   835</span>		gccgo -O2 threadring.go	133.06u 546.02s 595.33r
+<span id="L836" class="ln">   836</span>		gc threadring	16.75u 0.02s 16.80r
+<span id="L837" class="ln">   837</span>	
+<span id="L838" class="ln">   838</span>	chameneos 6000000
+<span id="L839" class="ln">   839</span>	OLD:
+<span id="L840" class="ln">   840</span>		gcc -O2 chameneosredux.c -lpthread	12.65u 31.02s 13.33r
+<span id="L841" class="ln">   841</span>		gccgo -O2 chameneosredux.go	47.04u 302.84s 252.29r
+<span id="L842" class="ln">   842</span>		gc chameneosredux	14.14u 0.00s 14.14r
+<span id="L843" class="ln">   843</span>	NEW:
+<span id="L844" class="ln">   844</span>		gcc -O2 chameneosredux.c -lpthread	8.05u 63.43s 11.16r
+<span id="L845" class="ln">   845</span>		gccgo -O2 chameneosredux.go	82.95u 304.37s 207.64r
+<span id="L846" class="ln">   846</span>		gc chameneosredux	9.42u 0.00s 9.43r
+<span id="L847" class="ln">   847</span>	
+<span id="L848" class="ln">   848</span>	# May 13, 2011
+<span id="L849" class="ln">   849</span>	# after gc update to inline append when possible - 35% faster
+<span id="L850" class="ln">   850</span>	
+<span id="L851" class="ln">   851</span>	regex-dna 100000
+<span id="L852" class="ln">   852</span>		gc regex-dna	3.94u 0.00s 3.95r
+<span id="L853" class="ln">   853</span>		gc regex-dna-parallel	4.15u 0.01s 1.63r
+<span id="L854" class="ln">   854</span>		gc_B regex-dna	4.01u 0.01s 4.02r
+<span id="L855" class="ln">   855</span>	
+<span id="L856" class="ln">   856</span>	# Aug 4, 2011
+<span id="L857" class="ln">   857</span>	# After various updates to locking code and some runtime changes.
+<span id="L858" class="ln">   858</span>	# Slowdowns believed due to slower (but more correct) memmove.
+<span id="L859" class="ln">   859</span>	
+<span id="L860" class="ln">   860</span>	fannkuch 12
+<span id="L861" class="ln">   861</span>		gccgo -O2 fannkuch.go	51.59u 0.00s 51.69r # -4%
+<span id="L862" class="ln">   862</span>		gccgo -O2 fannkuch-parallel.go	253.17u 0.00s 64.67r # -11%
+<span id="L863" class="ln">   863</span>		gc fannkuch	103.14u 0.00s 103.36r # -5%
+<span id="L864" class="ln">   864</span>		gc fannkuch-parallel	189.63u 0.00s 49.37r # +9%
+<span id="L865" class="ln">   865</span>		gc_B fannkuch	49.19u 0.00s 49.29r # -14%
+<span id="L866" class="ln">   866</span>	
+<span id="L867" class="ln">   867</span>	regex-dna 100000
+<span id="L868" class="ln">   868</span>		gc regex-dna	3.78u 0.00s 3.78r # -43%
+<span id="L869" class="ln">   869</span>		gc regex-dna-parallel	3.84u 0.02s 1.48r # -49%
+<span id="L870" class="ln">   870</span>		gc_B regex-dna	3.62u 0.00s 3.63r # -52%
+<span id="L871" class="ln">   871</span>	
+<span id="L872" class="ln">   872</span>	k-nucleotide 1000000
+<span id="L873" class="ln">   873</span>		gc k-nucleotide	12.23u 0.02s 12.27r # +27%
+<span id="L874" class="ln">   874</span>		gc k-nucleotide-parallel	12.76u 0.02s 4.37r # +29%
+<span id="L875" class="ln">   875</span>		gc_B k-nucleotide	12.18u 0.01s 12.21r # +33%
+<span id="L876" class="ln">   876</span>	
+<span id="L877" class="ln">   877</span>	threadring 50000000
+<span id="L878" class="ln">   878</span>		gc threadring	17.49u 0.00s 17.53r # +4%
+<span id="L879" class="ln">   879</span>	
+<span id="L880" class="ln">   880</span>	chameneos 6000000
+<span id="L881" class="ln">   881</span>		gc chameneosredux	7.61u 0.00s 7.63r # -24%
+<span id="L882" class="ln">   882</span>	
+<span id="L883" class="ln">   883</span>	Aug 9, 2011
+<span id="L884" class="ln">   884</span>	# After custom algorithms for 1- 2- 4- 8-byte scalars.
+<span id="L885" class="ln">   885</span>	
+<span id="L886" class="ln">   886</span>	fannkuch 12
+<span id="L887" class="ln">   887</span>		gc fannkuch-parallel	157.17u 0.00s 41.08r # -17%
+<span id="L888" class="ln">   888</span>	
+<span id="L889" class="ln">   889</span>	k-nucleotide 1000000
+<span id="L890" class="ln">   890</span>		gc k-nucleotide	8.72u 0.03s 8.76r # -39%
+<span id="L891" class="ln">   891</span>		gc k-nucleotide-parallel	8.79u 0.01s 3.14r # -39%
+<span id="L892" class="ln">   892</span>		gc_B k-nucleotide	8.65u 0.03s 8.69r # -39%
+<span id="L893" class="ln">   893</span>	
+<span id="L894" class="ln">   894</span>	pidigits 10000
+<span id="L895" class="ln">   895</span>		gc pidigits	3.71u 0.02s 3.73r # +4%
+<span id="L896" class="ln">   896</span>		gc_B pidigits	3.73u 0.00s 3.73r # +4%
+<span id="L897" class="ln">   897</span>	
+<span id="L898" class="ln">   898</span>	threadring 50000000
+<span id="L899" class="ln">   899</span>		gc threadring	14.51u 0.00s 14.54r # -17%
+<span id="L900" class="ln">   900</span>	
+<span id="L901" class="ln">   901</span>	chameneos 6000000
+<span id="L902" class="ln">   902</span>		gc chameneosredux	7.41u 0.00s 7.42r # -3%
+<span id="L903" class="ln">   903</span>	
+<span id="L904" class="ln">   904</span>	# A complete run at the Go 1 release.
+<span id="L905" class="ln">   905</span>	# Significant changes:
+<span id="L906" class="ln">   906</span>	# - gccgo is now enabled for all tests (goroutines are cheap enough)
+<span id="L907" class="ln">   907</span>	# - threadring and chameneos are 14% faster, probably due to runtime changes
+<span id="L908" class="ln">   908</span>	# - regex-dna 36% faster
+<span id="L909" class="ln">   909</span>	# - fannkuch-parallel (only) slowed down 40%
+<span id="L910" class="ln">   910</span>	# - gccgo on binary-tree-freelist is still optimized to nothing
+<span id="L911" class="ln">   911</span>	# Other changes are modest.
+<span id="L912" class="ln">   912</span>	
+<span id="L913" class="ln">   913</span>	fasta -n 25000000
+<span id="L914" class="ln">   914</span>		gcc -O2 fasta.c	1.45u 0.02s 1.48r
+<span id="L915" class="ln">   915</span>		gccgo -O2 fasta.go	1.46u 0.00s 1.47r
+<span id="L916" class="ln">   916</span>		gc fasta	1.99u 0.01s 2.00r
+<span id="L917" class="ln">   917</span>		gc_B fasta	1.99u 0.01s 2.01r
+<span id="L918" class="ln">   918</span>	
+<span id="L919" class="ln">   919</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L920" class="ln">   920</span>		gcc -O2 reverse-complement.c	0.95u 0.48s 4.99r
+<span id="L921" class="ln">   921</span>		gccgo -O2 reverse-complement.go	0.93u 0.16s 1.09r
+<span id="L922" class="ln">   922</span>		gc reverse-complement	1.20u 0.19s 1.39r
+<span id="L923" class="ln">   923</span>		gc_B reverse-complement	1.04u 0.16s 1.20r
+<span id="L924" class="ln">   924</span>	
+<span id="L925" class="ln">   925</span>	nbody -n 50000000
+<span id="L926" class="ln">   926</span>		gcc -O2 -lm nbody.c	13.02u 0.00s 13.05r
+<span id="L927" class="ln">   927</span>		gccgo -O2 nbody.go	14.46u 0.00s 14.49r
+<span id="L928" class="ln">   928</span>		gc nbody	21.79u 0.00s 21.84r
+<span id="L929" class="ln">   929</span>		gc_B nbody	21.74u 0.00s 21.79r
+<span id="L930" class="ln">   930</span>	
+<span id="L931" class="ln">   931</span>	binary-tree 15 # too slow to use 20
+<span id="L932" class="ln">   932</span>		gcc -O2 binary-tree.c -lm	0.60u 0.01s 0.61r
+<span id="L933" class="ln">   933</span>		gccgo -O2 binary-tree.go	1.30u 0.01s 1.32r
+<span id="L934" class="ln">   934</span>		gccgo -O2 binary-tree-freelist.go	0.00u 0.00s 0.00r
+<span id="L935" class="ln">   935</span>		gc binary-tree	1.84u 0.01s 1.86r
+<span id="L936" class="ln">   936</span>		gc binary-tree-freelist	0.33u 0.00s 0.33r
+<span id="L937" class="ln">   937</span>	
+<span id="L938" class="ln">   938</span>	fannkuch 12
+<span id="L939" class="ln">   939</span>		gcc -O2 fannkuch.c	45.24u 0.00s 45.34r
+<span id="L940" class="ln">   940</span>		gccgo -O2 fannkuch.go	59.76u 0.01s 59.90r
+<span id="L941" class="ln">   941</span>		gccgo -O2 fannkuch-parallel.go	218.20u 0.01s 61.60r
+<span id="L942" class="ln">   942</span>		gc fannkuch	103.92u 0.00s 104.16r
+<span id="L943" class="ln">   943</span>		gc fannkuch-parallel	221.61u 0.00s 60.49r
+<span id="L944" class="ln">   944</span>		gc_B fannkuch	53.17u 0.00s 53.30r
+<span id="L945" class="ln">   945</span>	
+<span id="L946" class="ln">   946</span>	regex-dna 100000
+<span id="L947" class="ln">   947</span>		gcc -O2 regex-dna.c -lpcre	0.47u 0.00s 0.48r
+<span id="L948" class="ln">   948</span>		gccgo -O2 regex-dna.go	6.52u 0.00s 6.54r
+<span id="L949" class="ln">   949</span>		gccgo -O2 regex-dna-parallel.go	14.40u 0.73s 4.35r
+<span id="L950" class="ln">   950</span>		gc regex-dna	2.63u 0.02s 2.66r # -36%
+<span id="L951" class="ln">   951</span>		gc regex-dna-parallel	2.87u 0.01s 1.11r
+<span id="L952" class="ln">   952</span>		gc_B regex-dna	2.65u 0.00s 2.66r
+<span id="L953" class="ln">   953</span>	
+<span id="L954" class="ln">   954</span>	spectral-norm 5500
+<span id="L955" class="ln">   955</span>		gcc -O2 spectral-norm.c -lm	15.78u 0.00s 15.82r
+<span id="L956" class="ln">   956</span>		gccgo -O2 spectral-norm.go	15.79u 0.00s 15.83r
+<span id="L957" class="ln">   957</span>		gc spectral-norm	19.76u 0.00s 19.80r
+<span id="L958" class="ln">   958</span>		gc_B spectral-norm	19.73u 0.01s 19.78r
+<span id="L959" class="ln">   959</span>	
+<span id="L960" class="ln">   960</span>	k-nucleotide 1000000
+<span id="L961" class="ln">   961</span>		gcc -O2  k-nucleotide.c	5.59u 0.03s 5.63r
+<span id="L962" class="ln">   962</span>		gccgo -O2 k-nucleotide.go	4.09u 0.03s 4.13r
+<span id="L963" class="ln">   963</span>		gccgo -O2 k-nucleotide-parallel.go	4.50u 0.06s 1.63r
+<span id="L964" class="ln">   964</span>		gc k-nucleotide	9.23u 0.02s 9.27r
+<span id="L965" class="ln">   965</span>		gc k-nucleotide-parallel	9.87u 0.03s 3.55r
+<span id="L966" class="ln">   966</span>		gc_B k-nucleotide	9.20u 0.00s 9.22r
+<span id="L967" class="ln">   967</span>	
+<span id="L968" class="ln">   968</span>	mandelbrot 16000
+<span id="L969" class="ln">   969</span>		gcc -O2 mandelbrot.c	36.09u 0.00s 36.18r
+<span id="L970" class="ln">   970</span>		gccgo -O2 mandelbrot.go	41.69u 0.01s 41.80r
+<span id="L971" class="ln">   971</span>		gc mandelbrot	60.91u 0.02s 61.07r
+<span id="L972" class="ln">   972</span>		gc_B mandelbrot	60.90u 0.00s 61.04r
+<span id="L973" class="ln">   973</span>	
+<span id="L974" class="ln">   974</span>	meteor 2098
+<span id="L975" class="ln">   975</span>		gcc -O2 meteor-contest.c	0.09u 0.00s 0.09r
+<span id="L976" class="ln">   976</span>		gccgo -O2 meteor-contest.go	0.09u 0.00s 0.09r
+<span id="L977" class="ln">   977</span>		gc meteor-contest	0.14u 0.00s 0.15r
+<span id="L978" class="ln">   978</span>		gc_B meteor-contest	0.14u 0.00s 0.14r
+<span id="L979" class="ln">   979</span>	
+<span id="L980" class="ln">   980</span>	pidigits 10000
+<span id="L981" class="ln">   981</span>		gcc -O2 pidigits.c -lgmp	2.27u 0.00s 2.27r
+<span id="L982" class="ln">   982</span>		gccgo -O2 pidigits.go	8.65u 0.00s 8.67r
+<span id="L983" class="ln">   983</span>		gc pidigits	3.70u 0.04s 3.75r
+<span id="L984" class="ln">   984</span>		gc_B pidigits	3.72u 0.02s 3.75r
+<span id="L985" class="ln">   985</span>	
+<span id="L986" class="ln">   986</span>	threadring 50000000
+<span id="L987" class="ln">   987</span>		gcc -O2 threadring.c	40.91u 369.85s 323.31r
+<span id="L988" class="ln">   988</span>		gccgo -O2 threadring.go	26.97u 30.82s 57.93r
+<span id="L989" class="ln">   989</span>		gc threadring	12.81u 0.01s 12.85r # -13%
+<span id="L990" class="ln">   990</span>	
+<span id="L991" class="ln">   991</span>	chameneos 6000000
+<span id="L992" class="ln">   992</span>		gcc -O2 chameneosredux.c -lpthread	9.44u 72.90s 12.65r
+<span id="L993" class="ln">   993</span>		gccgo -O2 chameneosredux.go	7.73u 7.53s 15.30r
+<span id="L994" class="ln">   994</span>		gc chameneosredux	6.51u 0.00s 6.53r # - 14%
+<span id="L995" class="ln">   995</span>	
+<span id="L996" class="ln">   996</span>	# After http://codereview.appspot.com/6248049, moving panicindex
+<span id="L997" class="ln">   997</span>	# calls out of line (putting the likely code into a single path and shortening
+<span id="L998" class="ln">   998</span>	# loops). Significant changes since the last run (note: some are slower for
+<span id="L999" class="ln">   999</span>	# unrelated and as yet undiagnosed reasons):
+<span id="L1000" class="ln">  1000</span>	
+<span id="L1001" class="ln">  1001</span>	nbody -n 50000000
+<span id="L1002" class="ln">  1002</span>		gc nbody	19.10u 0.01s 19.19r # -12%
+<span id="L1003" class="ln">  1003</span>		gc_B nbody	19.19u 0.00s 19.23r # -12%
+<span id="L1004" class="ln">  1004</span>	
+<span id="L1005" class="ln">  1005</span>	binary-tree 15 # too slow to use 20
+<span id="L1006" class="ln">  1006</span>		gc binary-tree	1.49u 0.01s 1.51r # -19%
+<span id="L1007" class="ln">  1007</span>		
+<span id="L1008" class="ln">  1008</span>	fannkuch 12
+<span id="L1009" class="ln">  1009</span>		gc fannkuch	60.79u 0.00s 60.92r # -41%
+<span id="L1010" class="ln">  1010</span>		gc fannkuch-parallel	183.51u 0.01s 51.75r # -14%
+<span id="L1011" class="ln">  1011</span>		gc_B fannkuch	51.68u 0.00s 51.79r # -3%
+<span id="L1012" class="ln">  1012</span>	
+<span id="L1013" class="ln">  1013</span>	k-nucleotide 1000000
+<span id="L1014" class="ln">  1014</span>		gc k-nucleotide	9.74u 0.04s 9.80r # +6%
+<span id="L1015" class="ln">  1015</span>		gc k-nucleotide-parallel	9.89u 0.05s 3.59r # +1%
+<span id="L1016" class="ln">  1016</span>		gc_B k-nucleotide	9.39u 0.02s 9.43r # +2%
+<span id="L1017" class="ln">  1017</span>	
+<span id="L1018" class="ln">  1018</span>	mandelbrot (much slower, due to unrelated http://codereview.appspot.com/6209077)
+<span id="L1019" class="ln">  1019</span>		gc mandelbrot	100.98u 0.00s 101.20r # +65%
+<span id="L1020" class="ln">  1020</span>		gc_B mandelbrot	100.90u 0.01s 101.17r # +65%
+<span id="L1021" class="ln">  1021</span>	
+<span id="L1022" class="ln">  1022</span>	meteor 2098
+<span id="L1023" class="ln">  1023</span>		gc meteor-contest	0.13u 0.00s 0.13r # -13%
+<span id="L1024" class="ln">  1024</span>		gc_B meteor-contest	0.13u 0.00s 0.13r # -7%
+<span id="L1025" class="ln">  1025</span>	
+<span id="L1026" class="ln">  1026</span>	# May 30, 2012.
+<span id="L1027" class="ln">  1027</span>	# After http://codereview.appspot.com/6261051, restoring old code generated
+<span id="L1028" class="ln">  1028</span>	# for floating-point constants. Mandelbrot is back to its previous numbers.
+<span id="L1029" class="ln">  1029</span>	
+<span id="L1030" class="ln">  1030</span>	mandelbrot 16000
+<span id="L1031" class="ln">  1031</span>		gcc -O2 mandelbrot.c	36.07u 0.00s 36.16r
+<span id="L1032" class="ln">  1032</span>		gccgo -O2 mandelbrot.go	41.72u 0.01s 41.90r
+<span id="L1033" class="ln">  1033</span>		gc mandelbrot	60.62u 0.00s 60.76r
+<span id="L1034" class="ln">  1034</span>		gc_B mandelbrot	60.68u 0.00s 60.82r
+<span id="L1035" class="ln">  1035</span>	
+<span id="L1036" class="ln">  1036</span>	# May 30, 2012.
+<span id="L1037" class="ln">  1037</span>	# After http://codereview.appspot.com/6248068, better FP code
+<span id="L1038" class="ln">  1038</span>	# by avoiding MOVSD between registers.
+<span id="L1039" class="ln">  1039</span>	# Plus some other timing changes that have crept in from other speedups,
+<span id="L1040" class="ln">  1040</span>	# from garbage collection to Printf.
+<span id="L1041" class="ln">  1041</span>	
+<span id="L1042" class="ln">  1042</span>	fasta -n 25000000
+<span id="L1043" class="ln">  1043</span>		gc fasta	1.76u 0.00s 1.76r # -12%
+<span id="L1044" class="ln">  1044</span>		gc_B fasta	1.71u 0.00s 1.72r # -12%
+<span id="L1045" class="ln">  1045</span>	
+<span id="L1046" class="ln">  1046</span>	nbody -n 50000000
+<span id="L1047" class="ln">  1047</span>		gc nbody	17.56u 0.00s 17.60r # -8%
+<span id="L1048" class="ln">  1048</span>		gc_B nbody	17.30u 0.00s 17.34r # -10%
+<span id="L1049" class="ln">  1049</span>	
+<span id="L1050" class="ln">  1050</span>	fannkuch 12
+<span id="L1051" class="ln">  1051</span>		gc fannkuch-parallel	155.92u 0.01s 44.05r # -15%
+<span id="L1052" class="ln">  1052</span>	
+<span id="L1053" class="ln">  1053</span>	k-nucleotide 1000000
+<span id="L1054" class="ln">  1054</span>		gc k-nucleotide	9.22u 0.01s 9.26r # -5%
+<span id="L1055" class="ln">  1055</span>		gc k-nucleotide-parallel	9.23u 0.03s 3.26r # -9%
+<span id="L1056" class="ln">  1056</span>		gc_B k-nucleotide	9.22u 0.03s 9.28r # -2%
+<span id="L1057" class="ln">  1057</span>	
+<span id="L1058" class="ln">  1058</span>	mandelbrot 16000
+<span id="L1059" class="ln">  1059</span>		gc mandelbrot	44.80u 0.00s 44.90r # -27%
+<span id="L1060" class="ln">  1060</span>		gc_B mandelbrot	44.81u 0.00s 44.92r # -26%
+<span id="L1061" class="ln">  1061</span>	
+<span id="L1062" class="ln">  1062</span>	pidigits 10000
+<span id="L1063" class="ln">  1063</span>		gc pidigits	3.51u 0.00s 3.52r # -6%
+<span id="L1064" class="ln">  1064</span>		gc_B pidigits	3.51u 0.00s 3.52r # -6%
+<span id="L1065" class="ln">  1065</span>	
+<span id="L1066" class="ln">  1066</span>	# Aug 28, 2012
+<span id="L1067" class="ln">  1067</span>	# After some assembler work in package big.
+<span id="L1068" class="ln">  1068</span>	pidigits 10000
+<span id="L1069" class="ln">  1069</span>		gc pidigits	2.85u 0.02s 2.88r # -22%
+<span id="L1070" class="ln">  1070</span>		gc_B pidigits	2.88u 0.01s 2.90r # -21%
+<span id="L1071" class="ln">  1071</span>	
+<span id="L1072" class="ln">  1072</span>	# Sep 26, 2012
+<span id="L1073" class="ln">  1073</span>	# 64-bit ints, plus significantly better floating-point code.
+<span id="L1074" class="ln">  1074</span>	# Interesting details:
+<span id="L1075" class="ln">  1075</span>	# 	Generally something in the 0-10% slower range, some (binary tree) more
+<span id="L1076" class="ln">  1076</span>	#	Floating-point noticeably faster:
+<span id="L1077" class="ln">  1077</span>	#		nbody -25%
+<span id="L1078" class="ln">  1078</span>	#		mandelbrot -37% relative to Go 1.
+<span id="L1079" class="ln">  1079</span>	#	Other:
+<span id="L1080" class="ln">  1080</span>	#		regex-dna +47%
+<span id="L1081" class="ln">  1081</span>	fasta -n 25000000
+<span id="L1082" class="ln">  1082</span>		gcc -O2 fasta.c	1.43u 0.03s 1.46r
+<span id="L1083" class="ln">  1083</span>		gccgo -O2 fasta.go	1.47u 0.00s 1.47r
+<span id="L1084" class="ln">  1084</span>		gc fasta	1.78u 0.01s 1.80r
+<span id="L1085" class="ln">  1085</span>		gc_B fasta	1.76u 0.00s 1.76r
+<span id="L1086" class="ln">  1086</span>	
+<span id="L1087" class="ln">  1087</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L1088" class="ln">  1088</span>		gcc -O2 reverse-complement.c	1.14u 0.39s 11.19r
+<span id="L1089" class="ln">  1089</span>		gccgo -O2 reverse-complement.go	0.91u 0.17s 1.09r
+<span id="L1090" class="ln">  1090</span>		gc reverse-complement	1.12u 0.18s 1.31r
+<span id="L1091" class="ln">  1091</span>		gc_B reverse-complement	1.12u 0.15s 1.28r
+<span id="L1092" class="ln">  1092</span>	
+<span id="L1093" class="ln">  1093</span>	nbody -n 50000000
+<span id="L1094" class="ln">  1094</span>		gcc -O2 nbody.c -lm	13.02u 0.00s 13.05r
+<span id="L1095" class="ln">  1095</span>		gccgo -O2 nbody.go	13.90u 0.00s 13.93r
+<span id="L1096" class="ln">  1096</span>		gc nbody	17.05u 0.00s 17.09r
+<span id="L1097" class="ln">  1097</span>		gc_B nbody	16.30u 0.00s 16.34r
+<span id="L1098" class="ln">  1098</span>	
+<span id="L1099" class="ln">  1099</span>	binary-tree 15 # too slow to use 20
+<span id="L1100" class="ln">  1100</span>		gcc -O2 binary-tree.c -lm	0.61u 0.00s 0.61r
+<span id="L1101" class="ln">  1101</span>		gccgo -O2 binary-tree.go	1.24u 0.04s 1.29r
+<span id="L1102" class="ln">  1102</span>		gccgo -O2 binary-tree-freelist.go	0.21u 0.01s 0.22r
+<span id="L1103" class="ln">  1103</span>		gc binary-tree	1.93u 0.02s 1.96r
+<span id="L1104" class="ln">  1104</span>		gc binary-tree-freelist	0.32u 0.00s 0.33r
+<span id="L1105" class="ln">  1105</span>	
+<span id="L1106" class="ln">  1106</span>	fannkuch 12
+<span id="L1107" class="ln">  1107</span>		gcc -O2 fannkuch.c	45.19u 0.00s 45.29r
+<span id="L1108" class="ln">  1108</span>		gccgo -O2 fannkuch.go	60.32u 0.00s 60.45r
+<span id="L1109" class="ln">  1109</span>		gccgo -O2 fannkuch-parallel.go	185.59u 0.00s 59.49r
+<span id="L1110" class="ln">  1110</span>		gc fannkuch	72.14u 0.00s 72.30r
+<span id="L1111" class="ln">  1111</span>		gc fannkuch-parallel	172.54u 0.00s 43.59r
+<span id="L1112" class="ln">  1112</span>		gc_B fannkuch	53.55u 0.00s 53.67r
+<span id="L1113" class="ln">  1113</span>	
+<span id="L1114" class="ln">  1114</span>	regex-dna 100000
+<span id="L1115" class="ln">  1115</span>		gcc -O2 regex-dna.c -lpcre	0.47u 0.00s 0.47r
+<span id="L1116" class="ln">  1116</span>		gccgo -O2 regex-dna.go	6.49u 0.05s 6.56r
+<span id="L1117" class="ln">  1117</span>		gccgo -O2 regex-dna-parallel.go	14.60u 0.67s 4.42r
+<span id="L1118" class="ln">  1118</span>		gc regex-dna	3.91u 0.00s 3.92r
+<span id="L1119" class="ln">  1119</span>		gc regex-dna-parallel	4.01u 0.03s 1.56r
+<span id="L1120" class="ln">  1120</span>		gc_B regex-dna	3.91u 0.00s 3.92r
+<span id="L1121" class="ln">  1121</span>	
+<span id="L1122" class="ln">  1122</span>	spectral-norm 5500
+<span id="L1123" class="ln">  1123</span>		gcc -O2 spectral-norm.c -lm	15.85u 0.00s 15.89r
+<span id="L1124" class="ln">  1124</span>		gccgo -O2 spectral-norm.go	15.86u 0.00s 15.89r
+<span id="L1125" class="ln">  1125</span>		gc spectral-norm	19.72u 0.00s 19.76r
+<span id="L1126" class="ln">  1126</span>		gc_B spectral-norm	19.68u 0.01s 19.74r
+<span id="L1127" class="ln">  1127</span>	
+<span id="L1128" class="ln">  1128</span>	k-nucleotide 1000000
+<span id="L1129" class="ln">  1129</span>		gcc -O2 k-nucleotide.c -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -lglib-2.0 	4.90u 0.01s 4.93r
+<span id="L1130" class="ln">  1130</span>		gccgo -O2 k-nucleotide.go	4.78u 0.01s 4.80r
+<span id="L1131" class="ln">  1131</span>		gccgo -O2 k-nucleotide-parallel.go	6.49u 0.02s 2.18r
+<span id="L1132" class="ln">  1132</span>		gc k-nucleotide	9.05u 0.02s 9.09r
+<span id="L1133" class="ln">  1133</span>		gc k-nucleotide-parallel	9.27u 0.01s 3.29r
+<span id="L1134" class="ln">  1134</span>		gc_B k-nucleotide	8.95u 0.03s 9.00r
+<span id="L1135" class="ln">  1135</span>	
+<span id="L1136" class="ln">  1136</span>	mandelbrot 16000
+<span id="L1137" class="ln">  1137</span>		gcc -O2 mandelbrot.c	36.11u 0.00s 36.19r
+<span id="L1138" class="ln">  1138</span>		gccgo -O2 mandelbrot.go	43.67u 0.00s 43.77r
+<span id="L1139" class="ln">  1139</span>		gc mandelbrot	38.57u 0.00s 38.66r
+<span id="L1140" class="ln">  1140</span>		gc_B mandelbrot	38.59u 0.00s 38.68r
+<span id="L1141" class="ln">  1141</span>	
+<span id="L1142" class="ln">  1142</span>	meteor 2098
+<span id="L1143" class="ln">  1143</span>		gcc -O2 meteor-contest.c	0.09u 0.00s 0.09r
+<span id="L1144" class="ln">  1144</span>		gccgo -O2 meteor-contest.go	0.09u 0.00s 0.09r
+<span id="L1145" class="ln">  1145</span>		gc meteor-contest	0.13u 0.00s 0.14r
+<span id="L1146" class="ln">  1146</span>		gc_B meteor-contest	0.12u 0.00s 0.13r
+<span id="L1147" class="ln">  1147</span>	
+<span id="L1148" class="ln">  1148</span>	pidigits 10000
+<span id="L1149" class="ln">  1149</span>		gcc -O2 pidigits.c -lgmp	2.26u 0.00s 2.27r
+<span id="L1150" class="ln">  1150</span>		gccgo -O2 pidigits.go	9.05u 0.00s 9.07r
+<span id="L1151" class="ln">  1151</span>		gc pidigits	2.88u 0.02s 2.90r
+<span id="L1152" class="ln">  1152</span>		gc_B pidigits	2.89u 0.00s 2.90r
+<span id="L1153" class="ln">  1153</span>	
+<span id="L1154" class="ln">  1154</span>	threadring 50000000
+<span id="L1155" class="ln">  1155</span>		gcc -O2 threadring.c -lpthread	37.30u 327.81s 289.28r
+<span id="L1156" class="ln">  1156</span>		gccgo -O2 threadring.go	42.83u 26.15s 69.14r
+<span id="L1157" class="ln">  1157</span>		gc threadring	13.00u 0.00s 13.03r
+<span id="L1158" class="ln">  1158</span>	
+<span id="L1159" class="ln">  1159</span>	chameneos 6000000
+<span id="L1160" class="ln">  1160</span>		gcc -O2 chameneosredux.c -lpthread	8.80u 71.67s 12.19r
+<span id="L1161" class="ln">  1161</span>		gccgo -O2 chameneosredux.go	11.28u 6.68s 18.00r
+<span id="L1162" class="ln">  1162</span>		gc chameneosredux	6.94u 0.00s 6.96r
+<span id="L1163" class="ln">  1163</span>	
+<span id="L1164" class="ln">  1164</span>	# May 23, 2013
+<span id="L1165" class="ln">  1165</span>	# Go 1.1, which includes precise GC, new scheduler, faster maps.
+<span id="L1166" class="ln">  1166</span>	# 20%-ish speedups across many benchmarks.
+<span id="L1167" class="ln">  1167</span>	# gccgo showing significant improvement (even though it&#39;s not yet up to Go 1.1)
+<span id="L1168" class="ln">  1168</span>	#
+<span id="L1169" class="ln">  1169</span>	# Standouts:
+<span id="L1170" class="ln">  1170</span>	#	fannkuch, regex-dna, k-nucleotide, threadring, chameneos
+<span id="L1171" class="ln">  1171</span>	
+<span id="L1172" class="ln">  1172</span>	fasta -n 25000000
+<span id="L1173" class="ln">  1173</span>		gcc -m64 -O2 fasta.c	1.54u 0.01s 1.55r
+<span id="L1174" class="ln">  1174</span>		gccgo -O2 fasta.go	1.42u 0.00s 1.43r
+<span id="L1175" class="ln">  1175</span>		gc fasta	1.50u 0.01s 1.52r # -16%
+<span id="L1176" class="ln">  1176</span>		gc_B fasta	1.46u 0.00s 1.46r # -17%
+<span id="L1177" class="ln">  1177</span>	
+<span id="L1178" class="ln">  1178</span>	reverse-complement &lt; output-of-fasta-25000000
+<span id="L1179" class="ln">  1179</span>		gcc -m64 -O2 reverse-complement.c	0.87u 0.37s 4.36r
+<span id="L1180" class="ln">  1180</span>		gccgo -O2 reverse-complement.go	0.77u 0.15s 0.93r # -15%
+<span id="L1181" class="ln">  1181</span>		gc reverse-complement	0.99u 0.12s 1.12r # -15%
+<span id="L1182" class="ln">  1182</span>		gc_B reverse-complement	0.85u 0.17s 1.02r # -21%
+<span id="L1183" class="ln">  1183</span>	
+<span id="L1184" class="ln">  1184</span>	nbody -n 50000000
+<span id="L1185" class="ln">  1185</span>		gcc -m64 -O2 nbody.c -lm	13.50u 0.00s 13.53r
+<span id="L1186" class="ln">  1186</span>		gccgo -O2 nbody.go	13.98u 0.01s 14.02r
+<span id="L1187" class="ln">  1187</span>		gc nbody	16.63u 0.01s 16.67r
+<span id="L1188" class="ln">  1188</span>		gc_B nbody	15.74u 0.00s 15.76r
+<span id="L1189" class="ln">  1189</span>	
+<span id="L1190" class="ln">  1190</span>	binary-tree 15 # too slow to use 20
+<span id="L1191" class="ln">  1191</span>		gcc -m64 -O2 binary-tree.c -lm	0.61u 0.00s 0.61r
+<span id="L1192" class="ln">  1192</span>		gccgo -O2 binary-tree.go	1.11u 0.01s 1.12r # -13%
+<span id="L1193" class="ln">  1193</span>		gccgo -O2 binary-tree-freelist.go	0.22u 0.01s 0.23r
+<span id="L1194" class="ln">  1194</span>		gc binary-tree	1.83u 0.02s 1.83r # -7%
+<span id="L1195" class="ln">  1195</span>		gc binary-tree-freelist	0.32u 0.00s 0.32r
+<span id="L1196" class="ln">  1196</span>	
+<span id="L1197" class="ln">  1197</span>	fannkuch 12
+<span id="L1198" class="ln">  1198</span>		gcc -m64 -O2 fannkuch.c	45.56u 0.00s 45.67r
+<span id="L1199" class="ln">  1199</span>		gccgo -O2 fannkuch.go	57.71u 0.00s 57.85r # -4%
+<span id="L1200" class="ln">  1200</span>		gccgo -O2 fannkuch-parallel.go	146.31u 0.00s 37.50r #-37%
+<span id="L1201" class="ln">  1201</span>		gc fannkuch	70.06u 0.03s 70.17r # -3%
+<span id="L1202" class="ln">  1202</span>		gc fannkuch-parallel	131.88u 0.06s 33.59r # -23%
+<span id="L1203" class="ln">  1203</span>		gc_B fannkuch	45.55u 0.02s 45.63r # -15%
+<span id="L1204" class="ln">  1204</span>	
+<span id="L1205" class="ln">  1205</span>	regex-dna 100000
+<span id="L1206" class="ln">  1206</span>		gcc -m64 -O2 regex-dna.c -lpcre	0.44u 0.01s 0.45r
+<span id="L1207" class="ln">  1207</span>		gccgo -O2 regex-dna.go	5.59u 0.00s 5.61r # -14%
+<span id="L1208" class="ln">  1208</span>		gccgo -O2 regex-dna-parallel.go	10.85u 0.30s 3.34r # -24%
+<span id="L1209" class="ln">  1209</span>		gc regex-dna	2.23u 0.01s 2.25r # -43%
+<span id="L1210" class="ln">  1210</span>		gc regex-dna-parallel	2.35u 0.00s 0.93r # -40%
+<span id="L1211" class="ln">  1211</span>		gc_B regex-dna	2.24u 0.01s 2.25r # -43%
+<span id="L1212" class="ln">  1212</span>	
+<span id="L1213" class="ln">  1213</span>	spectral-norm 5500
+<span id="L1214" class="ln">  1214</span>		gcc -m64 -O2 spectral-norm.c -lm	14.84u 0.00s 14.88r
+<span id="L1215" class="ln">  1215</span>		gccgo -O2 spectral-norm.go	15.33u 0.00s 15.37r
+<span id="L1216" class="ln">  1216</span>		gc spectral-norm	16.75u 0.02s 16.79r # -15%
+<span id="L1217" class="ln">  1217</span>		gc_B spectral-norm	16.77u 0.01s 16.79r # -15%
+<span id="L1218" class="ln">  1218</span>	
+<span id="L1219" class="ln">  1219</span>	k-nucleotide 1000000
+<span id="L1220" class="ln">  1220</span>		gcc -O2 k-nucleotide.c -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -lglib-2.0 	4.50u 0.00s 4.52r
+<span id="L1221" class="ln">  1221</span>		gccgo -O2 k-nucleotide.go	3.72u 0.04s 3.77r # -21%
+<span id="L1222" class="ln">  1222</span>		gccgo -O2 k-nucleotide-parallel.go	3.88u 0.03s 1.42r # -35%
+<span id="L1223" class="ln">  1223</span>		gc k-nucleotide	6.32u 0.01s 6.33r # -31%
+<span id="L1224" class="ln">  1224</span>		gc k-nucleotide-parallel	6.47u 0.05s 2.13r # -33%
+<span id="L1225" class="ln">  1225</span>		gc_B k-nucleotide	6.45u 0.01s 6.47r # - 28%
+<span id="L1226" class="ln">  1226</span>	
+<span id="L1227" class="ln">  1227</span>	mandelbrot 16000
+<span id="L1228" class="ln">  1228</span>		gcc -m64 -O2 mandelbrot.c	36.03u 0.00s 36.11r
+<span id="L1229" class="ln">  1229</span>		gccgo -O2 mandelbrot.go	37.61u 0.00s 37.74r # -14%
+<span id="L1230" class="ln">  1230</span>		gc mandelbrot	38.19u 0.05s 38.29r
+<span id="L1231" class="ln">  1231</span>		gc_B mandelbrot	38.19u 0.03s 38.26r
+<span id="L1232" class="ln">  1232</span>	
+<span id="L1233" class="ln">  1233</span>	meteor 2098
+<span id="L1234" class="ln">  1234</span>		gcc -m64 -O2 meteor-contest.c	0.08u 0.00s 0.08r
+<span id="L1235" class="ln">  1235</span>		gccgo -O2 meteor-contest.go	0.09u 0.01s 0.10r
+<span id="L1236" class="ln">  1236</span>		gc meteor-contest	0.12u 0.00s 0.12r # -15% although perhaps just noise
+<span id="L1237" class="ln">  1237</span>		gc_B meteor-contest	0.11u 0.00s 0.12r # -8% although perhaps just noise
+<span id="L1238" class="ln">  1238</span>	
+<span id="L1239" class="ln">  1239</span>	pidigits 10000
+<span id="L1240" class="ln">  1240</span>		gcc -m64 -O2 pidigits.c -lgmp	2.27u 0.00s 2.28r
+<span id="L1241" class="ln">  1241</span>		gccgo -O2 pidigits.go	8.95u 0.02s 8.99r
+<span id="L1242" class="ln">  1242</span>		gc pidigits	2.88u 0.14s 2.91r
+<span id="L1243" class="ln">  1243</span>		gc_B pidigits	2.92u 0.10s 2.91r
+<span id="L1244" class="ln">  1244</span>	
+<span id="L1245" class="ln">  1245</span>	threadring 50000000
+<span id="L1246" class="ln">  1246</span>		gcc -m64 -O2 threadring.c -lpthread	14.75u 167.88s 212.23r
+<span id="L1247" class="ln">  1247</span>		gccgo -O2 threadring.go	36.72u 12.08s 48.91r # -29%
+<span id="L1248" class="ln">  1248</span>		gc threadring	10.93u 0.01s 10.95r # -16%
+<span id="L1249" class="ln">  1249</span>	
+<span id="L1250" class="ln">  1250</span>	chameneos 6000000
+<span id="L1251" class="ln">  1251</span>		gcc -m64 -O2 chameneosredux.c -lpthread	8.89u 56.62s 9.75r
+<span id="L1252" class="ln">  1252</span>		gccgo -O2 chameneosredux.go	9.48u 2.48s 11.99r # -33%
+<span id="L1253" class="ln">  1253</span>		gc chameneosredux	5.80u 0.00s 5.81r # -16%
+<span id="L1254" class="ln">  1254</span>	
+</pre><p><a href="timing.log%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

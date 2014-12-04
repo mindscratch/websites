@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>test/bench/shootout/k-nucleotide-parallel.txt - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file test/bench/shootout/k-nucleotide-parallel.txt</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	T 31.520
+<span id="L2" class="ln">     2</span>	A 29.600
+<span id="L3" class="ln">     3</span>	C 19.480
+<span id="L4" class="ln">     4</span>	G 19.400
+<span id="L5" class="ln">     5</span>	
+<span id="L6" class="ln">     6</span>	AT 9.922
+<span id="L7" class="ln">     7</span>	TT 9.602
+<span id="L8" class="ln">     8</span>	TA 9.402
+<span id="L9" class="ln">     9</span>	AA 8.402
+<span id="L10" class="ln">    10</span>	GA 6.321
+<span id="L11" class="ln">    11</span>	TC 6.301
+<span id="L12" class="ln">    12</span>	TG 6.201
+<span id="L13" class="ln">    13</span>	GT 6.041
+<span id="L14" class="ln">    14</span>	CT 5.961
+<span id="L15" class="ln">    15</span>	AG 5.841
+<span id="L16" class="ln">    16</span>	CA 5.461
+<span id="L17" class="ln">    17</span>	AC 5.441
+<span id="L18" class="ln">    18</span>	CC 4.041
+<span id="L19" class="ln">    19</span>	CG 4.021
+<span id="L20" class="ln">    20</span>	GC 3.701
+<span id="L21" class="ln">    21</span>	GG 3.341
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	54 GGT
+<span id="L24" class="ln">    24</span>	24 GGTA
+<span id="L25" class="ln">    25</span>	4 GGTATT
+<span id="L26" class="ln">    26</span>	0 GGTATTTTAATT
+<span id="L27" class="ln">    27</span>	0 GGTATTTTAATTTATAGT
+</pre><p><a href="k-nucleotide-parallel.txt%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

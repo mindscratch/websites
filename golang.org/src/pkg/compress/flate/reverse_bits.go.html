@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/compress/flate/reverse_bits.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/compress/flate/reverse_bits.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package flate
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	var reverseByte = [256]byte{
+<span id="L8" class="ln">     8</span>		0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
+<span id="L9" class="ln">     9</span>		0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+<span id="L10" class="ln">    10</span>		0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
+<span id="L11" class="ln">    11</span>		0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+<span id="L12" class="ln">    12</span>		0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
+<span id="L13" class="ln">    13</span>		0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+<span id="L14" class="ln">    14</span>		0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
+<span id="L15" class="ln">    15</span>		0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+<span id="L16" class="ln">    16</span>		0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
+<span id="L17" class="ln">    17</span>		0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+<span id="L18" class="ln">    18</span>		0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
+<span id="L19" class="ln">    19</span>		0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+<span id="L20" class="ln">    20</span>		0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
+<span id="L21" class="ln">    21</span>		0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+<span id="L22" class="ln">    22</span>		0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
+<span id="L23" class="ln">    23</span>		0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+<span id="L24" class="ln">    24</span>		0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
+<span id="L25" class="ln">    25</span>		0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+<span id="L26" class="ln">    26</span>		0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
+<span id="L27" class="ln">    27</span>		0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+<span id="L28" class="ln">    28</span>		0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
+<span id="L29" class="ln">    29</span>		0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+<span id="L30" class="ln">    30</span>		0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
+<span id="L31" class="ln">    31</span>		0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+<span id="L32" class="ln">    32</span>		0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
+<span id="L33" class="ln">    33</span>		0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+<span id="L34" class="ln">    34</span>		0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
+<span id="L35" class="ln">    35</span>		0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+<span id="L36" class="ln">    36</span>		0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
+<span id="L37" class="ln">    37</span>		0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+<span id="L38" class="ln">    38</span>		0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
+<span id="L39" class="ln">    39</span>		0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
+<span id="L40" class="ln">    40</span>	}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	func reverseUint16(v uint16) uint16 {
+<span id="L43" class="ln">    43</span>		return uint16(reverseByte[v&gt;&gt;8]) | uint16(reverseByte[v&amp;0xFF])&lt;&lt;8
+<span id="L44" class="ln">    44</span>	}
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	func reverseBits(number uint16, bitLength byte) uint16 {
+<span id="L47" class="ln">    47</span>		return reverseUint16(number &lt;&lt; uint8(16-bitLength))
+<span id="L48" class="ln">    48</span>	}
+<span id="L49" class="ln">    49</span>	
+</pre><p><a href="reverse_bits.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

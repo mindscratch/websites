@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/cmd/ld/dwarf.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/cmd/ld/dwarf.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2010 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// TODO/NICETOHAVE:
+<span id="L6" class="ln">     6</span>	//   - eliminate DW_CLS_ if not used
+<span id="L7" class="ln">     7</span>	//   - package info in compilation units
+<span id="L8" class="ln">     8</span>	//   - assign global variables and types to their packages
+<span id="L9" class="ln">     9</span>	//   - gdb uses c syntax, meaning clumsy quoting is needed for go identifiers. eg
+<span id="L10" class="ln">    10</span>	//     ptype struct &#39;[]uint8&#39; and qualifiers need to be quoted away
+<span id="L11" class="ln">    11</span>	//   - lexical scoping is lost, so gdb gets confused as to which &#39;main.i&#39; you mean.
+<span id="L12" class="ln">    12</span>	//   - file:line info for variables
+<span id="L13" class="ln">    13</span>	//   - make strings a typedef so prettyprinters can see the underlying string type
+<span id="L14" class="ln">    14</span>	//
+<span id="L15" class="ln">    15</span>	#include	&#34;l.h&#34;
+<span id="L16" class="ln">    16</span>	#include	&#34;lib.h&#34;
+<span id="L17" class="ln">    17</span>	#include	&#34;../ld/dwarf.h&#34;
+<span id="L18" class="ln">    18</span>	#include	&#34;../ld/dwarf_defs.h&#34;
+<span id="L19" class="ln">    19</span>	#include	&#34;../ld/elf.h&#34;
+<span id="L20" class="ln">    20</span>	#include	&#34;../ld/macho.h&#34;
+<span id="L21" class="ln">    21</span>	#include	&#34;../ld/pe.h&#34;
+<span id="L22" class="ln">    22</span>	#include	&#34;../../pkg/runtime/typekind.h&#34;
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	/*
+<span id="L25" class="ln">    25</span>	 * Offsets and sizes of the debug_* sections in the cout file.
+<span id="L26" class="ln">    26</span>	 */
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>	static vlong abbrevo;
+<span id="L29" class="ln">    29</span>	static vlong abbrevsize;
+<span id="L30" class="ln">    30</span>	static LSym*  abbrevsym;
+<span id="L31" class="ln">    31</span>	static vlong abbrevsympos;
+<span id="L32" class="ln">    32</span>	static vlong lineo;
+<span id="L33" class="ln">    33</span>	static vlong linesize;
+<span id="L34" class="ln">    34</span>	static LSym*  linesym;
+<span id="L35" class="ln">    35</span>	static vlong linesympos;
+<span id="L36" class="ln">    36</span>	static vlong infoo;	// also the base for DWDie-&gt;offs and reference attributes.
+<span id="L37" class="ln">    37</span>	static vlong infosize;
+<span id="L38" class="ln">    38</span>	static LSym*  infosym;
+<span id="L39" class="ln">    39</span>	static vlong infosympos;
+<span id="L40" class="ln">    40</span>	static vlong frameo;
+<span id="L41" class="ln">    41</span>	static vlong framesize;
+<span id="L42" class="ln">    42</span>	static LSym*  framesym;
+<span id="L43" class="ln">    43</span>	static vlong framesympos;
+<span id="L44" class="ln">    44</span>	static vlong pubnameso;
+<span id="L45" class="ln">    45</span>	static vlong pubnamessize;
+<span id="L46" class="ln">    46</span>	static vlong pubtypeso;
+<span id="L47" class="ln">    47</span>	static vlong pubtypessize;
+<span id="L48" class="ln">    48</span>	static vlong arangeso;
+<span id="L49" class="ln">    49</span>	static vlong arangessize;
+<span id="L50" class="ln">    50</span>	static vlong gdbscripto;
+<span id="L51" class="ln">    51</span>	static vlong gdbscriptsize;
+<span id="L52" class="ln">    52</span>	
+<span id="L53" class="ln">    53</span>	static LSym *infosec;
+<span id="L54" class="ln">    54</span>	static vlong inforeloco;
+<span id="L55" class="ln">    55</span>	static vlong inforelocsize;
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>	static LSym *arangessec;
+<span id="L58" class="ln">    58</span>	static vlong arangesreloco;
+<span id="L59" class="ln">    59</span>	static vlong arangesrelocsize;
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>	static LSym *linesec;
+<span id="L62" class="ln">    62</span>	static vlong linereloco;
+<span id="L63" class="ln">    63</span>	static vlong linerelocsize;
+<span id="L64" class="ln">    64</span>	
+<span id="L65" class="ln">    65</span>	static LSym *framesec;
+<span id="L66" class="ln">    66</span>	static vlong framereloco;
+<span id="L67" class="ln">    67</span>	static vlong framerelocsize;
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	static char  gdbscript[1024];
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	/*
+<span id="L72" class="ln">    72</span>	 *  Basic I/O
+<span id="L73" class="ln">    73</span>	 */
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>	static void
+<span id="L76" class="ln">    76</span>	addrput(vlong addr)
+<span id="L77" class="ln">    77</span>	{
+<span id="L78" class="ln">    78</span>		switch(PtrSize) {
+<span id="L79" class="ln">    79</span>		case 4:
+<span id="L80" class="ln">    80</span>			LPUT(addr);
+<span id="L81" class="ln">    81</span>			break;
+<span id="L82" class="ln">    82</span>		case 8:
+<span id="L83" class="ln">    83</span>			VPUT(addr);
+<span id="L84" class="ln">    84</span>			break;
+<span id="L85" class="ln">    85</span>		}
+<span id="L86" class="ln">    86</span>	}
+<span id="L87" class="ln">    87</span>	
+<span id="L88" class="ln">    88</span>	static int
+<span id="L89" class="ln">    89</span>	uleb128enc(uvlong v, char* dst)
+<span id="L90" class="ln">    90</span>	{
+<span id="L91" class="ln">    91</span>		uint8 c, len;
+<span id="L92" class="ln">    92</span>	
+<span id="L93" class="ln">    93</span>		len = 0;
+<span id="L94" class="ln">    94</span>		do {
+<span id="L95" class="ln">    95</span>			c = v &amp; 0x7f;
+<span id="L96" class="ln">    96</span>			v &gt;&gt;= 7;
+<span id="L97" class="ln">    97</span>			if (v)
+<span id="L98" class="ln">    98</span>				c |= 0x80;
+<span id="L99" class="ln">    99</span>			if (dst)
+<span id="L100" class="ln">   100</span>				*dst++ = c;
+<span id="L101" class="ln">   101</span>			len++;
+<span id="L102" class="ln">   102</span>		} while (c &amp; 0x80);
+<span id="L103" class="ln">   103</span>		return len;
+<span id="L104" class="ln">   104</span>	};
+<span id="L105" class="ln">   105</span>	
+<span id="L106" class="ln">   106</span>	static int
+<span id="L107" class="ln">   107</span>	sleb128enc(vlong v, char *dst)
+<span id="L108" class="ln">   108</span>	{
+<span id="L109" class="ln">   109</span>		uint8 c, s, len;
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>		len = 0;
+<span id="L112" class="ln">   112</span>		do {
+<span id="L113" class="ln">   113</span>			c = v &amp; 0x7f;
+<span id="L114" class="ln">   114</span>			s = v &amp; 0x40;
+<span id="L115" class="ln">   115</span>			v &gt;&gt;= 7;
+<span id="L116" class="ln">   116</span>			if ((v != -1 || !s) &amp;&amp; (v != 0 || s))
+<span id="L117" class="ln">   117</span>				c |= 0x80;
+<span id="L118" class="ln">   118</span>			if (dst)
+<span id="L119" class="ln">   119</span>				*dst++ = c;
+<span id="L120" class="ln">   120</span>			len++;
+<span id="L121" class="ln">   121</span>		} while(c &amp; 0x80);
+<span id="L122" class="ln">   122</span>		return len;
+<span id="L123" class="ln">   123</span>	}
+<span id="L124" class="ln">   124</span>	
+<span id="L125" class="ln">   125</span>	static void
+<span id="L126" class="ln">   126</span>	uleb128put(vlong v)
+<span id="L127" class="ln">   127</span>	{
+<span id="L128" class="ln">   128</span>		char buf[10];
+<span id="L129" class="ln">   129</span>		strnput(buf, uleb128enc(v, buf));
+<span id="L130" class="ln">   130</span>	}
+<span id="L131" class="ln">   131</span>	
+<span id="L132" class="ln">   132</span>	static void
+<span id="L133" class="ln">   133</span>	sleb128put(vlong v)
+<span id="L134" class="ln">   134</span>	{
+<span id="L135" class="ln">   135</span>		char buf[10];
+<span id="L136" class="ln">   136</span>		strnput(buf, sleb128enc(v, buf));
+<span id="L137" class="ln">   137</span>	}
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>	/*
+<span id="L140" class="ln">   140</span>	 * Defining Abbrevs.  This is hardcoded, and there will be
+<span id="L141" class="ln">   141</span>	 * only a handful of them.  The DWARF spec places no restriction on
+<span id="L142" class="ln">   142</span>	 * the ordering of attributes in the Abbrevs and DIEs, and we will
+<span id="L143" class="ln">   143</span>	 * always write them out in the order of declaration in the abbrev.
+<span id="L144" class="ln">   144</span>	 * This implementation relies on tag, attr &lt; 127, so they serialize as
+<span id="L145" class="ln">   145</span>	 * a char.  Higher numbered user-defined tags or attributes can be used
+<span id="L146" class="ln">   146</span>	 * for storing internal data but won&#39;t be serialized.
+<span id="L147" class="ln">   147</span>	 */
+<span id="L148" class="ln">   148</span>	typedef struct DWAttrForm DWAttrForm;
+<span id="L149" class="ln">   149</span>	struct DWAttrForm {
+<span id="L150" class="ln">   150</span>		uint8 attr;
+<span id="L151" class="ln">   151</span>		uint8 form;
+<span id="L152" class="ln">   152</span>	};
+<span id="L153" class="ln">   153</span>	
+<span id="L154" class="ln">   154</span>	// Index into the abbrevs table below.
+<span id="L155" class="ln">   155</span>	// Keep in sync with ispubname() and ispubtype() below.
+<span id="L156" class="ln">   156</span>	// ispubtype considers &gt;= NULLTYPE public
+<span id="L157" class="ln">   157</span>	enum
+<span id="L158" class="ln">   158</span>	{
+<span id="L159" class="ln">   159</span>		DW_ABRV_NULL,
+<span id="L160" class="ln">   160</span>		DW_ABRV_COMPUNIT,
+<span id="L161" class="ln">   161</span>		DW_ABRV_FUNCTION,
+<span id="L162" class="ln">   162</span>		DW_ABRV_VARIABLE,
+<span id="L163" class="ln">   163</span>		DW_ABRV_AUTO,
+<span id="L164" class="ln">   164</span>		DW_ABRV_PARAM,
+<span id="L165" class="ln">   165</span>		DW_ABRV_STRUCTFIELD,
+<span id="L166" class="ln">   166</span>		DW_ABRV_FUNCTYPEPARAM,
+<span id="L167" class="ln">   167</span>		DW_ABRV_DOTDOTDOT,
+<span id="L168" class="ln">   168</span>		DW_ABRV_ARRAYRANGE,
+<span id="L169" class="ln">   169</span>		DW_ABRV_NULLTYPE,
+<span id="L170" class="ln">   170</span>		DW_ABRV_BASETYPE,
+<span id="L171" class="ln">   171</span>		DW_ABRV_ARRAYTYPE,
+<span id="L172" class="ln">   172</span>		DW_ABRV_CHANTYPE,
+<span id="L173" class="ln">   173</span>		DW_ABRV_FUNCTYPE,
+<span id="L174" class="ln">   174</span>		DW_ABRV_IFACETYPE,
+<span id="L175" class="ln">   175</span>		DW_ABRV_MAPTYPE,
+<span id="L176" class="ln">   176</span>		DW_ABRV_PTRTYPE,
+<span id="L177" class="ln">   177</span>		DW_ABRV_BARE_PTRTYPE, // only for void*, no DW_AT_type attr to please gdb 6.
+<span id="L178" class="ln">   178</span>		DW_ABRV_SLICETYPE,
+<span id="L179" class="ln">   179</span>		DW_ABRV_STRINGTYPE,
+<span id="L180" class="ln">   180</span>		DW_ABRV_STRUCTTYPE,
+<span id="L181" class="ln">   181</span>		DW_ABRV_TYPEDECL,
+<span id="L182" class="ln">   182</span>		DW_NABRV
+<span id="L183" class="ln">   183</span>	};
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>	typedef struct DWAbbrev DWAbbrev;
+<span id="L186" class="ln">   186</span>	static struct DWAbbrev {
+<span id="L187" class="ln">   187</span>		uint8 tag;
+<span id="L188" class="ln">   188</span>		uint8 children;
+<span id="L189" class="ln">   189</span>		DWAttrForm attr[30];
+<span id="L190" class="ln">   190</span>	} abbrevs[DW_NABRV] = {
+<span id="L191" class="ln">   191</span>		/* The mandatory DW_ABRV_NULL entry. */
+<span id="L192" class="ln">   192</span>		{ 0 },
+<span id="L193" class="ln">   193</span>		/* COMPUNIT */
+<span id="L194" class="ln">   194</span>		{
+<span id="L195" class="ln">   195</span>			DW_TAG_compile_unit, DW_CHILDREN_yes,
+<span id="L196" class="ln">   196</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L197" class="ln">   197</span>			DW_AT_language,	 DW_FORM_data1,
+<span id="L198" class="ln">   198</span>			DW_AT_low_pc,	 DW_FORM_addr,
+<span id="L199" class="ln">   199</span>			DW_AT_high_pc,	 DW_FORM_addr,
+<span id="L200" class="ln">   200</span>			DW_AT_stmt_list, DW_FORM_data4,
+<span id="L201" class="ln">   201</span>			0, 0
+<span id="L202" class="ln">   202</span>		},
+<span id="L203" class="ln">   203</span>		/* FUNCTION */
+<span id="L204" class="ln">   204</span>		{
+<span id="L205" class="ln">   205</span>			DW_TAG_subprogram, DW_CHILDREN_yes,
+<span id="L206" class="ln">   206</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L207" class="ln">   207</span>			DW_AT_low_pc,	 DW_FORM_addr,
+<span id="L208" class="ln">   208</span>			DW_AT_high_pc,	 DW_FORM_addr,
+<span id="L209" class="ln">   209</span>			DW_AT_external,	 DW_FORM_flag,
+<span id="L210" class="ln">   210</span>			0, 0
+<span id="L211" class="ln">   211</span>		},
+<span id="L212" class="ln">   212</span>		/* VARIABLE */
+<span id="L213" class="ln">   213</span>		{
+<span id="L214" class="ln">   214</span>			DW_TAG_variable, DW_CHILDREN_no,
+<span id="L215" class="ln">   215</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L216" class="ln">   216</span>			DW_AT_location,	 DW_FORM_block1,
+<span id="L217" class="ln">   217</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L218" class="ln">   218</span>			DW_AT_external,	 DW_FORM_flag,
+<span id="L219" class="ln">   219</span>			0, 0
+<span id="L220" class="ln">   220</span>		},
+<span id="L221" class="ln">   221</span>		/* AUTO */
+<span id="L222" class="ln">   222</span>		{
+<span id="L223" class="ln">   223</span>			DW_TAG_variable, DW_CHILDREN_no,
+<span id="L224" class="ln">   224</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L225" class="ln">   225</span>			DW_AT_location,	 DW_FORM_block1,
+<span id="L226" class="ln">   226</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L227" class="ln">   227</span>			0, 0
+<span id="L228" class="ln">   228</span>		},
+<span id="L229" class="ln">   229</span>		/* PARAM */
+<span id="L230" class="ln">   230</span>		{
+<span id="L231" class="ln">   231</span>			DW_TAG_formal_parameter, DW_CHILDREN_no,
+<span id="L232" class="ln">   232</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L233" class="ln">   233</span>			DW_AT_location,	 DW_FORM_block1,
+<span id="L234" class="ln">   234</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L235" class="ln">   235</span>			0, 0
+<span id="L236" class="ln">   236</span>		},
+<span id="L237" class="ln">   237</span>		/* STRUCTFIELD */
+<span id="L238" class="ln">   238</span>		{
+<span id="L239" class="ln">   239</span>			DW_TAG_member,	DW_CHILDREN_no,
+<span id="L240" class="ln">   240</span>			DW_AT_name,	DW_FORM_string,
+<span id="L241" class="ln">   241</span>			DW_AT_data_member_location, DW_FORM_block1,
+<span id="L242" class="ln">   242</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L243" class="ln">   243</span>			0, 0
+<span id="L244" class="ln">   244</span>		},
+<span id="L245" class="ln">   245</span>		/* FUNCTYPEPARAM */
+<span id="L246" class="ln">   246</span>		{
+<span id="L247" class="ln">   247</span>			DW_TAG_formal_parameter, DW_CHILDREN_no,
+<span id="L248" class="ln">   248</span>			// No name!
+<span id="L249" class="ln">   249</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L250" class="ln">   250</span>			0, 0
+<span id="L251" class="ln">   251</span>		},
+<span id="L252" class="ln">   252</span>	
+<span id="L253" class="ln">   253</span>		/* DOTDOTDOT */
+<span id="L254" class="ln">   254</span>		{
+<span id="L255" class="ln">   255</span>			DW_TAG_unspecified_parameters, DW_CHILDREN_no,
+<span id="L256" class="ln">   256</span>			0, 0
+<span id="L257" class="ln">   257</span>		},
+<span id="L258" class="ln">   258</span>		/* ARRAYRANGE */
+<span id="L259" class="ln">   259</span>		{
+<span id="L260" class="ln">   260</span>			DW_TAG_subrange_type, DW_CHILDREN_no,
+<span id="L261" class="ln">   261</span>			// No name!
+<span id="L262" class="ln">   262</span>			DW_AT_type,	 DW_FORM_ref_addr,
+<span id="L263" class="ln">   263</span>			DW_AT_upper_bound, DW_FORM_data1,
+<span id="L264" class="ln">   264</span>			0, 0
+<span id="L265" class="ln">   265</span>		},
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		// Below here are the types considered public by ispubtype
+<span id="L268" class="ln">   268</span>		/* NULLTYPE */
+<span id="L269" class="ln">   269</span>		{
+<span id="L270" class="ln">   270</span>			DW_TAG_unspecified_type, DW_CHILDREN_no,
+<span id="L271" class="ln">   271</span>			DW_AT_name,	DW_FORM_string,
+<span id="L272" class="ln">   272</span>			0, 0
+<span id="L273" class="ln">   273</span>		},
+<span id="L274" class="ln">   274</span>		/* BASETYPE */
+<span id="L275" class="ln">   275</span>		{
+<span id="L276" class="ln">   276</span>			DW_TAG_base_type, DW_CHILDREN_no,
+<span id="L277" class="ln">   277</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L278" class="ln">   278</span>			DW_AT_encoding,	 DW_FORM_data1,
+<span id="L279" class="ln">   279</span>			DW_AT_byte_size, DW_FORM_data1,
+<span id="L280" class="ln">   280</span>			0, 0
+<span id="L281" class="ln">   281</span>		},
+<span id="L282" class="ln">   282</span>		/* ARRAYTYPE */
+<span id="L283" class="ln">   283</span>		// child is subrange with upper bound
+<span id="L284" class="ln">   284</span>		{
+<span id="L285" class="ln">   285</span>			DW_TAG_array_type, DW_CHILDREN_yes,
+<span id="L286" class="ln">   286</span>			DW_AT_name,	DW_FORM_string,
+<span id="L287" class="ln">   287</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L288" class="ln">   288</span>			DW_AT_byte_size, DW_FORM_udata,
+<span id="L289" class="ln">   289</span>			0, 0
+<span id="L290" class="ln">   290</span>		},
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>		/* CHANTYPE */
+<span id="L293" class="ln">   293</span>		{
+<span id="L294" class="ln">   294</span>			DW_TAG_typedef, DW_CHILDREN_no,
+<span id="L295" class="ln">   295</span>			DW_AT_name,	DW_FORM_string,
+<span id="L296" class="ln">   296</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L297" class="ln">   297</span>			0, 0
+<span id="L298" class="ln">   298</span>		},
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>		/* FUNCTYPE */
+<span id="L301" class="ln">   301</span>		{
+<span id="L302" class="ln">   302</span>			DW_TAG_subroutine_type, DW_CHILDREN_yes,
+<span id="L303" class="ln">   303</span>			DW_AT_name,	DW_FORM_string,
+<span id="L304" class="ln">   304</span>	//		DW_AT_type,	DW_FORM_ref_addr,
+<span id="L305" class="ln">   305</span>			0, 0
+<span id="L306" class="ln">   306</span>		},
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>		/* IFACETYPE */
+<span id="L309" class="ln">   309</span>		{
+<span id="L310" class="ln">   310</span>			DW_TAG_typedef, DW_CHILDREN_yes,
+<span id="L311" class="ln">   311</span>			DW_AT_name,	 DW_FORM_string,
+<span id="L312" class="ln">   312</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L313" class="ln">   313</span>			0, 0
+<span id="L314" class="ln">   314</span>		},
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		/* MAPTYPE */
+<span id="L317" class="ln">   317</span>		{
+<span id="L318" class="ln">   318</span>			DW_TAG_typedef, DW_CHILDREN_no,
+<span id="L319" class="ln">   319</span>			DW_AT_name,	DW_FORM_string,
+<span id="L320" class="ln">   320</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L321" class="ln">   321</span>			0, 0
+<span id="L322" class="ln">   322</span>		},
+<span id="L323" class="ln">   323</span>	
+<span id="L324" class="ln">   324</span>		/* PTRTYPE */
+<span id="L325" class="ln">   325</span>		{
+<span id="L326" class="ln">   326</span>			DW_TAG_pointer_type, DW_CHILDREN_no,
+<span id="L327" class="ln">   327</span>			DW_AT_name,	DW_FORM_string,
+<span id="L328" class="ln">   328</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L329" class="ln">   329</span>			0, 0
+<span id="L330" class="ln">   330</span>		},
+<span id="L331" class="ln">   331</span>		/* BARE_PTRTYPE */
+<span id="L332" class="ln">   332</span>		{
+<span id="L333" class="ln">   333</span>			DW_TAG_pointer_type, DW_CHILDREN_no,
+<span id="L334" class="ln">   334</span>			DW_AT_name,	DW_FORM_string,
+<span id="L335" class="ln">   335</span>			0, 0
+<span id="L336" class="ln">   336</span>		},
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>		/* SLICETYPE */
+<span id="L339" class="ln">   339</span>		{
+<span id="L340" class="ln">   340</span>			DW_TAG_structure_type, DW_CHILDREN_yes,
+<span id="L341" class="ln">   341</span>			DW_AT_name,	DW_FORM_string,
+<span id="L342" class="ln">   342</span>			DW_AT_byte_size, DW_FORM_udata,
+<span id="L343" class="ln">   343</span>			0, 0
+<span id="L344" class="ln">   344</span>		},
+<span id="L345" class="ln">   345</span>	
+<span id="L346" class="ln">   346</span>		/* STRINGTYPE */
+<span id="L347" class="ln">   347</span>		{
+<span id="L348" class="ln">   348</span>			DW_TAG_structure_type, DW_CHILDREN_yes,
+<span id="L349" class="ln">   349</span>			DW_AT_name,	DW_FORM_string,
+<span id="L350" class="ln">   350</span>			DW_AT_byte_size, DW_FORM_udata,
+<span id="L351" class="ln">   351</span>			0, 0
+<span id="L352" class="ln">   352</span>		},
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>		/* STRUCTTYPE */
+<span id="L355" class="ln">   355</span>		{
+<span id="L356" class="ln">   356</span>			DW_TAG_structure_type, DW_CHILDREN_yes,
+<span id="L357" class="ln">   357</span>			DW_AT_name,	DW_FORM_string,
+<span id="L358" class="ln">   358</span>			DW_AT_byte_size, DW_FORM_udata,
+<span id="L359" class="ln">   359</span>			0, 0
+<span id="L360" class="ln">   360</span>		},
+<span id="L361" class="ln">   361</span>	
+<span id="L362" class="ln">   362</span>		/* TYPEDECL */
+<span id="L363" class="ln">   363</span>		{
+<span id="L364" class="ln">   364</span>			DW_TAG_typedef, DW_CHILDREN_no,
+<span id="L365" class="ln">   365</span>			DW_AT_name,	DW_FORM_string,
+<span id="L366" class="ln">   366</span>			DW_AT_type,	DW_FORM_ref_addr,
+<span id="L367" class="ln">   367</span>			0, 0
+<span id="L368" class="ln">   368</span>		},
+<span id="L369" class="ln">   369</span>	};
+<span id="L370" class="ln">   370</span>	
+<span id="L371" class="ln">   371</span>	static void
+<span id="L372" class="ln">   372</span>	writeabbrev(void)
+<span id="L373" class="ln">   373</span>	{
+<span id="L374" class="ln">   374</span>		int i, n;
+<span id="L375" class="ln">   375</span>	
+<span id="L376" class="ln">   376</span>		abbrevo = cpos();
+<span id="L377" class="ln">   377</span>		for (i = 1; i &lt; DW_NABRV; i++) {
+<span id="L378" class="ln">   378</span>			// See section 7.5.3
+<span id="L379" class="ln">   379</span>			uleb128put(i);
+<span id="L380" class="ln">   380</span>			uleb128put(abbrevs[i].tag);
+<span id="L381" class="ln">   381</span>			cput(abbrevs[i].children);
+<span id="L382" class="ln">   382</span>			// 0 is not a valid attr or form, and DWAbbrev.attr is
+<span id="L383" class="ln">   383</span>			// 0-terminated, so we can treat it as a string
+<span id="L384" class="ln">   384</span>			n = strlen((char*)abbrevs[i].attr) / 2;
+<span id="L385" class="ln">   385</span>			strnput((char*)abbrevs[i].attr,
+<span id="L386" class="ln">   386</span>				(n+1) * sizeof(DWAttrForm));
+<span id="L387" class="ln">   387</span>		}
+<span id="L388" class="ln">   388</span>		cput(0);
+<span id="L389" class="ln">   389</span>		abbrevsize = cpos() - abbrevo;
+<span id="L390" class="ln">   390</span>	}
+<span id="L391" class="ln">   391</span>	
+<span id="L392" class="ln">   392</span>	/*
+<span id="L393" class="ln">   393</span>	 * Debugging Information Entries and their attributes.
+<span id="L394" class="ln">   394</span>	 */
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>	enum
+<span id="L397" class="ln">   397</span>	{
+<span id="L398" class="ln">   398</span>		HASHSIZE = 107
+<span id="L399" class="ln">   399</span>	};
+<span id="L400" class="ln">   400</span>	
+<span id="L401" class="ln">   401</span>	static uint32
+<span id="L402" class="ln">   402</span>	hashstr(char* s)
+<span id="L403" class="ln">   403</span>	{
+<span id="L404" class="ln">   404</span>		uint32 h;
+<span id="L405" class="ln">   405</span>	
+<span id="L406" class="ln">   406</span>		h = 0;
+<span id="L407" class="ln">   407</span>		while (*s)
+<span id="L408" class="ln">   408</span>			h = h+h+h + *s++;
+<span id="L409" class="ln">   409</span>		return h % HASHSIZE;
+<span id="L410" class="ln">   410</span>	}
+<span id="L411" class="ln">   411</span>	
+<span id="L412" class="ln">   412</span>	// For DW_CLS_string and _block, value should contain the length, and
+<span id="L413" class="ln">   413</span>	// data the data, for _reference, value is 0 and data is a DWDie* to
+<span id="L414" class="ln">   414</span>	// the referenced instance, for all others, value is the whole thing
+<span id="L415" class="ln">   415</span>	// and data is null.
+<span id="L416" class="ln">   416</span>	
+<span id="L417" class="ln">   417</span>	typedef struct DWAttr DWAttr;
+<span id="L418" class="ln">   418</span>	struct DWAttr {
+<span id="L419" class="ln">   419</span>		DWAttr *link;
+<span id="L420" class="ln">   420</span>		uint8 atr;  // DW_AT_
+<span id="L421" class="ln">   421</span>		uint8 cls;  // DW_CLS_
+<span id="L422" class="ln">   422</span>		vlong value;
+<span id="L423" class="ln">   423</span>		char *data;
+<span id="L424" class="ln">   424</span>	};
+<span id="L425" class="ln">   425</span>	
+<span id="L426" class="ln">   426</span>	typedef struct DWDie DWDie;
+<span id="L427" class="ln">   427</span>	struct DWDie {
+<span id="L428" class="ln">   428</span>		int abbrev;
+<span id="L429" class="ln">   429</span>		DWDie *link;
+<span id="L430" class="ln">   430</span>		DWDie *child;
+<span id="L431" class="ln">   431</span>		DWAttr *attr;
+<span id="L432" class="ln">   432</span>		// offset into .debug_info section, i.e relative to
+<span id="L433" class="ln">   433</span>		// infoo. only valid after call to putdie()
+<span id="L434" class="ln">   434</span>		vlong offs;
+<span id="L435" class="ln">   435</span>		DWDie **hash;  // optional index of children by name, enabled by mkindex()
+<span id="L436" class="ln">   436</span>		DWDie *hlink;  // bucket chain in parent&#39;s index
+<span id="L437" class="ln">   437</span>	};
+<span id="L438" class="ln">   438</span>	
+<span id="L439" class="ln">   439</span>	/*
+<span id="L440" class="ln">   440</span>	 * Root DIEs for compilation units, types and global variables.
+<span id="L441" class="ln">   441</span>	 */
+<span id="L442" class="ln">   442</span>	
+<span id="L443" class="ln">   443</span>	static DWDie dwroot;
+<span id="L444" class="ln">   444</span>	static DWDie dwtypes;
+<span id="L445" class="ln">   445</span>	static DWDie dwglobals;
+<span id="L446" class="ln">   446</span>	
+<span id="L447" class="ln">   447</span>	static DWAttr*
+<span id="L448" class="ln">   448</span>	newattr(DWDie *die, uint8 attr, int cls, vlong value, char *data)
+<span id="L449" class="ln">   449</span>	{
+<span id="L450" class="ln">   450</span>		DWAttr *a;
+<span id="L451" class="ln">   451</span>	
+<span id="L452" class="ln">   452</span>		a = mal(sizeof *a);
+<span id="L453" class="ln">   453</span>		a-&gt;link = die-&gt;attr;
+<span id="L454" class="ln">   454</span>		die-&gt;attr = a;
+<span id="L455" class="ln">   455</span>		a-&gt;atr = attr;
+<span id="L456" class="ln">   456</span>		a-&gt;cls = cls;
+<span id="L457" class="ln">   457</span>		a-&gt;value = value;
+<span id="L458" class="ln">   458</span>		a-&gt;data = data;
+<span id="L459" class="ln">   459</span>		return a;
+<span id="L460" class="ln">   460</span>	}
+<span id="L461" class="ln">   461</span>	
+<span id="L462" class="ln">   462</span>	// Each DIE (except the root ones) has at least 1 attribute: its
+<span id="L463" class="ln">   463</span>	// name. getattr moves the desired one to the front so
+<span id="L464" class="ln">   464</span>	// frequently searched ones are found faster.
+<span id="L465" class="ln">   465</span>	static DWAttr*
+<span id="L466" class="ln">   466</span>	getattr(DWDie *die, uint8 attr)
+<span id="L467" class="ln">   467</span>	{
+<span id="L468" class="ln">   468</span>		DWAttr *a, *b;
+<span id="L469" class="ln">   469</span>	
+<span id="L470" class="ln">   470</span>		if (die-&gt;attr-&gt;atr == attr)
+<span id="L471" class="ln">   471</span>			return die-&gt;attr;
+<span id="L472" class="ln">   472</span>	
+<span id="L473" class="ln">   473</span>		a = die-&gt;attr;
+<span id="L474" class="ln">   474</span>		b = a-&gt;link;
+<span id="L475" class="ln">   475</span>		while (b != nil) {
+<span id="L476" class="ln">   476</span>			if (b-&gt;atr == attr) {
+<span id="L477" class="ln">   477</span>				a-&gt;link = b-&gt;link;
+<span id="L478" class="ln">   478</span>				b-&gt;link = die-&gt;attr;
+<span id="L479" class="ln">   479</span>				die-&gt;attr = b;
+<span id="L480" class="ln">   480</span>				return b;
+<span id="L481" class="ln">   481</span>			}
+<span id="L482" class="ln">   482</span>			a = b;
+<span id="L483" class="ln">   483</span>			b = b-&gt;link;
+<span id="L484" class="ln">   484</span>		}
+<span id="L485" class="ln">   485</span>		return nil;
+<span id="L486" class="ln">   486</span>	}
+<span id="L487" class="ln">   487</span>	
+<span id="L488" class="ln">   488</span>	// Every DIE has at least a DW_AT_name attribute (but it will only be
+<span id="L489" class="ln">   489</span>	// written out if it is listed in the abbrev).	If its parent is
+<span id="L490" class="ln">   490</span>	// keeping an index, the new DIE will be inserted there.
+<span id="L491" class="ln">   491</span>	static DWDie*
+<span id="L492" class="ln">   492</span>	newdie(DWDie *parent, int abbrev, char *name)
+<span id="L493" class="ln">   493</span>	{
+<span id="L494" class="ln">   494</span>		DWDie *die;
+<span id="L495" class="ln">   495</span>		int h;
+<span id="L496" class="ln">   496</span>	
+<span id="L497" class="ln">   497</span>		die = mal(sizeof *die);
+<span id="L498" class="ln">   498</span>		die-&gt;abbrev = abbrev;
+<span id="L499" class="ln">   499</span>		die-&gt;link = parent-&gt;child;
+<span id="L500" class="ln">   500</span>		parent-&gt;child = die;
+<span id="L501" class="ln">   501</span>	
+<span id="L502" class="ln">   502</span>		newattr(die, DW_AT_name, DW_CLS_STRING, strlen(name), name);
+<span id="L503" class="ln">   503</span>	
+<span id="L504" class="ln">   504</span>		if (parent-&gt;hash) {
+<span id="L505" class="ln">   505</span>			h = hashstr(name);
+<span id="L506" class="ln">   506</span>			die-&gt;hlink = parent-&gt;hash[h];
+<span id="L507" class="ln">   507</span>			parent-&gt;hash[h] = die;
+<span id="L508" class="ln">   508</span>		}
+<span id="L509" class="ln">   509</span>	
+<span id="L510" class="ln">   510</span>		return die;
+<span id="L511" class="ln">   511</span>	}
+<span id="L512" class="ln">   512</span>	
+<span id="L513" class="ln">   513</span>	static void
+<span id="L514" class="ln">   514</span>	mkindex(DWDie *die)
+<span id="L515" class="ln">   515</span>	{
+<span id="L516" class="ln">   516</span>		die-&gt;hash = mal(HASHSIZE * sizeof(DWDie*));
+<span id="L517" class="ln">   517</span>	}
+<span id="L518" class="ln">   518</span>	
+<span id="L519" class="ln">   519</span>	static DWDie*
+<span id="L520" class="ln">   520</span>	walktypedef(DWDie *die)
+<span id="L521" class="ln">   521</span>	{
+<span id="L522" class="ln">   522</span>		DWAttr *attr;
+<span id="L523" class="ln">   523</span>	
+<span id="L524" class="ln">   524</span>		// Resolve typedef if present.
+<span id="L525" class="ln">   525</span>		if (die-&gt;abbrev == DW_ABRV_TYPEDECL) {
+<span id="L526" class="ln">   526</span>			for (attr = die-&gt;attr; attr; attr = attr-&gt;link) {
+<span id="L527" class="ln">   527</span>				if (attr-&gt;atr == DW_AT_type &amp;&amp; attr-&gt;cls == DW_CLS_REFERENCE &amp;&amp; attr-&gt;data != nil) {
+<span id="L528" class="ln">   528</span>					return (DWDie*)attr-&gt;data;
+<span id="L529" class="ln">   529</span>				}
+<span id="L530" class="ln">   530</span>			}
+<span id="L531" class="ln">   531</span>		}
+<span id="L532" class="ln">   532</span>		return die;
+<span id="L533" class="ln">   533</span>	}
+<span id="L534" class="ln">   534</span>	
+<span id="L535" class="ln">   535</span>	// Find child by AT_name using hashtable if available or linear scan
+<span id="L536" class="ln">   536</span>	// if not.
+<span id="L537" class="ln">   537</span>	static DWDie*
+<span id="L538" class="ln">   538</span>	find(DWDie *die, char* name)
+<span id="L539" class="ln">   539</span>	{
+<span id="L540" class="ln">   540</span>		DWDie *a, *b, *die2;
+<span id="L541" class="ln">   541</span>		int h;
+<span id="L542" class="ln">   542</span>	
+<span id="L543" class="ln">   543</span>	top:
+<span id="L544" class="ln">   544</span>		if (die-&gt;hash == nil) {
+<span id="L545" class="ln">   545</span>			for (a = die-&gt;child; a != nil; a = a-&gt;link)
+<span id="L546" class="ln">   546</span>				if (strcmp(name, getattr(a, DW_AT_name)-&gt;data) == 0)
+<span id="L547" class="ln">   547</span>					return a;
+<span id="L548" class="ln">   548</span>			goto notfound;
+<span id="L549" class="ln">   549</span>		}
+<span id="L550" class="ln">   550</span>	
+<span id="L551" class="ln">   551</span>		h = hashstr(name);
+<span id="L552" class="ln">   552</span>		a = die-&gt;hash[h];
+<span id="L553" class="ln">   553</span>	
+<span id="L554" class="ln">   554</span>		if (a == nil)
+<span id="L555" class="ln">   555</span>			goto notfound;
+<span id="L556" class="ln">   556</span>	
+<span id="L557" class="ln">   557</span>	
+<span id="L558" class="ln">   558</span>		if (strcmp(name, getattr(a, DW_AT_name)-&gt;data) == 0)
+<span id="L559" class="ln">   559</span>			return a;
+<span id="L560" class="ln">   560</span>	
+<span id="L561" class="ln">   561</span>		// Move found ones to head of the list.
+<span id="L562" class="ln">   562</span>		b = a-&gt;hlink;
+<span id="L563" class="ln">   563</span>		while (b != nil) {
+<span id="L564" class="ln">   564</span>			if (strcmp(name, getattr(b, DW_AT_name)-&gt;data) == 0) {
+<span id="L565" class="ln">   565</span>				a-&gt;hlink = b-&gt;hlink;
+<span id="L566" class="ln">   566</span>				b-&gt;hlink = die-&gt;hash[h];
+<span id="L567" class="ln">   567</span>				die-&gt;hash[h] = b;
+<span id="L568" class="ln">   568</span>				return b;
+<span id="L569" class="ln">   569</span>			}
+<span id="L570" class="ln">   570</span>			a = b;
+<span id="L571" class="ln">   571</span>			b = b-&gt;hlink;
+<span id="L572" class="ln">   572</span>		}
+<span id="L573" class="ln">   573</span>	
+<span id="L574" class="ln">   574</span>	notfound:
+<span id="L575" class="ln">   575</span>		die2 = walktypedef(die);
+<span id="L576" class="ln">   576</span>		if(die2 != die) {
+<span id="L577" class="ln">   577</span>			die = die2;
+<span id="L578" class="ln">   578</span>			goto top;
+<span id="L579" class="ln">   579</span>		}
+<span id="L580" class="ln">   580</span>	
+<span id="L581" class="ln">   581</span>		return nil;
+<span id="L582" class="ln">   582</span>	}
+<span id="L583" class="ln">   583</span>	
+<span id="L584" class="ln">   584</span>	static DWDie*
+<span id="L585" class="ln">   585</span>	find_or_diag(DWDie *die, char* name)
+<span id="L586" class="ln">   586</span>	{
+<span id="L587" class="ln">   587</span>		DWDie *r;
+<span id="L588" class="ln">   588</span>		r = find(die, name);
+<span id="L589" class="ln">   589</span>		if (r == nil) {
+<span id="L590" class="ln">   590</span>			diag(&#34;dwarf find: %s %p has no %s&#34;, getattr(die, DW_AT_name)-&gt;data, die, name);
+<span id="L591" class="ln">   591</span>			errorexit();
+<span id="L592" class="ln">   592</span>		}
+<span id="L593" class="ln">   593</span>		return r;
+<span id="L594" class="ln">   594</span>	}
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>	static void
+<span id="L597" class="ln">   597</span>	adddwarfrel(LSym* sec, LSym* sym, vlong offsetbase, int siz, vlong addend)
+<span id="L598" class="ln">   598</span>	{
+<span id="L599" class="ln">   599</span>		Reloc *r;
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>		r = addrel(sec);
+<span id="L602" class="ln">   602</span>		r-&gt;sym = sym;
+<span id="L603" class="ln">   603</span>		r-&gt;xsym = sym;
+<span id="L604" class="ln">   604</span>		r-&gt;off = cpos() - offsetbase;
+<span id="L605" class="ln">   605</span>		r-&gt;siz = siz;
+<span id="L606" class="ln">   606</span>		r-&gt;type = R_ADDR;
+<span id="L607" class="ln">   607</span>		r-&gt;add = addend;
+<span id="L608" class="ln">   608</span>		r-&gt;xadd = addend;
+<span id="L609" class="ln">   609</span>		if(iself &amp;&amp; thechar == &#39;6&#39;)
+<span id="L610" class="ln">   610</span>			addend = 0;
+<span id="L611" class="ln">   611</span>		switch(siz) {
+<span id="L612" class="ln">   612</span>		case 4:
+<span id="L613" class="ln">   613</span>			LPUT(addend);
+<span id="L614" class="ln">   614</span>			break;
+<span id="L615" class="ln">   615</span>		case 8:
+<span id="L616" class="ln">   616</span>			VPUT(addend);
+<span id="L617" class="ln">   617</span>			break;
+<span id="L618" class="ln">   618</span>		default:
+<span id="L619" class="ln">   619</span>			diag(&#34;bad size in adddwarfrel&#34;);
+<span id="L620" class="ln">   620</span>			break;
+<span id="L621" class="ln">   621</span>		}
+<span id="L622" class="ln">   622</span>	}
+<span id="L623" class="ln">   623</span>	
+<span id="L624" class="ln">   624</span>	static DWAttr*
+<span id="L625" class="ln">   625</span>	newrefattr(DWDie *die, uint8 attr, DWDie* ref)
+<span id="L626" class="ln">   626</span>	{
+<span id="L627" class="ln">   627</span>		if (ref == nil)
+<span id="L628" class="ln">   628</span>			return nil;
+<span id="L629" class="ln">   629</span>		return newattr(die, attr, DW_CLS_REFERENCE, 0, (char*)ref);
+<span id="L630" class="ln">   630</span>	}
+<span id="L631" class="ln">   631</span>	
+<span id="L632" class="ln">   632</span>	static int fwdcount;
+<span id="L633" class="ln">   633</span>	
+<span id="L634" class="ln">   634</span>	static void
+<span id="L635" class="ln">   635</span>	putattr(int abbrev, int form, int cls, vlong value, char *data)
+<span id="L636" class="ln">   636</span>	{
+<span id="L637" class="ln">   637</span>		vlong off;
+<span id="L638" class="ln">   638</span>	
+<span id="L639" class="ln">   639</span>		switch(form) {
+<span id="L640" class="ln">   640</span>		case DW_FORM_addr:	// address
+<span id="L641" class="ln">   641</span>			if(linkmode == LinkExternal) {
+<span id="L642" class="ln">   642</span>				value -= ((LSym*)data)-&gt;value;
+<span id="L643" class="ln">   643</span>				adddwarfrel(infosec, (LSym*)data, infoo, PtrSize, value);
+<span id="L644" class="ln">   644</span>				break;
+<span id="L645" class="ln">   645</span>			}
+<span id="L646" class="ln">   646</span>			addrput(value);
+<span id="L647" class="ln">   647</span>			break;
+<span id="L648" class="ln">   648</span>	
+<span id="L649" class="ln">   649</span>		case DW_FORM_block1:	// block
+<span id="L650" class="ln">   650</span>			if(cls == DW_CLS_ADDRESS) {
+<span id="L651" class="ln">   651</span>				cput(1+PtrSize);
+<span id="L652" class="ln">   652</span>				cput(DW_OP_addr);
+<span id="L653" class="ln">   653</span>				if(linkmode == LinkExternal) {
+<span id="L654" class="ln">   654</span>					value -= ((LSym*)data)-&gt;value;
+<span id="L655" class="ln">   655</span>					adddwarfrel(infosec, (LSym*)data, infoo, PtrSize, value);
+<span id="L656" class="ln">   656</span>					break;
+<span id="L657" class="ln">   657</span>				}
+<span id="L658" class="ln">   658</span>				addrput(value);
+<span id="L659" class="ln">   659</span>				break;
+<span id="L660" class="ln">   660</span>			}
+<span id="L661" class="ln">   661</span>			value &amp;= 0xff;
+<span id="L662" class="ln">   662</span>			cput(value);
+<span id="L663" class="ln">   663</span>			while(value--)
+<span id="L664" class="ln">   664</span>				cput(*data++);
+<span id="L665" class="ln">   665</span>			break;
+<span id="L666" class="ln">   666</span>	
+<span id="L667" class="ln">   667</span>		case DW_FORM_block2:	// block
+<span id="L668" class="ln">   668</span>			value &amp;= 0xffff;
+<span id="L669" class="ln">   669</span>			WPUT(value);
+<span id="L670" class="ln">   670</span>			while(value--)
+<span id="L671" class="ln">   671</span>				cput(*data++);
+<span id="L672" class="ln">   672</span>			break;
+<span id="L673" class="ln">   673</span>	
+<span id="L674" class="ln">   674</span>		case DW_FORM_block4:	// block
+<span id="L675" class="ln">   675</span>			value &amp;= 0xffffffff;
+<span id="L676" class="ln">   676</span>			LPUT(value);
+<span id="L677" class="ln">   677</span>			while(value--)
+<span id="L678" class="ln">   678</span>				cput(*data++);
+<span id="L679" class="ln">   679</span>			break;
+<span id="L680" class="ln">   680</span>	
+<span id="L681" class="ln">   681</span>		case DW_FORM_block:	// block
+<span id="L682" class="ln">   682</span>			uleb128put(value);
+<span id="L683" class="ln">   683</span>			while(value--)
+<span id="L684" class="ln">   684</span>				cput(*data++);
+<span id="L685" class="ln">   685</span>			break;
+<span id="L686" class="ln">   686</span>	
+<span id="L687" class="ln">   687</span>		case DW_FORM_data1:	// constant
+<span id="L688" class="ln">   688</span>			cput(value);
+<span id="L689" class="ln">   689</span>			break;
+<span id="L690" class="ln">   690</span>	
+<span id="L691" class="ln">   691</span>		case DW_FORM_data2:	// constant
+<span id="L692" class="ln">   692</span>			WPUT(value);
+<span id="L693" class="ln">   693</span>			break;
+<span id="L694" class="ln">   694</span>	
+<span id="L695" class="ln">   695</span>		case DW_FORM_data4:	// constant, {line,loclist,mac,rangelist}ptr
+<span id="L696" class="ln">   696</span>			if(linkmode == LinkExternal &amp;&amp; cls == DW_CLS_PTR) {
+<span id="L697" class="ln">   697</span>				adddwarfrel(infosec, linesym, infoo, 4, value);
+<span id="L698" class="ln">   698</span>				break;
+<span id="L699" class="ln">   699</span>			}
+<span id="L700" class="ln">   700</span>			LPUT(value);
+<span id="L701" class="ln">   701</span>			break;
+<span id="L702" class="ln">   702</span>	
+<span id="L703" class="ln">   703</span>		case DW_FORM_data8:	// constant, {line,loclist,mac,rangelist}ptr
+<span id="L704" class="ln">   704</span>			VPUT(value);
+<span id="L705" class="ln">   705</span>			break;
+<span id="L706" class="ln">   706</span>	
+<span id="L707" class="ln">   707</span>		case DW_FORM_sdata:	// constant
+<span id="L708" class="ln">   708</span>			sleb128put(value);
+<span id="L709" class="ln">   709</span>			break;
+<span id="L710" class="ln">   710</span>	
+<span id="L711" class="ln">   711</span>		case DW_FORM_udata:	// constant
+<span id="L712" class="ln">   712</span>			uleb128put(value);
+<span id="L713" class="ln">   713</span>			break;
+<span id="L714" class="ln">   714</span>	
+<span id="L715" class="ln">   715</span>		case DW_FORM_string:	// string
+<span id="L716" class="ln">   716</span>			strnput(data, value+1);
+<span id="L717" class="ln">   717</span>			break;
+<span id="L718" class="ln">   718</span>	
+<span id="L719" class="ln">   719</span>		case DW_FORM_flag:	// flag
+<span id="L720" class="ln">   720</span>			cput(value?1:0);
+<span id="L721" class="ln">   721</span>			break;
+<span id="L722" class="ln">   722</span>	
+<span id="L723" class="ln">   723</span>		case DW_FORM_ref_addr:	// reference to a DIE in the .info section
+<span id="L724" class="ln">   724</span>			// In DWARF 2 (which is what we claim to generate),
+<span id="L725" class="ln">   725</span>			// the ref_addr is the same size as a normal address.
+<span id="L726" class="ln">   726</span>			// In DWARF 3 it is always 32 bits, unless emitting a large
+<span id="L727" class="ln">   727</span>			// (&gt; 4 GB of debug info aka &#34;64-bit&#34;) unit, which we don&#39;t implement.
+<span id="L728" class="ln">   728</span>			if (data == nil) {
+<span id="L729" class="ln">   729</span>				diag(&#34;dwarf: null reference in %d&#34;, abbrev);
+<span id="L730" class="ln">   730</span>				if(PtrSize == 8)
+<span id="L731" class="ln">   731</span>					VPUT(0); // invalid dwarf, gdb will complain.
+<span id="L732" class="ln">   732</span>				else
+<span id="L733" class="ln">   733</span>					LPUT(0); // invalid dwarf, gdb will complain.
+<span id="L734" class="ln">   734</span>			} else {
+<span id="L735" class="ln">   735</span>				off = ((DWDie*)data)-&gt;offs;
+<span id="L736" class="ln">   736</span>				if (off == 0)
+<span id="L737" class="ln">   737</span>					fwdcount++;
+<span id="L738" class="ln">   738</span>				if(linkmode == LinkExternal) {
+<span id="L739" class="ln">   739</span>					adddwarfrel(infosec, infosym, infoo, PtrSize, off);
+<span id="L740" class="ln">   740</span>					break;
+<span id="L741" class="ln">   741</span>				}
+<span id="L742" class="ln">   742</span>				addrput(off);
+<span id="L743" class="ln">   743</span>			}
+<span id="L744" class="ln">   744</span>			break;
+<span id="L745" class="ln">   745</span>	
+<span id="L746" class="ln">   746</span>		case DW_FORM_ref1:	// reference within the compilation unit
+<span id="L747" class="ln">   747</span>		case DW_FORM_ref2:	// reference
+<span id="L748" class="ln">   748</span>		case DW_FORM_ref4:	// reference
+<span id="L749" class="ln">   749</span>		case DW_FORM_ref8:	// reference
+<span id="L750" class="ln">   750</span>		case DW_FORM_ref_udata:	// reference
+<span id="L751" class="ln">   751</span>	
+<span id="L752" class="ln">   752</span>		case DW_FORM_strp:	// string
+<span id="L753" class="ln">   753</span>		case DW_FORM_indirect:	// (see Section 7.5.3)
+<span id="L754" class="ln">   754</span>		default:
+<span id="L755" class="ln">   755</span>			diag(&#34;dwarf: unsupported attribute form %d / class %d&#34;, form, cls);
+<span id="L756" class="ln">   756</span>			errorexit();
+<span id="L757" class="ln">   757</span>		}
+<span id="L758" class="ln">   758</span>	}
+<span id="L759" class="ln">   759</span>	
+<span id="L760" class="ln">   760</span>	// Note that we can (and do) add arbitrary attributes to a DIE, but
+<span id="L761" class="ln">   761</span>	// only the ones actually listed in the Abbrev will be written out.
+<span id="L762" class="ln">   762</span>	static void
+<span id="L763" class="ln">   763</span>	putattrs(int abbrev, DWAttr* attr)
+<span id="L764" class="ln">   764</span>	{
+<span id="L765" class="ln">   765</span>		DWAttr *attrs[DW_AT_recursive + 1];
+<span id="L766" class="ln">   766</span>		DWAttrForm* af;
+<span id="L767" class="ln">   767</span>	
+<span id="L768" class="ln">   768</span>		memset(attrs, 0, sizeof attrs);
+<span id="L769" class="ln">   769</span>		for( ; attr; attr = attr-&gt;link)
+<span id="L770" class="ln">   770</span>			if (attr-&gt;atr &lt; nelem(attrs))
+<span id="L771" class="ln">   771</span>				attrs[attr-&gt;atr] = attr;
+<span id="L772" class="ln">   772</span>	
+<span id="L773" class="ln">   773</span>		for(af = abbrevs[abbrev].attr; af-&gt;attr; af++)
+<span id="L774" class="ln">   774</span>			if (attrs[af-&gt;attr])
+<span id="L775" class="ln">   775</span>				putattr(abbrev, af-&gt;form,
+<span id="L776" class="ln">   776</span>					attrs[af-&gt;attr]-&gt;cls,
+<span id="L777" class="ln">   777</span>					attrs[af-&gt;attr]-&gt;value,
+<span id="L778" class="ln">   778</span>					attrs[af-&gt;attr]-&gt;data);
+<span id="L779" class="ln">   779</span>			else
+<span id="L780" class="ln">   780</span>				putattr(abbrev, af-&gt;form, 0, 0, nil);
+<span id="L781" class="ln">   781</span>	}
+<span id="L782" class="ln">   782</span>	
+<span id="L783" class="ln">   783</span>	static void putdie(DWDie* die);
+<span id="L784" class="ln">   784</span>	
+<span id="L785" class="ln">   785</span>	static void
+<span id="L786" class="ln">   786</span>	putdies(DWDie* die)
+<span id="L787" class="ln">   787</span>	{
+<span id="L788" class="ln">   788</span>		for(; die; die = die-&gt;link)
+<span id="L789" class="ln">   789</span>			putdie(die);
+<span id="L790" class="ln">   790</span>	}
+<span id="L791" class="ln">   791</span>	
+<span id="L792" class="ln">   792</span>	static void
+<span id="L793" class="ln">   793</span>	putdie(DWDie* die)
+<span id="L794" class="ln">   794</span>	{
+<span id="L795" class="ln">   795</span>		die-&gt;offs = cpos() - infoo;
+<span id="L796" class="ln">   796</span>		uleb128put(die-&gt;abbrev);
+<span id="L797" class="ln">   797</span>		putattrs(die-&gt;abbrev, die-&gt;attr);
+<span id="L798" class="ln">   798</span>		if (abbrevs[die-&gt;abbrev].children) {
+<span id="L799" class="ln">   799</span>			putdies(die-&gt;child);
+<span id="L800" class="ln">   800</span>			cput(0);
+<span id="L801" class="ln">   801</span>		}
+<span id="L802" class="ln">   802</span>	}
+<span id="L803" class="ln">   803</span>	
+<span id="L804" class="ln">   804</span>	static void
+<span id="L805" class="ln">   805</span>	reverselist(DWDie** list)
+<span id="L806" class="ln">   806</span>	{
+<span id="L807" class="ln">   807</span>		DWDie *curr, *prev;
+<span id="L808" class="ln">   808</span>	
+<span id="L809" class="ln">   809</span>		curr = *list;
+<span id="L810" class="ln">   810</span>		prev = nil;
+<span id="L811" class="ln">   811</span>		while(curr != nil) {
+<span id="L812" class="ln">   812</span>			DWDie* next = curr-&gt;link;
+<span id="L813" class="ln">   813</span>			curr-&gt;link = prev;
+<span id="L814" class="ln">   814</span>			prev = curr;
+<span id="L815" class="ln">   815</span>			curr = next;
+<span id="L816" class="ln">   816</span>		}
+<span id="L817" class="ln">   817</span>		*list = prev;
+<span id="L818" class="ln">   818</span>	}
+<span id="L819" class="ln">   819</span>	
+<span id="L820" class="ln">   820</span>	static void
+<span id="L821" class="ln">   821</span>	reversetree(DWDie** list)
+<span id="L822" class="ln">   822</span>	{
+<span id="L823" class="ln">   823</span>		 DWDie *die;
+<span id="L824" class="ln">   824</span>	
+<span id="L825" class="ln">   825</span>		 reverselist(list);
+<span id="L826" class="ln">   826</span>		 for (die = *list; die != nil; die = die-&gt;link)
+<span id="L827" class="ln">   827</span>			 if (abbrevs[die-&gt;abbrev].children)
+<span id="L828" class="ln">   828</span>				 reversetree(&amp;die-&gt;child);
+<span id="L829" class="ln">   829</span>	}
+<span id="L830" class="ln">   830</span>	
+<span id="L831" class="ln">   831</span>	static void
+<span id="L832" class="ln">   832</span>	newmemberoffsetattr(DWDie *die, int32 offs)
+<span id="L833" class="ln">   833</span>	{
+<span id="L834" class="ln">   834</span>		char block[10];
+<span id="L835" class="ln">   835</span>		int i;
+<span id="L836" class="ln">   836</span>	
+<span id="L837" class="ln">   837</span>		i = 0;
+<span id="L838" class="ln">   838</span>		if (offs != 0) {
+<span id="L839" class="ln">   839</span>			block[i++] = DW_OP_consts;
+<span id="L840" class="ln">   840</span>			i += sleb128enc(offs, block+i);
+<span id="L841" class="ln">   841</span>			block[i++] = DW_OP_plus;
+<span id="L842" class="ln">   842</span>		}
+<span id="L843" class="ln">   843</span>		newattr(die, DW_AT_data_member_location, DW_CLS_BLOCK, i, mal(i));
+<span id="L844" class="ln">   844</span>		memmove(die-&gt;attr-&gt;data, block, i);
+<span id="L845" class="ln">   845</span>	}
+<span id="L846" class="ln">   846</span>	
+<span id="L847" class="ln">   847</span>	// GDB doesn&#39;t like DW_FORM_addr for DW_AT_location, so emit a
+<span id="L848" class="ln">   848</span>	// location expression that evals to a const.
+<span id="L849" class="ln">   849</span>	static void
+<span id="L850" class="ln">   850</span>	newabslocexprattr(DWDie *die, vlong addr, LSym *sym)
+<span id="L851" class="ln">   851</span>	{
+<span id="L852" class="ln">   852</span>		newattr(die, DW_AT_location, DW_CLS_ADDRESS, addr, (char*)sym);
+<span id="L853" class="ln">   853</span>	}
+<span id="L854" class="ln">   854</span>	
+<span id="L855" class="ln">   855</span>	
+<span id="L856" class="ln">   856</span>	// Fake attributes for slices, maps and channel
+<span id="L857" class="ln">   857</span>	enum {
+<span id="L858" class="ln">   858</span>		DW_AT_internal_elem_type = 250,	 // channels and slices
+<span id="L859" class="ln">   859</span>		DW_AT_internal_key_type = 251,	 // maps
+<span id="L860" class="ln">   860</span>		DW_AT_internal_val_type = 252,	 // maps
+<span id="L861" class="ln">   861</span>		DW_AT_internal_location = 253,	 // params and locals
+<span id="L862" class="ln">   862</span>	};
+<span id="L863" class="ln">   863</span>	
+<span id="L864" class="ln">   864</span>	static DWDie* defptrto(DWDie *dwtype);	// below
+<span id="L865" class="ln">   865</span>	
+<span id="L866" class="ln">   866</span>	// Lookup predefined types
+<span id="L867" class="ln">   867</span>	static LSym*
+<span id="L868" class="ln">   868</span>	lookup_or_diag(char *n)
+<span id="L869" class="ln">   869</span>	{
+<span id="L870" class="ln">   870</span>		LSym *s;
+<span id="L871" class="ln">   871</span>	
+<span id="L872" class="ln">   872</span>		s = linkrlookup(ctxt, n, 0);
+<span id="L873" class="ln">   873</span>		if (s == nil || s-&gt;size == 0) {
+<span id="L874" class="ln">   874</span>			diag(&#34;dwarf: missing type: %s&#34;, n);
+<span id="L875" class="ln">   875</span>			errorexit();
+<span id="L876" class="ln">   876</span>		}
+<span id="L877" class="ln">   877</span>		return s;
+<span id="L878" class="ln">   878</span>	}
+<span id="L879" class="ln">   879</span>	
+<span id="L880" class="ln">   880</span>	static void
+<span id="L881" class="ln">   881</span>	dotypedef(DWDie *parent, char *name, DWDie *def)
+<span id="L882" class="ln">   882</span>	{
+<span id="L883" class="ln">   883</span>		DWDie *die;
+<span id="L884" class="ln">   884</span>	
+<span id="L885" class="ln">   885</span>		// Only emit typedefs for real names.
+<span id="L886" class="ln">   886</span>		if(strncmp(name, &#34;map[&#34;, 4) == 0)
+<span id="L887" class="ln">   887</span>			return;
+<span id="L888" class="ln">   888</span>		if(strncmp(name, &#34;struct {&#34;, 8) == 0)
+<span id="L889" class="ln">   889</span>			return;
+<span id="L890" class="ln">   890</span>		if(strncmp(name, &#34;chan &#34;, 5) == 0)
+<span id="L891" class="ln">   891</span>			return;
+<span id="L892" class="ln">   892</span>		if(*name == &#39;[&#39; || *name == &#39;*&#39;)
+<span id="L893" class="ln">   893</span>			return;
+<span id="L894" class="ln">   894</span>		if(def == nil)
+<span id="L895" class="ln">   895</span>			diag(&#34;dwarf: bad def in dotypedef&#34;);
+<span id="L896" class="ln">   896</span>	
+<span id="L897" class="ln">   897</span>		// The typedef entry must be created after the def,
+<span id="L898" class="ln">   898</span>		// so that future lookups will find the typedef instead
+<span id="L899" class="ln">   899</span>		// of the real definition. This hooks the typedef into any
+<span id="L900" class="ln">   900</span>		// circular definition loops, so that gdb can understand them.
+<span id="L901" class="ln">   901</span>		die = newdie(parent, DW_ABRV_TYPEDECL, name);
+<span id="L902" class="ln">   902</span>		newrefattr(die, DW_AT_type, def);
+<span id="L903" class="ln">   903</span>	}
+<span id="L904" class="ln">   904</span>	
+<span id="L905" class="ln">   905</span>	// Define gotype, for composite ones recurse into constituents.
+<span id="L906" class="ln">   906</span>	static DWDie*
+<span id="L907" class="ln">   907</span>	defgotype(LSym *gotype)
+<span id="L908" class="ln">   908</span>	{
+<span id="L909" class="ln">   909</span>		DWDie *die, *fld;
+<span id="L910" class="ln">   910</span>		LSym *s;
+<span id="L911" class="ln">   911</span>		char *name, *f;
+<span id="L912" class="ln">   912</span>		uint8 kind;
+<span id="L913" class="ln">   913</span>		vlong bytesize;
+<span id="L914" class="ln">   914</span>		int i, nfields;
+<span id="L915" class="ln">   915</span>	
+<span id="L916" class="ln">   916</span>		if (gotype == nil)
+<span id="L917" class="ln">   917</span>			return find_or_diag(&amp;dwtypes, &#34;&lt;unspecified&gt;&#34;);
+<span id="L918" class="ln">   918</span>	
+<span id="L919" class="ln">   919</span>		if (strncmp(&#34;type.&#34;, gotype-&gt;name, 5) != 0) {
+<span id="L920" class="ln">   920</span>			diag(&#34;dwarf: type name doesn&#39;t start with \&#34;.type\&#34;: %s&#34;, gotype-&gt;name);
+<span id="L921" class="ln">   921</span>			return find_or_diag(&amp;dwtypes, &#34;&lt;unspecified&gt;&#34;);
+<span id="L922" class="ln">   922</span>		}
+<span id="L923" class="ln">   923</span>		name = gotype-&gt;name + 5;  // could also decode from Type.string
+<span id="L924" class="ln">   924</span>	
+<span id="L925" class="ln">   925</span>		die = find(&amp;dwtypes, name);
+<span id="L926" class="ln">   926</span>		if (die != nil)
+<span id="L927" class="ln">   927</span>			return die;
+<span id="L928" class="ln">   928</span>	
+<span id="L929" class="ln">   929</span>		if (0 &amp;&amp; debug[&#39;v&#39;] &gt; 2)
+<span id="L930" class="ln">   930</span>			print(&#34;new type: %Y\n&#34;, gotype);
+<span id="L931" class="ln">   931</span>	
+<span id="L932" class="ln">   932</span>		kind = decodetype_kind(gotype);
+<span id="L933" class="ln">   933</span>		bytesize = decodetype_size(gotype);
+<span id="L934" class="ln">   934</span>	
+<span id="L935" class="ln">   935</span>		switch (kind) {
+<span id="L936" class="ln">   936</span>		case KindBool:
+<span id="L937" class="ln">   937</span>			die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, name);
+<span id="L938" class="ln">   938</span>			newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_boolean, 0);
+<span id="L939" class="ln">   939</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L940" class="ln">   940</span>			break;
+<span id="L941" class="ln">   941</span>	
+<span id="L942" class="ln">   942</span>		case KindInt:
+<span id="L943" class="ln">   943</span>		case KindInt8:
+<span id="L944" class="ln">   944</span>		case KindInt16:
+<span id="L945" class="ln">   945</span>		case KindInt32:
+<span id="L946" class="ln">   946</span>		case KindInt64:
+<span id="L947" class="ln">   947</span>			die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, name);
+<span id="L948" class="ln">   948</span>			newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_signed, 0);
+<span id="L949" class="ln">   949</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L950" class="ln">   950</span>			break;
+<span id="L951" class="ln">   951</span>	
+<span id="L952" class="ln">   952</span>		case KindUint:
+<span id="L953" class="ln">   953</span>		case KindUint8:
+<span id="L954" class="ln">   954</span>		case KindUint16:
+<span id="L955" class="ln">   955</span>		case KindUint32:
+<span id="L956" class="ln">   956</span>		case KindUint64:
+<span id="L957" class="ln">   957</span>		case KindUintptr:
+<span id="L958" class="ln">   958</span>			die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, name);
+<span id="L959" class="ln">   959</span>			newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_unsigned, 0);
+<span id="L960" class="ln">   960</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L961" class="ln">   961</span>			break;
+<span id="L962" class="ln">   962</span>	
+<span id="L963" class="ln">   963</span>		case KindFloat32:
+<span id="L964" class="ln">   964</span>		case KindFloat64:
+<span id="L965" class="ln">   965</span>			die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, name);
+<span id="L966" class="ln">   966</span>			newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_float, 0);
+<span id="L967" class="ln">   967</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L968" class="ln">   968</span>			break;
+<span id="L969" class="ln">   969</span>	
+<span id="L970" class="ln">   970</span>		case KindComplex64:
+<span id="L971" class="ln">   971</span>		case KindComplex128:
+<span id="L972" class="ln">   972</span>			die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, name);
+<span id="L973" class="ln">   973</span>			newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_complex_float, 0);
+<span id="L974" class="ln">   974</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L975" class="ln">   975</span>			break;
+<span id="L976" class="ln">   976</span>	
+<span id="L977" class="ln">   977</span>		case KindArray:
+<span id="L978" class="ln">   978</span>			die = newdie(&amp;dwtypes, DW_ABRV_ARRAYTYPE, name);
+<span id="L979" class="ln">   979</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L980" class="ln">   980</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L981" class="ln">   981</span>			s = decodetype_arrayelem(gotype);
+<span id="L982" class="ln">   982</span>			newrefattr(die, DW_AT_type, defgotype(s));
+<span id="L983" class="ln">   983</span>			fld = newdie(die, DW_ABRV_ARRAYRANGE, &#34;range&#34;);
+<span id="L984" class="ln">   984</span>			newattr(fld, DW_AT_upper_bound, DW_CLS_CONSTANT, decodetype_arraylen(gotype), 0);
+<span id="L985" class="ln">   985</span>			newrefattr(fld, DW_AT_type, find_or_diag(&amp;dwtypes, &#34;uintptr&#34;));
+<span id="L986" class="ln">   986</span>			break;
+<span id="L987" class="ln">   987</span>	
+<span id="L988" class="ln">   988</span>		case KindChan:
+<span id="L989" class="ln">   989</span>			die = newdie(&amp;dwtypes, DW_ABRV_CHANTYPE, name);
+<span id="L990" class="ln">   990</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L991" class="ln">   991</span>			s = decodetype_chanelem(gotype);
+<span id="L992" class="ln">   992</span>			newrefattr(die, DW_AT_internal_elem_type, defgotype(s));
+<span id="L993" class="ln">   993</span>			break;
+<span id="L994" class="ln">   994</span>	
+<span id="L995" class="ln">   995</span>		case KindFunc:
+<span id="L996" class="ln">   996</span>			die = newdie(&amp;dwtypes, DW_ABRV_FUNCTYPE, name);
+<span id="L997" class="ln">   997</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L998" class="ln">   998</span>			newrefattr(die, DW_AT_type, find_or_diag(&amp;dwtypes, &#34;void&#34;));
+<span id="L999" class="ln">   999</span>			nfields = decodetype_funcincount(gotype);
+<span id="L1000" class="ln">  1000</span>			for (i = 0; i &lt; nfields; i++) {
+<span id="L1001" class="ln">  1001</span>				s = decodetype_funcintype(gotype, i);
+<span id="L1002" class="ln">  1002</span>				fld = newdie(die, DW_ABRV_FUNCTYPEPARAM, s-&gt;name+5);
+<span id="L1003" class="ln">  1003</span>				newrefattr(fld, DW_AT_type, defgotype(s));
+<span id="L1004" class="ln">  1004</span>			}
+<span id="L1005" class="ln">  1005</span>			if (decodetype_funcdotdotdot(gotype))
+<span id="L1006" class="ln">  1006</span>				newdie(die, DW_ABRV_DOTDOTDOT, &#34;...&#34;);
+<span id="L1007" class="ln">  1007</span>			nfields = decodetype_funcoutcount(gotype);
+<span id="L1008" class="ln">  1008</span>			for (i = 0; i &lt; nfields; i++) {
+<span id="L1009" class="ln">  1009</span>				s = decodetype_funcouttype(gotype, i);
+<span id="L1010" class="ln">  1010</span>				fld = newdie(die, DW_ABRV_FUNCTYPEPARAM, s-&gt;name+5);
+<span id="L1011" class="ln">  1011</span>				newrefattr(fld, DW_AT_type, defptrto(defgotype(s)));
+<span id="L1012" class="ln">  1012</span>			}
+<span id="L1013" class="ln">  1013</span>			break;
+<span id="L1014" class="ln">  1014</span>	
+<span id="L1015" class="ln">  1015</span>		case KindInterface:
+<span id="L1016" class="ln">  1016</span>			die = newdie(&amp;dwtypes, DW_ABRV_IFACETYPE, name);
+<span id="L1017" class="ln">  1017</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L1018" class="ln">  1018</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L1019" class="ln">  1019</span>			nfields = decodetype_ifacemethodcount(gotype);
+<span id="L1020" class="ln">  1020</span>			if (nfields == 0)
+<span id="L1021" class="ln">  1021</span>				s = lookup_or_diag(&#34;type.runtime.eface&#34;);
+<span id="L1022" class="ln">  1022</span>			else
+<span id="L1023" class="ln">  1023</span>				s = lookup_or_diag(&#34;type.runtime.iface&#34;);
+<span id="L1024" class="ln">  1024</span>			newrefattr(die, DW_AT_type, defgotype(s));
+<span id="L1025" class="ln">  1025</span>			break;
+<span id="L1026" class="ln">  1026</span>	
+<span id="L1027" class="ln">  1027</span>		case KindMap:
+<span id="L1028" class="ln">  1028</span>			die = newdie(&amp;dwtypes, DW_ABRV_MAPTYPE, name);
+<span id="L1029" class="ln">  1029</span>			s = decodetype_mapkey(gotype);
+<span id="L1030" class="ln">  1030</span>			newrefattr(die, DW_AT_internal_key_type, defgotype(s));
+<span id="L1031" class="ln">  1031</span>			s = decodetype_mapvalue(gotype);
+<span id="L1032" class="ln">  1032</span>			newrefattr(die, DW_AT_internal_val_type, defgotype(s));
+<span id="L1033" class="ln">  1033</span>			break;
+<span id="L1034" class="ln">  1034</span>	
+<span id="L1035" class="ln">  1035</span>		case KindPtr:
+<span id="L1036" class="ln">  1036</span>			die = newdie(&amp;dwtypes, DW_ABRV_PTRTYPE, name);
+<span id="L1037" class="ln">  1037</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L1038" class="ln">  1038</span>			s = decodetype_ptrelem(gotype);
+<span id="L1039" class="ln">  1039</span>			newrefattr(die, DW_AT_type, defgotype(s));
+<span id="L1040" class="ln">  1040</span>			break;
+<span id="L1041" class="ln">  1041</span>	
+<span id="L1042" class="ln">  1042</span>		case KindSlice:
+<span id="L1043" class="ln">  1043</span>			die = newdie(&amp;dwtypes, DW_ABRV_SLICETYPE, name);
+<span id="L1044" class="ln">  1044</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L1045" class="ln">  1045</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L1046" class="ln">  1046</span>			s = decodetype_arrayelem(gotype);
+<span id="L1047" class="ln">  1047</span>			newrefattr(die, DW_AT_internal_elem_type, defgotype(s));
+<span id="L1048" class="ln">  1048</span>			break;
+<span id="L1049" class="ln">  1049</span>	
+<span id="L1050" class="ln">  1050</span>		case KindString:
+<span id="L1051" class="ln">  1051</span>			die = newdie(&amp;dwtypes, DW_ABRV_STRINGTYPE, name);
+<span id="L1052" class="ln">  1052</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L1053" class="ln">  1053</span>			break;
+<span id="L1054" class="ln">  1054</span>	
+<span id="L1055" class="ln">  1055</span>		case KindStruct:
+<span id="L1056" class="ln">  1056</span>			die = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE, name);
+<span id="L1057" class="ln">  1057</span>			dotypedef(&amp;dwtypes, name, die);
+<span id="L1058" class="ln">  1058</span>			newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, bytesize, 0);
+<span id="L1059" class="ln">  1059</span>			nfields = decodetype_structfieldcount(gotype);
+<span id="L1060" class="ln">  1060</span>			for (i = 0; i &lt; nfields; i++) {
+<span id="L1061" class="ln">  1061</span>				f = decodetype_structfieldname(gotype, i);
+<span id="L1062" class="ln">  1062</span>				s = decodetype_structfieldtype(gotype, i);
+<span id="L1063" class="ln">  1063</span>				if (f == nil)
+<span id="L1064" class="ln">  1064</span>					f = s-&gt;name + 5;	 // skip &#34;type.&#34;
+<span id="L1065" class="ln">  1065</span>				fld = newdie(die, DW_ABRV_STRUCTFIELD, f);
+<span id="L1066" class="ln">  1066</span>				newrefattr(fld, DW_AT_type, defgotype(s));
+<span id="L1067" class="ln">  1067</span>				newmemberoffsetattr(fld, decodetype_structfieldoffs(gotype, i));
+<span id="L1068" class="ln">  1068</span>			}
+<span id="L1069" class="ln">  1069</span>			break;
+<span id="L1070" class="ln">  1070</span>	
+<span id="L1071" class="ln">  1071</span>		case KindUnsafePointer:
+<span id="L1072" class="ln">  1072</span>			die = newdie(&amp;dwtypes, DW_ABRV_BARE_PTRTYPE, name);
+<span id="L1073" class="ln">  1073</span>			break;
+<span id="L1074" class="ln">  1074</span>	
+<span id="L1075" class="ln">  1075</span>		default:
+<span id="L1076" class="ln">  1076</span>			diag(&#34;dwarf: definition of unknown kind %d: %s&#34;, kind, gotype-&gt;name);
+<span id="L1077" class="ln">  1077</span>			die = newdie(&amp;dwtypes, DW_ABRV_TYPEDECL, name);
+<span id="L1078" class="ln">  1078</span>			newrefattr(die, DW_AT_type, find_or_diag(&amp;dwtypes, &#34;&lt;unspecified&gt;&#34;));
+<span id="L1079" class="ln">  1079</span>		 }
+<span id="L1080" class="ln">  1080</span>	
+<span id="L1081" class="ln">  1081</span>		return die;
+<span id="L1082" class="ln">  1082</span>	}
+<span id="L1083" class="ln">  1083</span>	
+<span id="L1084" class="ln">  1084</span>	// Find or construct *T given T.
+<span id="L1085" class="ln">  1085</span>	static DWDie*
+<span id="L1086" class="ln">  1086</span>	defptrto(DWDie *dwtype)
+<span id="L1087" class="ln">  1087</span>	{
+<span id="L1088" class="ln">  1088</span>		char ptrname[1024];
+<span id="L1089" class="ln">  1089</span>		DWDie *die;
+<span id="L1090" class="ln">  1090</span>	
+<span id="L1091" class="ln">  1091</span>		snprint(ptrname, sizeof ptrname, &#34;*%s&#34;, getattr(dwtype, DW_AT_name)-&gt;data);
+<span id="L1092" class="ln">  1092</span>		die = find(&amp;dwtypes, ptrname);
+<span id="L1093" class="ln">  1093</span>		if (die == nil) {
+<span id="L1094" class="ln">  1094</span>			die = newdie(&amp;dwtypes, DW_ABRV_PTRTYPE,
+<span id="L1095" class="ln">  1095</span>				     strcpy(mal(strlen(ptrname)+1), ptrname));
+<span id="L1096" class="ln">  1096</span>			newrefattr(die, DW_AT_type, dwtype);
+<span id="L1097" class="ln">  1097</span>		}
+<span id="L1098" class="ln">  1098</span>		return die;
+<span id="L1099" class="ln">  1099</span>	}
+<span id="L1100" class="ln">  1100</span>	
+<span id="L1101" class="ln">  1101</span>	// Copies src&#39;s children into dst. Copies attributes by value.
+<span id="L1102" class="ln">  1102</span>	// DWAttr.data is copied as pointer only.  If except is one of
+<span id="L1103" class="ln">  1103</span>	// the top-level children, it will not be copied.
+<span id="L1104" class="ln">  1104</span>	static void
+<span id="L1105" class="ln">  1105</span>	copychildrenexcept(DWDie *dst, DWDie *src, DWDie *except)
+<span id="L1106" class="ln">  1106</span>	{
+<span id="L1107" class="ln">  1107</span>		DWDie *c;
+<span id="L1108" class="ln">  1108</span>		DWAttr *a;
+<span id="L1109" class="ln">  1109</span>	
+<span id="L1110" class="ln">  1110</span>		for (src = src-&gt;child; src != nil; src = src-&gt;link) {
+<span id="L1111" class="ln">  1111</span>			if(src == except)
+<span id="L1112" class="ln">  1112</span>				continue;
+<span id="L1113" class="ln">  1113</span>			c = newdie(dst, src-&gt;abbrev, getattr(src, DW_AT_name)-&gt;data);
+<span id="L1114" class="ln">  1114</span>			for (a = src-&gt;attr; a != nil; a = a-&gt;link)
+<span id="L1115" class="ln">  1115</span>				newattr(c, a-&gt;atr, a-&gt;cls, a-&gt;value, a-&gt;data);
+<span id="L1116" class="ln">  1116</span>			copychildrenexcept(c, src, nil);
+<span id="L1117" class="ln">  1117</span>		}
+<span id="L1118" class="ln">  1118</span>		reverselist(&amp;dst-&gt;child);
+<span id="L1119" class="ln">  1119</span>	}
+<span id="L1120" class="ln">  1120</span>	static void
+<span id="L1121" class="ln">  1121</span>	copychildren(DWDie *dst, DWDie *src)
+<span id="L1122" class="ln">  1122</span>	{
+<span id="L1123" class="ln">  1123</span>		copychildrenexcept(dst, src, nil);
+<span id="L1124" class="ln">  1124</span>	}
+<span id="L1125" class="ln">  1125</span>	
+<span id="L1126" class="ln">  1126</span>	// Search children (assumed to have DW_TAG_member) for the one named
+<span id="L1127" class="ln">  1127</span>	// field and set its DW_AT_type to dwtype
+<span id="L1128" class="ln">  1128</span>	static void
+<span id="L1129" class="ln">  1129</span>	substitutetype(DWDie *structdie, char *field, DWDie* dwtype)
+<span id="L1130" class="ln">  1130</span>	{
+<span id="L1131" class="ln">  1131</span>		DWDie *child;
+<span id="L1132" class="ln">  1132</span>		DWAttr *a;
+<span id="L1133" class="ln">  1133</span>	
+<span id="L1134" class="ln">  1134</span>		child = find_or_diag(structdie, field);
+<span id="L1135" class="ln">  1135</span>		if (child == nil)
+<span id="L1136" class="ln">  1136</span>			return;
+<span id="L1137" class="ln">  1137</span>	
+<span id="L1138" class="ln">  1138</span>		a = getattr(child, DW_AT_type);
+<span id="L1139" class="ln">  1139</span>		if (a != nil)
+<span id="L1140" class="ln">  1140</span>			a-&gt;data = (char*) dwtype;
+<span id="L1141" class="ln">  1141</span>		else
+<span id="L1142" class="ln">  1142</span>			newrefattr(child, DW_AT_type, dwtype);
+<span id="L1143" class="ln">  1143</span>	}
+<span id="L1144" class="ln">  1144</span>	
+<span id="L1145" class="ln">  1145</span>	static void
+<span id="L1146" class="ln">  1146</span>	synthesizestringtypes(DWDie* die)
+<span id="L1147" class="ln">  1147</span>	{
+<span id="L1148" class="ln">  1148</span>		DWDie *prototype;
+<span id="L1149" class="ln">  1149</span>	
+<span id="L1150" class="ln">  1150</span>		prototype = walktypedef(defgotype(lookup_or_diag(&#34;type.runtime._string&#34;)));
+<span id="L1151" class="ln">  1151</span>		if (prototype == nil)
+<span id="L1152" class="ln">  1152</span>			return;
+<span id="L1153" class="ln">  1153</span>	
+<span id="L1154" class="ln">  1154</span>		for (; die != nil; die = die-&gt;link) {
+<span id="L1155" class="ln">  1155</span>			if (die-&gt;abbrev != DW_ABRV_STRINGTYPE)
+<span id="L1156" class="ln">  1156</span>				continue;
+<span id="L1157" class="ln">  1157</span>			copychildren(die, prototype);
+<span id="L1158" class="ln">  1158</span>		}
+<span id="L1159" class="ln">  1159</span>	}
+<span id="L1160" class="ln">  1160</span>	
+<span id="L1161" class="ln">  1161</span>	static void
+<span id="L1162" class="ln">  1162</span>	synthesizeslicetypes(DWDie *die)
+<span id="L1163" class="ln">  1163</span>	{
+<span id="L1164" class="ln">  1164</span>		DWDie *prototype, *elem;
+<span id="L1165" class="ln">  1165</span>	
+<span id="L1166" class="ln">  1166</span>		prototype = walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.slice&#34;)));
+<span id="L1167" class="ln">  1167</span>		if (prototype == nil)
+<span id="L1168" class="ln">  1168</span>			return;
+<span id="L1169" class="ln">  1169</span>	
+<span id="L1170" class="ln">  1170</span>		for (; die != nil; die = die-&gt;link) {
+<span id="L1171" class="ln">  1171</span>			if (die-&gt;abbrev != DW_ABRV_SLICETYPE)
+<span id="L1172" class="ln">  1172</span>				continue;
+<span id="L1173" class="ln">  1173</span>			copychildren(die, prototype);
+<span id="L1174" class="ln">  1174</span>			elem = (DWDie*) getattr(die, DW_AT_internal_elem_type)-&gt;data;
+<span id="L1175" class="ln">  1175</span>			substitutetype(die, &#34;array&#34;, defptrto(elem));
+<span id="L1176" class="ln">  1176</span>		}
+<span id="L1177" class="ln">  1177</span>	}
+<span id="L1178" class="ln">  1178</span>	
+<span id="L1179" class="ln">  1179</span>	static char*
+<span id="L1180" class="ln">  1180</span>	mkinternaltypename(char *base, char *arg1, char *arg2)
+<span id="L1181" class="ln">  1181</span>	{
+<span id="L1182" class="ln">  1182</span>		char buf[1024];
+<span id="L1183" class="ln">  1183</span>		char *n;
+<span id="L1184" class="ln">  1184</span>	
+<span id="L1185" class="ln">  1185</span>		if (arg2 == nil)
+<span id="L1186" class="ln">  1186</span>			snprint(buf, sizeof buf, &#34;%s&lt;%s&gt;&#34;, base, arg1);
+<span id="L1187" class="ln">  1187</span>		else
+<span id="L1188" class="ln">  1188</span>			snprint(buf, sizeof buf, &#34;%s&lt;%s,%s&gt;&#34;, base, arg1, arg2);
+<span id="L1189" class="ln">  1189</span>		n = mal(strlen(buf) + 1);
+<span id="L1190" class="ln">  1190</span>		memmove(n, buf, strlen(buf));
+<span id="L1191" class="ln">  1191</span>		return n;
+<span id="L1192" class="ln">  1192</span>	}
+<span id="L1193" class="ln">  1193</span>	
+<span id="L1194" class="ln">  1194</span>	// synthesizemaptypes is way too closely married to runtime/hashmap.c
+<span id="L1195" class="ln">  1195</span>	enum {
+<span id="L1196" class="ln">  1196</span>		MaxKeySize = 128,
+<span id="L1197" class="ln">  1197</span>		MaxValSize = 128,
+<span id="L1198" class="ln">  1198</span>		BucketSize = 8,
+<span id="L1199" class="ln">  1199</span>	};
+<span id="L1200" class="ln">  1200</span>	
+<span id="L1201" class="ln">  1201</span>	static void
+<span id="L1202" class="ln">  1202</span>	synthesizemaptypes(DWDie *die)
+<span id="L1203" class="ln">  1203</span>	{
+<span id="L1204" class="ln">  1204</span>	
+<span id="L1205" class="ln">  1205</span>		DWDie *hash, *bucket, *dwh, *dwhk, *dwhv, *dwhb, *keytype, *valtype, *fld;
+<span id="L1206" class="ln">  1206</span>		int indirect_key, indirect_val;
+<span id="L1207" class="ln">  1207</span>		int keysize, valsize;
+<span id="L1208" class="ln">  1208</span>		DWAttr *a;
+<span id="L1209" class="ln">  1209</span>	
+<span id="L1210" class="ln">  1210</span>		hash		= walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.hmap&#34;)));
+<span id="L1211" class="ln">  1211</span>		bucket		= walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.bucket&#34;)));
+<span id="L1212" class="ln">  1212</span>	
+<span id="L1213" class="ln">  1213</span>		if (hash == nil)
+<span id="L1214" class="ln">  1214</span>			return;
+<span id="L1215" class="ln">  1215</span>	
+<span id="L1216" class="ln">  1216</span>		for (; die != nil; die = die-&gt;link) {
+<span id="L1217" class="ln">  1217</span>			if (die-&gt;abbrev != DW_ABRV_MAPTYPE)
+<span id="L1218" class="ln">  1218</span>				continue;
+<span id="L1219" class="ln">  1219</span>	
+<span id="L1220" class="ln">  1220</span>			keytype = walktypedef((DWDie*) getattr(die, DW_AT_internal_key_type)-&gt;data);
+<span id="L1221" class="ln">  1221</span>			valtype = walktypedef((DWDie*) getattr(die, DW_AT_internal_val_type)-&gt;data);
+<span id="L1222" class="ln">  1222</span>	
+<span id="L1223" class="ln">  1223</span>			// compute size info like hashmap.c does.
+<span id="L1224" class="ln">  1224</span>			a = getattr(keytype, DW_AT_byte_size);
+<span id="L1225" class="ln">  1225</span>			keysize = a ? a-&gt;value : PtrSize;  // We don&#39;t store size with Pointers
+<span id="L1226" class="ln">  1226</span>			a = getattr(valtype, DW_AT_byte_size);
+<span id="L1227" class="ln">  1227</span>			valsize = a ? a-&gt;value : PtrSize;
+<span id="L1228" class="ln">  1228</span>			indirect_key = 0;
+<span id="L1229" class="ln">  1229</span>			indirect_val = 0;
+<span id="L1230" class="ln">  1230</span>			if(keysize &gt; MaxKeySize) {
+<span id="L1231" class="ln">  1231</span>				keysize = PtrSize;
+<span id="L1232" class="ln">  1232</span>				indirect_key = 1;
+<span id="L1233" class="ln">  1233</span>			}
+<span id="L1234" class="ln">  1234</span>			if(valsize &gt; MaxValSize) {
+<span id="L1235" class="ln">  1235</span>				valsize = PtrSize;
+<span id="L1236" class="ln">  1236</span>				indirect_val = 1;
+<span id="L1237" class="ln">  1237</span>			}
+<span id="L1238" class="ln">  1238</span>	
+<span id="L1239" class="ln">  1239</span>			// Construct type to represent an array of BucketSize keys
+<span id="L1240" class="ln">  1240</span>			dwhk = newdie(&amp;dwtypes, DW_ABRV_ARRAYTYPE,
+<span id="L1241" class="ln">  1241</span>				      mkinternaltypename(&#34;[]key&#34;,
+<span id="L1242" class="ln">  1242</span>							 getattr(keytype, DW_AT_name)-&gt;data, nil));
+<span id="L1243" class="ln">  1243</span>			newattr(dwhk, DW_AT_byte_size, DW_CLS_CONSTANT, BucketSize * keysize, 0);
+<span id="L1244" class="ln">  1244</span>			newrefattr(dwhk, DW_AT_type, indirect_key ? defptrto(keytype) : keytype);
+<span id="L1245" class="ln">  1245</span>			fld = newdie(dwhk, DW_ABRV_ARRAYRANGE, &#34;size&#34;);
+<span id="L1246" class="ln">  1246</span>			newattr(fld, DW_AT_upper_bound, DW_CLS_CONSTANT, BucketSize, 0);
+<span id="L1247" class="ln">  1247</span>			newrefattr(fld, DW_AT_type, find_or_diag(&amp;dwtypes, &#34;uintptr&#34;));
+<span id="L1248" class="ln">  1248</span>			
+<span id="L1249" class="ln">  1249</span>			// Construct type to represent an array of BucketSize values
+<span id="L1250" class="ln">  1250</span>			dwhv = newdie(&amp;dwtypes, DW_ABRV_ARRAYTYPE, 
+<span id="L1251" class="ln">  1251</span>				      mkinternaltypename(&#34;[]val&#34;,
+<span id="L1252" class="ln">  1252</span>							 getattr(valtype, DW_AT_name)-&gt;data, nil));
+<span id="L1253" class="ln">  1253</span>			newattr(dwhv, DW_AT_byte_size, DW_CLS_CONSTANT, BucketSize * valsize, 0);
+<span id="L1254" class="ln">  1254</span>			newrefattr(dwhv, DW_AT_type, indirect_val ? defptrto(valtype) : valtype);
+<span id="L1255" class="ln">  1255</span>			fld = newdie(dwhv, DW_ABRV_ARRAYRANGE, &#34;size&#34;);
+<span id="L1256" class="ln">  1256</span>			newattr(fld, DW_AT_upper_bound, DW_CLS_CONSTANT, BucketSize, 0);
+<span id="L1257" class="ln">  1257</span>			newrefattr(fld, DW_AT_type, find_or_diag(&amp;dwtypes, &#34;uintptr&#34;));
+<span id="L1258" class="ln">  1258</span>	
+<span id="L1259" class="ln">  1259</span>			// Construct bucket&lt;K,V&gt;
+<span id="L1260" class="ln">  1260</span>			dwhb = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE,
+<span id="L1261" class="ln">  1261</span>				      mkinternaltypename(&#34;bucket&#34;,
+<span id="L1262" class="ln">  1262</span>							 getattr(keytype, DW_AT_name)-&gt;data,
+<span id="L1263" class="ln">  1263</span>							 getattr(valtype, DW_AT_name)-&gt;data));
+<span id="L1264" class="ln">  1264</span>			// Copy over all fields except the field &#34;data&#34; from the generic bucket.
+<span id="L1265" class="ln">  1265</span>			// &#34;data&#34; will be replaced with keys/values below.
+<span id="L1266" class="ln">  1266</span>			copychildrenexcept(dwhb, bucket, find(bucket, &#34;data&#34;));
+<span id="L1267" class="ln">  1267</span>			
+<span id="L1268" class="ln">  1268</span>			fld = newdie(dwhb, DW_ABRV_STRUCTFIELD, &#34;keys&#34;);
+<span id="L1269" class="ln">  1269</span>			newrefattr(fld, DW_AT_type, dwhk);
+<span id="L1270" class="ln">  1270</span>			newmemberoffsetattr(fld, BucketSize + PtrSize);
+<span id="L1271" class="ln">  1271</span>			fld = newdie(dwhb, DW_ABRV_STRUCTFIELD, &#34;values&#34;);
+<span id="L1272" class="ln">  1272</span>			newrefattr(fld, DW_AT_type, dwhv);
+<span id="L1273" class="ln">  1273</span>			newmemberoffsetattr(fld, BucketSize + PtrSize + BucketSize * keysize);
+<span id="L1274" class="ln">  1274</span>			newattr(dwhb, DW_AT_byte_size, DW_CLS_CONSTANT, BucketSize + PtrSize + BucketSize * keysize + BucketSize * valsize, 0);
+<span id="L1275" class="ln">  1275</span>			substitutetype(dwhb, &#34;overflow&#34;, defptrto(dwhb));
+<span id="L1276" class="ln">  1276</span>	
+<span id="L1277" class="ln">  1277</span>			// Construct hash&lt;K,V&gt;
+<span id="L1278" class="ln">  1278</span>			dwh = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE,
+<span id="L1279" class="ln">  1279</span>				mkinternaltypename(&#34;hash&#34;,
+<span id="L1280" class="ln">  1280</span>					getattr(keytype, DW_AT_name)-&gt;data,
+<span id="L1281" class="ln">  1281</span>					getattr(valtype, DW_AT_name)-&gt;data));
+<span id="L1282" class="ln">  1282</span>			copychildren(dwh, hash);
+<span id="L1283" class="ln">  1283</span>			substitutetype(dwh, &#34;buckets&#34;, defptrto(dwhb));
+<span id="L1284" class="ln">  1284</span>			substitutetype(dwh, &#34;oldbuckets&#34;, defptrto(dwhb));
+<span id="L1285" class="ln">  1285</span>			newattr(dwh, DW_AT_byte_size, DW_CLS_CONSTANT,
+<span id="L1286" class="ln">  1286</span>				getattr(hash, DW_AT_byte_size)-&gt;value, nil);
+<span id="L1287" class="ln">  1287</span>	
+<span id="L1288" class="ln">  1288</span>			// make map type a pointer to hash&lt;K,V&gt;
+<span id="L1289" class="ln">  1289</span>			newrefattr(die, DW_AT_type, defptrto(dwh));
+<span id="L1290" class="ln">  1290</span>		}
+<span id="L1291" class="ln">  1291</span>	}
+<span id="L1292" class="ln">  1292</span>	
+<span id="L1293" class="ln">  1293</span>	static void
+<span id="L1294" class="ln">  1294</span>	synthesizechantypes(DWDie *die)
+<span id="L1295" class="ln">  1295</span>	{
+<span id="L1296" class="ln">  1296</span>		DWDie *sudog, *waitq, *hchan,
+<span id="L1297" class="ln">  1297</span>			*dws, *dww, *dwh, *elemtype;
+<span id="L1298" class="ln">  1298</span>		DWAttr *a;
+<span id="L1299" class="ln">  1299</span>		int elemsize, sudogsize;
+<span id="L1300" class="ln">  1300</span>	
+<span id="L1301" class="ln">  1301</span>		sudog = walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.sudog&#34;)));
+<span id="L1302" class="ln">  1302</span>		waitq = walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.waitq&#34;)));
+<span id="L1303" class="ln">  1303</span>		hchan = walktypedef(defgotype(lookup_or_diag(&#34;type.runtime.hchan&#34;)));
+<span id="L1304" class="ln">  1304</span>		if (sudog == nil || waitq == nil || hchan == nil)
+<span id="L1305" class="ln">  1305</span>			return;
+<span id="L1306" class="ln">  1306</span>	
+<span id="L1307" class="ln">  1307</span>		sudogsize = getattr(sudog, DW_AT_byte_size)-&gt;value;
+<span id="L1308" class="ln">  1308</span>	
+<span id="L1309" class="ln">  1309</span>		for (; die != nil; die = die-&gt;link) {
+<span id="L1310" class="ln">  1310</span>			if (die-&gt;abbrev != DW_ABRV_CHANTYPE)
+<span id="L1311" class="ln">  1311</span>				continue;
+<span id="L1312" class="ln">  1312</span>			elemtype = (DWDie*) getattr(die, DW_AT_internal_elem_type)-&gt;data;
+<span id="L1313" class="ln">  1313</span>			a = getattr(elemtype, DW_AT_byte_size);
+<span id="L1314" class="ln">  1314</span>			elemsize = a ? a-&gt;value : PtrSize;
+<span id="L1315" class="ln">  1315</span>	
+<span id="L1316" class="ln">  1316</span>			// sudog&lt;T&gt;
+<span id="L1317" class="ln">  1317</span>			dws = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE,
+<span id="L1318" class="ln">  1318</span>				mkinternaltypename(&#34;sudog&#34;,
+<span id="L1319" class="ln">  1319</span>					getattr(elemtype, DW_AT_name)-&gt;data, nil));
+<span id="L1320" class="ln">  1320</span>			copychildren(dws, sudog);
+<span id="L1321" class="ln">  1321</span>			substitutetype(dws, &#34;elem&#34;, elemtype);
+<span id="L1322" class="ln">  1322</span>			newattr(dws, DW_AT_byte_size, DW_CLS_CONSTANT,
+<span id="L1323" class="ln">  1323</span>				sudogsize + (elemsize &gt; 8 ? elemsize - 8 : 0), nil);
+<span id="L1324" class="ln">  1324</span>	
+<span id="L1325" class="ln">  1325</span>			// waitq&lt;T&gt;
+<span id="L1326" class="ln">  1326</span>			dww = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE,
+<span id="L1327" class="ln">  1327</span>				mkinternaltypename(&#34;waitq&#34;, getattr(elemtype, DW_AT_name)-&gt;data, nil));
+<span id="L1328" class="ln">  1328</span>			copychildren(dww, waitq);
+<span id="L1329" class="ln">  1329</span>			substitutetype(dww, &#34;first&#34;, defptrto(dws));
+<span id="L1330" class="ln">  1330</span>			substitutetype(dww, &#34;last&#34;,  defptrto(dws));
+<span id="L1331" class="ln">  1331</span>			newattr(dww, DW_AT_byte_size, DW_CLS_CONSTANT,
+<span id="L1332" class="ln">  1332</span>				getattr(waitq, DW_AT_byte_size)-&gt;value, nil);
+<span id="L1333" class="ln">  1333</span>	
+<span id="L1334" class="ln">  1334</span>			// hchan&lt;T&gt;
+<span id="L1335" class="ln">  1335</span>			dwh = newdie(&amp;dwtypes, DW_ABRV_STRUCTTYPE,
+<span id="L1336" class="ln">  1336</span>				mkinternaltypename(&#34;hchan&#34;, getattr(elemtype, DW_AT_name)-&gt;data, nil));
+<span id="L1337" class="ln">  1337</span>			copychildren(dwh, hchan);
+<span id="L1338" class="ln">  1338</span>			substitutetype(dwh, &#34;recvq&#34;, dww);
+<span id="L1339" class="ln">  1339</span>			substitutetype(dwh, &#34;sendq&#34;, dww);
+<span id="L1340" class="ln">  1340</span>			newattr(dwh, DW_AT_byte_size, DW_CLS_CONSTANT,
+<span id="L1341" class="ln">  1341</span>				getattr(hchan, DW_AT_byte_size)-&gt;value, nil);
+<span id="L1342" class="ln">  1342</span>	
+<span id="L1343" class="ln">  1343</span>			newrefattr(die, DW_AT_type, defptrto(dwh));
+<span id="L1344" class="ln">  1344</span>		}
+<span id="L1345" class="ln">  1345</span>	}
+<span id="L1346" class="ln">  1346</span>	
+<span id="L1347" class="ln">  1347</span>	// For use with pass.c::genasmsym
+<span id="L1348" class="ln">  1348</span>	static void
+<span id="L1349" class="ln">  1349</span>	defdwsymb(LSym* sym, char *s, int t, vlong v, vlong size, int ver, LSym *gotype)
+<span id="L1350" class="ln">  1350</span>	{
+<span id="L1351" class="ln">  1351</span>		DWDie *dv, *dt;
+<span id="L1352" class="ln">  1352</span>	
+<span id="L1353" class="ln">  1353</span>		USED(size);
+<span id="L1354" class="ln">  1354</span>		if (strncmp(s, &#34;go.string.&#34;, 10) == 0)
+<span id="L1355" class="ln">  1355</span>			return;
+<span id="L1356" class="ln">  1356</span>	
+<span id="L1357" class="ln">  1357</span>		if (strncmp(s, &#34;type.&#34;, 5) == 0 &amp;&amp; strcmp(s, &#34;type.*&#34;) != 0 &amp;&amp; strncmp(s, &#34;type..&#34;, 6) != 0) {
+<span id="L1358" class="ln">  1358</span>			defgotype(sym);
+<span id="L1359" class="ln">  1359</span>			return;
+<span id="L1360" class="ln">  1360</span>		}
+<span id="L1361" class="ln">  1361</span>	
+<span id="L1362" class="ln">  1362</span>		dv = nil;
+<span id="L1363" class="ln">  1363</span>	
+<span id="L1364" class="ln">  1364</span>		switch (t) {
+<span id="L1365" class="ln">  1365</span>		default:
+<span id="L1366" class="ln">  1366</span>			return;
+<span id="L1367" class="ln">  1367</span>		case &#39;d&#39;:
+<span id="L1368" class="ln">  1368</span>		case &#39;b&#39;:
+<span id="L1369" class="ln">  1369</span>		case &#39;D&#39;:
+<span id="L1370" class="ln">  1370</span>		case &#39;B&#39;:
+<span id="L1371" class="ln">  1371</span>			dv = newdie(&amp;dwglobals, DW_ABRV_VARIABLE, s);
+<span id="L1372" class="ln">  1372</span>			newabslocexprattr(dv, v, sym);
+<span id="L1373" class="ln">  1373</span>			if (ver == 0)
+<span id="L1374" class="ln">  1374</span>				newattr(dv, DW_AT_external, DW_CLS_FLAG, 1, 0);
+<span id="L1375" class="ln">  1375</span>			// fallthrough
+<span id="L1376" class="ln">  1376</span>		case &#39;a&#39;:
+<span id="L1377" class="ln">  1377</span>		case &#39;p&#39;:
+<span id="L1378" class="ln">  1378</span>			dt = defgotype(gotype);
+<span id="L1379" class="ln">  1379</span>		}
+<span id="L1380" class="ln">  1380</span>	
+<span id="L1381" class="ln">  1381</span>		if (dv != nil)
+<span id="L1382" class="ln">  1382</span>			newrefattr(dv, DW_AT_type, dt);
+<span id="L1383" class="ln">  1383</span>	}
+<span id="L1384" class="ln">  1384</span>	
+<span id="L1385" class="ln">  1385</span>	static void
+<span id="L1386" class="ln">  1386</span>	movetomodule(DWDie *parent)
+<span id="L1387" class="ln">  1387</span>	{
+<span id="L1388" class="ln">  1388</span>		DWDie *die;
+<span id="L1389" class="ln">  1389</span>	
+<span id="L1390" class="ln">  1390</span>		die = dwroot.child-&gt;child;
+<span id="L1391" class="ln">  1391</span>		while(die-&gt;link != nil)
+<span id="L1392" class="ln">  1392</span>			die = die-&gt;link;
+<span id="L1393" class="ln">  1393</span>		die-&gt;link = parent-&gt;child;
+<span id="L1394" class="ln">  1394</span>	}
+<span id="L1395" class="ln">  1395</span>	
+<span id="L1396" class="ln">  1396</span>	// If the pcln table contains runtime/string.goc, use that to set gdbscript path.
+<span id="L1397" class="ln">  1397</span>	static void
+<span id="L1398" class="ln">  1398</span>	finddebugruntimepath(LSym *s)
+<span id="L1399" class="ln">  1399</span>	{
+<span id="L1400" class="ln">  1400</span>		int i;
+<span id="L1401" class="ln">  1401</span>		char *p;
+<span id="L1402" class="ln">  1402</span>		LSym *f;
+<span id="L1403" class="ln">  1403</span>		
+<span id="L1404" class="ln">  1404</span>		if(gdbscript[0] != &#39;\0&#39;)
+<span id="L1405" class="ln">  1405</span>			return;
+<span id="L1406" class="ln">  1406</span>	
+<span id="L1407" class="ln">  1407</span>		for(i=0; i&lt;s-&gt;pcln-&gt;nfile; i++) {
+<span id="L1408" class="ln">  1408</span>			f = s-&gt;pcln-&gt;file[i];
+<span id="L1409" class="ln">  1409</span>			if((p = strstr(f-&gt;name, &#34;runtime/string.goc&#34;)) != nil) {
+<span id="L1410" class="ln">  1410</span>				*p = &#39;\0&#39;;
+<span id="L1411" class="ln">  1411</span>				snprint(gdbscript, sizeof gdbscript, &#34;%sruntime/runtime-gdb.py&#34;, f-&gt;name);
+<span id="L1412" class="ln">  1412</span>				*p = &#39;r&#39;;
+<span id="L1413" class="ln">  1413</span>				break;
+<span id="L1414" class="ln">  1414</span>			}
+<span id="L1415" class="ln">  1415</span>		}
+<span id="L1416" class="ln">  1416</span>	}
+<span id="L1417" class="ln">  1417</span>	
+<span id="L1418" class="ln">  1418</span>	/*
+<span id="L1419" class="ln">  1419</span>	 * Generate short opcodes when possible, long ones when necessary.
+<span id="L1420" class="ln">  1420</span>	 * See section 6.2.5
+<span id="L1421" class="ln">  1421</span>	 */
+<span id="L1422" class="ln">  1422</span>	
+<span id="L1423" class="ln">  1423</span>	enum {
+<span id="L1424" class="ln">  1424</span>		LINE_BASE = -1,
+<span id="L1425" class="ln">  1425</span>		LINE_RANGE = 4,
+<span id="L1426" class="ln">  1426</span>		OPCODE_BASE = 10
+<span id="L1427" class="ln">  1427</span>	};
+<span id="L1428" class="ln">  1428</span>	
+<span id="L1429" class="ln">  1429</span>	static void
+<span id="L1430" class="ln">  1430</span>	putpclcdelta(vlong delta_pc, vlong delta_lc)
+<span id="L1431" class="ln">  1431</span>	{
+<span id="L1432" class="ln">  1432</span>		if (LINE_BASE &lt;= delta_lc &amp;&amp; delta_lc &lt; LINE_BASE+LINE_RANGE) {
+<span id="L1433" class="ln">  1433</span>			vlong opcode = OPCODE_BASE + (delta_lc - LINE_BASE) + (LINE_RANGE * delta_pc);
+<span id="L1434" class="ln">  1434</span>			if (OPCODE_BASE &lt;= opcode &amp;&amp; opcode &lt; 256) {
+<span id="L1435" class="ln">  1435</span>				cput(opcode);
+<span id="L1436" class="ln">  1436</span>				return;
+<span id="L1437" class="ln">  1437</span>			}
+<span id="L1438" class="ln">  1438</span>		}
+<span id="L1439" class="ln">  1439</span>	
+<span id="L1440" class="ln">  1440</span>		if (delta_pc) {
+<span id="L1441" class="ln">  1441</span>			cput(DW_LNS_advance_pc);
+<span id="L1442" class="ln">  1442</span>			sleb128put(delta_pc);
+<span id="L1443" class="ln">  1443</span>		}
+<span id="L1444" class="ln">  1444</span>	
+<span id="L1445" class="ln">  1445</span>		cput(DW_LNS_advance_line);
+<span id="L1446" class="ln">  1446</span>		sleb128put(delta_lc);
+<span id="L1447" class="ln">  1447</span>		cput(DW_LNS_copy);
+<span id="L1448" class="ln">  1448</span>	}
+<span id="L1449" class="ln">  1449</span>	
+<span id="L1450" class="ln">  1450</span>	static void
+<span id="L1451" class="ln">  1451</span>	newcfaoffsetattr(DWDie *die, int32 offs)
+<span id="L1452" class="ln">  1452</span>	{
+<span id="L1453" class="ln">  1453</span>		char block[10];
+<span id="L1454" class="ln">  1454</span>		int i;
+<span id="L1455" class="ln">  1455</span>	
+<span id="L1456" class="ln">  1456</span>		i = 0;
+<span id="L1457" class="ln">  1457</span>	
+<span id="L1458" class="ln">  1458</span>		block[i++] = DW_OP_call_frame_cfa;
+<span id="L1459" class="ln">  1459</span>		if (offs != 0) {
+<span id="L1460" class="ln">  1460</span>			block[i++] = DW_OP_consts;
+<span id="L1461" class="ln">  1461</span>			i += sleb128enc(offs, block+i);
+<span id="L1462" class="ln">  1462</span>			block[i++] = DW_OP_plus;
+<span id="L1463" class="ln">  1463</span>		}
+<span id="L1464" class="ln">  1464</span>		newattr(die, DW_AT_location, DW_CLS_BLOCK, i, mal(i));
+<span id="L1465" class="ln">  1465</span>		memmove(die-&gt;attr-&gt;data, block, i);
+<span id="L1466" class="ln">  1466</span>	}
+<span id="L1467" class="ln">  1467</span>	
+<span id="L1468" class="ln">  1468</span>	static char*
+<span id="L1469" class="ln">  1469</span>	mkvarname(char* name, int da)
+<span id="L1470" class="ln">  1470</span>	{
+<span id="L1471" class="ln">  1471</span>		char buf[1024];
+<span id="L1472" class="ln">  1472</span>		char *n;
+<span id="L1473" class="ln">  1473</span>	
+<span id="L1474" class="ln">  1474</span>		snprint(buf, sizeof buf, &#34;%s#%d&#34;, name, da);
+<span id="L1475" class="ln">  1475</span>		n = mal(strlen(buf) + 1);
+<span id="L1476" class="ln">  1476</span>		memmove(n, buf, strlen(buf));
+<span id="L1477" class="ln">  1477</span>		return n;
+<span id="L1478" class="ln">  1478</span>	}
+<span id="L1479" class="ln">  1479</span>	
+<span id="L1480" class="ln">  1480</span>	/*
+<span id="L1481" class="ln">  1481</span>	 * Walk prog table, emit line program and build DIE tree.
+<span id="L1482" class="ln">  1482</span>	 */
+<span id="L1483" class="ln">  1483</span>	
+<span id="L1484" class="ln">  1484</span>	// flush previous compilation unit.
+<span id="L1485" class="ln">  1485</span>	static void
+<span id="L1486" class="ln">  1486</span>	flushunit(DWDie *dwinfo, vlong pc, LSym *pcsym, vlong unitstart, int32 header_length)
+<span id="L1487" class="ln">  1487</span>	{
+<span id="L1488" class="ln">  1488</span>		vlong here;
+<span id="L1489" class="ln">  1489</span>	
+<span id="L1490" class="ln">  1490</span>		if (dwinfo != nil &amp;&amp; pc != 0) {
+<span id="L1491" class="ln">  1491</span>			newattr(dwinfo, DW_AT_high_pc, DW_CLS_ADDRESS, pc+1, (char*)pcsym);
+<span id="L1492" class="ln">  1492</span>		}
+<span id="L1493" class="ln">  1493</span>	
+<span id="L1494" class="ln">  1494</span>		if (unitstart &gt;= 0) {
+<span id="L1495" class="ln">  1495</span>			cput(0);  // start extended opcode
+<span id="L1496" class="ln">  1496</span>			uleb128put(1);
+<span id="L1497" class="ln">  1497</span>			cput(DW_LNE_end_sequence);
+<span id="L1498" class="ln">  1498</span>	
+<span id="L1499" class="ln">  1499</span>			here = cpos();
+<span id="L1500" class="ln">  1500</span>			cseek(unitstart);
+<span id="L1501" class="ln">  1501</span>			LPUT(here - unitstart - sizeof(int32));	 // unit_length
+<span id="L1502" class="ln">  1502</span>			WPUT(2);  // dwarf version
+<span id="L1503" class="ln">  1503</span>			LPUT(header_length); // header length starting here
+<span id="L1504" class="ln">  1504</span>			cseek(here);
+<span id="L1505" class="ln">  1505</span>		}
+<span id="L1506" class="ln">  1506</span>	}
+<span id="L1507" class="ln">  1507</span>	
+<span id="L1508" class="ln">  1508</span>	static void
+<span id="L1509" class="ln">  1509</span>	writelines(void)
+<span id="L1510" class="ln">  1510</span>	{
+<span id="L1511" class="ln">  1511</span>		LSym *s, *epcs;
+<span id="L1512" class="ln">  1512</span>		Auto *a;
+<span id="L1513" class="ln">  1513</span>		vlong unitstart, headerend, offs;
+<span id="L1514" class="ln">  1514</span>		vlong pc, epc;
+<span id="L1515" class="ln">  1515</span>		int i, lang, da, dt, line, file;
+<span id="L1516" class="ln">  1516</span>		DWDie *dwinfo, *dwfunc, *dwvar, **dws;
+<span id="L1517" class="ln">  1517</span>		DWDie *varhash[HASHSIZE];
+<span id="L1518" class="ln">  1518</span>		char *n, *nn;
+<span id="L1519" class="ln">  1519</span>		Pciter pcfile, pcline;
+<span id="L1520" class="ln">  1520</span>		LSym **files, *f;
+<span id="L1521" class="ln">  1521</span>	
+<span id="L1522" class="ln">  1522</span>		if(linesec == S)
+<span id="L1523" class="ln">  1523</span>			linesec = linklookup(ctxt, &#34;.dwarfline&#34;, 0);
+<span id="L1524" class="ln">  1524</span>		linesec-&gt;nr = 0;
+<span id="L1525" class="ln">  1525</span>	
+<span id="L1526" class="ln">  1526</span>		unitstart = -1;
+<span id="L1527" class="ln">  1527</span>		headerend = -1;
+<span id="L1528" class="ln">  1528</span>		epc = 0;
+<span id="L1529" class="ln">  1529</span>		epcs = S;
+<span id="L1530" class="ln">  1530</span>		lineo = cpos();
+<span id="L1531" class="ln">  1531</span>		dwinfo = nil;
+<span id="L1532" class="ln">  1532</span>		
+<span id="L1533" class="ln">  1533</span>		flushunit(dwinfo, epc, epcs, unitstart, headerend - unitstart - 10);
+<span id="L1534" class="ln">  1534</span>		unitstart = cpos();
+<span id="L1535" class="ln">  1535</span>		
+<span id="L1536" class="ln">  1536</span>		lang = DW_LANG_Go;
+<span id="L1537" class="ln">  1537</span>		
+<span id="L1538" class="ln">  1538</span>		s = ctxt-&gt;textp;
+<span id="L1539" class="ln">  1539</span>	
+<span id="L1540" class="ln">  1540</span>		dwinfo = newdie(&amp;dwroot, DW_ABRV_COMPUNIT, estrdup(&#34;go&#34;));
+<span id="L1541" class="ln">  1541</span>		newattr(dwinfo, DW_AT_language, DW_CLS_CONSTANT,lang, 0);
+<span id="L1542" class="ln">  1542</span>		newattr(dwinfo, DW_AT_stmt_list, DW_CLS_PTR, unitstart - lineo, 0);
+<span id="L1543" class="ln">  1543</span>		newattr(dwinfo, DW_AT_low_pc, DW_CLS_ADDRESS, s-&gt;value, (char*)s);
+<span id="L1544" class="ln">  1544</span>	
+<span id="L1545" class="ln">  1545</span>		// Write .debug_line Line Number Program Header (sec 6.2.4)
+<span id="L1546" class="ln">  1546</span>		// Fields marked with (*) must be changed for 64-bit dwarf
+<span id="L1547" class="ln">  1547</span>		LPUT(0);   // unit_length (*), will be filled in by flushunit.
+<span id="L1548" class="ln">  1548</span>		WPUT(2);   // dwarf version (appendix F)
+<span id="L1549" class="ln">  1549</span>		LPUT(0);   // header_length (*), filled in by flushunit.
+<span id="L1550" class="ln">  1550</span>		// cpos == unitstart + 4 + 2 + 4
+<span id="L1551" class="ln">  1551</span>		cput(1);   // minimum_instruction_length
+<span id="L1552" class="ln">  1552</span>		cput(1);   // default_is_stmt
+<span id="L1553" class="ln">  1553</span>		cput(LINE_BASE);     // line_base
+<span id="L1554" class="ln">  1554</span>		cput(LINE_RANGE);    // line_range
+<span id="L1555" class="ln">  1555</span>		cput(OPCODE_BASE);   // opcode_base
+<span id="L1556" class="ln">  1556</span>		cput(0);   // standard_opcode_lengths[1]
+<span id="L1557" class="ln">  1557</span>		cput(1);   // standard_opcode_lengths[2]
+<span id="L1558" class="ln">  1558</span>		cput(1);   // standard_opcode_lengths[3]
+<span id="L1559" class="ln">  1559</span>		cput(1);   // standard_opcode_lengths[4]
+<span id="L1560" class="ln">  1560</span>		cput(1);   // standard_opcode_lengths[5]
+<span id="L1561" class="ln">  1561</span>		cput(0);   // standard_opcode_lengths[6]
+<span id="L1562" class="ln">  1562</span>		cput(0);   // standard_opcode_lengths[7]
+<span id="L1563" class="ln">  1563</span>		cput(0);   // standard_opcode_lengths[8]
+<span id="L1564" class="ln">  1564</span>		cput(1);   // standard_opcode_lengths[9]
+<span id="L1565" class="ln">  1565</span>		cput(0);   // include_directories  (empty)
+<span id="L1566" class="ln">  1566</span>	
+<span id="L1567" class="ln">  1567</span>		files = emallocz(ctxt-&gt;nhistfile*sizeof files[0]);
+<span id="L1568" class="ln">  1568</span>		for(f = ctxt-&gt;filesyms; f != nil; f = f-&gt;next)
+<span id="L1569" class="ln">  1569</span>			files[f-&gt;value-1] = f;
+<span id="L1570" class="ln">  1570</span>	
+<span id="L1571" class="ln">  1571</span>		for(i=0; i&lt;ctxt-&gt;nhistfile; i++) {
+<span id="L1572" class="ln">  1572</span>			strnput(files[i]-&gt;name, strlen(files[i]-&gt;name) + 4);
+<span id="L1573" class="ln">  1573</span>			// 4 zeros: the string termination + 3 fields.
+<span id="L1574" class="ln">  1574</span>		}
+<span id="L1575" class="ln">  1575</span>	
+<span id="L1576" class="ln">  1576</span>		cput(0);   // terminate file_names.
+<span id="L1577" class="ln">  1577</span>		headerend = cpos();
+<span id="L1578" class="ln">  1578</span>	
+<span id="L1579" class="ln">  1579</span>		cput(0);  // start extended opcode
+<span id="L1580" class="ln">  1580</span>		uleb128put(1 + PtrSize);
+<span id="L1581" class="ln">  1581</span>		cput(DW_LNE_set_address);
+<span id="L1582" class="ln">  1582</span>	
+<span id="L1583" class="ln">  1583</span>		pc = s-&gt;value;
+<span id="L1584" class="ln">  1584</span>		line = 1;
+<span id="L1585" class="ln">  1585</span>		file = 1;
+<span id="L1586" class="ln">  1586</span>		if(linkmode == LinkExternal)
+<span id="L1587" class="ln">  1587</span>			adddwarfrel(linesec, s, lineo, PtrSize, 0);
+<span id="L1588" class="ln">  1588</span>		else
+<span id="L1589" class="ln">  1589</span>			addrput(pc);
+<span id="L1590" class="ln">  1590</span>	
+<span id="L1591" class="ln">  1591</span>		for(ctxt-&gt;cursym = ctxt-&gt;textp; ctxt-&gt;cursym != nil; ctxt-&gt;cursym = ctxt-&gt;cursym-&gt;next) {
+<span id="L1592" class="ln">  1592</span>			s = ctxt-&gt;cursym;
+<span id="L1593" class="ln">  1593</span>	
+<span id="L1594" class="ln">  1594</span>			dwfunc = newdie(dwinfo, DW_ABRV_FUNCTION, s-&gt;name);
+<span id="L1595" class="ln">  1595</span>			newattr(dwfunc, DW_AT_low_pc, DW_CLS_ADDRESS, s-&gt;value, (char*)s);
+<span id="L1596" class="ln">  1596</span>			epc = s-&gt;value + s-&gt;size;
+<span id="L1597" class="ln">  1597</span>			epcs = s;
+<span id="L1598" class="ln">  1598</span>			newattr(dwfunc, DW_AT_high_pc, DW_CLS_ADDRESS, epc, (char*)s);
+<span id="L1599" class="ln">  1599</span>			if (s-&gt;version == 0)
+<span id="L1600" class="ln">  1600</span>				newattr(dwfunc, DW_AT_external, DW_CLS_FLAG, 1, 0);
+<span id="L1601" class="ln">  1601</span>	
+<span id="L1602" class="ln">  1602</span>			if(s-&gt;pcln == nil)
+<span id="L1603" class="ln">  1603</span>				continue;
+<span id="L1604" class="ln">  1604</span>	
+<span id="L1605" class="ln">  1605</span>			finddebugruntimepath(s);
+<span id="L1606" class="ln">  1606</span>	
+<span id="L1607" class="ln">  1607</span>			pciterinit(ctxt, &amp;pcfile, &amp;s-&gt;pcln-&gt;pcfile);
+<span id="L1608" class="ln">  1608</span>			pciterinit(ctxt, &amp;pcline, &amp;s-&gt;pcln-&gt;pcline);
+<span id="L1609" class="ln">  1609</span>			epc = pc;
+<span id="L1610" class="ln">  1610</span>			while(!pcfile.done &amp;&amp; !pcline.done) {
+<span id="L1611" class="ln">  1611</span>				if(epc - s-&gt;value &gt;= pcfile.nextpc) {
+<span id="L1612" class="ln">  1612</span>					pciternext(&amp;pcfile);
+<span id="L1613" class="ln">  1613</span>					continue;
+<span id="L1614" class="ln">  1614</span>				}
+<span id="L1615" class="ln">  1615</span>				if(epc - s-&gt;value &gt;= pcline.nextpc) {
+<span id="L1616" class="ln">  1616</span>					pciternext(&amp;pcline);
+<span id="L1617" class="ln">  1617</span>					continue;
+<span id="L1618" class="ln">  1618</span>				}
+<span id="L1619" class="ln">  1619</span>	
+<span id="L1620" class="ln">  1620</span>				if(file != pcfile.value) {
+<span id="L1621" class="ln">  1621</span>					cput(DW_LNS_set_file);
+<span id="L1622" class="ln">  1622</span>					uleb128put(pcfile.value);
+<span id="L1623" class="ln">  1623</span>					file = pcfile.value;
+<span id="L1624" class="ln">  1624</span>				}
+<span id="L1625" class="ln">  1625</span>				putpclcdelta(s-&gt;value + pcline.pc - pc, pcline.value - line);
+<span id="L1626" class="ln">  1626</span>	
+<span id="L1627" class="ln">  1627</span>				pc = s-&gt;value + pcline.pc;
+<span id="L1628" class="ln">  1628</span>				line = pcline.value;
+<span id="L1629" class="ln">  1629</span>				if(pcfile.nextpc &lt; pcline.nextpc)
+<span id="L1630" class="ln">  1630</span>					epc = pcfile.nextpc;
+<span id="L1631" class="ln">  1631</span>				else
+<span id="L1632" class="ln">  1632</span>					epc = pcline.nextpc;
+<span id="L1633" class="ln">  1633</span>				epc += s-&gt;value;
+<span id="L1634" class="ln">  1634</span>			}
+<span id="L1635" class="ln">  1635</span>	
+<span id="L1636" class="ln">  1636</span>			da = 0;
+<span id="L1637" class="ln">  1637</span>			dwfunc-&gt;hash = varhash;	 // enable indexing of children by name
+<span id="L1638" class="ln">  1638</span>			memset(varhash, 0, sizeof varhash);
+<span id="L1639" class="ln">  1639</span>			for(a = s-&gt;autom; a; a = a-&gt;link) {
+<span id="L1640" class="ln">  1640</span>				switch (a-&gt;type) {
+<span id="L1641" class="ln">  1641</span>				case A_AUTO:
+<span id="L1642" class="ln">  1642</span>					dt = DW_ABRV_AUTO;
+<span id="L1643" class="ln">  1643</span>					offs = a-&gt;aoffset - PtrSize;
+<span id="L1644" class="ln">  1644</span>					break;
+<span id="L1645" class="ln">  1645</span>				case A_PARAM:
+<span id="L1646" class="ln">  1646</span>					dt = DW_ABRV_PARAM;
+<span id="L1647" class="ln">  1647</span>					offs = a-&gt;aoffset;
+<span id="L1648" class="ln">  1648</span>					break;
+<span id="L1649" class="ln">  1649</span>				default:
+<span id="L1650" class="ln">  1650</span>					continue;
+<span id="L1651" class="ln">  1651</span>				}
+<span id="L1652" class="ln">  1652</span>				if (strstr(a-&gt;asym-&gt;name, &#34;.autotmp_&#34;))
+<span id="L1653" class="ln">  1653</span>					continue;
+<span id="L1654" class="ln">  1654</span>				if (find(dwfunc, a-&gt;asym-&gt;name) != nil)
+<span id="L1655" class="ln">  1655</span>					n = mkvarname(a-&gt;asym-&gt;name, da);
+<span id="L1656" class="ln">  1656</span>				else
+<span id="L1657" class="ln">  1657</span>					n = a-&gt;asym-&gt;name;
+<span id="L1658" class="ln">  1658</span>				// Drop the package prefix from locals and arguments.
+<span id="L1659" class="ln">  1659</span>				nn = strrchr(n, &#39;.&#39;);
+<span id="L1660" class="ln">  1660</span>				if (nn)
+<span id="L1661" class="ln">  1661</span>					n = nn + 1;
+<span id="L1662" class="ln">  1662</span>	
+<span id="L1663" class="ln">  1663</span>				dwvar = newdie(dwfunc, dt, n);
+<span id="L1664" class="ln">  1664</span>				newcfaoffsetattr(dwvar, offs);
+<span id="L1665" class="ln">  1665</span>				newrefattr(dwvar, DW_AT_type, defgotype(a-&gt;gotype));
+<span id="L1666" class="ln">  1666</span>	
+<span id="L1667" class="ln">  1667</span>				// push dwvar down dwfunc-&gt;child to preserve order
+<span id="L1668" class="ln">  1668</span>				newattr(dwvar, DW_AT_internal_location, DW_CLS_CONSTANT, offs, nil);
+<span id="L1669" class="ln">  1669</span>				dwfunc-&gt;child = dwvar-&gt;link;  // take dwvar out from the top of the list
+<span id="L1670" class="ln">  1670</span>				for (dws = &amp;dwfunc-&gt;child; *dws != nil; dws = &amp;(*dws)-&gt;link)
+<span id="L1671" class="ln">  1671</span>					if (offs &gt; getattr(*dws, DW_AT_internal_location)-&gt;value)
+<span id="L1672" class="ln">  1672</span>						break;
+<span id="L1673" class="ln">  1673</span>				dwvar-&gt;link = *dws;
+<span id="L1674" class="ln">  1674</span>				*dws = dwvar;
+<span id="L1675" class="ln">  1675</span>	
+<span id="L1676" class="ln">  1676</span>				da++;
+<span id="L1677" class="ln">  1677</span>			}
+<span id="L1678" class="ln">  1678</span>	
+<span id="L1679" class="ln">  1679</span>			dwfunc-&gt;hash = nil;
+<span id="L1680" class="ln">  1680</span>		}
+<span id="L1681" class="ln">  1681</span>	
+<span id="L1682" class="ln">  1682</span>		flushunit(dwinfo, epc, epcs, unitstart, headerend - unitstart - 10);
+<span id="L1683" class="ln">  1683</span>		linesize = cpos() - lineo;
+<span id="L1684" class="ln">  1684</span>	}
+<span id="L1685" class="ln">  1685</span>	
+<span id="L1686" class="ln">  1686</span>	/*
+<span id="L1687" class="ln">  1687</span>	 *  Emit .debug_frame
+<span id="L1688" class="ln">  1688</span>	 */
+<span id="L1689" class="ln">  1689</span>	enum
+<span id="L1690" class="ln">  1690</span>	{
+<span id="L1691" class="ln">  1691</span>		CIERESERVE = 16,
+<span id="L1692" class="ln">  1692</span>		DATAALIGNMENTFACTOR = -4,	// TODO -PtrSize?
+<span id="L1693" class="ln">  1693</span>		FAKERETURNCOLUMN = 16		// TODO gdb6 doesn&#39;t like &gt; 15?
+<span id="L1694" class="ln">  1694</span>	};
+<span id="L1695" class="ln">  1695</span>	
+<span id="L1696" class="ln">  1696</span>	static void
+<span id="L1697" class="ln">  1697</span>	putpccfadelta(vlong deltapc, vlong cfa)
+<span id="L1698" class="ln">  1698</span>	{
+<span id="L1699" class="ln">  1699</span>		if (deltapc &lt; 0x40) {
+<span id="L1700" class="ln">  1700</span>			cput(DW_CFA_advance_loc + deltapc);
+<span id="L1701" class="ln">  1701</span>		} else if (deltapc &lt; 0x100) {
+<span id="L1702" class="ln">  1702</span>			cput(DW_CFA_advance_loc1);
+<span id="L1703" class="ln">  1703</span>			cput(deltapc);
+<span id="L1704" class="ln">  1704</span>		} else if (deltapc &lt; 0x10000) {
+<span id="L1705" class="ln">  1705</span>			cput(DW_CFA_advance_loc2);
+<span id="L1706" class="ln">  1706</span>			WPUT(deltapc);
+<span id="L1707" class="ln">  1707</span>		} else {
+<span id="L1708" class="ln">  1708</span>			cput(DW_CFA_advance_loc4);
+<span id="L1709" class="ln">  1709</span>			LPUT(deltapc);
+<span id="L1710" class="ln">  1710</span>		}
+<span id="L1711" class="ln">  1711</span>	
+<span id="L1712" class="ln">  1712</span>		cput(DW_CFA_def_cfa_offset_sf);
+<span id="L1713" class="ln">  1713</span>		sleb128put(cfa / DATAALIGNMENTFACTOR);
+<span id="L1714" class="ln">  1714</span>	}
+<span id="L1715" class="ln">  1715</span>	
+<span id="L1716" class="ln">  1716</span>	static void
+<span id="L1717" class="ln">  1717</span>	writeframes(void)
+<span id="L1718" class="ln">  1718</span>	{
+<span id="L1719" class="ln">  1719</span>		LSym *s;
+<span id="L1720" class="ln">  1720</span>		vlong fdeo, fdesize, pad;
+<span id="L1721" class="ln">  1721</span>		Pciter pcsp;
+<span id="L1722" class="ln">  1722</span>	
+<span id="L1723" class="ln">  1723</span>		if(framesec == S)
+<span id="L1724" class="ln">  1724</span>			framesec = linklookup(ctxt, &#34;.dwarfframe&#34;, 0);
+<span id="L1725" class="ln">  1725</span>		framesec-&gt;nr = 0;
+<span id="L1726" class="ln">  1726</span>		frameo = cpos();
+<span id="L1727" class="ln">  1727</span>	
+<span id="L1728" class="ln">  1728</span>		// Emit the CIE, Section 6.4.1
+<span id="L1729" class="ln">  1729</span>		LPUT(CIERESERVE);	// initial length, must be multiple of PtrSize
+<span id="L1730" class="ln">  1730</span>		LPUT(0xffffffff);	// cid.
+<span id="L1731" class="ln">  1731</span>		cput(3);		// dwarf version (appendix F)
+<span id="L1732" class="ln">  1732</span>		cput(0);		// augmentation &#34;&#34;
+<span id="L1733" class="ln">  1733</span>		uleb128put(1);		// code_alignment_factor
+<span id="L1734" class="ln">  1734</span>		sleb128put(DATAALIGNMENTFACTOR); // guess
+<span id="L1735" class="ln">  1735</span>		uleb128put(FAKERETURNCOLUMN);	// return_address_register
+<span id="L1736" class="ln">  1736</span>	
+<span id="L1737" class="ln">  1737</span>		cput(DW_CFA_def_cfa);
+<span id="L1738" class="ln">  1738</span>		uleb128put(DWARFREGSP);	// register SP (**ABI-dependent, defined in l.h)
+<span id="L1739" class="ln">  1739</span>		uleb128put(PtrSize);	// offset
+<span id="L1740" class="ln">  1740</span>	
+<span id="L1741" class="ln">  1741</span>		cput(DW_CFA_offset + FAKERETURNCOLUMN);	 // return address
+<span id="L1742" class="ln">  1742</span>		uleb128put(-PtrSize / DATAALIGNMENTFACTOR);  // at cfa - x*4
+<span id="L1743" class="ln">  1743</span>	
+<span id="L1744" class="ln">  1744</span>		// 4 is to exclude the length field.
+<span id="L1745" class="ln">  1745</span>		pad = CIERESERVE + frameo + 4 - cpos();
+<span id="L1746" class="ln">  1746</span>		if (pad &lt; 0) {
+<span id="L1747" class="ln">  1747</span>			diag(&#34;dwarf: CIERESERVE too small by %lld bytes.&#34;, -pad);
+<span id="L1748" class="ln">  1748</span>			errorexit();
+<span id="L1749" class="ln">  1749</span>		}
+<span id="L1750" class="ln">  1750</span>		strnput(&#34;&#34;, pad);
+<span id="L1751" class="ln">  1751</span>	
+<span id="L1752" class="ln">  1752</span>		for(ctxt-&gt;cursym = ctxt-&gt;textp; ctxt-&gt;cursym != nil; ctxt-&gt;cursym = ctxt-&gt;cursym-&gt;next) {
+<span id="L1753" class="ln">  1753</span>			s = ctxt-&gt;cursym;
+<span id="L1754" class="ln">  1754</span>			if(s-&gt;pcln == nil)
+<span id="L1755" class="ln">  1755</span>				continue;
+<span id="L1756" class="ln">  1756</span>	
+<span id="L1757" class="ln">  1757</span>			fdeo = cpos();
+<span id="L1758" class="ln">  1758</span>			// Emit a FDE, Section 6.4.1, starting wit a placeholder.
+<span id="L1759" class="ln">  1759</span>			LPUT(0);	// length, must be multiple of PtrSize
+<span id="L1760" class="ln">  1760</span>			LPUT(0);	// Pointer to the CIE above, at offset 0
+<span id="L1761" class="ln">  1761</span>			addrput(0);	// initial location
+<span id="L1762" class="ln">  1762</span>			addrput(0);	// address range
+<span id="L1763" class="ln">  1763</span>	
+<span id="L1764" class="ln">  1764</span>			for(pciterinit(ctxt, &amp;pcsp, &amp;s-&gt;pcln-&gt;pcsp); !pcsp.done; pciternext(&amp;pcsp))
+<span id="L1765" class="ln">  1765</span>				putpccfadelta(pcsp.nextpc - pcsp.pc, PtrSize + pcsp.value);
+<span id="L1766" class="ln">  1766</span>	
+<span id="L1767" class="ln">  1767</span>			fdesize = cpos() - fdeo - 4;	// exclude the length field.
+<span id="L1768" class="ln">  1768</span>			pad = rnd(fdesize, PtrSize) - fdesize;
+<span id="L1769" class="ln">  1769</span>			strnput(&#34;&#34;, pad);
+<span id="L1770" class="ln">  1770</span>			fdesize += pad;
+<span id="L1771" class="ln">  1771</span>	
+<span id="L1772" class="ln">  1772</span>			// Emit the FDE header for real, Section 6.4.1.
+<span id="L1773" class="ln">  1773</span>			cseek(fdeo);
+<span id="L1774" class="ln">  1774</span>			LPUT(fdesize);
+<span id="L1775" class="ln">  1775</span>			if(linkmode == LinkExternal) {
+<span id="L1776" class="ln">  1776</span>				adddwarfrel(framesec, framesym, frameo, 4, 0);
+<span id="L1777" class="ln">  1777</span>				adddwarfrel(framesec, s, frameo, PtrSize, 0);
+<span id="L1778" class="ln">  1778</span>			}
+<span id="L1779" class="ln">  1779</span>			else {
+<span id="L1780" class="ln">  1780</span>				LPUT(0);
+<span id="L1781" class="ln">  1781</span>				addrput(s-&gt;value);
+<span id="L1782" class="ln">  1782</span>			}
+<span id="L1783" class="ln">  1783</span>			addrput(s-&gt;size);
+<span id="L1784" class="ln">  1784</span>			cseek(fdeo + 4 + fdesize);
+<span id="L1785" class="ln">  1785</span>		}
+<span id="L1786" class="ln">  1786</span>	
+<span id="L1787" class="ln">  1787</span>		cflush();
+<span id="L1788" class="ln">  1788</span>		framesize = cpos() - frameo;
+<span id="L1789" class="ln">  1789</span>	}
+<span id="L1790" class="ln">  1790</span>	
+<span id="L1791" class="ln">  1791</span>	/*
+<span id="L1792" class="ln">  1792</span>	 *  Walk DWarfDebugInfoEntries, and emit .debug_info
+<span id="L1793" class="ln">  1793</span>	 */
+<span id="L1794" class="ln">  1794</span>	enum
+<span id="L1795" class="ln">  1795</span>	{
+<span id="L1796" class="ln">  1796</span>		COMPUNITHEADERSIZE = 4+2+4+1
+<span id="L1797" class="ln">  1797</span>	};
+<span id="L1798" class="ln">  1798</span>	
+<span id="L1799" class="ln">  1799</span>	static void
+<span id="L1800" class="ln">  1800</span>	writeinfo(void)
+<span id="L1801" class="ln">  1801</span>	{
+<span id="L1802" class="ln">  1802</span>		DWDie *compunit;
+<span id="L1803" class="ln">  1803</span>		vlong unitstart, here;
+<span id="L1804" class="ln">  1804</span>	
+<span id="L1805" class="ln">  1805</span>		fwdcount = 0;
+<span id="L1806" class="ln">  1806</span>		if (infosec == S)
+<span id="L1807" class="ln">  1807</span>			infosec = linklookup(ctxt, &#34;.dwarfinfo&#34;, 0);
+<span id="L1808" class="ln">  1808</span>		infosec-&gt;nr = 0;
+<span id="L1809" class="ln">  1809</span>	
+<span id="L1810" class="ln">  1810</span>		if(arangessec == S)
+<span id="L1811" class="ln">  1811</span>			arangessec = linklookup(ctxt, &#34;.dwarfaranges&#34;, 0);
+<span id="L1812" class="ln">  1812</span>		arangessec-&gt;nr = 0;
+<span id="L1813" class="ln">  1813</span>	
+<span id="L1814" class="ln">  1814</span>		for (compunit = dwroot.child; compunit; compunit = compunit-&gt;link) {
+<span id="L1815" class="ln">  1815</span>			unitstart = cpos();
+<span id="L1816" class="ln">  1816</span>	
+<span id="L1817" class="ln">  1817</span>			// Write .debug_info Compilation Unit Header (sec 7.5.1)
+<span id="L1818" class="ln">  1818</span>			// Fields marked with (*) must be changed for 64-bit dwarf
+<span id="L1819" class="ln">  1819</span>			// This must match COMPUNITHEADERSIZE above.
+<span id="L1820" class="ln">  1820</span>			LPUT(0);	// unit_length (*), will be filled in later.
+<span id="L1821" class="ln">  1821</span>			WPUT(2);	// dwarf version (appendix F)
+<span id="L1822" class="ln">  1822</span>	
+<span id="L1823" class="ln">  1823</span>			// debug_abbrev_offset (*)
+<span id="L1824" class="ln">  1824</span>			if(linkmode == LinkExternal)
+<span id="L1825" class="ln">  1825</span>				adddwarfrel(infosec, abbrevsym, infoo, 4, 0);
+<span id="L1826" class="ln">  1826</span>			else
+<span id="L1827" class="ln">  1827</span>				LPUT(0);
+<span id="L1828" class="ln">  1828</span>	
+<span id="L1829" class="ln">  1829</span>			cput(PtrSize);	// address_size
+<span id="L1830" class="ln">  1830</span>	
+<span id="L1831" class="ln">  1831</span>			putdie(compunit);
+<span id="L1832" class="ln">  1832</span>	
+<span id="L1833" class="ln">  1833</span>			here = cpos();
+<span id="L1834" class="ln">  1834</span>			cseek(unitstart);
+<span id="L1835" class="ln">  1835</span>			LPUT(here - unitstart - 4);	// exclude the length field.
+<span id="L1836" class="ln">  1836</span>			cseek(here);
+<span id="L1837" class="ln">  1837</span>		}
+<span id="L1838" class="ln">  1838</span>		cflush();
+<span id="L1839" class="ln">  1839</span>	}
+<span id="L1840" class="ln">  1840</span>	
+<span id="L1841" class="ln">  1841</span>	/*
+<span id="L1842" class="ln">  1842</span>	 *  Emit .debug_pubnames/_types.  _info must have been written before,
+<span id="L1843" class="ln">  1843</span>	 *  because we need die-&gt;offs and infoo/infosize;
+<span id="L1844" class="ln">  1844</span>	 */
+<span id="L1845" class="ln">  1845</span>	static int
+<span id="L1846" class="ln">  1846</span>	ispubname(DWDie *die)
+<span id="L1847" class="ln">  1847</span>	{
+<span id="L1848" class="ln">  1848</span>		DWAttr *a;
+<span id="L1849" class="ln">  1849</span>	
+<span id="L1850" class="ln">  1850</span>		switch(die-&gt;abbrev) {
+<span id="L1851" class="ln">  1851</span>		case DW_ABRV_FUNCTION:
+<span id="L1852" class="ln">  1852</span>		case DW_ABRV_VARIABLE:
+<span id="L1853" class="ln">  1853</span>			a = getattr(die, DW_AT_external);
+<span id="L1854" class="ln">  1854</span>			return a &amp;&amp; a-&gt;value;
+<span id="L1855" class="ln">  1855</span>		}
+<span id="L1856" class="ln">  1856</span>		return 0;
+<span id="L1857" class="ln">  1857</span>	}
+<span id="L1858" class="ln">  1858</span>	
+<span id="L1859" class="ln">  1859</span>	static int
+<span id="L1860" class="ln">  1860</span>	ispubtype(DWDie *die)
+<span id="L1861" class="ln">  1861</span>	{
+<span id="L1862" class="ln">  1862</span>		return die-&gt;abbrev &gt;= DW_ABRV_NULLTYPE;
+<span id="L1863" class="ln">  1863</span>	}
+<span id="L1864" class="ln">  1864</span>	
+<span id="L1865" class="ln">  1865</span>	static vlong
+<span id="L1866" class="ln">  1866</span>	writepub(int (*ispub)(DWDie*))
+<span id="L1867" class="ln">  1867</span>	{
+<span id="L1868" class="ln">  1868</span>		DWDie *compunit, *die;
+<span id="L1869" class="ln">  1869</span>		DWAttr *dwa;
+<span id="L1870" class="ln">  1870</span>		vlong unitstart, unitend, sectionstart, here;
+<span id="L1871" class="ln">  1871</span>	
+<span id="L1872" class="ln">  1872</span>		sectionstart = cpos();
+<span id="L1873" class="ln">  1873</span>	
+<span id="L1874" class="ln">  1874</span>		for (compunit = dwroot.child; compunit != nil; compunit = compunit-&gt;link) {
+<span id="L1875" class="ln">  1875</span>			unitstart = compunit-&gt;offs - COMPUNITHEADERSIZE;
+<span id="L1876" class="ln">  1876</span>			if (compunit-&gt;link != nil)
+<span id="L1877" class="ln">  1877</span>				unitend = compunit-&gt;link-&gt;offs - COMPUNITHEADERSIZE;
+<span id="L1878" class="ln">  1878</span>			else
+<span id="L1879" class="ln">  1879</span>				unitend = infoo + infosize;
+<span id="L1880" class="ln">  1880</span>	
+<span id="L1881" class="ln">  1881</span>			// Write .debug_pubnames/types	Header (sec 6.1.1)
+<span id="L1882" class="ln">  1882</span>			LPUT(0);			// unit_length (*), will be filled in later.
+<span id="L1883" class="ln">  1883</span>			WPUT(2);			// dwarf version (appendix F)
+<span id="L1884" class="ln">  1884</span>			LPUT(unitstart);		// debug_info_offset (of the Comp unit Header)
+<span id="L1885" class="ln">  1885</span>			LPUT(unitend - unitstart);	// debug_info_length
+<span id="L1886" class="ln">  1886</span>	
+<span id="L1887" class="ln">  1887</span>			for (die = compunit-&gt;child; die != nil; die = die-&gt;link) {
+<span id="L1888" class="ln">  1888</span>				if (!ispub(die)) continue;
+<span id="L1889" class="ln">  1889</span>				LPUT(die-&gt;offs - unitstart);
+<span id="L1890" class="ln">  1890</span>				dwa = getattr(die, DW_AT_name);
+<span id="L1891" class="ln">  1891</span>				strnput(dwa-&gt;data, dwa-&gt;value + 1);
+<span id="L1892" class="ln">  1892</span>			}
+<span id="L1893" class="ln">  1893</span>			LPUT(0);
+<span id="L1894" class="ln">  1894</span>	
+<span id="L1895" class="ln">  1895</span>			here = cpos();
+<span id="L1896" class="ln">  1896</span>			cseek(sectionstart);
+<span id="L1897" class="ln">  1897</span>			LPUT(here - sectionstart - 4);	// exclude the length field.
+<span id="L1898" class="ln">  1898</span>			cseek(here);
+<span id="L1899" class="ln">  1899</span>	
+<span id="L1900" class="ln">  1900</span>		}
+<span id="L1901" class="ln">  1901</span>	
+<span id="L1902" class="ln">  1902</span>		return sectionstart;
+<span id="L1903" class="ln">  1903</span>	}
+<span id="L1904" class="ln">  1904</span>	
+<span id="L1905" class="ln">  1905</span>	/*
+<span id="L1906" class="ln">  1906</span>	 *  emit .debug_aranges.  _info must have been written before,
+<span id="L1907" class="ln">  1907</span>	 *  because we need die-&gt;offs of dw_globals.
+<span id="L1908" class="ln">  1908</span>	 */
+<span id="L1909" class="ln">  1909</span>	static vlong
+<span id="L1910" class="ln">  1910</span>	writearanges(void)
+<span id="L1911" class="ln">  1911</span>	{
+<span id="L1912" class="ln">  1912</span>		DWDie *compunit;
+<span id="L1913" class="ln">  1913</span>		DWAttr *b, *e;
+<span id="L1914" class="ln">  1914</span>		int headersize;
+<span id="L1915" class="ln">  1915</span>		vlong sectionstart;
+<span id="L1916" class="ln">  1916</span>		vlong value;
+<span id="L1917" class="ln">  1917</span>	
+<span id="L1918" class="ln">  1918</span>		sectionstart = cpos();
+<span id="L1919" class="ln">  1919</span>		headersize = rnd(4+2+4+1+1, PtrSize);  // don&#39;t count unit_length field itself
+<span id="L1920" class="ln">  1920</span>	
+<span id="L1921" class="ln">  1921</span>		for (compunit = dwroot.child; compunit != nil; compunit = compunit-&gt;link) {
+<span id="L1922" class="ln">  1922</span>			b = getattr(compunit,  DW_AT_low_pc);
+<span id="L1923" class="ln">  1923</span>			if (b == nil)
+<span id="L1924" class="ln">  1924</span>				continue;
+<span id="L1925" class="ln">  1925</span>			e = getattr(compunit,  DW_AT_high_pc);
+<span id="L1926" class="ln">  1926</span>			if (e == nil)
+<span id="L1927" class="ln">  1927</span>				continue;
+<span id="L1928" class="ln">  1928</span>	
+<span id="L1929" class="ln">  1929</span>			// Write .debug_aranges	 Header + entry	 (sec 6.1.2)
+<span id="L1930" class="ln">  1930</span>			LPUT(headersize + 4*PtrSize - 4);	// unit_length (*)
+<span id="L1931" class="ln">  1931</span>			WPUT(2);	// dwarf version (appendix F)
+<span id="L1932" class="ln">  1932</span>	
+<span id="L1933" class="ln">  1933</span>			value = compunit-&gt;offs - COMPUNITHEADERSIZE;	// debug_info_offset
+<span id="L1934" class="ln">  1934</span>			if(linkmode == LinkExternal)
+<span id="L1935" class="ln">  1935</span>				adddwarfrel(arangessec, infosym, sectionstart, 4, value);
+<span id="L1936" class="ln">  1936</span>			else
+<span id="L1937" class="ln">  1937</span>				LPUT(value);
+<span id="L1938" class="ln">  1938</span>	
+<span id="L1939" class="ln">  1939</span>			cput(PtrSize);	// address_size
+<span id="L1940" class="ln">  1940</span>			cput(0);	// segment_size
+<span id="L1941" class="ln">  1941</span>			strnput(&#34;&#34;, headersize - (4+2+4+1+1));	// align to PtrSize
+<span id="L1942" class="ln">  1942</span>	
+<span id="L1943" class="ln">  1943</span>			if(linkmode == LinkExternal)
+<span id="L1944" class="ln">  1944</span>				adddwarfrel(arangessec, (LSym*)b-&gt;data, sectionstart, PtrSize, b-&gt;value-((LSym*)b-&gt;data)-&gt;value);
+<span id="L1945" class="ln">  1945</span>			else
+<span id="L1946" class="ln">  1946</span>				addrput(b-&gt;value);
+<span id="L1947" class="ln">  1947</span>	
+<span id="L1948" class="ln">  1948</span>			addrput(e-&gt;value - b-&gt;value);
+<span id="L1949" class="ln">  1949</span>			addrput(0);
+<span id="L1950" class="ln">  1950</span>			addrput(0);
+<span id="L1951" class="ln">  1951</span>		}
+<span id="L1952" class="ln">  1952</span>		cflush();
+<span id="L1953" class="ln">  1953</span>		return sectionstart;
+<span id="L1954" class="ln">  1954</span>	}
+<span id="L1955" class="ln">  1955</span>	
+<span id="L1956" class="ln">  1956</span>	static vlong
+<span id="L1957" class="ln">  1957</span>	writegdbscript(void)
+<span id="L1958" class="ln">  1958</span>	{
+<span id="L1959" class="ln">  1959</span>		vlong sectionstart;
+<span id="L1960" class="ln">  1960</span>	
+<span id="L1961" class="ln">  1961</span>		sectionstart = cpos();
+<span id="L1962" class="ln">  1962</span>	
+<span id="L1963" class="ln">  1963</span>		if (gdbscript[0]) {
+<span id="L1964" class="ln">  1964</span>			cput(1);  // magic 1 byte?
+<span id="L1965" class="ln">  1965</span>			strnput(gdbscript, strlen(gdbscript)+1);
+<span id="L1966" class="ln">  1966</span>			cflush();
+<span id="L1967" class="ln">  1967</span>		}
+<span id="L1968" class="ln">  1968</span>		return sectionstart;
+<span id="L1969" class="ln">  1969</span>	}
+<span id="L1970" class="ln">  1970</span>	
+<span id="L1971" class="ln">  1971</span>	static void
+<span id="L1972" class="ln">  1972</span>	align(vlong size)
+<span id="L1973" class="ln">  1973</span>	{
+<span id="L1974" class="ln">  1974</span>		if(HEADTYPE == Hwindows) // Only Windows PE need section align.
+<span id="L1975" class="ln">  1975</span>			strnput(&#34;&#34;, rnd(size, PEFILEALIGN) - size);
+<span id="L1976" class="ln">  1976</span>	}
+<span id="L1977" class="ln">  1977</span>	
+<span id="L1978" class="ln">  1978</span>	static vlong
+<span id="L1979" class="ln">  1979</span>	writedwarfreloc(LSym* s)
+<span id="L1980" class="ln">  1980</span>	{
+<span id="L1981" class="ln">  1981</span>		int i;
+<span id="L1982" class="ln">  1982</span>		vlong start;
+<span id="L1983" class="ln">  1983</span>		Reloc *r;
+<span id="L1984" class="ln">  1984</span>		
+<span id="L1985" class="ln">  1985</span>		start = cpos();
+<span id="L1986" class="ln">  1986</span>		for(r = s-&gt;r; r &lt; s-&gt;r+s-&gt;nr; r++) {
+<span id="L1987" class="ln">  1987</span>			if(iself)
+<span id="L1988" class="ln">  1988</span>				i = elfreloc1(r, r-&gt;off);
+<span id="L1989" class="ln">  1989</span>			else if(HEADTYPE == Hdarwin)
+<span id="L1990" class="ln">  1990</span>				i = machoreloc1(r, r-&gt;off);
+<span id="L1991" class="ln">  1991</span>			else
+<span id="L1992" class="ln">  1992</span>				i = -1;
+<span id="L1993" class="ln">  1993</span>			if(i &lt; 0)
+<span id="L1994" class="ln">  1994</span>				diag(&#34;unsupported obj reloc %d/%d to %s&#34;, r-&gt;type, r-&gt;siz, r-&gt;sym-&gt;name);
+<span id="L1995" class="ln">  1995</span>		}
+<span id="L1996" class="ln">  1996</span>		return start;
+<span id="L1997" class="ln">  1997</span>	}
+<span id="L1998" class="ln">  1998</span>	
+<span id="L1999" class="ln">  1999</span>	/*
+<span id="L2000" class="ln">  2000</span>	 * This is the main entry point for generating dwarf.  After emitting
+<span id="L2001" class="ln">  2001</span>	 * the mandatory debug_abbrev section, it calls writelines() to set up
+<span id="L2002" class="ln">  2002</span>	 * the per-compilation unit part of the DIE tree, while simultaneously
+<span id="L2003" class="ln">  2003</span>	 * emitting the debug_line section.  When the final tree contains
+<span id="L2004" class="ln">  2004</span>	 * forward references, it will write the debug_info section in 2
+<span id="L2005" class="ln">  2005</span>	 * passes.
+<span id="L2006" class="ln">  2006</span>	 *
+<span id="L2007" class="ln">  2007</span>	 */
+<span id="L2008" class="ln">  2008</span>	void
+<span id="L2009" class="ln">  2009</span>	dwarfemitdebugsections(void)
+<span id="L2010" class="ln">  2010</span>	{
+<span id="L2011" class="ln">  2011</span>		vlong infoe;
+<span id="L2012" class="ln">  2012</span>		DWDie* die;
+<span id="L2013" class="ln">  2013</span>	
+<span id="L2014" class="ln">  2014</span>		if(debug[&#39;w&#39;])  // disable dwarf
+<span id="L2015" class="ln">  2015</span>			return;
+<span id="L2016" class="ln">  2016</span>	
+<span id="L2017" class="ln">  2017</span>		if(linkmode == LinkExternal &amp;&amp; !iself)
+<span id="L2018" class="ln">  2018</span>			return;
+<span id="L2019" class="ln">  2019</span>	
+<span id="L2020" class="ln">  2020</span>		// For diagnostic messages.
+<span id="L2021" class="ln">  2021</span>		newattr(&amp;dwtypes, DW_AT_name, DW_CLS_STRING, strlen(&#34;dwtypes&#34;), &#34;dwtypes&#34;);
+<span id="L2022" class="ln">  2022</span>	
+<span id="L2023" class="ln">  2023</span>		mkindex(&amp;dwroot);
+<span id="L2024" class="ln">  2024</span>		mkindex(&amp;dwtypes);
+<span id="L2025" class="ln">  2025</span>		mkindex(&amp;dwglobals);
+<span id="L2026" class="ln">  2026</span>	
+<span id="L2027" class="ln">  2027</span>		// Some types that must exist to define other ones.
+<span id="L2028" class="ln">  2028</span>		newdie(&amp;dwtypes, DW_ABRV_NULLTYPE, &#34;&lt;unspecified&gt;&#34;);
+<span id="L2029" class="ln">  2029</span>		newdie(&amp;dwtypes, DW_ABRV_NULLTYPE, &#34;void&#34;);
+<span id="L2030" class="ln">  2030</span>		newdie(&amp;dwtypes, DW_ABRV_BARE_PTRTYPE, &#34;unsafe.Pointer&#34;);
+<span id="L2031" class="ln">  2031</span>		die = newdie(&amp;dwtypes, DW_ABRV_BASETYPE, &#34;uintptr&#34;);  // needed for array size
+<span id="L2032" class="ln">  2032</span>		newattr(die, DW_AT_encoding,  DW_CLS_CONSTANT, DW_ATE_unsigned, 0);
+<span id="L2033" class="ln">  2033</span>		newattr(die, DW_AT_byte_size, DW_CLS_CONSTANT, PtrSize, 0);
+<span id="L2034" class="ln">  2034</span>	
+<span id="L2035" class="ln">  2035</span>		// Needed by the prettyprinter code for interface inspection.
+<span id="L2036" class="ln">  2036</span>		defgotype(lookup_or_diag(&#34;type.runtime.rtype&#34;));
+<span id="L2037" class="ln">  2037</span>		defgotype(lookup_or_diag(&#34;type.runtime.interfaceType&#34;));
+<span id="L2038" class="ln">  2038</span>		defgotype(lookup_or_diag(&#34;type.runtime.itab&#34;));
+<span id="L2039" class="ln">  2039</span>	
+<span id="L2040" class="ln">  2040</span>		genasmsym(defdwsymb);
+<span id="L2041" class="ln">  2041</span>	
+<span id="L2042" class="ln">  2042</span>		writeabbrev();
+<span id="L2043" class="ln">  2043</span>		align(abbrevsize);
+<span id="L2044" class="ln">  2044</span>		writelines();
+<span id="L2045" class="ln">  2045</span>		align(linesize);
+<span id="L2046" class="ln">  2046</span>		writeframes();
+<span id="L2047" class="ln">  2047</span>		align(framesize);
+<span id="L2048" class="ln">  2048</span>	
+<span id="L2049" class="ln">  2049</span>		synthesizestringtypes(dwtypes.child);
+<span id="L2050" class="ln">  2050</span>		synthesizeslicetypes(dwtypes.child);
+<span id="L2051" class="ln">  2051</span>		synthesizemaptypes(dwtypes.child);
+<span id="L2052" class="ln">  2052</span>		synthesizechantypes(dwtypes.child);
+<span id="L2053" class="ln">  2053</span>	
+<span id="L2054" class="ln">  2054</span>		reversetree(&amp;dwroot.child);
+<span id="L2055" class="ln">  2055</span>		reversetree(&amp;dwtypes.child);
+<span id="L2056" class="ln">  2056</span>		reversetree(&amp;dwglobals.child);
+<span id="L2057" class="ln">  2057</span>	
+<span id="L2058" class="ln">  2058</span>		movetomodule(&amp;dwtypes);
+<span id="L2059" class="ln">  2059</span>		movetomodule(&amp;dwglobals);
+<span id="L2060" class="ln">  2060</span>	
+<span id="L2061" class="ln">  2061</span>		infoo = cpos();
+<span id="L2062" class="ln">  2062</span>		writeinfo();
+<span id="L2063" class="ln">  2063</span>		infoe = cpos();
+<span id="L2064" class="ln">  2064</span>		pubnameso = infoe;
+<span id="L2065" class="ln">  2065</span>		pubtypeso = infoe;
+<span id="L2066" class="ln">  2066</span>		arangeso = infoe;
+<span id="L2067" class="ln">  2067</span>		gdbscripto = infoe;
+<span id="L2068" class="ln">  2068</span>	
+<span id="L2069" class="ln">  2069</span>		if (fwdcount &gt; 0) {
+<span id="L2070" class="ln">  2070</span>			if (debug[&#39;v&#39;])
+<span id="L2071" class="ln">  2071</span>				Bprint(&amp;bso, &#34;%5.2f dwarf pass 2.\n&#34;, cputime());
+<span id="L2072" class="ln">  2072</span>			cseek(infoo);
+<span id="L2073" class="ln">  2073</span>			writeinfo();
+<span id="L2074" class="ln">  2074</span>			if (fwdcount &gt; 0) {
+<span id="L2075" class="ln">  2075</span>				diag(&#34;dwarf: unresolved references after first dwarf info pass&#34;);
+<span id="L2076" class="ln">  2076</span>				errorexit();
+<span id="L2077" class="ln">  2077</span>			}
+<span id="L2078" class="ln">  2078</span>			if (infoe != cpos()) {
+<span id="L2079" class="ln">  2079</span>				diag(&#34;dwarf: inconsistent second dwarf info pass&#34;);
+<span id="L2080" class="ln">  2080</span>				errorexit();
+<span id="L2081" class="ln">  2081</span>			}
+<span id="L2082" class="ln">  2082</span>		}
+<span id="L2083" class="ln">  2083</span>		infosize = infoe - infoo;
+<span id="L2084" class="ln">  2084</span>		align(infosize);
+<span id="L2085" class="ln">  2085</span>	
+<span id="L2086" class="ln">  2086</span>		pubnameso  = writepub(ispubname);
+<span id="L2087" class="ln">  2087</span>		pubnamessize  = cpos() - pubnameso;
+<span id="L2088" class="ln">  2088</span>		align(pubnamessize);
+<span id="L2089" class="ln">  2089</span>	
+<span id="L2090" class="ln">  2090</span>		pubtypeso  = writepub(ispubtype);
+<span id="L2091" class="ln">  2091</span>		pubtypessize  = cpos() - pubtypeso;
+<span id="L2092" class="ln">  2092</span>		align(pubtypessize);
+<span id="L2093" class="ln">  2093</span>	
+<span id="L2094" class="ln">  2094</span>		arangeso   = writearanges();
+<span id="L2095" class="ln">  2095</span>		arangessize   = cpos() - arangeso;
+<span id="L2096" class="ln">  2096</span>		align(arangessize);
+<span id="L2097" class="ln">  2097</span>	
+<span id="L2098" class="ln">  2098</span>		gdbscripto = writegdbscript();
+<span id="L2099" class="ln">  2099</span>		gdbscriptsize = cpos() - gdbscripto;
+<span id="L2100" class="ln">  2100</span>		align(gdbscriptsize);
+<span id="L2101" class="ln">  2101</span>	
+<span id="L2102" class="ln">  2102</span>		while(cpos()&amp;7)
+<span id="L2103" class="ln">  2103</span>			cput(0);
+<span id="L2104" class="ln">  2104</span>		inforeloco = writedwarfreloc(infosec);
+<span id="L2105" class="ln">  2105</span>		inforelocsize = cpos() - inforeloco;
+<span id="L2106" class="ln">  2106</span>		align(inforelocsize);
+<span id="L2107" class="ln">  2107</span>	
+<span id="L2108" class="ln">  2108</span>		arangesreloco = writedwarfreloc(arangessec);
+<span id="L2109" class="ln">  2109</span>		arangesrelocsize = cpos() - arangesreloco;
+<span id="L2110" class="ln">  2110</span>		align(arangesrelocsize);
+<span id="L2111" class="ln">  2111</span>	
+<span id="L2112" class="ln">  2112</span>		linereloco = writedwarfreloc(linesec);
+<span id="L2113" class="ln">  2113</span>		linerelocsize = cpos() - linereloco;
+<span id="L2114" class="ln">  2114</span>		align(linerelocsize);
+<span id="L2115" class="ln">  2115</span>	
+<span id="L2116" class="ln">  2116</span>		framereloco = writedwarfreloc(framesec);
+<span id="L2117" class="ln">  2117</span>		framerelocsize = cpos() - framereloco;
+<span id="L2118" class="ln">  2118</span>		align(framerelocsize);
+<span id="L2119" class="ln">  2119</span>	}
+<span id="L2120" class="ln">  2120</span>	
+<span id="L2121" class="ln">  2121</span>	/*
+<span id="L2122" class="ln">  2122</span>	 *  Elf.
+<span id="L2123" class="ln">  2123</span>	 */
+<span id="L2124" class="ln">  2124</span>	enum
+<span id="L2125" class="ln">  2125</span>	{
+<span id="L2126" class="ln">  2126</span>		ElfStrDebugAbbrev,
+<span id="L2127" class="ln">  2127</span>		ElfStrDebugAranges,
+<span id="L2128" class="ln">  2128</span>		ElfStrDebugFrame,
+<span id="L2129" class="ln">  2129</span>		ElfStrDebugInfo,
+<span id="L2130" class="ln">  2130</span>		ElfStrDebugLine,
+<span id="L2131" class="ln">  2131</span>		ElfStrDebugLoc,
+<span id="L2132" class="ln">  2132</span>		ElfStrDebugMacinfo,
+<span id="L2133" class="ln">  2133</span>		ElfStrDebugPubNames,
+<span id="L2134" class="ln">  2134</span>		ElfStrDebugPubTypes,
+<span id="L2135" class="ln">  2135</span>		ElfStrDebugRanges,
+<span id="L2136" class="ln">  2136</span>		ElfStrDebugStr,
+<span id="L2137" class="ln">  2137</span>		ElfStrGDBScripts,
+<span id="L2138" class="ln">  2138</span>		ElfStrRelDebugInfo,
+<span id="L2139" class="ln">  2139</span>		ElfStrRelDebugAranges,
+<span id="L2140" class="ln">  2140</span>		ElfStrRelDebugLine,
+<span id="L2141" class="ln">  2141</span>		ElfStrRelDebugFrame,
+<span id="L2142" class="ln">  2142</span>		NElfStrDbg
+<span id="L2143" class="ln">  2143</span>	};
+<span id="L2144" class="ln">  2144</span>	
+<span id="L2145" class="ln">  2145</span>	vlong elfstrdbg[NElfStrDbg];
+<span id="L2146" class="ln">  2146</span>	
+<span id="L2147" class="ln">  2147</span>	void
+<span id="L2148" class="ln">  2148</span>	dwarfaddshstrings(LSym *shstrtab)
+<span id="L2149" class="ln">  2149</span>	{
+<span id="L2150" class="ln">  2150</span>		if(debug[&#39;w&#39;])  // disable dwarf
+<span id="L2151" class="ln">  2151</span>			return;
+<span id="L2152" class="ln">  2152</span>	
+<span id="L2153" class="ln">  2153</span>		elfstrdbg[ElfStrDebugAbbrev]   = addstring(shstrtab, &#34;.debug_abbrev&#34;);
+<span id="L2154" class="ln">  2154</span>		elfstrdbg[ElfStrDebugAranges]  = addstring(shstrtab, &#34;.debug_aranges&#34;);
+<span id="L2155" class="ln">  2155</span>		elfstrdbg[ElfStrDebugFrame]    = addstring(shstrtab, &#34;.debug_frame&#34;);
+<span id="L2156" class="ln">  2156</span>		elfstrdbg[ElfStrDebugInfo]     = addstring(shstrtab, &#34;.debug_info&#34;);
+<span id="L2157" class="ln">  2157</span>		elfstrdbg[ElfStrDebugLine]     = addstring(shstrtab, &#34;.debug_line&#34;);
+<span id="L2158" class="ln">  2158</span>		elfstrdbg[ElfStrDebugLoc]      = addstring(shstrtab, &#34;.debug_loc&#34;);
+<span id="L2159" class="ln">  2159</span>		elfstrdbg[ElfStrDebugMacinfo]  = addstring(shstrtab, &#34;.debug_macinfo&#34;);
+<span id="L2160" class="ln">  2160</span>		elfstrdbg[ElfStrDebugPubNames] = addstring(shstrtab, &#34;.debug_pubnames&#34;);
+<span id="L2161" class="ln">  2161</span>		elfstrdbg[ElfStrDebugPubTypes] = addstring(shstrtab, &#34;.debug_pubtypes&#34;);
+<span id="L2162" class="ln">  2162</span>		elfstrdbg[ElfStrDebugRanges]   = addstring(shstrtab, &#34;.debug_ranges&#34;);
+<span id="L2163" class="ln">  2163</span>		elfstrdbg[ElfStrDebugStr]      = addstring(shstrtab, &#34;.debug_str&#34;);
+<span id="L2164" class="ln">  2164</span>		elfstrdbg[ElfStrGDBScripts]    = addstring(shstrtab, &#34;.debug_gdb_scripts&#34;);
+<span id="L2165" class="ln">  2165</span>		if(linkmode == LinkExternal) {
+<span id="L2166" class="ln">  2166</span>			if(thechar == &#39;6&#39;) {
+<span id="L2167" class="ln">  2167</span>				elfstrdbg[ElfStrRelDebugInfo] = addstring(shstrtab, &#34;.rela.debug_info&#34;);
+<span id="L2168" class="ln">  2168</span>				elfstrdbg[ElfStrRelDebugAranges] = addstring(shstrtab, &#34;.rela.debug_aranges&#34;);
+<span id="L2169" class="ln">  2169</span>				elfstrdbg[ElfStrRelDebugLine] = addstring(shstrtab, &#34;.rela.debug_line&#34;);
+<span id="L2170" class="ln">  2170</span>				elfstrdbg[ElfStrRelDebugFrame] = addstring(shstrtab, &#34;.rela.debug_frame&#34;);
+<span id="L2171" class="ln">  2171</span>			} else {
+<span id="L2172" class="ln">  2172</span>				elfstrdbg[ElfStrRelDebugInfo] = addstring(shstrtab, &#34;.rel.debug_info&#34;);
+<span id="L2173" class="ln">  2173</span>				elfstrdbg[ElfStrRelDebugAranges] = addstring(shstrtab, &#34;.rel.debug_aranges&#34;);
+<span id="L2174" class="ln">  2174</span>				elfstrdbg[ElfStrRelDebugLine] = addstring(shstrtab, &#34;.rel.debug_line&#34;);
+<span id="L2175" class="ln">  2175</span>				elfstrdbg[ElfStrRelDebugFrame] = addstring(shstrtab, &#34;.rel.debug_frame&#34;);
+<span id="L2176" class="ln">  2176</span>			}
+<span id="L2177" class="ln">  2177</span>	
+<span id="L2178" class="ln">  2178</span>			infosym = linklookup(ctxt, &#34;.debug_info&#34;, 0);
+<span id="L2179" class="ln">  2179</span>			infosym-&gt;hide = 1;
+<span id="L2180" class="ln">  2180</span>	
+<span id="L2181" class="ln">  2181</span>			abbrevsym = linklookup(ctxt, &#34;.debug_abbrev&#34;, 0);
+<span id="L2182" class="ln">  2182</span>			abbrevsym-&gt;hide = 1;
+<span id="L2183" class="ln">  2183</span>	
+<span id="L2184" class="ln">  2184</span>			linesym = linklookup(ctxt, &#34;.debug_line&#34;, 0);
+<span id="L2185" class="ln">  2185</span>			linesym-&gt;hide = 1;
+<span id="L2186" class="ln">  2186</span>	
+<span id="L2187" class="ln">  2187</span>			framesym = linklookup(ctxt, &#34;.debug_frame&#34;, 0);
+<span id="L2188" class="ln">  2188</span>			framesym-&gt;hide = 1;
+<span id="L2189" class="ln">  2189</span>		}
+<span id="L2190" class="ln">  2190</span>	}
+<span id="L2191" class="ln">  2191</span>	
+<span id="L2192" class="ln">  2192</span>	// Add section symbols for DWARF debug info.  This is called before
+<span id="L2193" class="ln">  2193</span>	// dwarfaddelfheaders.
+<span id="L2194" class="ln">  2194</span>	void
+<span id="L2195" class="ln">  2195</span>	dwarfaddelfsectionsyms()
+<span id="L2196" class="ln">  2196</span>	{
+<span id="L2197" class="ln">  2197</span>		if(infosym != nil) {
+<span id="L2198" class="ln">  2198</span>			infosympos = cpos();
+<span id="L2199" class="ln">  2199</span>			putelfsectionsym(infosym, 0);
+<span id="L2200" class="ln">  2200</span>		}
+<span id="L2201" class="ln">  2201</span>		if(abbrevsym != nil) {
+<span id="L2202" class="ln">  2202</span>			abbrevsympos = cpos();
+<span id="L2203" class="ln">  2203</span>			putelfsectionsym(abbrevsym, 0);
+<span id="L2204" class="ln">  2204</span>		}
+<span id="L2205" class="ln">  2205</span>		if(linesym != nil) {
+<span id="L2206" class="ln">  2206</span>			linesympos = cpos();
+<span id="L2207" class="ln">  2207</span>			putelfsectionsym(linesym, 0);
+<span id="L2208" class="ln">  2208</span>		}
+<span id="L2209" class="ln">  2209</span>		if(framesym != nil) {
+<span id="L2210" class="ln">  2210</span>			framesympos = cpos();
+<span id="L2211" class="ln">  2211</span>			putelfsectionsym(framesym, 0);
+<span id="L2212" class="ln">  2212</span>		}
+<span id="L2213" class="ln">  2213</span>	}
+<span id="L2214" class="ln">  2214</span>	
+<span id="L2215" class="ln">  2215</span>	static void
+<span id="L2216" class="ln">  2216</span>	dwarfaddelfrelocheader(int elfstr, ElfShdr *shdata, vlong off, vlong size)
+<span id="L2217" class="ln">  2217</span>	{
+<span id="L2218" class="ln">  2218</span>		ElfShdr *sh;
+<span id="L2219" class="ln">  2219</span>	
+<span id="L2220" class="ln">  2220</span>		sh = newElfShdr(elfstrdbg[elfstr]);
+<span id="L2221" class="ln">  2221</span>		if(thechar == &#39;6&#39;) {
+<span id="L2222" class="ln">  2222</span>			sh-&gt;type = SHT_RELA;
+<span id="L2223" class="ln">  2223</span>		} else {
+<span id="L2224" class="ln">  2224</span>			sh-&gt;type = SHT_REL;
+<span id="L2225" class="ln">  2225</span>		}
+<span id="L2226" class="ln">  2226</span>		sh-&gt;entsize = PtrSize*(2+(sh-&gt;type==SHT_RELA));
+<span id="L2227" class="ln">  2227</span>		sh-&gt;link = elfshname(&#34;.symtab&#34;)-&gt;shnum;
+<span id="L2228" class="ln">  2228</span>		sh-&gt;info = shdata-&gt;shnum;
+<span id="L2229" class="ln">  2229</span>		sh-&gt;off = off;
+<span id="L2230" class="ln">  2230</span>		sh-&gt;size = size;
+<span id="L2231" class="ln">  2231</span>		sh-&gt;addralign = PtrSize;
+<span id="L2232" class="ln">  2232</span>		
+<span id="L2233" class="ln">  2233</span>	}
+<span id="L2234" class="ln">  2234</span>	
+<span id="L2235" class="ln">  2235</span>	void
+<span id="L2236" class="ln">  2236</span>	dwarfaddelfheaders(void)
+<span id="L2237" class="ln">  2237</span>	{
+<span id="L2238" class="ln">  2238</span>		ElfShdr *sh, *shinfo, *sharanges, *shline, *shframe;
+<span id="L2239" class="ln">  2239</span>	
+<span id="L2240" class="ln">  2240</span>		if(debug[&#39;w&#39;])  // disable dwarf
+<span id="L2241" class="ln">  2241</span>			return;
+<span id="L2242" class="ln">  2242</span>	
+<span id="L2243" class="ln">  2243</span>		sh = newElfShdr(elfstrdbg[ElfStrDebugAbbrev]);
+<span id="L2244" class="ln">  2244</span>		sh-&gt;type = SHT_PROGBITS;
+<span id="L2245" class="ln">  2245</span>		sh-&gt;off = abbrevo;
+<span id="L2246" class="ln">  2246</span>		sh-&gt;size = abbrevsize;
+<span id="L2247" class="ln">  2247</span>		sh-&gt;addralign = 1;
+<span id="L2248" class="ln">  2248</span>		if(abbrevsympos &gt; 0)
+<span id="L2249" class="ln">  2249</span>			putelfsymshndx(abbrevsympos, sh-&gt;shnum);
+<span id="L2250" class="ln">  2250</span>	
+<span id="L2251" class="ln">  2251</span>		sh = newElfShdr(elfstrdbg[ElfStrDebugLine]);
+<span id="L2252" class="ln">  2252</span>		sh-&gt;type = SHT_PROGBITS;
+<span id="L2253" class="ln">  2253</span>		sh-&gt;off = lineo;
+<span id="L2254" class="ln">  2254</span>		sh-&gt;size = linesize;
+<span id="L2255" class="ln">  2255</span>		sh-&gt;addralign = 1;
+<span id="L2256" class="ln">  2256</span>		if(linesympos &gt; 0)
+<span id="L2257" class="ln">  2257</span>			putelfsymshndx(linesympos, sh-&gt;shnum);
+<span id="L2258" class="ln">  2258</span>		shline = sh;
+<span id="L2259" class="ln">  2259</span>	
+<span id="L2260" class="ln">  2260</span>		sh = newElfShdr(elfstrdbg[ElfStrDebugFrame]);
+<span id="L2261" class="ln">  2261</span>		sh-&gt;type = SHT_PROGBITS;
+<span id="L2262" class="ln">  2262</span>		sh-&gt;off = frameo;
+<span id="L2263" class="ln">  2263</span>		sh-&gt;size = framesize;
+<span id="L2264" class="ln">  2264</span>		sh-&gt;addralign = 1;
+<span id="L2265" class="ln">  2265</span>		if(framesympos &gt; 0)
+<span id="L2266" class="ln">  2266</span>			putelfsymshndx(framesympos, sh-&gt;shnum);
+<span id="L2267" class="ln">  2267</span>		shframe = sh;
+<span id="L2268" class="ln">  2268</span>	
+<span id="L2269" class="ln">  2269</span>		sh = newElfShdr(elfstrdbg[ElfStrDebugInfo]);
+<span id="L2270" class="ln">  2270</span>		sh-&gt;type = SHT_PROGBITS;
+<span id="L2271" class="ln">  2271</span>		sh-&gt;off = infoo;
+<span id="L2272" class="ln">  2272</span>		sh-&gt;size = infosize;
+<span id="L2273" class="ln">  2273</span>		sh-&gt;addralign = 1;
+<span id="L2274" class="ln">  2274</span>		if(infosympos &gt; 0)
+<span id="L2275" class="ln">  2275</span>			putelfsymshndx(infosympos, sh-&gt;shnum);
+<span id="L2276" class="ln">  2276</span>		shinfo = sh;
+<span id="L2277" class="ln">  2277</span>	
+<span id="L2278" class="ln">  2278</span>		if (pubnamessize &gt; 0) {
+<span id="L2279" class="ln">  2279</span>			sh = newElfShdr(elfstrdbg[ElfStrDebugPubNames]);
+<span id="L2280" class="ln">  2280</span>			sh-&gt;type = SHT_PROGBITS;
+<span id="L2281" class="ln">  2281</span>			sh-&gt;off = pubnameso;
+<span id="L2282" class="ln">  2282</span>			sh-&gt;size = pubnamessize;
+<span id="L2283" class="ln">  2283</span>			sh-&gt;addralign = 1;
+<span id="L2284" class="ln">  2284</span>		}
+<span id="L2285" class="ln">  2285</span>	
+<span id="L2286" class="ln">  2286</span>		if (pubtypessize &gt; 0) {
+<span id="L2287" class="ln">  2287</span>			sh = newElfShdr(elfstrdbg[ElfStrDebugPubTypes]);
+<span id="L2288" class="ln">  2288</span>			sh-&gt;type = SHT_PROGBITS;
+<span id="L2289" class="ln">  2289</span>			sh-&gt;off = pubtypeso;
+<span id="L2290" class="ln">  2290</span>			sh-&gt;size = pubtypessize;
+<span id="L2291" class="ln">  2291</span>			sh-&gt;addralign = 1;
+<span id="L2292" class="ln">  2292</span>		}
+<span id="L2293" class="ln">  2293</span>	
+<span id="L2294" class="ln">  2294</span>		sharanges = nil;
+<span id="L2295" class="ln">  2295</span>		if (arangessize) {
+<span id="L2296" class="ln">  2296</span>			sh = newElfShdr(elfstrdbg[ElfStrDebugAranges]);
+<span id="L2297" class="ln">  2297</span>			sh-&gt;type = SHT_PROGBITS;
+<span id="L2298" class="ln">  2298</span>			sh-&gt;off = arangeso;
+<span id="L2299" class="ln">  2299</span>			sh-&gt;size = arangessize;
+<span id="L2300" class="ln">  2300</span>			sh-&gt;addralign = 1;
+<span id="L2301" class="ln">  2301</span>			sharanges = sh;
+<span id="L2302" class="ln">  2302</span>		}
+<span id="L2303" class="ln">  2303</span>	
+<span id="L2304" class="ln">  2304</span>		if (gdbscriptsize) {
+<span id="L2305" class="ln">  2305</span>			sh = newElfShdr(elfstrdbg[ElfStrGDBScripts]);
+<span id="L2306" class="ln">  2306</span>			sh-&gt;type = SHT_PROGBITS;
+<span id="L2307" class="ln">  2307</span>			sh-&gt;off = gdbscripto;
+<span id="L2308" class="ln">  2308</span>			sh-&gt;size = gdbscriptsize;
+<span id="L2309" class="ln">  2309</span>			sh-&gt;addralign = 1;
+<span id="L2310" class="ln">  2310</span>		}
+<span id="L2311" class="ln">  2311</span>	
+<span id="L2312" class="ln">  2312</span>		if(inforelocsize)
+<span id="L2313" class="ln">  2313</span>			dwarfaddelfrelocheader(ElfStrRelDebugInfo, shinfo, inforeloco, inforelocsize);
+<span id="L2314" class="ln">  2314</span>	
+<span id="L2315" class="ln">  2315</span>		if(arangesrelocsize)
+<span id="L2316" class="ln">  2316</span>			dwarfaddelfrelocheader(ElfStrRelDebugAranges, sharanges, arangesreloco, arangesrelocsize);
+<span id="L2317" class="ln">  2317</span>	
+<span id="L2318" class="ln">  2318</span>		if(linerelocsize)
+<span id="L2319" class="ln">  2319</span>			dwarfaddelfrelocheader(ElfStrRelDebugLine, shline, linereloco, linerelocsize);
+<span id="L2320" class="ln">  2320</span>	
+<span id="L2321" class="ln">  2321</span>		if(framerelocsize)
+<span id="L2322" class="ln">  2322</span>			dwarfaddelfrelocheader(ElfStrRelDebugFrame, shframe, framereloco, framerelocsize);
+<span id="L2323" class="ln">  2323</span>	}
+<span id="L2324" class="ln">  2324</span>	
+<span id="L2325" class="ln">  2325</span>	/*
+<span id="L2326" class="ln">  2326</span>	 * Macho
+<span id="L2327" class="ln">  2327</span>	 */
+<span id="L2328" class="ln">  2328</span>	void
+<span id="L2329" class="ln">  2329</span>	dwarfaddmachoheaders(void)
+<span id="L2330" class="ln">  2330</span>	{
+<span id="L2331" class="ln">  2331</span>		MachoSect *msect;
+<span id="L2332" class="ln">  2332</span>		MachoSeg *ms;
+<span id="L2333" class="ln">  2333</span>		vlong fakestart;
+<span id="L2334" class="ln">  2334</span>		int nsect;
+<span id="L2335" class="ln">  2335</span>	
+<span id="L2336" class="ln">  2336</span>		if(debug[&#39;w&#39;])  // disable dwarf
+<span id="L2337" class="ln">  2337</span>			return;
+<span id="L2338" class="ln">  2338</span>	
+<span id="L2339" class="ln">  2339</span>		// Zero vsize segments won&#39;t be loaded in memory, even so they
+<span id="L2340" class="ln">  2340</span>		// have to be page aligned in the file.
+<span id="L2341" class="ln">  2341</span>		fakestart = abbrevo &amp; ~0xfff;
+<span id="L2342" class="ln">  2342</span>	
+<span id="L2343" class="ln">  2343</span>		nsect = 4;
+<span id="L2344" class="ln">  2344</span>		if (pubnamessize  &gt; 0)
+<span id="L2345" class="ln">  2345</span>			nsect++;
+<span id="L2346" class="ln">  2346</span>		if (pubtypessize  &gt; 0)
+<span id="L2347" class="ln">  2347</span>			nsect++;
+<span id="L2348" class="ln">  2348</span>		if (arangessize	  &gt; 0)
+<span id="L2349" class="ln">  2349</span>			nsect++;
+<span id="L2350" class="ln">  2350</span>		if (gdbscriptsize &gt; 0)
+<span id="L2351" class="ln">  2351</span>			nsect++;
+<span id="L2352" class="ln">  2352</span>	
+<span id="L2353" class="ln">  2353</span>		ms = newMachoSeg(&#34;__DWARF&#34;, nsect);
+<span id="L2354" class="ln">  2354</span>		ms-&gt;fileoffset = fakestart;
+<span id="L2355" class="ln">  2355</span>		ms-&gt;filesize = abbrevo-fakestart;
+<span id="L2356" class="ln">  2356</span>		ms-&gt;vaddr = ms-&gt;fileoffset + segdata.vaddr - segdata.fileoff;
+<span id="L2357" class="ln">  2357</span>	
+<span id="L2358" class="ln">  2358</span>		msect = newMachoSect(ms, &#34;__debug_abbrev&#34;, &#34;__DWARF&#34;);
+<span id="L2359" class="ln">  2359</span>		msect-&gt;off = abbrevo;
+<span id="L2360" class="ln">  2360</span>		msect-&gt;size = abbrevsize;
+<span id="L2361" class="ln">  2361</span>		msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2362" class="ln">  2362</span>		ms-&gt;filesize += msect-&gt;size;
+<span id="L2363" class="ln">  2363</span>	
+<span id="L2364" class="ln">  2364</span>		msect = newMachoSect(ms, &#34;__debug_line&#34;, &#34;__DWARF&#34;);
+<span id="L2365" class="ln">  2365</span>		msect-&gt;off = lineo;
+<span id="L2366" class="ln">  2366</span>		msect-&gt;size = linesize;
+<span id="L2367" class="ln">  2367</span>		msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2368" class="ln">  2368</span>		ms-&gt;filesize += msect-&gt;size;
+<span id="L2369" class="ln">  2369</span>	
+<span id="L2370" class="ln">  2370</span>		msect = newMachoSect(ms, &#34;__debug_frame&#34;, &#34;__DWARF&#34;);
+<span id="L2371" class="ln">  2371</span>		msect-&gt;off = frameo;
+<span id="L2372" class="ln">  2372</span>		msect-&gt;size = framesize;
+<span id="L2373" class="ln">  2373</span>		msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2374" class="ln">  2374</span>		ms-&gt;filesize += msect-&gt;size;
+<span id="L2375" class="ln">  2375</span>	
+<span id="L2376" class="ln">  2376</span>		msect = newMachoSect(ms, &#34;__debug_info&#34;, &#34;__DWARF&#34;);
+<span id="L2377" class="ln">  2377</span>		msect-&gt;off = infoo;
+<span id="L2378" class="ln">  2378</span>		msect-&gt;size = infosize;
+<span id="L2379" class="ln">  2379</span>		msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2380" class="ln">  2380</span>		ms-&gt;filesize += msect-&gt;size;
+<span id="L2381" class="ln">  2381</span>	
+<span id="L2382" class="ln">  2382</span>		if (pubnamessize &gt; 0) {
+<span id="L2383" class="ln">  2383</span>			msect = newMachoSect(ms, &#34;__debug_pubnames&#34;, &#34;__DWARF&#34;);
+<span id="L2384" class="ln">  2384</span>			msect-&gt;off = pubnameso;
+<span id="L2385" class="ln">  2385</span>			msect-&gt;size = pubnamessize;
+<span id="L2386" class="ln">  2386</span>			msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2387" class="ln">  2387</span>			ms-&gt;filesize += msect-&gt;size;
+<span id="L2388" class="ln">  2388</span>		}
+<span id="L2389" class="ln">  2389</span>	
+<span id="L2390" class="ln">  2390</span>		if (pubtypessize &gt; 0) {
+<span id="L2391" class="ln">  2391</span>			msect = newMachoSect(ms, &#34;__debug_pubtypes&#34;, &#34;__DWARF&#34;);
+<span id="L2392" class="ln">  2392</span>			msect-&gt;off = pubtypeso;
+<span id="L2393" class="ln">  2393</span>			msect-&gt;size = pubtypessize;
+<span id="L2394" class="ln">  2394</span>			msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2395" class="ln">  2395</span>			ms-&gt;filesize += msect-&gt;size;
+<span id="L2396" class="ln">  2396</span>		}
+<span id="L2397" class="ln">  2397</span>	
+<span id="L2398" class="ln">  2398</span>		if (arangessize &gt; 0) {
+<span id="L2399" class="ln">  2399</span>			msect = newMachoSect(ms, &#34;__debug_aranges&#34;, &#34;__DWARF&#34;);
+<span id="L2400" class="ln">  2400</span>			msect-&gt;off = arangeso;
+<span id="L2401" class="ln">  2401</span>			msect-&gt;size = arangessize;
+<span id="L2402" class="ln">  2402</span>			msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2403" class="ln">  2403</span>			ms-&gt;filesize += msect-&gt;size;
+<span id="L2404" class="ln">  2404</span>		}
+<span id="L2405" class="ln">  2405</span>	
+<span id="L2406" class="ln">  2406</span>		// TODO(lvd) fix gdb/python to load MachO (16 char section name limit)
+<span id="L2407" class="ln">  2407</span>		if (gdbscriptsize &gt; 0) {
+<span id="L2408" class="ln">  2408</span>			msect = newMachoSect(ms, &#34;__debug_gdb_scripts&#34;, &#34;__DWARF&#34;);
+<span id="L2409" class="ln">  2409</span>			msect-&gt;off = gdbscripto;
+<span id="L2410" class="ln">  2410</span>			msect-&gt;size = gdbscriptsize;
+<span id="L2411" class="ln">  2411</span>			msect-&gt;addr = msect-&gt;off + segdata.vaddr - segdata.fileoff;
+<span id="L2412" class="ln">  2412</span>			ms-&gt;filesize += msect-&gt;size;
+<span id="L2413" class="ln">  2413</span>		}
+<span id="L2414" class="ln">  2414</span>	}
+<span id="L2415" class="ln">  2415</span>	
+<span id="L2416" class="ln">  2416</span>	/*
+<span id="L2417" class="ln">  2417</span>	 * Windows PE
+<span id="L2418" class="ln">  2418</span>	 */
+<span id="L2419" class="ln">  2419</span>	void
+<span id="L2420" class="ln">  2420</span>	dwarfaddpeheaders(void)
+<span id="L2421" class="ln">  2421</span>	{
+<span id="L2422" class="ln">  2422</span>		if(debug[&#39;w&#39;])  // disable dwarf
+<span id="L2423" class="ln">  2423</span>			return;
+<span id="L2424" class="ln">  2424</span>	
+<span id="L2425" class="ln">  2425</span>		newPEDWARFSection(&#34;.debug_abbrev&#34;, abbrevsize);
+<span id="L2426" class="ln">  2426</span>		newPEDWARFSection(&#34;.debug_line&#34;, linesize);
+<span id="L2427" class="ln">  2427</span>		newPEDWARFSection(&#34;.debug_frame&#34;, framesize);
+<span id="L2428" class="ln">  2428</span>		newPEDWARFSection(&#34;.debug_info&#34;, infosize);
+<span id="L2429" class="ln">  2429</span>		newPEDWARFSection(&#34;.debug_pubnames&#34;, pubnamessize);
+<span id="L2430" class="ln">  2430</span>		newPEDWARFSection(&#34;.debug_pubtypes&#34;, pubtypessize);
+<span id="L2431" class="ln">  2431</span>		newPEDWARFSection(&#34;.debug_aranges&#34;, arangessize);
+<span id="L2432" class="ln">  2432</span>		newPEDWARFSection(&#34;.debug_gdb_scripts&#34;, gdbscriptsize);
+<span id="L2433" class="ln">  2433</span>	}
+</pre><p><a href="dwarf.c%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

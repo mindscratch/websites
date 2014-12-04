@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/time/format_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/time/format_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package time_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;strconv&#34;
+<span id="L10" class="ln">    10</span>		&#34;strings&#34;
+<span id="L11" class="ln">    11</span>		&#34;testing&#34;
+<span id="L12" class="ln">    12</span>		&#34;testing/quick&#34;
+<span id="L13" class="ln">    13</span>		. &#34;time&#34;
+<span id="L14" class="ln">    14</span>	)
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	type TimeFormatTest struct {
+<span id="L17" class="ln">    17</span>		time           Time
+<span id="L18" class="ln">    18</span>		formattedValue string
+<span id="L19" class="ln">    19</span>	}
+<span id="L20" class="ln">    20</span>	
+<span id="L21" class="ln">    21</span>	var rfc3339Formats = []TimeFormatTest{
+<span id="L22" class="ln">    22</span>		{Date(2008, 9, 17, 20, 4, 26, 0, UTC), &#34;2008-09-17T20:04:26Z&#34;},
+<span id="L23" class="ln">    23</span>		{Date(1994, 9, 17, 20, 4, 26, 0, FixedZone(&#34;EST&#34;, -18000)), &#34;1994-09-17T20:04:26-05:00&#34;},
+<span id="L24" class="ln">    24</span>		{Date(2000, 12, 26, 1, 15, 6, 0, FixedZone(&#34;OTO&#34;, 15600)), &#34;2000-12-26T01:15:06+04:20&#34;},
+<span id="L25" class="ln">    25</span>	}
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	func TestRFC3339Conversion(t *testing.T) {
+<span id="L28" class="ln">    28</span>		for _, f := range rfc3339Formats {
+<span id="L29" class="ln">    29</span>			if f.time.Format(RFC3339) != f.formattedValue {
+<span id="L30" class="ln">    30</span>				t.Error(&#34;RFC3339:&#34;)
+<span id="L31" class="ln">    31</span>				t.Errorf(&#34;  want=%+v&#34;, f.formattedValue)
+<span id="L32" class="ln">    32</span>				t.Errorf(&#34;  have=%+v&#34;, f.time.Format(RFC3339))
+<span id="L33" class="ln">    33</span>			}
+<span id="L34" class="ln">    34</span>		}
+<span id="L35" class="ln">    35</span>	}
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	type FormatTest struct {
+<span id="L38" class="ln">    38</span>		name   string
+<span id="L39" class="ln">    39</span>		format string
+<span id="L40" class="ln">    40</span>		result string
+<span id="L41" class="ln">    41</span>	}
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>	var formatTests = []FormatTest{
+<span id="L44" class="ln">    44</span>		{&#34;ANSIC&#34;, ANSIC, &#34;Wed Feb  4 21:00:57 2009&#34;},
+<span id="L45" class="ln">    45</span>		{&#34;UnixDate&#34;, UnixDate, &#34;Wed Feb  4 21:00:57 PST 2009&#34;},
+<span id="L46" class="ln">    46</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Wed Feb 04 21:00:57 -0800 2009&#34;},
+<span id="L47" class="ln">    47</span>		{&#34;RFC822&#34;, RFC822, &#34;04 Feb 09 21:00 PST&#34;},
+<span id="L48" class="ln">    48</span>		{&#34;RFC850&#34;, RFC850, &#34;Wednesday, 04-Feb-09 21:00:57 PST&#34;},
+<span id="L49" class="ln">    49</span>		{&#34;RFC1123&#34;, RFC1123, &#34;Wed, 04 Feb 2009 21:00:57 PST&#34;},
+<span id="L50" class="ln">    50</span>		{&#34;RFC1123Z&#34;, RFC1123Z, &#34;Wed, 04 Feb 2009 21:00:57 -0800&#34;},
+<span id="L51" class="ln">    51</span>		{&#34;RFC3339&#34;, RFC3339, &#34;2009-02-04T21:00:57-08:00&#34;},
+<span id="L52" class="ln">    52</span>		{&#34;RFC3339Nano&#34;, RFC3339Nano, &#34;2009-02-04T21:00:57.0123456-08:00&#34;},
+<span id="L53" class="ln">    53</span>		{&#34;Kitchen&#34;, Kitchen, &#34;9:00PM&#34;},
+<span id="L54" class="ln">    54</span>		{&#34;am/pm&#34;, &#34;3pm&#34;, &#34;9pm&#34;},
+<span id="L55" class="ln">    55</span>		{&#34;AM/PM&#34;, &#34;3PM&#34;, &#34;9PM&#34;},
+<span id="L56" class="ln">    56</span>		{&#34;two-digit year&#34;, &#34;06 01 02&#34;, &#34;09 02 04&#34;},
+<span id="L57" class="ln">    57</span>		<span class="comment">// Three-letter months and days must not be followed by lower-case letter.</span>
+<span id="L58" class="ln">    58</span>		{&#34;Janet&#34;, &#34;Hi Janet, the Month is January&#34;, &#34;Hi Janet, the Month is February&#34;},
+<span id="L59" class="ln">    59</span>		<span class="comment">// Time stamps, Fractional seconds.</span>
+<span id="L60" class="ln">    60</span>		{&#34;Stamp&#34;, Stamp, &#34;Feb  4 21:00:57&#34;},
+<span id="L61" class="ln">    61</span>		{&#34;StampMilli&#34;, StampMilli, &#34;Feb  4 21:00:57.012&#34;},
+<span id="L62" class="ln">    62</span>		{&#34;StampMicro&#34;, StampMicro, &#34;Feb  4 21:00:57.012345&#34;},
+<span id="L63" class="ln">    63</span>		{&#34;StampNano&#34;, StampNano, &#34;Feb  4 21:00:57.012345600&#34;},
+<span id="L64" class="ln">    64</span>	}
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	func TestFormat(t *testing.T) {
+<span id="L67" class="ln">    67</span>		<span class="comment">// The numeric time represents Thu Feb  4 21:00:57.012345600 PST 2010</span>
+<span id="L68" class="ln">    68</span>		time := Unix(0, 1233810057012345600)
+<span id="L69" class="ln">    69</span>		for _, test := range formatTests {
+<span id="L70" class="ln">    70</span>			result := time.Format(test.format)
+<span id="L71" class="ln">    71</span>			if result != test.result {
+<span id="L72" class="ln">    72</span>				t.Errorf(&#34;%s expected %q got %q&#34;, test.name, test.result, result)
+<span id="L73" class="ln">    73</span>			}
+<span id="L74" class="ln">    74</span>		}
+<span id="L75" class="ln">    75</span>	}
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	func TestFormatShortYear(t *testing.T) {
+<span id="L78" class="ln">    78</span>		years := []int{
+<span id="L79" class="ln">    79</span>			-100001, -100000, -99999,
+<span id="L80" class="ln">    80</span>			-10001, -10000, -9999,
+<span id="L81" class="ln">    81</span>			-1001, -1000, -999,
+<span id="L82" class="ln">    82</span>			-101, -100, -99,
+<span id="L83" class="ln">    83</span>			-11, -10, -9,
+<span id="L84" class="ln">    84</span>			-1, 0, 1,
+<span id="L85" class="ln">    85</span>			9, 10, 11,
+<span id="L86" class="ln">    86</span>			99, 100, 101,
+<span id="L87" class="ln">    87</span>			999, 1000, 1001,
+<span id="L88" class="ln">    88</span>			9999, 10000, 10001,
+<span id="L89" class="ln">    89</span>			99999, 100000, 100001,
+<span id="L90" class="ln">    90</span>		}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>		for _, y := range years {
+<span id="L93" class="ln">    93</span>			time := Date(y, January, 1, 0, 0, 0, 0, UTC)
+<span id="L94" class="ln">    94</span>			result := time.Format(&#34;2006.01.02&#34;)
+<span id="L95" class="ln">    95</span>			var want string
+<span id="L96" class="ln">    96</span>			if y &lt; 0 {
+<span id="L97" class="ln">    97</span>				<span class="comment">// The 4 in %04d counts the - sign, so print -y instead</span>
+<span id="L98" class="ln">    98</span>				<span class="comment">// and introduce our own - sign.</span>
+<span id="L99" class="ln">    99</span>				want = fmt.Sprintf(&#34;-%04d.%02d.%02d&#34;, -y, 1, 1)
+<span id="L100" class="ln">   100</span>			} else {
+<span id="L101" class="ln">   101</span>				want = fmt.Sprintf(&#34;%04d.%02d.%02d&#34;, y, 1, 1)
+<span id="L102" class="ln">   102</span>			}
+<span id="L103" class="ln">   103</span>			if result != want {
+<span id="L104" class="ln">   104</span>				t.Errorf(&#34;(jan 1 %d).Format(\&#34;2006.01.02\&#34;) = %q, want %q&#34;, y, result, want)
+<span id="L105" class="ln">   105</span>			}
+<span id="L106" class="ln">   106</span>		}
+<span id="L107" class="ln">   107</span>	}
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>	type ParseTest struct {
+<span id="L110" class="ln">   110</span>		name       string
+<span id="L111" class="ln">   111</span>		format     string
+<span id="L112" class="ln">   112</span>		value      string
+<span id="L113" class="ln">   113</span>		hasTZ      bool <span class="comment">// contains a time zone</span>
+<span id="L114" class="ln">   114</span>		hasWD      bool <span class="comment">// contains a weekday</span>
+<span id="L115" class="ln">   115</span>		yearSign   int  <span class="comment">// sign of year, -1 indicates the year is not present in the format</span>
+<span id="L116" class="ln">   116</span>		fracDigits int  <span class="comment">// number of digits of fractional second</span>
+<span id="L117" class="ln">   117</span>	}
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	var parseTests = []ParseTest{
+<span id="L120" class="ln">   120</span>		{&#34;ANSIC&#34;, ANSIC, &#34;Thu Feb  4 21:00:57 2010&#34;, false, true, 1, 0},
+<span id="L121" class="ln">   121</span>		{&#34;UnixDate&#34;, UnixDate, &#34;Thu Feb  4 21:00:57 PST 2010&#34;, true, true, 1, 0},
+<span id="L122" class="ln">   122</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57 -0800 2010&#34;, true, true, 1, 0},
+<span id="L123" class="ln">   123</span>		{&#34;RFC850&#34;, RFC850, &#34;Thursday, 04-Feb-10 21:00:57 PST&#34;, true, true, 1, 0},
+<span id="L124" class="ln">   124</span>		{&#34;RFC1123&#34;, RFC1123, &#34;Thu, 04 Feb 2010 21:00:57 PST&#34;, true, true, 1, 0},
+<span id="L125" class="ln">   125</span>		{&#34;RFC1123&#34;, RFC1123, &#34;Thu, 04 Feb 2010 22:00:57 PDT&#34;, true, true, 1, 0},
+<span id="L126" class="ln">   126</span>		{&#34;RFC1123Z&#34;, RFC1123Z, &#34;Thu, 04 Feb 2010 21:00:57 -0800&#34;, true, true, 1, 0},
+<span id="L127" class="ln">   127</span>		{&#34;RFC3339&#34;, RFC3339, &#34;2010-02-04T21:00:57-08:00&#34;, true, false, 1, 0},
+<span id="L128" class="ln">   128</span>		{&#34;custom: \&#34;2006-01-02 15:04:05-07\&#34;&#34;, &#34;2006-01-02 15:04:05-07&#34;, &#34;2010-02-04 21:00:57-08&#34;, true, false, 1, 0},
+<span id="L129" class="ln">   129</span>		<span class="comment">// Optional fractional seconds.</span>
+<span id="L130" class="ln">   130</span>		{&#34;ANSIC&#34;, ANSIC, &#34;Thu Feb  4 21:00:57.0 2010&#34;, false, true, 1, 1},
+<span id="L131" class="ln">   131</span>		{&#34;UnixDate&#34;, UnixDate, &#34;Thu Feb  4 21:00:57.01 PST 2010&#34;, true, true, 1, 2},
+<span id="L132" class="ln">   132</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57.012 -0800 2010&#34;, true, true, 1, 3},
+<span id="L133" class="ln">   133</span>		{&#34;RFC850&#34;, RFC850, &#34;Thursday, 04-Feb-10 21:00:57.0123 PST&#34;, true, true, 1, 4},
+<span id="L134" class="ln">   134</span>		{&#34;RFC1123&#34;, RFC1123, &#34;Thu, 04 Feb 2010 21:00:57.01234 PST&#34;, true, true, 1, 5},
+<span id="L135" class="ln">   135</span>		{&#34;RFC1123Z&#34;, RFC1123Z, &#34;Thu, 04 Feb 2010 21:00:57.01234 -0800&#34;, true, true, 1, 5},
+<span id="L136" class="ln">   136</span>		{&#34;RFC3339&#34;, RFC3339, &#34;2010-02-04T21:00:57.012345678-08:00&#34;, true, false, 1, 9},
+<span id="L137" class="ln">   137</span>		{&#34;custom: \&#34;2006-01-02 15:04:05\&#34;&#34;, &#34;2006-01-02 15:04:05&#34;, &#34;2010-02-04 21:00:57.0&#34;, false, false, 1, 0},
+<span id="L138" class="ln">   138</span>		<span class="comment">// Amount of white space should not matter.</span>
+<span id="L139" class="ln">   139</span>		{&#34;ANSIC&#34;, ANSIC, &#34;Thu Feb 4 21:00:57 2010&#34;, false, true, 1, 0},
+<span id="L140" class="ln">   140</span>		{&#34;ANSIC&#34;, ANSIC, &#34;Thu      Feb     4     21:00:57     2010&#34;, false, true, 1, 0},
+<span id="L141" class="ln">   141</span>		<span class="comment">// Case should not matter</span>
+<span id="L142" class="ln">   142</span>		{&#34;ANSIC&#34;, ANSIC, &#34;THU FEB 4 21:00:57 2010&#34;, false, true, 1, 0},
+<span id="L143" class="ln">   143</span>		{&#34;ANSIC&#34;, ANSIC, &#34;thu feb 4 21:00:57 2010&#34;, false, true, 1, 0},
+<span id="L144" class="ln">   144</span>		<span class="comment">// Fractional seconds.</span>
+<span id="L145" class="ln">   145</span>		{&#34;millisecond&#34;, &#34;Mon Jan _2 15:04:05.000 2006&#34;, &#34;Thu Feb  4 21:00:57.012 2010&#34;, false, true, 1, 3},
+<span id="L146" class="ln">   146</span>		{&#34;microsecond&#34;, &#34;Mon Jan _2 15:04:05.000000 2006&#34;, &#34;Thu Feb  4 21:00:57.012345 2010&#34;, false, true, 1, 6},
+<span id="L147" class="ln">   147</span>		{&#34;nanosecond&#34;, &#34;Mon Jan _2 15:04:05.000000000 2006&#34;, &#34;Thu Feb  4 21:00:57.012345678 2010&#34;, false, true, 1, 9},
+<span id="L148" class="ln">   148</span>		<span class="comment">// Leading zeros in other places should not be taken as fractional seconds.</span>
+<span id="L149" class="ln">   149</span>		{&#34;zero1&#34;, &#34;2006.01.02.15.04.05.0&#34;, &#34;2010.02.04.21.00.57.0&#34;, false, false, 1, 1},
+<span id="L150" class="ln">   150</span>		{&#34;zero2&#34;, &#34;2006.01.02.15.04.05.00&#34;, &#34;2010.02.04.21.00.57.01&#34;, false, false, 1, 2},
+<span id="L151" class="ln">   151</span>		<span class="comment">// Month and day names only match when not followed by a lower-case letter.</span>
+<span id="L152" class="ln">   152</span>		{&#34;Janet&#34;, &#34;Hi Janet, the Month is January: Jan _2 15:04:05 2006&#34;, &#34;Hi Janet, the Month is February: Feb  4 21:00:57 2010&#34;, false, true, 1, 0},
+<span id="L153" class="ln">   153</span>	
+<span id="L154" class="ln">   154</span>		<span class="comment">// GMT with offset.</span>
+<span id="L155" class="ln">   155</span>		{&#34;GMT-8&#34;, UnixDate, &#34;Fri Feb  5 05:00:57 GMT-8 2010&#34;, true, true, 1, 0},
+<span id="L156" class="ln">   156</span>	
+<span id="L157" class="ln">   157</span>		<span class="comment">// Accept any number of fractional second digits (including none) for .999...</span>
+<span id="L158" class="ln">   158</span>		<span class="comment">// In Go 1, .999... was completely ignored in the format, meaning the first two</span>
+<span id="L159" class="ln">   159</span>		<span class="comment">// cases would succeed, but the next four would not. Go 1.1 accepts all six.</span>
+<span id="L160" class="ln">   160</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.9999 -0700 MST&#34;, &#34;2010-02-04 21:00:57 -0800 PST&#34;, true, false, 1, 0},
+<span id="L161" class="ln">   161</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.999999999 -0700 MST&#34;, &#34;2010-02-04 21:00:57 -0800 PST&#34;, true, false, 1, 0},
+<span id="L162" class="ln">   162</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.9999 -0700 MST&#34;, &#34;2010-02-04 21:00:57.0123 -0800 PST&#34;, true, false, 1, 4},
+<span id="L163" class="ln">   163</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.999999999 -0700 MST&#34;, &#34;2010-02-04 21:00:57.0123 -0800 PST&#34;, true, false, 1, 4},
+<span id="L164" class="ln">   164</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.9999 -0700 MST&#34;, &#34;2010-02-04 21:00:57.012345678 -0800 PST&#34;, true, false, 1, 9},
+<span id="L165" class="ln">   165</span>		{&#34;&#34;, &#34;2006-01-02 15:04:05.999999999 -0700 MST&#34;, &#34;2010-02-04 21:00:57.012345678 -0800 PST&#34;, true, false, 1, 9},
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>		<span class="comment">// issue 4502.</span>
+<span id="L168" class="ln">   168</span>		{&#34;&#34;, StampNano, &#34;Feb  4 21:00:57.012345678&#34;, false, false, -1, 9},
+<span id="L169" class="ln">   169</span>		{&#34;&#34;, &#34;Jan _2 15:04:05.999&#34;, &#34;Feb  4 21:00:57.012300000&#34;, false, false, -1, 4},
+<span id="L170" class="ln">   170</span>		{&#34;&#34;, &#34;Jan _2 15:04:05.999&#34;, &#34;Feb  4 21:00:57.012345678&#34;, false, false, -1, 9},
+<span id="L171" class="ln">   171</span>		{&#34;&#34;, &#34;Jan _2 15:04:05.999999999&#34;, &#34;Feb  4 21:00:57.0123&#34;, false, false, -1, 4},
+<span id="L172" class="ln">   172</span>		{&#34;&#34;, &#34;Jan _2 15:04:05.999999999&#34;, &#34;Feb  4 21:00:57.012345678&#34;, false, false, -1, 9},
+<span id="L173" class="ln">   173</span>	}
+<span id="L174" class="ln">   174</span>	
+<span id="L175" class="ln">   175</span>	func TestParse(t *testing.T) {
+<span id="L176" class="ln">   176</span>		for _, test := range parseTests {
+<span id="L177" class="ln">   177</span>			time, err := Parse(test.format, test.value)
+<span id="L178" class="ln">   178</span>			if err != nil {
+<span id="L179" class="ln">   179</span>				t.Errorf(&#34;%s error: %v&#34;, test.name, err)
+<span id="L180" class="ln">   180</span>			} else {
+<span id="L181" class="ln">   181</span>				checkTime(time, &amp;test, t)
+<span id="L182" class="ln">   182</span>			}
+<span id="L183" class="ln">   183</span>		}
+<span id="L184" class="ln">   184</span>	}
+<span id="L185" class="ln">   185</span>	
+<span id="L186" class="ln">   186</span>	func TestParseInLocation(t *testing.T) {
+<span id="L187" class="ln">   187</span>		<span class="comment">// Check that Parse (and ParseInLocation) understand that</span>
+<span id="L188" class="ln">   188</span>		<span class="comment">// Feb 01 AST (Arabia Standard Time) and Feb 01 AST (Atlantic Standard Time)</span>
+<span id="L189" class="ln">   189</span>		<span class="comment">// are in different time zones even though both are called AST</span>
+<span id="L190" class="ln">   190</span>	
+<span id="L191" class="ln">   191</span>		baghdad, err := LoadLocation(&#34;Asia/Baghdad&#34;)
+<span id="L192" class="ln">   192</span>		if err != nil {
+<span id="L193" class="ln">   193</span>			t.Fatal(err)
+<span id="L194" class="ln">   194</span>		}
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>		t1, err := ParseInLocation(&#34;Jan 02 2006 MST&#34;, &#34;Feb 01 2013 AST&#34;, baghdad)
+<span id="L197" class="ln">   197</span>		if err != nil {
+<span id="L198" class="ln">   198</span>			t.Fatal(err)
+<span id="L199" class="ln">   199</span>		}
+<span id="L200" class="ln">   200</span>		t2 := Date(2013, February, 1, 00, 00, 00, 0, baghdad)
+<span id="L201" class="ln">   201</span>		if t1 != t2 {
+<span id="L202" class="ln">   202</span>			t.Fatalf(&#34;ParseInLocation(Feb 01 2013 AST, Baghdad) = %v, want %v&#34;, t1, t2)
+<span id="L203" class="ln">   203</span>		}
+<span id="L204" class="ln">   204</span>		_, offset := t1.Zone()
+<span id="L205" class="ln">   205</span>		if offset != 3*60*60 {
+<span id="L206" class="ln">   206</span>			t.Fatalf(&#34;ParseInLocation(Feb 01 2013 AST, Baghdad).Zone = _, %d, want _, %d&#34;, offset, 3*60*60)
+<span id="L207" class="ln">   207</span>		}
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>		blancSablon, err := LoadLocation(&#34;America/Blanc-Sablon&#34;)
+<span id="L210" class="ln">   210</span>		if err != nil {
+<span id="L211" class="ln">   211</span>			t.Fatal(err)
+<span id="L212" class="ln">   212</span>		}
+<span id="L213" class="ln">   213</span>	
+<span id="L214" class="ln">   214</span>		t1, err = ParseInLocation(&#34;Jan 02 2006 MST&#34;, &#34;Feb 01 2013 AST&#34;, blancSablon)
+<span id="L215" class="ln">   215</span>		if err != nil {
+<span id="L216" class="ln">   216</span>			t.Fatal(err)
+<span id="L217" class="ln">   217</span>		}
+<span id="L218" class="ln">   218</span>		t2 = Date(2013, February, 1, 00, 00, 00, 0, blancSablon)
+<span id="L219" class="ln">   219</span>		if t1 != t2 {
+<span id="L220" class="ln">   220</span>			t.Fatalf(&#34;ParseInLocation(Feb 01 2013 AST, Blanc-Sablon) = %v, want %v&#34;, t1, t2)
+<span id="L221" class="ln">   221</span>		}
+<span id="L222" class="ln">   222</span>		_, offset = t1.Zone()
+<span id="L223" class="ln">   223</span>		if offset != -4*60*60 {
+<span id="L224" class="ln">   224</span>			t.Fatalf(&#34;ParseInLocation(Feb 01 2013 AST, Blanc-Sablon).Zone = _, %d, want _, %d&#34;, offset, -4*60*60)
+<span id="L225" class="ln">   225</span>		}
+<span id="L226" class="ln">   226</span>	}
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	func TestLoadLocationZipFile(t *testing.T) {
+<span id="L229" class="ln">   229</span>		ForceZipFileForTesting(true)
+<span id="L230" class="ln">   230</span>		defer ForceZipFileForTesting(false)
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>		_, err := LoadLocation(&#34;Australia/Sydney&#34;)
+<span id="L233" class="ln">   233</span>		if err != nil {
+<span id="L234" class="ln">   234</span>			t.Fatal(err)
+<span id="L235" class="ln">   235</span>		}
+<span id="L236" class="ln">   236</span>	}
+<span id="L237" class="ln">   237</span>	
+<span id="L238" class="ln">   238</span>	var rubyTests = []ParseTest{
+<span id="L239" class="ln">   239</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57 -0800 2010&#34;, true, true, 1, 0},
+<span id="L240" class="ln">   240</span>		<span class="comment">// Ignore the time zone in the test. If it parses, it&#39;ll be OK.</span>
+<span id="L241" class="ln">   241</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57 -0000 2010&#34;, false, true, 1, 0},
+<span id="L242" class="ln">   242</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57 +0000 2010&#34;, false, true, 1, 0},
+<span id="L243" class="ln">   243</span>		{&#34;RubyDate&#34;, RubyDate, &#34;Thu Feb 04 21:00:57 +1130 2010&#34;, false, true, 1, 0},
+<span id="L244" class="ln">   244</span>	}
+<span id="L245" class="ln">   245</span>	
+<span id="L246" class="ln">   246</span>	<span class="comment">// Problematic time zone format needs special tests.</span>
+<span id="L247" class="ln">   247</span>	func TestRubyParse(t *testing.T) {
+<span id="L248" class="ln">   248</span>		for _, test := range rubyTests {
+<span id="L249" class="ln">   249</span>			time, err := Parse(test.format, test.value)
+<span id="L250" class="ln">   250</span>			if err != nil {
+<span id="L251" class="ln">   251</span>				t.Errorf(&#34;%s error: %v&#34;, test.name, err)
+<span id="L252" class="ln">   252</span>			} else {
+<span id="L253" class="ln">   253</span>				checkTime(time, &amp;test, t)
+<span id="L254" class="ln">   254</span>			}
+<span id="L255" class="ln">   255</span>		}
+<span id="L256" class="ln">   256</span>	}
+<span id="L257" class="ln">   257</span>	
+<span id="L258" class="ln">   258</span>	func checkTime(time Time, test *ParseTest, t *testing.T) {
+<span id="L259" class="ln">   259</span>		<span class="comment">// The time should be Thu Feb  4 21:00:57 PST 2010</span>
+<span id="L260" class="ln">   260</span>		if test.yearSign &gt;= 0 &amp;&amp; test.yearSign*time.Year() != 2010 {
+<span id="L261" class="ln">   261</span>			t.Errorf(&#34;%s: bad year: %d not %d&#34;, test.name, time.Year(), 2010)
+<span id="L262" class="ln">   262</span>		}
+<span id="L263" class="ln">   263</span>		if time.Month() != February {
+<span id="L264" class="ln">   264</span>			t.Errorf(&#34;%s: bad month: %s not %s&#34;, test.name, time.Month(), February)
+<span id="L265" class="ln">   265</span>		}
+<span id="L266" class="ln">   266</span>		if time.Day() != 4 {
+<span id="L267" class="ln">   267</span>			t.Errorf(&#34;%s: bad day: %d not %d&#34;, test.name, time.Day(), 4)
+<span id="L268" class="ln">   268</span>		}
+<span id="L269" class="ln">   269</span>		if time.Hour() != 21 {
+<span id="L270" class="ln">   270</span>			t.Errorf(&#34;%s: bad hour: %d not %d&#34;, test.name, time.Hour(), 21)
+<span id="L271" class="ln">   271</span>		}
+<span id="L272" class="ln">   272</span>		if time.Minute() != 0 {
+<span id="L273" class="ln">   273</span>			t.Errorf(&#34;%s: bad minute: %d not %d&#34;, test.name, time.Minute(), 0)
+<span id="L274" class="ln">   274</span>		}
+<span id="L275" class="ln">   275</span>		if time.Second() != 57 {
+<span id="L276" class="ln">   276</span>			t.Errorf(&#34;%s: bad second: %d not %d&#34;, test.name, time.Second(), 57)
+<span id="L277" class="ln">   277</span>		}
+<span id="L278" class="ln">   278</span>		<span class="comment">// Nanoseconds must be checked against the precision of the input.</span>
+<span id="L279" class="ln">   279</span>		nanosec, err := strconv.ParseUint(&#34;012345678&#34;[:test.fracDigits]+&#34;000000000&#34;[:9-test.fracDigits], 10, 0)
+<span id="L280" class="ln">   280</span>		if err != nil {
+<span id="L281" class="ln">   281</span>			panic(err)
+<span id="L282" class="ln">   282</span>		}
+<span id="L283" class="ln">   283</span>		if time.Nanosecond() != int(nanosec) {
+<span id="L284" class="ln">   284</span>			t.Errorf(&#34;%s: bad nanosecond: %d not %d&#34;, test.name, time.Nanosecond(), nanosec)
+<span id="L285" class="ln">   285</span>		}
+<span id="L286" class="ln">   286</span>		name, offset := time.Zone()
+<span id="L287" class="ln">   287</span>		if test.hasTZ &amp;&amp; offset != -28800 {
+<span id="L288" class="ln">   288</span>			t.Errorf(&#34;%s: bad tz offset: %s %d not %d&#34;, test.name, name, offset, -28800)
+<span id="L289" class="ln">   289</span>		}
+<span id="L290" class="ln">   290</span>		if test.hasWD &amp;&amp; time.Weekday() != Thursday {
+<span id="L291" class="ln">   291</span>			t.Errorf(&#34;%s: bad weekday: %s not %s&#34;, test.name, time.Weekday(), Thursday)
+<span id="L292" class="ln">   292</span>		}
+<span id="L293" class="ln">   293</span>	}
+<span id="L294" class="ln">   294</span>	
+<span id="L295" class="ln">   295</span>	func TestFormatAndParse(t *testing.T) {
+<span id="L296" class="ln">   296</span>		const fmt = &#34;Mon MST &#34; + RFC3339 <span class="comment">// all fields</span>
+<span id="L297" class="ln">   297</span>		f := func(sec int64) bool {
+<span id="L298" class="ln">   298</span>			t1 := Unix(sec, 0)
+<span id="L299" class="ln">   299</span>			if t1.Year() &lt; 1000 || t1.Year() &gt; 9999 {
+<span id="L300" class="ln">   300</span>				<span class="comment">// not required to work</span>
+<span id="L301" class="ln">   301</span>				return true
+<span id="L302" class="ln">   302</span>			}
+<span id="L303" class="ln">   303</span>			t2, err := Parse(fmt, t1.Format(fmt))
+<span id="L304" class="ln">   304</span>			if err != nil {
+<span id="L305" class="ln">   305</span>				t.Errorf(&#34;error: %s&#34;, err)
+<span id="L306" class="ln">   306</span>				return false
+<span id="L307" class="ln">   307</span>			}
+<span id="L308" class="ln">   308</span>			if t1.Unix() != t2.Unix() || t1.Nanosecond() != t2.Nanosecond() {
+<span id="L309" class="ln">   309</span>				t.Errorf(&#34;FormatAndParse %d: %q(%d) %q(%d)&#34;, sec, t1, t1.Unix(), t2, t2.Unix())
+<span id="L310" class="ln">   310</span>				return false
+<span id="L311" class="ln">   311</span>			}
+<span id="L312" class="ln">   312</span>			return true
+<span id="L313" class="ln">   313</span>		}
+<span id="L314" class="ln">   314</span>		f32 := func(sec int32) bool { return f(int64(sec)) }
+<span id="L315" class="ln">   315</span>		cfg := &amp;quick.Config{MaxCount: 10000}
+<span id="L316" class="ln">   316</span>	
+<span id="L317" class="ln">   317</span>		<span class="comment">// Try a reasonable date first, then the huge ones.</span>
+<span id="L318" class="ln">   318</span>		if err := quick.Check(f32, cfg); err != nil {
+<span id="L319" class="ln">   319</span>			t.Fatal(err)
+<span id="L320" class="ln">   320</span>		}
+<span id="L321" class="ln">   321</span>		if err := quick.Check(f, cfg); err != nil {
+<span id="L322" class="ln">   322</span>			t.Fatal(err)
+<span id="L323" class="ln">   323</span>		}
+<span id="L324" class="ln">   324</span>	}
+<span id="L325" class="ln">   325</span>	
+<span id="L326" class="ln">   326</span>	type ParseTimeZoneTest struct {
+<span id="L327" class="ln">   327</span>		value  string
+<span id="L328" class="ln">   328</span>		length int
+<span id="L329" class="ln">   329</span>		ok     bool
+<span id="L330" class="ln">   330</span>	}
+<span id="L331" class="ln">   331</span>	
+<span id="L332" class="ln">   332</span>	var parseTimeZoneTests = []ParseTimeZoneTest{
+<span id="L333" class="ln">   333</span>		{&#34;gmt hi there&#34;, 0, false},
+<span id="L334" class="ln">   334</span>		{&#34;GMT hi there&#34;, 3, true},
+<span id="L335" class="ln">   335</span>		{&#34;GMT+12 hi there&#34;, 6, true},
+<span id="L336" class="ln">   336</span>		{&#34;GMT+00 hi there&#34;, 3, true}, <span class="comment">// 0 or 00 is not a legal offset.</span>
+<span id="L337" class="ln">   337</span>		{&#34;GMT-5 hi there&#34;, 5, true},
+<span id="L338" class="ln">   338</span>		{&#34;GMT-51 hi there&#34;, 3, true},
+<span id="L339" class="ln">   339</span>		{&#34;ChST hi there&#34;, 4, true},
+<span id="L340" class="ln">   340</span>		{&#34;MeST hi there&#34;, 4, true},
+<span id="L341" class="ln">   341</span>		{&#34;MSDx&#34;, 3, true},
+<span id="L342" class="ln">   342</span>		{&#34;MSDY&#34;, 0, false}, <span class="comment">// four letters must end in T.</span>
+<span id="L343" class="ln">   343</span>		{&#34;ESAST hi&#34;, 5, true},
+<span id="L344" class="ln">   344</span>		{&#34;ESASTT hi&#34;, 0, false}, <span class="comment">// run of upper-case letters too long.</span>
+<span id="L345" class="ln">   345</span>		{&#34;ESATY hi&#34;, 0, false},  <span class="comment">// five letters must end in T.</span>
+<span id="L346" class="ln">   346</span>	}
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>	func TestParseTimeZone(t *testing.T) {
+<span id="L349" class="ln">   349</span>		for _, test := range parseTimeZoneTests {
+<span id="L350" class="ln">   350</span>			length, ok := ParseTimeZone(test.value)
+<span id="L351" class="ln">   351</span>			if ok != test.ok {
+<span id="L352" class="ln">   352</span>				t.Errorf(&#34;expected %t for %q got %t&#34;, test.ok, test.value, ok)
+<span id="L353" class="ln">   353</span>			} else if length != test.length {
+<span id="L354" class="ln">   354</span>				t.Errorf(&#34;expected %d for %q got %d&#34;, test.length, test.value, length)
+<span id="L355" class="ln">   355</span>			}
+<span id="L356" class="ln">   356</span>		}
+<span id="L357" class="ln">   357</span>	}
+<span id="L358" class="ln">   358</span>	
+<span id="L359" class="ln">   359</span>	type ParseErrorTest struct {
+<span id="L360" class="ln">   360</span>		format string
+<span id="L361" class="ln">   361</span>		value  string
+<span id="L362" class="ln">   362</span>		expect string <span class="comment">// must appear within the error</span>
+<span id="L363" class="ln">   363</span>	}
+<span id="L364" class="ln">   364</span>	
+<span id="L365" class="ln">   365</span>	var parseErrorTests = []ParseErrorTest{
+<span id="L366" class="ln">   366</span>		{ANSIC, &#34;Feb  4 21:00:60 2010&#34;, &#34;cannot parse&#34;}, <span class="comment">// cannot parse Feb as Mon</span>
+<span id="L367" class="ln">   367</span>		{ANSIC, &#34;Thu Feb  4 21:00:57 @2010&#34;, &#34;cannot parse&#34;},
+<span id="L368" class="ln">   368</span>		{ANSIC, &#34;Thu Feb  4 21:00:60 2010&#34;, &#34;second out of range&#34;},
+<span id="L369" class="ln">   369</span>		{ANSIC, &#34;Thu Feb  4 21:61:57 2010&#34;, &#34;minute out of range&#34;},
+<span id="L370" class="ln">   370</span>		{ANSIC, &#34;Thu Feb  4 24:00:60 2010&#34;, &#34;hour out of range&#34;},
+<span id="L371" class="ln">   371</span>		{&#34;Mon Jan _2 15:04:05.000 2006&#34;, &#34;Thu Feb  4 23:00:59x01 2010&#34;, &#34;cannot parse&#34;},
+<span id="L372" class="ln">   372</span>		{&#34;Mon Jan _2 15:04:05.000 2006&#34;, &#34;Thu Feb  4 23:00:59.xxx 2010&#34;, &#34;cannot parse&#34;},
+<span id="L373" class="ln">   373</span>		{&#34;Mon Jan _2 15:04:05.000 2006&#34;, &#34;Thu Feb  4 23:00:59.-123 2010&#34;, &#34;fractional second out of range&#34;},
+<span id="L374" class="ln">   374</span>		<span class="comment">// issue 4502. StampNano requires exactly 9 digits of precision.</span>
+<span id="L375" class="ln">   375</span>		{StampNano, &#34;Dec  7 11:22:01.000000&#34;, `cannot parse &#34;.000000&#34; as &#34;.000000000&#34;`},
+<span id="L376" class="ln">   376</span>		{StampNano, &#34;Dec  7 11:22:01.0000000000&#34;, &#34;extra text: 0&#34;},
+<span id="L377" class="ln">   377</span>		<span class="comment">// issue 4493. Helpful errors.</span>
+<span id="L378" class="ln">   378</span>		{RFC3339, &#34;2006-01-02T15:04:05Z07:00&#34;, `parsing time &#34;2006-01-02T15:04:05Z07:00&#34;: extra text: 07:00`},
+<span id="L379" class="ln">   379</span>		{RFC3339, &#34;2006-01-02T15:04_abc&#34;, `parsing time &#34;2006-01-02T15:04_abc&#34; as &#34;2006-01-02T15:04:05Z07:00&#34;: cannot parse &#34;_abc&#34; as &#34;:&#34;`},
+<span id="L380" class="ln">   380</span>		{RFC3339, &#34;2006-01-02T15:04:05_abc&#34;, `parsing time &#34;2006-01-02T15:04:05_abc&#34; as &#34;2006-01-02T15:04:05Z07:00&#34;: cannot parse &#34;_abc&#34; as &#34;Z07:00&#34;`},
+<span id="L381" class="ln">   381</span>		{RFC3339, &#34;2006-01-02T15:04:05Z_abc&#34;, `parsing time &#34;2006-01-02T15:04:05Z_abc&#34;: extra text: _abc`},
+<span id="L382" class="ln">   382</span>	}
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>	func TestParseErrors(t *testing.T) {
+<span id="L385" class="ln">   385</span>		for _, test := range parseErrorTests {
+<span id="L386" class="ln">   386</span>			_, err := Parse(test.format, test.value)
+<span id="L387" class="ln">   387</span>			if err == nil {
+<span id="L388" class="ln">   388</span>				t.Errorf(&#34;expected error for %q %q&#34;, test.format, test.value)
+<span id="L389" class="ln">   389</span>			} else if strings.Index(err.Error(), test.expect) &lt; 0 {
+<span id="L390" class="ln">   390</span>				t.Errorf(&#34;expected error with %q for %q %q; got %s&#34;, test.expect, test.format, test.value, err)
+<span id="L391" class="ln">   391</span>			}
+<span id="L392" class="ln">   392</span>		}
+<span id="L393" class="ln">   393</span>	}
+<span id="L394" class="ln">   394</span>	
+<span id="L395" class="ln">   395</span>	func TestNoonIs12PM(t *testing.T) {
+<span id="L396" class="ln">   396</span>		noon := Date(0, January, 1, 12, 0, 0, 0, UTC)
+<span id="L397" class="ln">   397</span>		const expect = &#34;12:00PM&#34;
+<span id="L398" class="ln">   398</span>		got := noon.Format(&#34;3:04PM&#34;)
+<span id="L399" class="ln">   399</span>		if got != expect {
+<span id="L400" class="ln">   400</span>			t.Errorf(&#34;got %q; expect %q&#34;, got, expect)
+<span id="L401" class="ln">   401</span>		}
+<span id="L402" class="ln">   402</span>		got = noon.Format(&#34;03:04PM&#34;)
+<span id="L403" class="ln">   403</span>		if got != expect {
+<span id="L404" class="ln">   404</span>			t.Errorf(&#34;got %q; expect %q&#34;, got, expect)
+<span id="L405" class="ln">   405</span>		}
+<span id="L406" class="ln">   406</span>	}
+<span id="L407" class="ln">   407</span>	
+<span id="L408" class="ln">   408</span>	func TestMidnightIs12AM(t *testing.T) {
+<span id="L409" class="ln">   409</span>		midnight := Date(0, January, 1, 0, 0, 0, 0, UTC)
+<span id="L410" class="ln">   410</span>		expect := &#34;12:00AM&#34;
+<span id="L411" class="ln">   411</span>		got := midnight.Format(&#34;3:04PM&#34;)
+<span id="L412" class="ln">   412</span>		if got != expect {
+<span id="L413" class="ln">   413</span>			t.Errorf(&#34;got %q; expect %q&#34;, got, expect)
+<span id="L414" class="ln">   414</span>		}
+<span id="L415" class="ln">   415</span>		got = midnight.Format(&#34;03:04PM&#34;)
+<span id="L416" class="ln">   416</span>		if got != expect {
+<span id="L417" class="ln">   417</span>			t.Errorf(&#34;got %q; expect %q&#34;, got, expect)
+<span id="L418" class="ln">   418</span>		}
+<span id="L419" class="ln">   419</span>	}
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>	func Test12PMIsNoon(t *testing.T) {
+<span id="L422" class="ln">   422</span>		noon, err := Parse(&#34;3:04PM&#34;, &#34;12:00PM&#34;)
+<span id="L423" class="ln">   423</span>		if err != nil {
+<span id="L424" class="ln">   424</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L425" class="ln">   425</span>		}
+<span id="L426" class="ln">   426</span>		if noon.Hour() != 12 {
+<span id="L427" class="ln">   427</span>			t.Errorf(&#34;got %d; expect 12&#34;, noon.Hour())
+<span id="L428" class="ln">   428</span>		}
+<span id="L429" class="ln">   429</span>		noon, err = Parse(&#34;03:04PM&#34;, &#34;12:00PM&#34;)
+<span id="L430" class="ln">   430</span>		if err != nil {
+<span id="L431" class="ln">   431</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L432" class="ln">   432</span>		}
+<span id="L433" class="ln">   433</span>		if noon.Hour() != 12 {
+<span id="L434" class="ln">   434</span>			t.Errorf(&#34;got %d; expect 12&#34;, noon.Hour())
+<span id="L435" class="ln">   435</span>		}
+<span id="L436" class="ln">   436</span>	}
+<span id="L437" class="ln">   437</span>	
+<span id="L438" class="ln">   438</span>	func Test12AMIsMidnight(t *testing.T) {
+<span id="L439" class="ln">   439</span>		midnight, err := Parse(&#34;3:04PM&#34;, &#34;12:00AM&#34;)
+<span id="L440" class="ln">   440</span>		if err != nil {
+<span id="L441" class="ln">   441</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L442" class="ln">   442</span>		}
+<span id="L443" class="ln">   443</span>		if midnight.Hour() != 0 {
+<span id="L444" class="ln">   444</span>			t.Errorf(&#34;got %d; expect 0&#34;, midnight.Hour())
+<span id="L445" class="ln">   445</span>		}
+<span id="L446" class="ln">   446</span>		midnight, err = Parse(&#34;03:04PM&#34;, &#34;12:00AM&#34;)
+<span id="L447" class="ln">   447</span>		if err != nil {
+<span id="L448" class="ln">   448</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L449" class="ln">   449</span>		}
+<span id="L450" class="ln">   450</span>		if midnight.Hour() != 0 {
+<span id="L451" class="ln">   451</span>			t.Errorf(&#34;got %d; expect 0&#34;, midnight.Hour())
+<span id="L452" class="ln">   452</span>		}
+<span id="L453" class="ln">   453</span>	}
+<span id="L454" class="ln">   454</span>	
+<span id="L455" class="ln">   455</span>	<span class="comment">// Check that a time without a Zone still produces a (numeric) time zone</span>
+<span id="L456" class="ln">   456</span>	<span class="comment">// when formatted with MST as a requested zone.</span>
+<span id="L457" class="ln">   457</span>	func TestMissingZone(t *testing.T) {
+<span id="L458" class="ln">   458</span>		time, err := Parse(RubyDate, &#34;Thu Feb 02 16:10:03 -0500 2006&#34;)
+<span id="L459" class="ln">   459</span>		if err != nil {
+<span id="L460" class="ln">   460</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L461" class="ln">   461</span>		}
+<span id="L462" class="ln">   462</span>		expect := &#34;Thu Feb  2 16:10:03 -0500 2006&#34; <span class="comment">// -0500 not EST</span>
+<span id="L463" class="ln">   463</span>		str := time.Format(UnixDate)               <span class="comment">// uses MST as its time zone</span>
+<span id="L464" class="ln">   464</span>		if str != expect {
+<span id="L465" class="ln">   465</span>			t.Errorf(&#34;got %s; expect %s&#34;, str, expect)
+<span id="L466" class="ln">   466</span>		}
+<span id="L467" class="ln">   467</span>	}
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>	func TestMinutesInTimeZone(t *testing.T) {
+<span id="L470" class="ln">   470</span>		time, err := Parse(RubyDate, &#34;Mon Jan 02 15:04:05 +0123 2006&#34;)
+<span id="L471" class="ln">   471</span>		if err != nil {
+<span id="L472" class="ln">   472</span>			t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L473" class="ln">   473</span>		}
+<span id="L474" class="ln">   474</span>		expected := (1*60 + 23) * 60
+<span id="L475" class="ln">   475</span>		_, offset := time.Zone()
+<span id="L476" class="ln">   476</span>		if offset != expected {
+<span id="L477" class="ln">   477</span>			t.Errorf(&#34;ZoneOffset = %d, want %d&#34;, offset, expected)
+<span id="L478" class="ln">   478</span>		}
+<span id="L479" class="ln">   479</span>	}
+<span id="L480" class="ln">   480</span>	
+<span id="L481" class="ln">   481</span>	type SecondsTimeZoneOffsetTest struct {
+<span id="L482" class="ln">   482</span>		format         string
+<span id="L483" class="ln">   483</span>		value          string
+<span id="L484" class="ln">   484</span>		expectedoffset int
+<span id="L485" class="ln">   485</span>	}
+<span id="L486" class="ln">   486</span>	
+<span id="L487" class="ln">   487</span>	var secondsTimeZoneOffsetTests = []SecondsTimeZoneOffsetTest{
+<span id="L488" class="ln">   488</span>		{&#34;2006-01-02T15:04:05-070000&#34;, &#34;1871-01-01T05:33:02-003408&#34;, -(34*60 + 8)},
+<span id="L489" class="ln">   489</span>		{&#34;2006-01-02T15:04:05-07:00:00&#34;, &#34;1871-01-01T05:33:02-00:34:08&#34;, -(34*60 + 8)},
+<span id="L490" class="ln">   490</span>		{&#34;2006-01-02T15:04:05-070000&#34;, &#34;1871-01-01T05:33:02+003408&#34;, 34*60 + 8},
+<span id="L491" class="ln">   491</span>		{&#34;2006-01-02T15:04:05-07:00:00&#34;, &#34;1871-01-01T05:33:02+00:34:08&#34;, 34*60 + 8},
+<span id="L492" class="ln">   492</span>		{&#34;2006-01-02T15:04:05Z070000&#34;, &#34;1871-01-01T05:33:02-003408&#34;, -(34*60 + 8)},
+<span id="L493" class="ln">   493</span>		{&#34;2006-01-02T15:04:05Z07:00:00&#34;, &#34;1871-01-01T05:33:02+00:34:08&#34;, 34*60 + 8},
+<span id="L494" class="ln">   494</span>	}
+<span id="L495" class="ln">   495</span>	
+<span id="L496" class="ln">   496</span>	func TestParseSecondsInTimeZone(t *testing.T) {
+<span id="L497" class="ln">   497</span>		<span class="comment">// should accept timezone offsets with seconds like: Zone America/New_York   -4:56:02 -      LMT     1883 Nov 18 12:03:58</span>
+<span id="L498" class="ln">   498</span>		for _, test := range secondsTimeZoneOffsetTests {
+<span id="L499" class="ln">   499</span>			time, err := Parse(test.format, test.value)
+<span id="L500" class="ln">   500</span>			if err != nil {
+<span id="L501" class="ln">   501</span>				t.Fatal(&#34;error parsing date:&#34;, err)
+<span id="L502" class="ln">   502</span>			}
+<span id="L503" class="ln">   503</span>			_, offset := time.Zone()
+<span id="L504" class="ln">   504</span>			if offset != test.expectedoffset {
+<span id="L505" class="ln">   505</span>				t.Errorf(&#34;ZoneOffset = %d, want %d&#34;, offset, test.expectedoffset)
+<span id="L506" class="ln">   506</span>			}
+<span id="L507" class="ln">   507</span>		}
+<span id="L508" class="ln">   508</span>	}
+<span id="L509" class="ln">   509</span>	
+<span id="L510" class="ln">   510</span>	func TestFormatSecondsInTimeZone(t *testing.T) {
+<span id="L511" class="ln">   511</span>		d := Date(1871, 9, 17, 20, 4, 26, 0, FixedZone(&#34;LMT&#34;, -(34*60+8)))
+<span id="L512" class="ln">   512</span>		timestr := d.Format(&#34;2006-01-02T15:04:05Z070000&#34;)
+<span id="L513" class="ln">   513</span>		expected := &#34;1871-09-17T20:04:26-003408&#34;
+<span id="L514" class="ln">   514</span>		if timestr != expected {
+<span id="L515" class="ln">   515</span>			t.Errorf(&#34;Got %s, want %s&#34;, timestr, expected)
+<span id="L516" class="ln">   516</span>		}
+<span id="L517" class="ln">   517</span>	}
+<span id="L518" class="ln">   518</span>	
+</pre><p><a href="http://golang.org/src/pkg/time/format_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

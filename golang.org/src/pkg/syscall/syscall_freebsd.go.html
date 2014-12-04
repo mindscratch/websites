@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/syscall/syscall_freebsd.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/syscall/syscall_freebsd.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009,2010 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// FreeBSD system calls.</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">// This file is compiled as ordinary Go code,</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// but it is also input to mksyscall,</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">// which parses the //sys lines and generates system call stubs.</span>
+<span id="L9" class="ln">     9</span>	<span class="comment">// Note that sometimes we use a lowercase //sys name and wrap</span>
+<span id="L10" class="ln">    10</span>	<span class="comment">// it in our own nicer implementation, either here or in</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">// syscall_bsd.go or syscall_unix.go.</span>
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	package syscall
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	import &#34;unsafe&#34;
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	type SockaddrDatalink struct {
+<span id="L18" class="ln">    18</span>		Len    uint8
+<span id="L19" class="ln">    19</span>		Family uint8
+<span id="L20" class="ln">    20</span>		Index  uint16
+<span id="L21" class="ln">    21</span>		Type   uint8
+<span id="L22" class="ln">    22</span>		Nlen   uint8
+<span id="L23" class="ln">    23</span>		Alen   uint8
+<span id="L24" class="ln">    24</span>		Slen   uint8
+<span id="L25" class="ln">    25</span>		Data   [46]int8
+<span id="L26" class="ln">    26</span>		raw    RawSockaddrDatalink
+<span id="L27" class="ln">    27</span>	}
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	<span class="comment">// Translate &#34;kern.hostname&#34; to []_C_int{0,1,2,3}.</span>
+<span id="L30" class="ln">    30</span>	func nametomib(name string) (mib []_C_int, err error) {
+<span id="L31" class="ln">    31</span>		const siz = unsafe.Sizeof(mib[0])
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>		<span class="comment">// NOTE(rsc): It seems strange to set the buffer to have</span>
+<span id="L34" class="ln">    34</span>		<span class="comment">// size CTL_MAXNAME+2 but use only CTL_MAXNAME</span>
+<span id="L35" class="ln">    35</span>		<span class="comment">// as the size.  I don&#39;t know why the +2 is here, but the</span>
+<span id="L36" class="ln">    36</span>		<span class="comment">// kernel uses +2 for its own implementation of this function.</span>
+<span id="L37" class="ln">    37</span>		<span class="comment">// I am scared that if we don&#39;t include the +2 here, the kernel</span>
+<span id="L38" class="ln">    38</span>		<span class="comment">// will silently write 2 words farther than we specify</span>
+<span id="L39" class="ln">    39</span>		<span class="comment">// and we&#39;ll get memory corruption.</span>
+<span id="L40" class="ln">    40</span>		var buf [CTL_MAXNAME + 2]_C_int
+<span id="L41" class="ln">    41</span>		n := uintptr(CTL_MAXNAME) * siz
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>		p := (*byte)(unsafe.Pointer(&amp;buf[0]))
+<span id="L44" class="ln">    44</span>		bytes, err := ByteSliceFromString(name)
+<span id="L45" class="ln">    45</span>		if err != nil {
+<span id="L46" class="ln">    46</span>			return nil, err
+<span id="L47" class="ln">    47</span>		}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>		<span class="comment">// Magic sysctl: &#34;setting&#34; 0.3 to a string name</span>
+<span id="L50" class="ln">    50</span>		<span class="comment">// lets you read back the array of integers form.</span>
+<span id="L51" class="ln">    51</span>		if err = sysctl([]_C_int{0, 3}, p, &amp;n, &amp;bytes[0], uintptr(len(name))); err != nil {
+<span id="L52" class="ln">    52</span>			return nil, err
+<span id="L53" class="ln">    53</span>		}
+<span id="L54" class="ln">    54</span>		return buf[0 : n/siz], nil
+<span id="L55" class="ln">    55</span>	}
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>	<span class="comment">// ParseDirent parses up to max directory entries in buf,</span>
+<span id="L58" class="ln">    58</span>	<span class="comment">// appending the names to names.  It returns the number</span>
+<span id="L59" class="ln">    59</span>	<span class="comment">// bytes consumed from buf, the number of entries added</span>
+<span id="L60" class="ln">    60</span>	<span class="comment">// to names, and the new names slice.</span>
+<span id="L61" class="ln">    61</span>	func ParseDirent(buf []byte, max int, names []string) (consumed int, count int, newnames []string) {
+<span id="L62" class="ln">    62</span>		origlen := len(buf)
+<span id="L63" class="ln">    63</span>		for max != 0 &amp;&amp; len(buf) &gt; 0 {
+<span id="L64" class="ln">    64</span>			dirent := (*Dirent)(unsafe.Pointer(&amp;buf[0]))
+<span id="L65" class="ln">    65</span>			if dirent.Reclen == 0 {
+<span id="L66" class="ln">    66</span>				buf = nil
+<span id="L67" class="ln">    67</span>				break
+<span id="L68" class="ln">    68</span>			}
+<span id="L69" class="ln">    69</span>			buf = buf[dirent.Reclen:]
+<span id="L70" class="ln">    70</span>			if dirent.Fileno == 0 { <span class="comment">// File absent in directory.</span>
+<span id="L71" class="ln">    71</span>				continue
+<span id="L72" class="ln">    72</span>			}
+<span id="L73" class="ln">    73</span>			bytes := (*[10000]byte)(unsafe.Pointer(&amp;dirent.Name[0]))
+<span id="L74" class="ln">    74</span>			var name = string(bytes[0:dirent.Namlen])
+<span id="L75" class="ln">    75</span>			if name == &#34;.&#34; || name == &#34;..&#34; { <span class="comment">// Useless names</span>
+<span id="L76" class="ln">    76</span>				continue
+<span id="L77" class="ln">    77</span>			}
+<span id="L78" class="ln">    78</span>			max--
+<span id="L79" class="ln">    79</span>			count++
+<span id="L80" class="ln">    80</span>			names = append(names, name)
+<span id="L81" class="ln">    81</span>		}
+<span id="L82" class="ln">    82</span>		return origlen - len(buf), count, names
+<span id="L83" class="ln">    83</span>	}
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>	<span class="comment">//sysnb pipe() (r int, w int, err error)</span>
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>	func Pipe(p []int) (err error) {
+<span id="L88" class="ln">    88</span>		if len(p) != 2 {
+<span id="L89" class="ln">    89</span>			return EINVAL
+<span id="L90" class="ln">    90</span>		}
+<span id="L91" class="ln">    91</span>		p[0], p[1], err = pipe()
+<span id="L92" class="ln">    92</span>		return
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	func GetsockoptIPMreqn(fd, level, opt int) (*IPMreqn, error) {
+<span id="L96" class="ln">    96</span>		var value IPMreqn
+<span id="L97" class="ln">    97</span>		vallen := _Socklen(SizeofIPMreqn)
+<span id="L98" class="ln">    98</span>		errno := getsockopt(fd, level, opt, unsafe.Pointer(&amp;value), &amp;vallen)
+<span id="L99" class="ln">    99</span>		return &amp;value, errno
+<span id="L100" class="ln">   100</span>	}
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	func SetsockoptIPMreqn(fd, level, opt int, mreq *IPMreqn) (err error) {
+<span id="L103" class="ln">   103</span>		return setsockopt(fd, level, opt, unsafe.Pointer(mreq), unsafe.Sizeof(*mreq))
+<span id="L104" class="ln">   104</span>	}
+<span id="L105" class="ln">   105</span>	
+<span id="L106" class="ln">   106</span>	func Accept4(fd, flags int) (nfd int, sa Sockaddr, err error) {
+<span id="L107" class="ln">   107</span>		var rsa RawSockaddrAny
+<span id="L108" class="ln">   108</span>		var len _Socklen = SizeofSockaddrAny
+<span id="L109" class="ln">   109</span>		nfd, err = accept4(fd, &amp;rsa, &amp;len, flags)
+<span id="L110" class="ln">   110</span>		if err != nil {
+<span id="L111" class="ln">   111</span>			return
+<span id="L112" class="ln">   112</span>		}
+<span id="L113" class="ln">   113</span>		if len &gt; SizeofSockaddrAny {
+<span id="L114" class="ln">   114</span>			panic(&#34;RawSockaddrAny too small&#34;)
+<span id="L115" class="ln">   115</span>		}
+<span id="L116" class="ln">   116</span>		sa, err = anyToSockaddr(&amp;rsa)
+<span id="L117" class="ln">   117</span>		if err != nil {
+<span id="L118" class="ln">   118</span>			Close(nfd)
+<span id="L119" class="ln">   119</span>			nfd = 0
+<span id="L120" class="ln">   120</span>		}
+<span id="L121" class="ln">   121</span>		return
+<span id="L122" class="ln">   122</span>	}
+<span id="L123" class="ln">   123</span>	
+<span id="L124" class="ln">   124</span>	func Getfsstat(buf []Statfs_t, flags int) (n int, err error) {
+<span id="L125" class="ln">   125</span>		var _p0 unsafe.Pointer
+<span id="L126" class="ln">   126</span>		var bufsize uintptr
+<span id="L127" class="ln">   127</span>		if len(buf) &gt; 0 {
+<span id="L128" class="ln">   128</span>			_p0 = unsafe.Pointer(&amp;buf[0])
+<span id="L129" class="ln">   129</span>			bufsize = unsafe.Sizeof(Statfs_t{}) * uintptr(len(buf))
+<span id="L130" class="ln">   130</span>		}
+<span id="L131" class="ln">   131</span>		r0, _, e1 := Syscall(SYS_GETFSSTAT, uintptr(_p0), bufsize, uintptr(flags))
+<span id="L132" class="ln">   132</span>		n = int(r0)
+<span id="L133" class="ln">   133</span>		if e1 != 0 {
+<span id="L134" class="ln">   134</span>			err = e1
+<span id="L135" class="ln">   135</span>		}
+<span id="L136" class="ln">   136</span>		return
+<span id="L137" class="ln">   137</span>	}
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>	<span class="comment">/*
+<span id="L140" class="ln">   140</span>	 * Exposed directly
+<span id="L141" class="ln">   141</span>	 */</span>
+<span id="L142" class="ln">   142</span>	<span class="comment">//sys	Access(path string, mode uint32) (err error)</span>
+<span id="L143" class="ln">   143</span>	<span class="comment">//sys	Adjtime(delta *Timeval, olddelta *Timeval) (err error)</span>
+<span id="L144" class="ln">   144</span>	<span class="comment">//sys	Chdir(path string) (err error)</span>
+<span id="L145" class="ln">   145</span>	<span class="comment">//sys	Chflags(path string, flags int) (err error)</span>
+<span id="L146" class="ln">   146</span>	<span class="comment">//sys	Chmod(path string, mode uint32) (err error)</span>
+<span id="L147" class="ln">   147</span>	<span class="comment">//sys	Chown(path string, uid int, gid int) (err error)</span>
+<span id="L148" class="ln">   148</span>	<span class="comment">//sys	Chroot(path string) (err error)</span>
+<span id="L149" class="ln">   149</span>	<span class="comment">//sys	Close(fd int) (err error)</span>
+<span id="L150" class="ln">   150</span>	<span class="comment">//sysnb	Dup(fd int) (nfd int, err error)</span>
+<span id="L151" class="ln">   151</span>	<span class="comment">//sysnb	Dup2(from int, to int) (err error)</span>
+<span id="L152" class="ln">   152</span>	<span class="comment">//sys	Exit(code int)</span>
+<span id="L153" class="ln">   153</span>	<span class="comment">//sys	Fchdir(fd int) (err error)</span>
+<span id="L154" class="ln">   154</span>	<span class="comment">//sys	Fchflags(fd int, flags int) (err error)</span>
+<span id="L155" class="ln">   155</span>	<span class="comment">//sys	Fchmod(fd int, mode uint32) (err error)</span>
+<span id="L156" class="ln">   156</span>	<span class="comment">//sys	Fchown(fd int, uid int, gid int) (err error)</span>
+<span id="L157" class="ln">   157</span>	<span class="comment">//sys	Flock(fd int, how int) (err error)</span>
+<span id="L158" class="ln">   158</span>	<span class="comment">//sys	Fpathconf(fd int, name int) (val int, err error)</span>
+<span id="L159" class="ln">   159</span>	<span class="comment">//sys	Fstat(fd int, stat *Stat_t) (err error)</span>
+<span id="L160" class="ln">   160</span>	<span class="comment">//sys	Fstatfs(fd int, stat *Statfs_t) (err error)</span>
+<span id="L161" class="ln">   161</span>	<span class="comment">//sys	Fsync(fd int) (err error)</span>
+<span id="L162" class="ln">   162</span>	<span class="comment">//sys	Ftruncate(fd int, length int64) (err error)</span>
+<span id="L163" class="ln">   163</span>	<span class="comment">//sys	Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error)</span>
+<span id="L164" class="ln">   164</span>	<span class="comment">//sys	Getdtablesize() (size int)</span>
+<span id="L165" class="ln">   165</span>	<span class="comment">//sysnb	Getegid() (egid int)</span>
+<span id="L166" class="ln">   166</span>	<span class="comment">//sysnb	Geteuid() (uid int)</span>
+<span id="L167" class="ln">   167</span>	<span class="comment">//sysnb	Getgid() (gid int)</span>
+<span id="L168" class="ln">   168</span>	<span class="comment">//sysnb	Getpgid(pid int) (pgid int, err error)</span>
+<span id="L169" class="ln">   169</span>	<span class="comment">//sysnb	Getpgrp() (pgrp int)</span>
+<span id="L170" class="ln">   170</span>	<span class="comment">//sysnb	Getpid() (pid int)</span>
+<span id="L171" class="ln">   171</span>	<span class="comment">//sysnb	Getppid() (ppid int)</span>
+<span id="L172" class="ln">   172</span>	<span class="comment">//sys	Getpriority(which int, who int) (prio int, err error)</span>
+<span id="L173" class="ln">   173</span>	<span class="comment">//sysnb	Getrlimit(which int, lim *Rlimit) (err error)</span>
+<span id="L174" class="ln">   174</span>	<span class="comment">//sysnb	Getrusage(who int, rusage *Rusage) (err error)</span>
+<span id="L175" class="ln">   175</span>	<span class="comment">//sysnb	Getsid(pid int) (sid int, err error)</span>
+<span id="L176" class="ln">   176</span>	<span class="comment">//sysnb	Gettimeofday(tv *Timeval) (err error)</span>
+<span id="L177" class="ln">   177</span>	<span class="comment">//sysnb	Getuid() (uid int)</span>
+<span id="L178" class="ln">   178</span>	<span class="comment">//sys	Issetugid() (tainted bool)</span>
+<span id="L179" class="ln">   179</span>	<span class="comment">//sys	Kill(pid int, signum Signal) (err error)</span>
+<span id="L180" class="ln">   180</span>	<span class="comment">//sys	Kqueue() (fd int, err error)</span>
+<span id="L181" class="ln">   181</span>	<span class="comment">//sys	Lchown(path string, uid int, gid int) (err error)</span>
+<span id="L182" class="ln">   182</span>	<span class="comment">//sys	Link(path string, link string) (err error)</span>
+<span id="L183" class="ln">   183</span>	<span class="comment">//sys	Listen(s int, backlog int) (err error)</span>
+<span id="L184" class="ln">   184</span>	<span class="comment">//sys	Lstat(path string, stat *Stat_t) (err error)</span>
+<span id="L185" class="ln">   185</span>	<span class="comment">//sys	Mkdir(path string, mode uint32) (err error)</span>
+<span id="L186" class="ln">   186</span>	<span class="comment">//sys	Mkfifo(path string, mode uint32) (err error)</span>
+<span id="L187" class="ln">   187</span>	<span class="comment">//sys	Mknod(path string, mode uint32, dev int) (err error)</span>
+<span id="L188" class="ln">   188</span>	<span class="comment">//sys	Nanosleep(time *Timespec, leftover *Timespec) (err error)</span>
+<span id="L189" class="ln">   189</span>	<span class="comment">//sys	Open(path string, mode int, perm uint32) (fd int, err error)</span>
+<span id="L190" class="ln">   190</span>	<span class="comment">//sys	Pathconf(path string, name int) (val int, err error)</span>
+<span id="L191" class="ln">   191</span>	<span class="comment">//sys	Pread(fd int, p []byte, offset int64) (n int, err error)</span>
+<span id="L192" class="ln">   192</span>	<span class="comment">//sys	Pwrite(fd int, p []byte, offset int64) (n int, err error)</span>
+<span id="L193" class="ln">   193</span>	<span class="comment">//sys	read(fd int, p []byte) (n int, err error)</span>
+<span id="L194" class="ln">   194</span>	<span class="comment">//sys	Readlink(path string, buf []byte) (n int, err error)</span>
+<span id="L195" class="ln">   195</span>	<span class="comment">//sys	Rename(from string, to string) (err error)</span>
+<span id="L196" class="ln">   196</span>	<span class="comment">//sys	Revoke(path string) (err error)</span>
+<span id="L197" class="ln">   197</span>	<span class="comment">//sys	Rmdir(path string) (err error)</span>
+<span id="L198" class="ln">   198</span>	<span class="comment">//sys	Seek(fd int, offset int64, whence int) (newoffset int64, err error) = SYS_LSEEK</span>
+<span id="L199" class="ln">   199</span>	<span class="comment">//sys	Select(n int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (err error)</span>
+<span id="L200" class="ln">   200</span>	<span class="comment">//sysnb	Setegid(egid int) (err error)</span>
+<span id="L201" class="ln">   201</span>	<span class="comment">//sysnb	Seteuid(euid int) (err error)</span>
+<span id="L202" class="ln">   202</span>	<span class="comment">//sysnb	Setgid(gid int) (err error)</span>
+<span id="L203" class="ln">   203</span>	<span class="comment">//sys	Setlogin(name string) (err error)</span>
+<span id="L204" class="ln">   204</span>	<span class="comment">//sysnb	Setpgid(pid int, pgid int) (err error)</span>
+<span id="L205" class="ln">   205</span>	<span class="comment">//sys	Setpriority(which int, who int, prio int) (err error)</span>
+<span id="L206" class="ln">   206</span>	<span class="comment">//sysnb	Setregid(rgid int, egid int) (err error)</span>
+<span id="L207" class="ln">   207</span>	<span class="comment">//sysnb	Setreuid(ruid int, euid int) (err error)</span>
+<span id="L208" class="ln">   208</span>	<span class="comment">//sysnb	Setrlimit(which int, lim *Rlimit) (err error)</span>
+<span id="L209" class="ln">   209</span>	<span class="comment">//sysnb	Setsid() (pid int, err error)</span>
+<span id="L210" class="ln">   210</span>	<span class="comment">//sysnb	Settimeofday(tp *Timeval) (err error)</span>
+<span id="L211" class="ln">   211</span>	<span class="comment">//sysnb	Setuid(uid int) (err error)</span>
+<span id="L212" class="ln">   212</span>	<span class="comment">//sys	Stat(path string, stat *Stat_t) (err error)</span>
+<span id="L213" class="ln">   213</span>	<span class="comment">//sys	Statfs(path string, stat *Statfs_t) (err error)</span>
+<span id="L214" class="ln">   214</span>	<span class="comment">//sys	Symlink(path string, link string) (err error)</span>
+<span id="L215" class="ln">   215</span>	<span class="comment">//sys	Sync() (err error)</span>
+<span id="L216" class="ln">   216</span>	<span class="comment">//sys	Truncate(path string, length int64) (err error)</span>
+<span id="L217" class="ln">   217</span>	<span class="comment">//sys	Umask(newmask int) (oldmask int)</span>
+<span id="L218" class="ln">   218</span>	<span class="comment">//sys	Undelete(path string) (err error)</span>
+<span id="L219" class="ln">   219</span>	<span class="comment">//sys	Unlink(path string) (err error)</span>
+<span id="L220" class="ln">   220</span>	<span class="comment">//sys	Unmount(path string, flags int) (err error)</span>
+<span id="L221" class="ln">   221</span>	<span class="comment">//sys	write(fd int, p []byte) (n int, err error)</span>
+<span id="L222" class="ln">   222</span>	<span class="comment">//sys   mmap(addr uintptr, length uintptr, prot int, flag int, fd int, pos int64) (ret uintptr, err error)</span>
+<span id="L223" class="ln">   223</span>	<span class="comment">//sys   munmap(addr uintptr, length uintptr) (err error)</span>
+<span id="L224" class="ln">   224</span>	<span class="comment">//sys	readlen(fd int, buf *byte, nbuf int) (n int, err error) = SYS_READ</span>
+<span id="L225" class="ln">   225</span>	<span class="comment">//sys	writelen(fd int, buf *byte, nbuf int) (n int, err error) = SYS_WRITE</span>
+<span id="L226" class="ln">   226</span>	<span class="comment">//sys	accept4(fd int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (nfd int, err error)</span>
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	<span class="comment">/*
+<span id="L229" class="ln">   229</span>	 * Unimplemented
+<span id="L230" class="ln">   230</span>	 */</span>
+<span id="L231" class="ln">   231</span>	<span class="comment">// Profil</span>
+<span id="L232" class="ln">   232</span>	<span class="comment">// Sigaction</span>
+<span id="L233" class="ln">   233</span>	<span class="comment">// Sigprocmask</span>
+<span id="L234" class="ln">   234</span>	<span class="comment">// Getlogin</span>
+<span id="L235" class="ln">   235</span>	<span class="comment">// Sigpending</span>
+<span id="L236" class="ln">   236</span>	<span class="comment">// Sigaltstack</span>
+<span id="L237" class="ln">   237</span>	<span class="comment">// Ioctl</span>
+<span id="L238" class="ln">   238</span>	<span class="comment">// Reboot</span>
+<span id="L239" class="ln">   239</span>	<span class="comment">// Execve</span>
+<span id="L240" class="ln">   240</span>	<span class="comment">// Vfork</span>
+<span id="L241" class="ln">   241</span>	<span class="comment">// Sbrk</span>
+<span id="L242" class="ln">   242</span>	<span class="comment">// Sstk</span>
+<span id="L243" class="ln">   243</span>	<span class="comment">// Ovadvise</span>
+<span id="L244" class="ln">   244</span>	<span class="comment">// Mincore</span>
+<span id="L245" class="ln">   245</span>	<span class="comment">// Setitimer</span>
+<span id="L246" class="ln">   246</span>	<span class="comment">// Swapon</span>
+<span id="L247" class="ln">   247</span>	<span class="comment">// Select</span>
+<span id="L248" class="ln">   248</span>	<span class="comment">// Sigsuspend</span>
+<span id="L249" class="ln">   249</span>	<span class="comment">// Readv</span>
+<span id="L250" class="ln">   250</span>	<span class="comment">// Writev</span>
+<span id="L251" class="ln">   251</span>	<span class="comment">// Nfssvc</span>
+<span id="L252" class="ln">   252</span>	<span class="comment">// Getfh</span>
+<span id="L253" class="ln">   253</span>	<span class="comment">// Quotactl</span>
+<span id="L254" class="ln">   254</span>	<span class="comment">// Mount</span>
+<span id="L255" class="ln">   255</span>	<span class="comment">// Csops</span>
+<span id="L256" class="ln">   256</span>	<span class="comment">// Waitid</span>
+<span id="L257" class="ln">   257</span>	<span class="comment">// Add_profil</span>
+<span id="L258" class="ln">   258</span>	<span class="comment">// Kdebug_trace</span>
+<span id="L259" class="ln">   259</span>	<span class="comment">// Sigreturn</span>
+<span id="L260" class="ln">   260</span>	<span class="comment">// Mmap</span>
+<span id="L261" class="ln">   261</span>	<span class="comment">// Mlock</span>
+<span id="L262" class="ln">   262</span>	<span class="comment">// Munlock</span>
+<span id="L263" class="ln">   263</span>	<span class="comment">// Atsocket</span>
+<span id="L264" class="ln">   264</span>	<span class="comment">// Kqueue_from_portset_np</span>
+<span id="L265" class="ln">   265</span>	<span class="comment">// Kqueue_portset</span>
+<span id="L266" class="ln">   266</span>	<span class="comment">// Getattrlist</span>
+<span id="L267" class="ln">   267</span>	<span class="comment">// Setattrlist</span>
+<span id="L268" class="ln">   268</span>	<span class="comment">// Getdirentriesattr</span>
+<span id="L269" class="ln">   269</span>	<span class="comment">// Searchfs</span>
+<span id="L270" class="ln">   270</span>	<span class="comment">// Delete</span>
+<span id="L271" class="ln">   271</span>	<span class="comment">// Copyfile</span>
+<span id="L272" class="ln">   272</span>	<span class="comment">// Poll</span>
+<span id="L273" class="ln">   273</span>	<span class="comment">// Watchevent</span>
+<span id="L274" class="ln">   274</span>	<span class="comment">// Waitevent</span>
+<span id="L275" class="ln">   275</span>	<span class="comment">// Modwatch</span>
+<span id="L276" class="ln">   276</span>	<span class="comment">// Getxattr</span>
+<span id="L277" class="ln">   277</span>	<span class="comment">// Fgetxattr</span>
+<span id="L278" class="ln">   278</span>	<span class="comment">// Setxattr</span>
+<span id="L279" class="ln">   279</span>	<span class="comment">// Fsetxattr</span>
+<span id="L280" class="ln">   280</span>	<span class="comment">// Removexattr</span>
+<span id="L281" class="ln">   281</span>	<span class="comment">// Fremovexattr</span>
+<span id="L282" class="ln">   282</span>	<span class="comment">// Listxattr</span>
+<span id="L283" class="ln">   283</span>	<span class="comment">// Flistxattr</span>
+<span id="L284" class="ln">   284</span>	<span class="comment">// Fsctl</span>
+<span id="L285" class="ln">   285</span>	<span class="comment">// Initgroups</span>
+<span id="L286" class="ln">   286</span>	<span class="comment">// Posix_spawn</span>
+<span id="L287" class="ln">   287</span>	<span class="comment">// Nfsclnt</span>
+<span id="L288" class="ln">   288</span>	<span class="comment">// Fhopen</span>
+<span id="L289" class="ln">   289</span>	<span class="comment">// Minherit</span>
+<span id="L290" class="ln">   290</span>	<span class="comment">// Semsys</span>
+<span id="L291" class="ln">   291</span>	<span class="comment">// Msgsys</span>
+<span id="L292" class="ln">   292</span>	<span class="comment">// Shmsys</span>
+<span id="L293" class="ln">   293</span>	<span class="comment">// Semctl</span>
+<span id="L294" class="ln">   294</span>	<span class="comment">// Semget</span>
+<span id="L295" class="ln">   295</span>	<span class="comment">// Semop</span>
+<span id="L296" class="ln">   296</span>	<span class="comment">// Msgctl</span>
+<span id="L297" class="ln">   297</span>	<span class="comment">// Msgget</span>
+<span id="L298" class="ln">   298</span>	<span class="comment">// Msgsnd</span>
+<span id="L299" class="ln">   299</span>	<span class="comment">// Msgrcv</span>
+<span id="L300" class="ln">   300</span>	<span class="comment">// Shmat</span>
+<span id="L301" class="ln">   301</span>	<span class="comment">// Shmctl</span>
+<span id="L302" class="ln">   302</span>	<span class="comment">// Shmdt</span>
+<span id="L303" class="ln">   303</span>	<span class="comment">// Shmget</span>
+<span id="L304" class="ln">   304</span>	<span class="comment">// Shm_open</span>
+<span id="L305" class="ln">   305</span>	<span class="comment">// Shm_unlink</span>
+<span id="L306" class="ln">   306</span>	<span class="comment">// Sem_open</span>
+<span id="L307" class="ln">   307</span>	<span class="comment">// Sem_close</span>
+<span id="L308" class="ln">   308</span>	<span class="comment">// Sem_unlink</span>
+<span id="L309" class="ln">   309</span>	<span class="comment">// Sem_wait</span>
+<span id="L310" class="ln">   310</span>	<span class="comment">// Sem_trywait</span>
+<span id="L311" class="ln">   311</span>	<span class="comment">// Sem_post</span>
+<span id="L312" class="ln">   312</span>	<span class="comment">// Sem_getvalue</span>
+<span id="L313" class="ln">   313</span>	<span class="comment">// Sem_init</span>
+<span id="L314" class="ln">   314</span>	<span class="comment">// Sem_destroy</span>
+<span id="L315" class="ln">   315</span>	<span class="comment">// Open_extended</span>
+<span id="L316" class="ln">   316</span>	<span class="comment">// Umask_extended</span>
+<span id="L317" class="ln">   317</span>	<span class="comment">// Stat_extended</span>
+<span id="L318" class="ln">   318</span>	<span class="comment">// Lstat_extended</span>
+<span id="L319" class="ln">   319</span>	<span class="comment">// Fstat_extended</span>
+<span id="L320" class="ln">   320</span>	<span class="comment">// Chmod_extended</span>
+<span id="L321" class="ln">   321</span>	<span class="comment">// Fchmod_extended</span>
+<span id="L322" class="ln">   322</span>	<span class="comment">// Access_extended</span>
+<span id="L323" class="ln">   323</span>	<span class="comment">// Settid</span>
+<span id="L324" class="ln">   324</span>	<span class="comment">// Gettid</span>
+<span id="L325" class="ln">   325</span>	<span class="comment">// Setsgroups</span>
+<span id="L326" class="ln">   326</span>	<span class="comment">// Getsgroups</span>
+<span id="L327" class="ln">   327</span>	<span class="comment">// Setwgroups</span>
+<span id="L328" class="ln">   328</span>	<span class="comment">// Getwgroups</span>
+<span id="L329" class="ln">   329</span>	<span class="comment">// Mkfifo_extended</span>
+<span id="L330" class="ln">   330</span>	<span class="comment">// Mkdir_extended</span>
+<span id="L331" class="ln">   331</span>	<span class="comment">// Identitysvc</span>
+<span id="L332" class="ln">   332</span>	<span class="comment">// Shared_region_check_np</span>
+<span id="L333" class="ln">   333</span>	<span class="comment">// Shared_region_map_np</span>
+<span id="L334" class="ln">   334</span>	<span class="comment">// __pthread_mutex_destroy</span>
+<span id="L335" class="ln">   335</span>	<span class="comment">// __pthread_mutex_init</span>
+<span id="L336" class="ln">   336</span>	<span class="comment">// __pthread_mutex_lock</span>
+<span id="L337" class="ln">   337</span>	<span class="comment">// __pthread_mutex_trylock</span>
+<span id="L338" class="ln">   338</span>	<span class="comment">// __pthread_mutex_unlock</span>
+<span id="L339" class="ln">   339</span>	<span class="comment">// __pthread_cond_init</span>
+<span id="L340" class="ln">   340</span>	<span class="comment">// __pthread_cond_destroy</span>
+<span id="L341" class="ln">   341</span>	<span class="comment">// __pthread_cond_broadcast</span>
+<span id="L342" class="ln">   342</span>	<span class="comment">// __pthread_cond_signal</span>
+<span id="L343" class="ln">   343</span>	<span class="comment">// Setsid_with_pid</span>
+<span id="L344" class="ln">   344</span>	<span class="comment">// __pthread_cond_timedwait</span>
+<span id="L345" class="ln">   345</span>	<span class="comment">// Aio_fsync</span>
+<span id="L346" class="ln">   346</span>	<span class="comment">// Aio_return</span>
+<span id="L347" class="ln">   347</span>	<span class="comment">// Aio_suspend</span>
+<span id="L348" class="ln">   348</span>	<span class="comment">// Aio_cancel</span>
+<span id="L349" class="ln">   349</span>	<span class="comment">// Aio_error</span>
+<span id="L350" class="ln">   350</span>	<span class="comment">// Aio_read</span>
+<span id="L351" class="ln">   351</span>	<span class="comment">// Aio_write</span>
+<span id="L352" class="ln">   352</span>	<span class="comment">// Lio_listio</span>
+<span id="L353" class="ln">   353</span>	<span class="comment">// __pthread_cond_wait</span>
+<span id="L354" class="ln">   354</span>	<span class="comment">// Iopolicysys</span>
+<span id="L355" class="ln">   355</span>	<span class="comment">// Mlockall</span>
+<span id="L356" class="ln">   356</span>	<span class="comment">// Munlockall</span>
+<span id="L357" class="ln">   357</span>	<span class="comment">// __pthread_kill</span>
+<span id="L358" class="ln">   358</span>	<span class="comment">// __pthread_sigmask</span>
+<span id="L359" class="ln">   359</span>	<span class="comment">// __sigwait</span>
+<span id="L360" class="ln">   360</span>	<span class="comment">// __disable_threadsignal</span>
+<span id="L361" class="ln">   361</span>	<span class="comment">// __pthread_markcancel</span>
+<span id="L362" class="ln">   362</span>	<span class="comment">// __pthread_canceled</span>
+<span id="L363" class="ln">   363</span>	<span class="comment">// __semwait_signal</span>
+<span id="L364" class="ln">   364</span>	<span class="comment">// Proc_info</span>
+<span id="L365" class="ln">   365</span>	<span class="comment">// Stat64_extended</span>
+<span id="L366" class="ln">   366</span>	<span class="comment">// Lstat64_extended</span>
+<span id="L367" class="ln">   367</span>	<span class="comment">// Fstat64_extended</span>
+<span id="L368" class="ln">   368</span>	<span class="comment">// __pthread_chdir</span>
+<span id="L369" class="ln">   369</span>	<span class="comment">// __pthread_fchdir</span>
+<span id="L370" class="ln">   370</span>	<span class="comment">// Audit</span>
+<span id="L371" class="ln">   371</span>	<span class="comment">// Auditon</span>
+<span id="L372" class="ln">   372</span>	<span class="comment">// Getauid</span>
+<span id="L373" class="ln">   373</span>	<span class="comment">// Setauid</span>
+<span id="L374" class="ln">   374</span>	<span class="comment">// Getaudit</span>
+<span id="L375" class="ln">   375</span>	<span class="comment">// Setaudit</span>
+<span id="L376" class="ln">   376</span>	<span class="comment">// Getaudit_addr</span>
+<span id="L377" class="ln">   377</span>	<span class="comment">// Setaudit_addr</span>
+<span id="L378" class="ln">   378</span>	<span class="comment">// Auditctl</span>
+<span id="L379" class="ln">   379</span>	<span class="comment">// Bsdthread_create</span>
+<span id="L380" class="ln">   380</span>	<span class="comment">// Bsdthread_terminate</span>
+<span id="L381" class="ln">   381</span>	<span class="comment">// Stack_snapshot</span>
+<span id="L382" class="ln">   382</span>	<span class="comment">// Bsdthread_register</span>
+<span id="L383" class="ln">   383</span>	<span class="comment">// Workq_open</span>
+<span id="L384" class="ln">   384</span>	<span class="comment">// Workq_ops</span>
+<span id="L385" class="ln">   385</span>	<span class="comment">// __mac_execve</span>
+<span id="L386" class="ln">   386</span>	<span class="comment">// __mac_syscall</span>
+<span id="L387" class="ln">   387</span>	<span class="comment">// __mac_get_file</span>
+<span id="L388" class="ln">   388</span>	<span class="comment">// __mac_set_file</span>
+<span id="L389" class="ln">   389</span>	<span class="comment">// __mac_get_link</span>
+<span id="L390" class="ln">   390</span>	<span class="comment">// __mac_set_link</span>
+<span id="L391" class="ln">   391</span>	<span class="comment">// __mac_get_proc</span>
+<span id="L392" class="ln">   392</span>	<span class="comment">// __mac_set_proc</span>
+<span id="L393" class="ln">   393</span>	<span class="comment">// __mac_get_fd</span>
+<span id="L394" class="ln">   394</span>	<span class="comment">// __mac_set_fd</span>
+<span id="L395" class="ln">   395</span>	<span class="comment">// __mac_get_pid</span>
+<span id="L396" class="ln">   396</span>	<span class="comment">// __mac_get_lcid</span>
+<span id="L397" class="ln">   397</span>	<span class="comment">// __mac_get_lctx</span>
+<span id="L398" class="ln">   398</span>	<span class="comment">// __mac_set_lctx</span>
+<span id="L399" class="ln">   399</span>	<span class="comment">// Setlcid</span>
+<span id="L400" class="ln">   400</span>	<span class="comment">// Read_nocancel</span>
+<span id="L401" class="ln">   401</span>	<span class="comment">// Write_nocancel</span>
+<span id="L402" class="ln">   402</span>	<span class="comment">// Open_nocancel</span>
+<span id="L403" class="ln">   403</span>	<span class="comment">// Close_nocancel</span>
+<span id="L404" class="ln">   404</span>	<span class="comment">// Wait4_nocancel</span>
+<span id="L405" class="ln">   405</span>	<span class="comment">// Recvmsg_nocancel</span>
+<span id="L406" class="ln">   406</span>	<span class="comment">// Sendmsg_nocancel</span>
+<span id="L407" class="ln">   407</span>	<span class="comment">// Recvfrom_nocancel</span>
+<span id="L408" class="ln">   408</span>	<span class="comment">// Accept_nocancel</span>
+<span id="L409" class="ln">   409</span>	<span class="comment">// Msync_nocancel</span>
+<span id="L410" class="ln">   410</span>	<span class="comment">// Fcntl_nocancel</span>
+<span id="L411" class="ln">   411</span>	<span class="comment">// Select_nocancel</span>
+<span id="L412" class="ln">   412</span>	<span class="comment">// Fsync_nocancel</span>
+<span id="L413" class="ln">   413</span>	<span class="comment">// Connect_nocancel</span>
+<span id="L414" class="ln">   414</span>	<span class="comment">// Sigsuspend_nocancel</span>
+<span id="L415" class="ln">   415</span>	<span class="comment">// Readv_nocancel</span>
+<span id="L416" class="ln">   416</span>	<span class="comment">// Writev_nocancel</span>
+<span id="L417" class="ln">   417</span>	<span class="comment">// Sendto_nocancel</span>
+<span id="L418" class="ln">   418</span>	<span class="comment">// Pread_nocancel</span>
+<span id="L419" class="ln">   419</span>	<span class="comment">// Pwrite_nocancel</span>
+<span id="L420" class="ln">   420</span>	<span class="comment">// Waitid_nocancel</span>
+<span id="L421" class="ln">   421</span>	<span class="comment">// Poll_nocancel</span>
+<span id="L422" class="ln">   422</span>	<span class="comment">// Msgsnd_nocancel</span>
+<span id="L423" class="ln">   423</span>	<span class="comment">// Msgrcv_nocancel</span>
+<span id="L424" class="ln">   424</span>	<span class="comment">// Sem_wait_nocancel</span>
+<span id="L425" class="ln">   425</span>	<span class="comment">// Aio_suspend_nocancel</span>
+<span id="L426" class="ln">   426</span>	<span class="comment">// __sigwait_nocancel</span>
+<span id="L427" class="ln">   427</span>	<span class="comment">// __semwait_signal_nocancel</span>
+<span id="L428" class="ln">   428</span>	<span class="comment">// __mac_mount</span>
+<span id="L429" class="ln">   429</span>	<span class="comment">// __mac_get_mount</span>
+<span id="L430" class="ln">   430</span>	<span class="comment">// __mac_getfsstat</span>
+<span id="L431" class="ln">   431</span>	
+</pre><p><a href="http://golang.org/src/pkg/syscall/syscall_freebsd.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

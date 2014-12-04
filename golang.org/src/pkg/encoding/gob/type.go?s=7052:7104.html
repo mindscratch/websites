@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/encoding/gob/type.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/encoding/gob/type.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package gob
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;encoding&#34;
+<span id="L9" class="ln">     9</span>		&#34;errors&#34;
+<span id="L10" class="ln">    10</span>		&#34;fmt&#34;
+<span id="L11" class="ln">    11</span>		&#34;os&#34;
+<span id="L12" class="ln">    12</span>		&#34;reflect&#34;
+<span id="L13" class="ln">    13</span>		&#34;sync&#34;
+<span id="L14" class="ln">    14</span>		&#34;unicode&#34;
+<span id="L15" class="ln">    15</span>		&#34;unicode/utf8&#34;
+<span id="L16" class="ln">    16</span>	)
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>	<span class="comment">// userTypeInfo stores the information associated with a type the user has handed</span>
+<span id="L19" class="ln">    19</span>	<span class="comment">// to the package.  It&#39;s computed once and stored in a map keyed by reflection</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">// type.</span>
+<span id="L21" class="ln">    21</span>	type userTypeInfo struct {
+<span id="L22" class="ln">    22</span>		user        reflect.Type <span class="comment">// the type the user handed us</span>
+<span id="L23" class="ln">    23</span>		base        reflect.Type <span class="comment">// the base type after all indirections</span>
+<span id="L24" class="ln">    24</span>		indir       int          <span class="comment">// number of indirections to reach the base type</span>
+<span id="L25" class="ln">    25</span>		externalEnc int          <span class="comment">// xGob, xBinary, or xText</span>
+<span id="L26" class="ln">    26</span>		externalDec int          <span class="comment">// xGob, xBinary or xText</span>
+<span id="L27" class="ln">    27</span>		encIndir    int8         <span class="comment">// number of indirections to reach the receiver type; may be negative</span>
+<span id="L28" class="ln">    28</span>		decIndir    int8         <span class="comment">// number of indirections to reach the receiver type; may be negative</span>
+<span id="L29" class="ln">    29</span>	}
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	<span class="comment">// externalEncoding bits</span>
+<span id="L32" class="ln">    32</span>	const (
+<span id="L33" class="ln">    33</span>		xGob    = 1 + iota <span class="comment">// GobEncoder or GobDecoder</span>
+<span id="L34" class="ln">    34</span>		xBinary            <span class="comment">// encoding.BinaryMarshaler or encoding.BinaryUnmarshaler</span>
+<span id="L35" class="ln">    35</span>		xText              <span class="comment">// encoding.TextMarshaler or encoding.TextUnmarshaler</span>
+<span id="L36" class="ln">    36</span>	)
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	var (
+<span id="L39" class="ln">    39</span>		<span class="comment">// Protected by an RWMutex because we read it a lot and write</span>
+<span id="L40" class="ln">    40</span>		<span class="comment">// it only when we see a new type, typically when compiling.</span>
+<span id="L41" class="ln">    41</span>		userTypeLock  sync.RWMutex
+<span id="L42" class="ln">    42</span>		userTypeCache = make(map[reflect.Type]*userTypeInfo)
+<span id="L43" class="ln">    43</span>	)
+<span id="L44" class="ln">    44</span>	
+<span id="L45" class="ln">    45</span>	<span class="comment">// validType returns, and saves, the information associated with user-provided type rt.</span>
+<span id="L46" class="ln">    46</span>	<span class="comment">// If the user type is not valid, err will be non-nil.  To be used when the error handler</span>
+<span id="L47" class="ln">    47</span>	<span class="comment">// is not set up.</span>
+<span id="L48" class="ln">    48</span>	func validUserType(rt reflect.Type) (ut *userTypeInfo, err error) {
+<span id="L49" class="ln">    49</span>		userTypeLock.RLock()
+<span id="L50" class="ln">    50</span>		ut = userTypeCache[rt]
+<span id="L51" class="ln">    51</span>		userTypeLock.RUnlock()
+<span id="L52" class="ln">    52</span>		if ut != nil {
+<span id="L53" class="ln">    53</span>			return
+<span id="L54" class="ln">    54</span>		}
+<span id="L55" class="ln">    55</span>		<span class="comment">// Now set the value under the write lock.</span>
+<span id="L56" class="ln">    56</span>		userTypeLock.Lock()
+<span id="L57" class="ln">    57</span>		defer userTypeLock.Unlock()
+<span id="L58" class="ln">    58</span>		if ut = userTypeCache[rt]; ut != nil {
+<span id="L59" class="ln">    59</span>			<span class="comment">// Lost the race; not a problem.</span>
+<span id="L60" class="ln">    60</span>			return
+<span id="L61" class="ln">    61</span>		}
+<span id="L62" class="ln">    62</span>		ut = new(userTypeInfo)
+<span id="L63" class="ln">    63</span>		ut.base = rt
+<span id="L64" class="ln">    64</span>		ut.user = rt
+<span id="L65" class="ln">    65</span>		<span class="comment">// A type that is just a cycle of pointers (such as type T *T) cannot</span>
+<span id="L66" class="ln">    66</span>		<span class="comment">// be represented in gobs, which need some concrete data.  We use a</span>
+<span id="L67" class="ln">    67</span>		<span class="comment">// cycle detection algorithm from Knuth, Vol 2, Section 3.1, Ex 6,</span>
+<span id="L68" class="ln">    68</span>		<span class="comment">// pp 539-540.  As we step through indirections, run another type at</span>
+<span id="L69" class="ln">    69</span>		<span class="comment">// half speed. If they meet up, there&#39;s a cycle.</span>
+<span id="L70" class="ln">    70</span>		slowpoke := ut.base <span class="comment">// walks half as fast as ut.base</span>
+<span id="L71" class="ln">    71</span>		for {
+<span id="L72" class="ln">    72</span>			pt := ut.base
+<span id="L73" class="ln">    73</span>			if pt.Kind() != reflect.Ptr {
+<span id="L74" class="ln">    74</span>				break
+<span id="L75" class="ln">    75</span>			}
+<span id="L76" class="ln">    76</span>			ut.base = pt.Elem()
+<span id="L77" class="ln">    77</span>			if ut.base == slowpoke { <span class="comment">// ut.base lapped slowpoke</span>
+<span id="L78" class="ln">    78</span>				<span class="comment">// recursive pointer type.</span>
+<span id="L79" class="ln">    79</span>				return nil, errors.New(&#34;can&#39;t represent recursive pointer type &#34; + ut.base.String())
+<span id="L80" class="ln">    80</span>			}
+<span id="L81" class="ln">    81</span>			if ut.indir%2 == 0 {
+<span id="L82" class="ln">    82</span>				slowpoke = slowpoke.Elem()
+<span id="L83" class="ln">    83</span>			}
+<span id="L84" class="ln">    84</span>			ut.indir++
+<span id="L85" class="ln">    85</span>		}
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>		if ok, indir := implementsInterface(ut.user, gobEncoderInterfaceType); ok {
+<span id="L88" class="ln">    88</span>			ut.externalEnc, ut.encIndir = xGob, indir
+<span id="L89" class="ln">    89</span>		} else if ok, indir := implementsInterface(ut.user, binaryMarshalerInterfaceType); ok {
+<span id="L90" class="ln">    90</span>			ut.externalEnc, ut.encIndir = xBinary, indir
+<span id="L91" class="ln">    91</span>		}
+<span id="L92" class="ln">    92</span>	
+<span id="L93" class="ln">    93</span>		<span class="comment">// NOTE(rsc): Would like to allow MarshalText here, but results in incompatibility</span>
+<span id="L94" class="ln">    94</span>		<span class="comment">// with older encodings for net.IP. See golang.org/issue/6760.</span>
+<span id="L95" class="ln">    95</span>		<span class="comment">// } else if ok, indir := implementsInterface(ut.user, textMarshalerInterfaceType); ok {</span>
+<span id="L96" class="ln">    96</span>		<span class="comment">// 	ut.externalEnc, ut.encIndir = xText, indir</span>
+<span id="L97" class="ln">    97</span>		<span class="comment">// }</span>
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>		if ok, indir := implementsInterface(ut.user, gobDecoderInterfaceType); ok {
+<span id="L100" class="ln">   100</span>			ut.externalDec, ut.decIndir = xGob, indir
+<span id="L101" class="ln">   101</span>		} else if ok, indir := implementsInterface(ut.user, binaryUnmarshalerInterfaceType); ok {
+<span id="L102" class="ln">   102</span>			ut.externalDec, ut.decIndir = xBinary, indir
+<span id="L103" class="ln">   103</span>		}
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>		<span class="comment">// See note above.</span>
+<span id="L106" class="ln">   106</span>		<span class="comment">// } else if ok, indir := implementsInterface(ut.user, textUnmarshalerInterfaceType); ok {</span>
+<span id="L107" class="ln">   107</span>		<span class="comment">// 	ut.externalDec, ut.decIndir = xText, indir</span>
+<span id="L108" class="ln">   108</span>		<span class="comment">// }</span>
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>		userTypeCache[rt] = ut
+<span id="L111" class="ln">   111</span>		return
+<span id="L112" class="ln">   112</span>	}
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>	var (
+<span id="L115" class="ln">   115</span>		gobEncoderInterfaceType        = reflect.TypeOf((*GobEncoder)(nil)).Elem()
+<span id="L116" class="ln">   116</span>		gobDecoderInterfaceType        = reflect.TypeOf((*GobDecoder)(nil)).Elem()
+<span id="L117" class="ln">   117</span>		binaryMarshalerInterfaceType   = reflect.TypeOf((*encoding.BinaryMarshaler)(nil)).Elem()
+<span id="L118" class="ln">   118</span>		binaryUnmarshalerInterfaceType = reflect.TypeOf((*encoding.BinaryUnmarshaler)(nil)).Elem()
+<span id="L119" class="ln">   119</span>		textMarshalerInterfaceType     = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
+<span id="L120" class="ln">   120</span>		textUnmarshalerInterfaceType   = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
+<span id="L121" class="ln">   121</span>	)
+<span id="L122" class="ln">   122</span>	
+<span id="L123" class="ln">   123</span>	<span class="comment">// implementsInterface reports whether the type implements the</span>
+<span id="L124" class="ln">   124</span>	<span class="comment">// gobEncoder/gobDecoder interface.</span>
+<span id="L125" class="ln">   125</span>	<span class="comment">// It also returns the number of indirections required to get to the</span>
+<span id="L126" class="ln">   126</span>	<span class="comment">// implementation.</span>
+<span id="L127" class="ln">   127</span>	func implementsInterface(typ, gobEncDecType reflect.Type) (success bool, indir int8) {
+<span id="L128" class="ln">   128</span>		if typ == nil {
+<span id="L129" class="ln">   129</span>			return
+<span id="L130" class="ln">   130</span>		}
+<span id="L131" class="ln">   131</span>		rt := typ
+<span id="L132" class="ln">   132</span>		<span class="comment">// The type might be a pointer and we need to keep</span>
+<span id="L133" class="ln">   133</span>		<span class="comment">// dereferencing to the base type until we find an implementation.</span>
+<span id="L134" class="ln">   134</span>		for {
+<span id="L135" class="ln">   135</span>			if rt.Implements(gobEncDecType) {
+<span id="L136" class="ln">   136</span>				return true, indir
+<span id="L137" class="ln">   137</span>			}
+<span id="L138" class="ln">   138</span>			if p := rt; p.Kind() == reflect.Ptr {
+<span id="L139" class="ln">   139</span>				indir++
+<span id="L140" class="ln">   140</span>				if indir &gt; 100 { <span class="comment">// insane number of indirections</span>
+<span id="L141" class="ln">   141</span>					return false, 0
+<span id="L142" class="ln">   142</span>				}
+<span id="L143" class="ln">   143</span>				rt = p.Elem()
+<span id="L144" class="ln">   144</span>				continue
+<span id="L145" class="ln">   145</span>			}
+<span id="L146" class="ln">   146</span>			break
+<span id="L147" class="ln">   147</span>		}
+<span id="L148" class="ln">   148</span>		<span class="comment">// No luck yet, but if this is a base type (non-pointer), the pointer might satisfy.</span>
+<span id="L149" class="ln">   149</span>		if typ.Kind() != reflect.Ptr {
+<span id="L150" class="ln">   150</span>			<span class="comment">// Not a pointer, but does the pointer work?</span>
+<span id="L151" class="ln">   151</span>			if reflect.PtrTo(typ).Implements(gobEncDecType) {
+<span id="L152" class="ln">   152</span>				return true, -1
+<span id="L153" class="ln">   153</span>			}
+<span id="L154" class="ln">   154</span>		}
+<span id="L155" class="ln">   155</span>		return false, 0
+<span id="L156" class="ln">   156</span>	}
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>	<span class="comment">// userType returns, and saves, the information associated with user-provided type rt.</span>
+<span id="L159" class="ln">   159</span>	<span class="comment">// If the user type is not valid, it calls error.</span>
+<span id="L160" class="ln">   160</span>	func userType(rt reflect.Type) *userTypeInfo {
+<span id="L161" class="ln">   161</span>		ut, err := validUserType(rt)
+<span id="L162" class="ln">   162</span>		if err != nil {
+<span id="L163" class="ln">   163</span>			error_(err)
+<span id="L164" class="ln">   164</span>		}
+<span id="L165" class="ln">   165</span>		return ut
+<span id="L166" class="ln">   166</span>	}
+<span id="L167" class="ln">   167</span>	
+<span id="L168" class="ln">   168</span>	<span class="comment">// A typeId represents a gob Type as an integer that can be passed on the wire.</span>
+<span id="L169" class="ln">   169</span>	<span class="comment">// Internally, typeIds are used as keys to a map to recover the underlying type info.</span>
+<span id="L170" class="ln">   170</span>	type typeId int32
+<span id="L171" class="ln">   171</span>	
+<span id="L172" class="ln">   172</span>	var nextId typeId       <span class="comment">// incremented for each new type we build</span>
+<span id="L173" class="ln">   173</span>	var typeLock sync.Mutex <span class="comment">// set while building a type</span>
+<span id="L174" class="ln">   174</span>	const firstUserId = 64  <span class="comment">// lowest id number granted to user</span>
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>	type gobType interface {
+<span id="L177" class="ln">   177</span>		id() typeId
+<span id="L178" class="ln">   178</span>		setId(id typeId)
+<span id="L179" class="ln">   179</span>		name() string
+<span id="L180" class="ln">   180</span>		string() string <span class="comment">// not public; only for debugging</span>
+<span id="L181" class="ln">   181</span>		safeString(seen map[typeId]bool) string
+<span id="L182" class="ln">   182</span>	}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	var types = make(map[reflect.Type]gobType)
+<span id="L185" class="ln">   185</span>	var idToType = make(map[typeId]gobType)
+<span id="L186" class="ln">   186</span>	var builtinIdToType map[typeId]gobType <span class="comment">// set in init() after builtins are established</span>
+<span id="L187" class="ln">   187</span>	
+<span id="L188" class="ln">   188</span>	func setTypeId(typ gobType) {
+<span id="L189" class="ln">   189</span>		<span class="comment">// When building recursive types, someone may get there before us.</span>
+<span id="L190" class="ln">   190</span>		if typ.id() != 0 {
+<span id="L191" class="ln">   191</span>			return
+<span id="L192" class="ln">   192</span>		}
+<span id="L193" class="ln">   193</span>		nextId++
+<span id="L194" class="ln">   194</span>		typ.setId(nextId)
+<span id="L195" class="ln">   195</span>		idToType[nextId] = typ
+<span id="L196" class="ln">   196</span>	}
+<span id="L197" class="ln">   197</span>	
+<span id="L198" class="ln">   198</span>	func (t typeId) gobType() gobType {
+<span id="L199" class="ln">   199</span>		if t == 0 {
+<span id="L200" class="ln">   200</span>			return nil
+<span id="L201" class="ln">   201</span>		}
+<span id="L202" class="ln">   202</span>		return idToType[t]
+<span id="L203" class="ln">   203</span>	}
+<span id="L204" class="ln">   204</span>	
+<span id="L205" class="ln">   205</span>	<span class="comment">// string returns the string representation of the type associated with the typeId.</span>
+<span id="L206" class="ln">   206</span>	func (t typeId) string() string {
+<span id="L207" class="ln">   207</span>		if t.gobType() == nil {
+<span id="L208" class="ln">   208</span>			return &#34;&lt;nil&gt;&#34;
+<span id="L209" class="ln">   209</span>		}
+<span id="L210" class="ln">   210</span>		return t.gobType().string()
+<span id="L211" class="ln">   211</span>	}
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	<span class="comment">// Name returns the name of the type associated with the typeId.</span>
+<span id="L214" class="ln">   214</span>	func (t typeId) name() string {
+<span id="L215" class="ln">   215</span>		if t.gobType() == nil {
+<span id="L216" class="ln">   216</span>			return &#34;&lt;nil&gt;&#34;
+<span id="L217" class="ln">   217</span>		}
+<span id="L218" class="ln">   218</span>		return t.gobType().name()
+<span id="L219" class="ln">   219</span>	}
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	<span class="comment">// CommonType holds elements of all types.</span>
+<span id="L222" class="ln">   222</span>	<span class="comment">// It is a historical artifact, kept for binary compatibility and exported</span>
+<span id="L223" class="ln">   223</span>	<span class="comment">// only for the benefit of the package&#39;s encoding of type descriptors. It is</span>
+<span id="L224" class="ln">   224</span>	<span class="comment">// not intended for direct use by clients.</span>
+<span id="L225" class="ln">   225</span>	<span class="selection">type CommonType struct {
+<span id="L226" class="ln">   226</span>		Name string
+<span id="L227" class="ln">   227</span>		Id   typeId
+<span id="L228" class="ln">   228</span>	}</span>
+<span id="L229" class="ln">   229</span>	
+<span id="L230" class="ln">   230</span>	func (t *CommonType) id() typeId { return t.Id }
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>	func (t *CommonType) setId(id typeId) { t.Id = id }
+<span id="L233" class="ln">   233</span>	
+<span id="L234" class="ln">   234</span>	func (t *CommonType) string() string { return t.Name }
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	func (t *CommonType) safeString(seen map[typeId]bool) string {
+<span id="L237" class="ln">   237</span>		return t.Name
+<span id="L238" class="ln">   238</span>	}
+<span id="L239" class="ln">   239</span>	
+<span id="L240" class="ln">   240</span>	func (t *CommonType) name() string { return t.Name }
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>	<span class="comment">// Create and check predefined types</span>
+<span id="L243" class="ln">   243</span>	<span class="comment">// The string for tBytes is &#34;bytes&#34; not &#34;[]byte&#34; to signify its specialness.</span>
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>	var (
+<span id="L246" class="ln">   246</span>		<span class="comment">// Primordial types, needed during initialization.</span>
+<span id="L247" class="ln">   247</span>		<span class="comment">// Always passed as pointers so the interface{} type</span>
+<span id="L248" class="ln">   248</span>		<span class="comment">// goes through without losing its interfaceness.</span>
+<span id="L249" class="ln">   249</span>		tBool      = bootstrapType(&#34;bool&#34;, (*bool)(nil), 1)
+<span id="L250" class="ln">   250</span>		tInt       = bootstrapType(&#34;int&#34;, (*int)(nil), 2)
+<span id="L251" class="ln">   251</span>		tUint      = bootstrapType(&#34;uint&#34;, (*uint)(nil), 3)
+<span id="L252" class="ln">   252</span>		tFloat     = bootstrapType(&#34;float&#34;, (*float64)(nil), 4)
+<span id="L253" class="ln">   253</span>		tBytes     = bootstrapType(&#34;bytes&#34;, (*[]byte)(nil), 5)
+<span id="L254" class="ln">   254</span>		tString    = bootstrapType(&#34;string&#34;, (*string)(nil), 6)
+<span id="L255" class="ln">   255</span>		tComplex   = bootstrapType(&#34;complex&#34;, (*complex128)(nil), 7)
+<span id="L256" class="ln">   256</span>		tInterface = bootstrapType(&#34;interface&#34;, (*interface{})(nil), 8)
+<span id="L257" class="ln">   257</span>		<span class="comment">// Reserve some Ids for compatible expansion</span>
+<span id="L258" class="ln">   258</span>		tReserved7 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r7 int })(nil), 9)
+<span id="L259" class="ln">   259</span>		tReserved6 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r6 int })(nil), 10)
+<span id="L260" class="ln">   260</span>		tReserved5 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r5 int })(nil), 11)
+<span id="L261" class="ln">   261</span>		tReserved4 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r4 int })(nil), 12)
+<span id="L262" class="ln">   262</span>		tReserved3 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r3 int })(nil), 13)
+<span id="L263" class="ln">   263</span>		tReserved2 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r2 int })(nil), 14)
+<span id="L264" class="ln">   264</span>		tReserved1 = bootstrapType(&#34;_reserved1&#34;, (*struct{ r1 int })(nil), 15)
+<span id="L265" class="ln">   265</span>	)
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>	<span class="comment">// Predefined because it&#39;s needed by the Decoder</span>
+<span id="L268" class="ln">   268</span>	var tWireType = mustGetTypeInfo(reflect.TypeOf(wireType{})).id
+<span id="L269" class="ln">   269</span>	var wireTypeUserInfo *userTypeInfo <span class="comment">// userTypeInfo of (*wireType)</span>
+<span id="L270" class="ln">   270</span>	
+<span id="L271" class="ln">   271</span>	func init() {
+<span id="L272" class="ln">   272</span>		<span class="comment">// Some magic numbers to make sure there are no surprises.</span>
+<span id="L273" class="ln">   273</span>		checkId(16, tWireType)
+<span id="L274" class="ln">   274</span>		checkId(17, mustGetTypeInfo(reflect.TypeOf(arrayType{})).id)
+<span id="L275" class="ln">   275</span>		checkId(18, mustGetTypeInfo(reflect.TypeOf(CommonType{})).id)
+<span id="L276" class="ln">   276</span>		checkId(19, mustGetTypeInfo(reflect.TypeOf(sliceType{})).id)
+<span id="L277" class="ln">   277</span>		checkId(20, mustGetTypeInfo(reflect.TypeOf(structType{})).id)
+<span id="L278" class="ln">   278</span>		checkId(21, mustGetTypeInfo(reflect.TypeOf(fieldType{})).id)
+<span id="L279" class="ln">   279</span>		checkId(23, mustGetTypeInfo(reflect.TypeOf(mapType{})).id)
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>		builtinIdToType = make(map[typeId]gobType)
+<span id="L282" class="ln">   282</span>		for k, v := range idToType {
+<span id="L283" class="ln">   283</span>			builtinIdToType[k] = v
+<span id="L284" class="ln">   284</span>		}
+<span id="L285" class="ln">   285</span>	
+<span id="L286" class="ln">   286</span>		<span class="comment">// Move the id space upwards to allow for growth in the predefined world</span>
+<span id="L287" class="ln">   287</span>		<span class="comment">// without breaking existing files.</span>
+<span id="L288" class="ln">   288</span>		if nextId &gt; firstUserId {
+<span id="L289" class="ln">   289</span>			panic(fmt.Sprintln(&#34;nextId too large:&#34;, nextId))
+<span id="L290" class="ln">   290</span>		}
+<span id="L291" class="ln">   291</span>		nextId = firstUserId
+<span id="L292" class="ln">   292</span>		registerBasics()
+<span id="L293" class="ln">   293</span>		wireTypeUserInfo = userType(reflect.TypeOf((*wireType)(nil)))
+<span id="L294" class="ln">   294</span>	}
+<span id="L295" class="ln">   295</span>	
+<span id="L296" class="ln">   296</span>	<span class="comment">// Array type</span>
+<span id="L297" class="ln">   297</span>	type arrayType struct {
+<span id="L298" class="ln">   298</span>		CommonType
+<span id="L299" class="ln">   299</span>		Elem typeId
+<span id="L300" class="ln">   300</span>		Len  int
+<span id="L301" class="ln">   301</span>	}
+<span id="L302" class="ln">   302</span>	
+<span id="L303" class="ln">   303</span>	func newArrayType(name string) *arrayType {
+<span id="L304" class="ln">   304</span>		a := &amp;arrayType{CommonType{Name: name}, 0, 0}
+<span id="L305" class="ln">   305</span>		return a
+<span id="L306" class="ln">   306</span>	}
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	func (a *arrayType) init(elem gobType, len int) {
+<span id="L309" class="ln">   309</span>		<span class="comment">// Set our type id before evaluating the element&#39;s, in case it&#39;s our own.</span>
+<span id="L310" class="ln">   310</span>		setTypeId(a)
+<span id="L311" class="ln">   311</span>		a.Elem = elem.id()
+<span id="L312" class="ln">   312</span>		a.Len = len
+<span id="L313" class="ln">   313</span>	}
+<span id="L314" class="ln">   314</span>	
+<span id="L315" class="ln">   315</span>	func (a *arrayType) safeString(seen map[typeId]bool) string {
+<span id="L316" class="ln">   316</span>		if seen[a.Id] {
+<span id="L317" class="ln">   317</span>			return a.Name
+<span id="L318" class="ln">   318</span>		}
+<span id="L319" class="ln">   319</span>		seen[a.Id] = true
+<span id="L320" class="ln">   320</span>		return fmt.Sprintf(&#34;[%d]%s&#34;, a.Len, a.Elem.gobType().safeString(seen))
+<span id="L321" class="ln">   321</span>	}
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>	func (a *arrayType) string() string { return a.safeString(make(map[typeId]bool)) }
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>	<span class="comment">// GobEncoder type (something that implements the GobEncoder interface)</span>
+<span id="L326" class="ln">   326</span>	type gobEncoderType struct {
+<span id="L327" class="ln">   327</span>		CommonType
+<span id="L328" class="ln">   328</span>	}
+<span id="L329" class="ln">   329</span>	
+<span id="L330" class="ln">   330</span>	func newGobEncoderType(name string) *gobEncoderType {
+<span id="L331" class="ln">   331</span>		g := &amp;gobEncoderType{CommonType{Name: name}}
+<span id="L332" class="ln">   332</span>		setTypeId(g)
+<span id="L333" class="ln">   333</span>		return g
+<span id="L334" class="ln">   334</span>	}
+<span id="L335" class="ln">   335</span>	
+<span id="L336" class="ln">   336</span>	func (g *gobEncoderType) safeString(seen map[typeId]bool) string {
+<span id="L337" class="ln">   337</span>		return g.Name
+<span id="L338" class="ln">   338</span>	}
+<span id="L339" class="ln">   339</span>	
+<span id="L340" class="ln">   340</span>	func (g *gobEncoderType) string() string { return g.Name }
+<span id="L341" class="ln">   341</span>	
+<span id="L342" class="ln">   342</span>	<span class="comment">// Map type</span>
+<span id="L343" class="ln">   343</span>	type mapType struct {
+<span id="L344" class="ln">   344</span>		CommonType
+<span id="L345" class="ln">   345</span>		Key  typeId
+<span id="L346" class="ln">   346</span>		Elem typeId
+<span id="L347" class="ln">   347</span>	}
+<span id="L348" class="ln">   348</span>	
+<span id="L349" class="ln">   349</span>	func newMapType(name string) *mapType {
+<span id="L350" class="ln">   350</span>		m := &amp;mapType{CommonType{Name: name}, 0, 0}
+<span id="L351" class="ln">   351</span>		return m
+<span id="L352" class="ln">   352</span>	}
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>	func (m *mapType) init(key, elem gobType) {
+<span id="L355" class="ln">   355</span>		<span class="comment">// Set our type id before evaluating the element&#39;s, in case it&#39;s our own.</span>
+<span id="L356" class="ln">   356</span>		setTypeId(m)
+<span id="L357" class="ln">   357</span>		m.Key = key.id()
+<span id="L358" class="ln">   358</span>		m.Elem = elem.id()
+<span id="L359" class="ln">   359</span>	}
+<span id="L360" class="ln">   360</span>	
+<span id="L361" class="ln">   361</span>	func (m *mapType) safeString(seen map[typeId]bool) string {
+<span id="L362" class="ln">   362</span>		if seen[m.Id] {
+<span id="L363" class="ln">   363</span>			return m.Name
+<span id="L364" class="ln">   364</span>		}
+<span id="L365" class="ln">   365</span>		seen[m.Id] = true
+<span id="L366" class="ln">   366</span>		key := m.Key.gobType().safeString(seen)
+<span id="L367" class="ln">   367</span>		elem := m.Elem.gobType().safeString(seen)
+<span id="L368" class="ln">   368</span>		return fmt.Sprintf(&#34;map[%s]%s&#34;, key, elem)
+<span id="L369" class="ln">   369</span>	}
+<span id="L370" class="ln">   370</span>	
+<span id="L371" class="ln">   371</span>	func (m *mapType) string() string { return m.safeString(make(map[typeId]bool)) }
+<span id="L372" class="ln">   372</span>	
+<span id="L373" class="ln">   373</span>	<span class="comment">// Slice type</span>
+<span id="L374" class="ln">   374</span>	type sliceType struct {
+<span id="L375" class="ln">   375</span>		CommonType
+<span id="L376" class="ln">   376</span>		Elem typeId
+<span id="L377" class="ln">   377</span>	}
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>	func newSliceType(name string) *sliceType {
+<span id="L380" class="ln">   380</span>		s := &amp;sliceType{CommonType{Name: name}, 0}
+<span id="L381" class="ln">   381</span>		return s
+<span id="L382" class="ln">   382</span>	}
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>	func (s *sliceType) init(elem gobType) {
+<span id="L385" class="ln">   385</span>		<span class="comment">// Set our type id before evaluating the element&#39;s, in case it&#39;s our own.</span>
+<span id="L386" class="ln">   386</span>		setTypeId(s)
+<span id="L387" class="ln">   387</span>		<span class="comment">// See the comments about ids in newTypeObject. Only slices and</span>
+<span id="L388" class="ln">   388</span>		<span class="comment">// structs have mutual recursion.</span>
+<span id="L389" class="ln">   389</span>		if elem.id() == 0 {
+<span id="L390" class="ln">   390</span>			setTypeId(elem)
+<span id="L391" class="ln">   391</span>		}
+<span id="L392" class="ln">   392</span>		s.Elem = elem.id()
+<span id="L393" class="ln">   393</span>	}
+<span id="L394" class="ln">   394</span>	
+<span id="L395" class="ln">   395</span>	func (s *sliceType) safeString(seen map[typeId]bool) string {
+<span id="L396" class="ln">   396</span>		if seen[s.Id] {
+<span id="L397" class="ln">   397</span>			return s.Name
+<span id="L398" class="ln">   398</span>		}
+<span id="L399" class="ln">   399</span>		seen[s.Id] = true
+<span id="L400" class="ln">   400</span>		return fmt.Sprintf(&#34;[]%s&#34;, s.Elem.gobType().safeString(seen))
+<span id="L401" class="ln">   401</span>	}
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>	func (s *sliceType) string() string { return s.safeString(make(map[typeId]bool)) }
+<span id="L404" class="ln">   404</span>	
+<span id="L405" class="ln">   405</span>	<span class="comment">// Struct type</span>
+<span id="L406" class="ln">   406</span>	type fieldType struct {
+<span id="L407" class="ln">   407</span>		Name string
+<span id="L408" class="ln">   408</span>		Id   typeId
+<span id="L409" class="ln">   409</span>	}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	type structType struct {
+<span id="L412" class="ln">   412</span>		CommonType
+<span id="L413" class="ln">   413</span>		Field []*fieldType
+<span id="L414" class="ln">   414</span>	}
+<span id="L415" class="ln">   415</span>	
+<span id="L416" class="ln">   416</span>	func (s *structType) safeString(seen map[typeId]bool) string {
+<span id="L417" class="ln">   417</span>		if s == nil {
+<span id="L418" class="ln">   418</span>			return &#34;&lt;nil&gt;&#34;
+<span id="L419" class="ln">   419</span>		}
+<span id="L420" class="ln">   420</span>		if _, ok := seen[s.Id]; ok {
+<span id="L421" class="ln">   421</span>			return s.Name
+<span id="L422" class="ln">   422</span>		}
+<span id="L423" class="ln">   423</span>		seen[s.Id] = true
+<span id="L424" class="ln">   424</span>		str := s.Name + &#34; = struct { &#34;
+<span id="L425" class="ln">   425</span>		for _, f := range s.Field {
+<span id="L426" class="ln">   426</span>			str += fmt.Sprintf(&#34;%s %s; &#34;, f.Name, f.Id.gobType().safeString(seen))
+<span id="L427" class="ln">   427</span>		}
+<span id="L428" class="ln">   428</span>		str += &#34;}&#34;
+<span id="L429" class="ln">   429</span>		return str
+<span id="L430" class="ln">   430</span>	}
+<span id="L431" class="ln">   431</span>	
+<span id="L432" class="ln">   432</span>	func (s *structType) string() string { return s.safeString(make(map[typeId]bool)) }
+<span id="L433" class="ln">   433</span>	
+<span id="L434" class="ln">   434</span>	func newStructType(name string) *structType {
+<span id="L435" class="ln">   435</span>		s := &amp;structType{CommonType{Name: name}, nil}
+<span id="L436" class="ln">   436</span>		<span class="comment">// For historical reasons we set the id here rather than init.</span>
+<span id="L437" class="ln">   437</span>		<span class="comment">// See the comment in newTypeObject for details.</span>
+<span id="L438" class="ln">   438</span>		setTypeId(s)
+<span id="L439" class="ln">   439</span>		return s
+<span id="L440" class="ln">   440</span>	}
+<span id="L441" class="ln">   441</span>	
+<span id="L442" class="ln">   442</span>	<span class="comment">// newTypeObject allocates a gobType for the reflection type rt.</span>
+<span id="L443" class="ln">   443</span>	<span class="comment">// Unless ut represents a GobEncoder, rt should be the base type</span>
+<span id="L444" class="ln">   444</span>	<span class="comment">// of ut.</span>
+<span id="L445" class="ln">   445</span>	<span class="comment">// This is only called from the encoding side. The decoding side</span>
+<span id="L446" class="ln">   446</span>	<span class="comment">// works through typeIds and userTypeInfos alone.</span>
+<span id="L447" class="ln">   447</span>	func newTypeObject(name string, ut *userTypeInfo, rt reflect.Type) (gobType, error) {
+<span id="L448" class="ln">   448</span>		<span class="comment">// Does this type implement GobEncoder?</span>
+<span id="L449" class="ln">   449</span>		if ut.externalEnc != 0 {
+<span id="L450" class="ln">   450</span>			return newGobEncoderType(name), nil
+<span id="L451" class="ln">   451</span>		}
+<span id="L452" class="ln">   452</span>		var err error
+<span id="L453" class="ln">   453</span>		var type0, type1 gobType
+<span id="L454" class="ln">   454</span>		defer func() {
+<span id="L455" class="ln">   455</span>			if err != nil {
+<span id="L456" class="ln">   456</span>				delete(types, rt)
+<span id="L457" class="ln">   457</span>			}
+<span id="L458" class="ln">   458</span>		}()
+<span id="L459" class="ln">   459</span>		<span class="comment">// Install the top-level type before the subtypes (e.g. struct before</span>
+<span id="L460" class="ln">   460</span>		<span class="comment">// fields) so recursive types can be constructed safely.</span>
+<span id="L461" class="ln">   461</span>		switch t := rt; t.Kind() {
+<span id="L462" class="ln">   462</span>		<span class="comment">// All basic types are easy: they are predefined.</span>
+<span id="L463" class="ln">   463</span>		case reflect.Bool:
+<span id="L464" class="ln">   464</span>			return tBool.gobType(), nil
+<span id="L465" class="ln">   465</span>	
+<span id="L466" class="ln">   466</span>		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+<span id="L467" class="ln">   467</span>			return tInt.gobType(), nil
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+<span id="L470" class="ln">   470</span>			return tUint.gobType(), nil
+<span id="L471" class="ln">   471</span>	
+<span id="L472" class="ln">   472</span>		case reflect.Float32, reflect.Float64:
+<span id="L473" class="ln">   473</span>			return tFloat.gobType(), nil
+<span id="L474" class="ln">   474</span>	
+<span id="L475" class="ln">   475</span>		case reflect.Complex64, reflect.Complex128:
+<span id="L476" class="ln">   476</span>			return tComplex.gobType(), nil
+<span id="L477" class="ln">   477</span>	
+<span id="L478" class="ln">   478</span>		case reflect.String:
+<span id="L479" class="ln">   479</span>			return tString.gobType(), nil
+<span id="L480" class="ln">   480</span>	
+<span id="L481" class="ln">   481</span>		case reflect.Interface:
+<span id="L482" class="ln">   482</span>			return tInterface.gobType(), nil
+<span id="L483" class="ln">   483</span>	
+<span id="L484" class="ln">   484</span>		case reflect.Array:
+<span id="L485" class="ln">   485</span>			at := newArrayType(name)
+<span id="L486" class="ln">   486</span>			types[rt] = at
+<span id="L487" class="ln">   487</span>			type0, err = getBaseType(&#34;&#34;, t.Elem())
+<span id="L488" class="ln">   488</span>			if err != nil {
+<span id="L489" class="ln">   489</span>				return nil, err
+<span id="L490" class="ln">   490</span>			}
+<span id="L491" class="ln">   491</span>			<span class="comment">// Historical aside:</span>
+<span id="L492" class="ln">   492</span>			<span class="comment">// For arrays, maps, and slices, we set the type id after the elements</span>
+<span id="L493" class="ln">   493</span>			<span class="comment">// are constructed. This is to retain the order of type id allocation after</span>
+<span id="L494" class="ln">   494</span>			<span class="comment">// a fix made to handle recursive types, which changed the order in</span>
+<span id="L495" class="ln">   495</span>			<span class="comment">// which types are built.  Delaying the setting in this way preserves</span>
+<span id="L496" class="ln">   496</span>			<span class="comment">// type ids while allowing recursive types to be described. Structs,</span>
+<span id="L497" class="ln">   497</span>			<span class="comment">// done below, were already handling recursion correctly so they</span>
+<span id="L498" class="ln">   498</span>			<span class="comment">// assign the top-level id before those of the field.</span>
+<span id="L499" class="ln">   499</span>			at.init(type0, t.Len())
+<span id="L500" class="ln">   500</span>			return at, nil
+<span id="L501" class="ln">   501</span>	
+<span id="L502" class="ln">   502</span>		case reflect.Map:
+<span id="L503" class="ln">   503</span>			mt := newMapType(name)
+<span id="L504" class="ln">   504</span>			types[rt] = mt
+<span id="L505" class="ln">   505</span>			type0, err = getBaseType(&#34;&#34;, t.Key())
+<span id="L506" class="ln">   506</span>			if err != nil {
+<span id="L507" class="ln">   507</span>				return nil, err
+<span id="L508" class="ln">   508</span>			}
+<span id="L509" class="ln">   509</span>			type1, err = getBaseType(&#34;&#34;, t.Elem())
+<span id="L510" class="ln">   510</span>			if err != nil {
+<span id="L511" class="ln">   511</span>				return nil, err
+<span id="L512" class="ln">   512</span>			}
+<span id="L513" class="ln">   513</span>			mt.init(type0, type1)
+<span id="L514" class="ln">   514</span>			return mt, nil
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>		case reflect.Slice:
+<span id="L517" class="ln">   517</span>			<span class="comment">// []byte == []uint8 is a special case</span>
+<span id="L518" class="ln">   518</span>			if t.Elem().Kind() == reflect.Uint8 {
+<span id="L519" class="ln">   519</span>				return tBytes.gobType(), nil
+<span id="L520" class="ln">   520</span>			}
+<span id="L521" class="ln">   521</span>			st := newSliceType(name)
+<span id="L522" class="ln">   522</span>			types[rt] = st
+<span id="L523" class="ln">   523</span>			type0, err = getBaseType(t.Elem().Name(), t.Elem())
+<span id="L524" class="ln">   524</span>			if err != nil {
+<span id="L525" class="ln">   525</span>				return nil, err
+<span id="L526" class="ln">   526</span>			}
+<span id="L527" class="ln">   527</span>			st.init(type0)
+<span id="L528" class="ln">   528</span>			return st, nil
+<span id="L529" class="ln">   529</span>	
+<span id="L530" class="ln">   530</span>		case reflect.Struct:
+<span id="L531" class="ln">   531</span>			st := newStructType(name)
+<span id="L532" class="ln">   532</span>			types[rt] = st
+<span id="L533" class="ln">   533</span>			idToType[st.id()] = st
+<span id="L534" class="ln">   534</span>			for i := 0; i &lt; t.NumField(); i++ {
+<span id="L535" class="ln">   535</span>				f := t.Field(i)
+<span id="L536" class="ln">   536</span>				if !isSent(&amp;f) {
+<span id="L537" class="ln">   537</span>					continue
+<span id="L538" class="ln">   538</span>				}
+<span id="L539" class="ln">   539</span>				typ := userType(f.Type).base
+<span id="L540" class="ln">   540</span>				tname := typ.Name()
+<span id="L541" class="ln">   541</span>				if tname == &#34;&#34; {
+<span id="L542" class="ln">   542</span>					t := userType(f.Type).base
+<span id="L543" class="ln">   543</span>					tname = t.String()
+<span id="L544" class="ln">   544</span>				}
+<span id="L545" class="ln">   545</span>				gt, err := getBaseType(tname, f.Type)
+<span id="L546" class="ln">   546</span>				if err != nil {
+<span id="L547" class="ln">   547</span>					return nil, err
+<span id="L548" class="ln">   548</span>				}
+<span id="L549" class="ln">   549</span>				<span class="comment">// Some mutually recursive types can cause us to be here while</span>
+<span id="L550" class="ln">   550</span>				<span class="comment">// still defining the element. Fix the element type id here.</span>
+<span id="L551" class="ln">   551</span>				<span class="comment">// We could do this more neatly by setting the id at the start of</span>
+<span id="L552" class="ln">   552</span>				<span class="comment">// building every type, but that would break binary compatibility.</span>
+<span id="L553" class="ln">   553</span>				if gt.id() == 0 {
+<span id="L554" class="ln">   554</span>					setTypeId(gt)
+<span id="L555" class="ln">   555</span>				}
+<span id="L556" class="ln">   556</span>				st.Field = append(st.Field, &amp;fieldType{f.Name, gt.id()})
+<span id="L557" class="ln">   557</span>			}
+<span id="L558" class="ln">   558</span>			return st, nil
+<span id="L559" class="ln">   559</span>	
+<span id="L560" class="ln">   560</span>		default:
+<span id="L561" class="ln">   561</span>			return nil, errors.New(&#34;gob NewTypeObject can&#39;t handle type: &#34; + rt.String())
+<span id="L562" class="ln">   562</span>		}
+<span id="L563" class="ln">   563</span>	}
+<span id="L564" class="ln">   564</span>	
+<span id="L565" class="ln">   565</span>	<span class="comment">// isExported reports whether this is an exported - upper case - name.</span>
+<span id="L566" class="ln">   566</span>	func isExported(name string) bool {
+<span id="L567" class="ln">   567</span>		rune, _ := utf8.DecodeRuneInString(name)
+<span id="L568" class="ln">   568</span>		return unicode.IsUpper(rune)
+<span id="L569" class="ln">   569</span>	}
+<span id="L570" class="ln">   570</span>	
+<span id="L571" class="ln">   571</span>	<span class="comment">// isSent reports whether this struct field is to be transmitted.</span>
+<span id="L572" class="ln">   572</span>	<span class="comment">// It will be transmitted only if it is exported and not a chan or func field</span>
+<span id="L573" class="ln">   573</span>	<span class="comment">// or pointer to chan or func.</span>
+<span id="L574" class="ln">   574</span>	func isSent(field *reflect.StructField) bool {
+<span id="L575" class="ln">   575</span>		if !isExported(field.Name) {
+<span id="L576" class="ln">   576</span>			return false
+<span id="L577" class="ln">   577</span>		}
+<span id="L578" class="ln">   578</span>		<span class="comment">// If the field is a chan or func or pointer thereto, don&#39;t send it.</span>
+<span id="L579" class="ln">   579</span>		<span class="comment">// That is, treat it like an unexported field.</span>
+<span id="L580" class="ln">   580</span>		typ := field.Type
+<span id="L581" class="ln">   581</span>		for typ.Kind() == reflect.Ptr {
+<span id="L582" class="ln">   582</span>			typ = typ.Elem()
+<span id="L583" class="ln">   583</span>		}
+<span id="L584" class="ln">   584</span>		if typ.Kind() == reflect.Chan || typ.Kind() == reflect.Func {
+<span id="L585" class="ln">   585</span>			return false
+<span id="L586" class="ln">   586</span>		}
+<span id="L587" class="ln">   587</span>		return true
+<span id="L588" class="ln">   588</span>	}
+<span id="L589" class="ln">   589</span>	
+<span id="L590" class="ln">   590</span>	<span class="comment">// getBaseType returns the Gob type describing the given reflect.Type&#39;s base type.</span>
+<span id="L591" class="ln">   591</span>	<span class="comment">// typeLock must be held.</span>
+<span id="L592" class="ln">   592</span>	func getBaseType(name string, rt reflect.Type) (gobType, error) {
+<span id="L593" class="ln">   593</span>		ut := userType(rt)
+<span id="L594" class="ln">   594</span>		return getType(name, ut, ut.base)
+<span id="L595" class="ln">   595</span>	}
+<span id="L596" class="ln">   596</span>	
+<span id="L597" class="ln">   597</span>	<span class="comment">// getType returns the Gob type describing the given reflect.Type.</span>
+<span id="L598" class="ln">   598</span>	<span class="comment">// Should be called only when handling GobEncoders/Decoders,</span>
+<span id="L599" class="ln">   599</span>	<span class="comment">// which may be pointers.  All other types are handled through the</span>
+<span id="L600" class="ln">   600</span>	<span class="comment">// base type, never a pointer.</span>
+<span id="L601" class="ln">   601</span>	<span class="comment">// typeLock must be held.</span>
+<span id="L602" class="ln">   602</span>	func getType(name string, ut *userTypeInfo, rt reflect.Type) (gobType, error) {
+<span id="L603" class="ln">   603</span>		typ, present := types[rt]
+<span id="L604" class="ln">   604</span>		if present {
+<span id="L605" class="ln">   605</span>			return typ, nil
+<span id="L606" class="ln">   606</span>		}
+<span id="L607" class="ln">   607</span>		typ, err := newTypeObject(name, ut, rt)
+<span id="L608" class="ln">   608</span>		if err == nil {
+<span id="L609" class="ln">   609</span>			types[rt] = typ
+<span id="L610" class="ln">   610</span>		}
+<span id="L611" class="ln">   611</span>		return typ, err
+<span id="L612" class="ln">   612</span>	}
+<span id="L613" class="ln">   613</span>	
+<span id="L614" class="ln">   614</span>	func checkId(want, got typeId) {
+<span id="L615" class="ln">   615</span>		if want != got {
+<span id="L616" class="ln">   616</span>			fmt.Fprintf(os.Stderr, &#34;checkId: %d should be %d\n&#34;, int(got), int(want))
+<span id="L617" class="ln">   617</span>			panic(&#34;bootstrap type wrong id: &#34; + got.name() + &#34; &#34; + got.string() + &#34; not &#34; + want.string())
+<span id="L618" class="ln">   618</span>		}
+<span id="L619" class="ln">   619</span>	}
+<span id="L620" class="ln">   620</span>	
+<span id="L621" class="ln">   621</span>	<span class="comment">// used for building the basic types; called only from init().  the incoming</span>
+<span id="L622" class="ln">   622</span>	<span class="comment">// interface always refers to a pointer.</span>
+<span id="L623" class="ln">   623</span>	func bootstrapType(name string, e interface{}, expect typeId) typeId {
+<span id="L624" class="ln">   624</span>		rt := reflect.TypeOf(e).Elem()
+<span id="L625" class="ln">   625</span>		_, present := types[rt]
+<span id="L626" class="ln">   626</span>		if present {
+<span id="L627" class="ln">   627</span>			panic(&#34;bootstrap type already present: &#34; + name + &#34;, &#34; + rt.String())
+<span id="L628" class="ln">   628</span>		}
+<span id="L629" class="ln">   629</span>		typ := &amp;CommonType{Name: name}
+<span id="L630" class="ln">   630</span>		types[rt] = typ
+<span id="L631" class="ln">   631</span>		setTypeId(typ)
+<span id="L632" class="ln">   632</span>		checkId(expect, nextId)
+<span id="L633" class="ln">   633</span>		userType(rt) <span class="comment">// might as well cache it now</span>
+<span id="L634" class="ln">   634</span>		return nextId
+<span id="L635" class="ln">   635</span>	}
+<span id="L636" class="ln">   636</span>	
+<span id="L637" class="ln">   637</span>	<span class="comment">// Representation of the information we send and receive about this type.</span>
+<span id="L638" class="ln">   638</span>	<span class="comment">// Each value we send is preceded by its type definition: an encoded int.</span>
+<span id="L639" class="ln">   639</span>	<span class="comment">// However, the very first time we send the value, we first send the pair</span>
+<span id="L640" class="ln">   640</span>	<span class="comment">// (-id, wireType).</span>
+<span id="L641" class="ln">   641</span>	<span class="comment">// For bootstrapping purposes, we assume that the recipient knows how</span>
+<span id="L642" class="ln">   642</span>	<span class="comment">// to decode a wireType; it is exactly the wireType struct here, interpreted</span>
+<span id="L643" class="ln">   643</span>	<span class="comment">// using the gob rules for sending a structure, except that we assume the</span>
+<span id="L644" class="ln">   644</span>	<span class="comment">// ids for wireType and structType etc. are known.  The relevant pieces</span>
+<span id="L645" class="ln">   645</span>	<span class="comment">// are built in encode.go&#39;s init() function.</span>
+<span id="L646" class="ln">   646</span>	<span class="comment">// To maintain binary compatibility, if you extend this type, always put</span>
+<span id="L647" class="ln">   647</span>	<span class="comment">// the new fields last.</span>
+<span id="L648" class="ln">   648</span>	type wireType struct {
+<span id="L649" class="ln">   649</span>		ArrayT           *arrayType
+<span id="L650" class="ln">   650</span>		SliceT           *sliceType
+<span id="L651" class="ln">   651</span>		StructT          *structType
+<span id="L652" class="ln">   652</span>		MapT             *mapType
+<span id="L653" class="ln">   653</span>		GobEncoderT      *gobEncoderType
+<span id="L654" class="ln">   654</span>		BinaryMarshalerT *gobEncoderType
+<span id="L655" class="ln">   655</span>		TextMarshalerT   *gobEncoderType
+<span id="L656" class="ln">   656</span>	}
+<span id="L657" class="ln">   657</span>	
+<span id="L658" class="ln">   658</span>	func (w *wireType) string() string {
+<span id="L659" class="ln">   659</span>		const unknown = &#34;unknown type&#34;
+<span id="L660" class="ln">   660</span>		if w == nil {
+<span id="L661" class="ln">   661</span>			return unknown
+<span id="L662" class="ln">   662</span>		}
+<span id="L663" class="ln">   663</span>		switch {
+<span id="L664" class="ln">   664</span>		case w.ArrayT != nil:
+<span id="L665" class="ln">   665</span>			return w.ArrayT.Name
+<span id="L666" class="ln">   666</span>		case w.SliceT != nil:
+<span id="L667" class="ln">   667</span>			return w.SliceT.Name
+<span id="L668" class="ln">   668</span>		case w.StructT != nil:
+<span id="L669" class="ln">   669</span>			return w.StructT.Name
+<span id="L670" class="ln">   670</span>		case w.MapT != nil:
+<span id="L671" class="ln">   671</span>			return w.MapT.Name
+<span id="L672" class="ln">   672</span>		case w.GobEncoderT != nil:
+<span id="L673" class="ln">   673</span>			return w.GobEncoderT.Name
+<span id="L674" class="ln">   674</span>		case w.BinaryMarshalerT != nil:
+<span id="L675" class="ln">   675</span>			return w.BinaryMarshalerT.Name
+<span id="L676" class="ln">   676</span>		case w.TextMarshalerT != nil:
+<span id="L677" class="ln">   677</span>			return w.TextMarshalerT.Name
+<span id="L678" class="ln">   678</span>		}
+<span id="L679" class="ln">   679</span>		return unknown
+<span id="L680" class="ln">   680</span>	}
+<span id="L681" class="ln">   681</span>	
+<span id="L682" class="ln">   682</span>	type typeInfo struct {
+<span id="L683" class="ln">   683</span>		id      typeId
+<span id="L684" class="ln">   684</span>		encoder *encEngine
+<span id="L685" class="ln">   685</span>		wire    *wireType
+<span id="L686" class="ln">   686</span>	}
+<span id="L687" class="ln">   687</span>	
+<span id="L688" class="ln">   688</span>	var typeInfoMap = make(map[reflect.Type]*typeInfo) <span class="comment">// protected by typeLock</span>
+<span id="L689" class="ln">   689</span>	
+<span id="L690" class="ln">   690</span>	<span class="comment">// typeLock must be held.</span>
+<span id="L691" class="ln">   691</span>	func getTypeInfo(ut *userTypeInfo) (*typeInfo, error) {
+<span id="L692" class="ln">   692</span>		rt := ut.base
+<span id="L693" class="ln">   693</span>		if ut.externalEnc != 0 {
+<span id="L694" class="ln">   694</span>			<span class="comment">// We want the user type, not the base type.</span>
+<span id="L695" class="ln">   695</span>			rt = ut.user
+<span id="L696" class="ln">   696</span>		}
+<span id="L697" class="ln">   697</span>		info, ok := typeInfoMap[rt]
+<span id="L698" class="ln">   698</span>		if ok {
+<span id="L699" class="ln">   699</span>			return info, nil
+<span id="L700" class="ln">   700</span>		}
+<span id="L701" class="ln">   701</span>		info = new(typeInfo)
+<span id="L702" class="ln">   702</span>		gt, err := getBaseType(rt.Name(), rt)
+<span id="L703" class="ln">   703</span>		if err != nil {
+<span id="L704" class="ln">   704</span>			return nil, err
+<span id="L705" class="ln">   705</span>		}
+<span id="L706" class="ln">   706</span>		info.id = gt.id()
+<span id="L707" class="ln">   707</span>	
+<span id="L708" class="ln">   708</span>		if ut.externalEnc != 0 {
+<span id="L709" class="ln">   709</span>			userType, err := getType(rt.Name(), ut, rt)
+<span id="L710" class="ln">   710</span>			if err != nil {
+<span id="L711" class="ln">   711</span>				return nil, err
+<span id="L712" class="ln">   712</span>			}
+<span id="L713" class="ln">   713</span>			gt := userType.id().gobType().(*gobEncoderType)
+<span id="L714" class="ln">   714</span>			switch ut.externalEnc {
+<span id="L715" class="ln">   715</span>			case xGob:
+<span id="L716" class="ln">   716</span>				info.wire = &amp;wireType{GobEncoderT: gt}
+<span id="L717" class="ln">   717</span>			case xBinary:
+<span id="L718" class="ln">   718</span>				info.wire = &amp;wireType{BinaryMarshalerT: gt}
+<span id="L719" class="ln">   719</span>			case xText:
+<span id="L720" class="ln">   720</span>				info.wire = &amp;wireType{TextMarshalerT: gt}
+<span id="L721" class="ln">   721</span>			}
+<span id="L722" class="ln">   722</span>			typeInfoMap[ut.user] = info
+<span id="L723" class="ln">   723</span>			return info, nil
+<span id="L724" class="ln">   724</span>		}
+<span id="L725" class="ln">   725</span>	
+<span id="L726" class="ln">   726</span>		t := info.id.gobType()
+<span id="L727" class="ln">   727</span>		switch typ := rt; typ.Kind() {
+<span id="L728" class="ln">   728</span>		case reflect.Array:
+<span id="L729" class="ln">   729</span>			info.wire = &amp;wireType{ArrayT: t.(*arrayType)}
+<span id="L730" class="ln">   730</span>		case reflect.Map:
+<span id="L731" class="ln">   731</span>			info.wire = &amp;wireType{MapT: t.(*mapType)}
+<span id="L732" class="ln">   732</span>		case reflect.Slice:
+<span id="L733" class="ln">   733</span>			<span class="comment">// []byte == []uint8 is a special case handled separately</span>
+<span id="L734" class="ln">   734</span>			if typ.Elem().Kind() != reflect.Uint8 {
+<span id="L735" class="ln">   735</span>				info.wire = &amp;wireType{SliceT: t.(*sliceType)}
+<span id="L736" class="ln">   736</span>			}
+<span id="L737" class="ln">   737</span>		case reflect.Struct:
+<span id="L738" class="ln">   738</span>			info.wire = &amp;wireType{StructT: t.(*structType)}
+<span id="L739" class="ln">   739</span>		}
+<span id="L740" class="ln">   740</span>		typeInfoMap[rt] = info
+<span id="L741" class="ln">   741</span>		return info, nil
+<span id="L742" class="ln">   742</span>	}
+<span id="L743" class="ln">   743</span>	
+<span id="L744" class="ln">   744</span>	<span class="comment">// Called only when a panic is acceptable and unexpected.</span>
+<span id="L745" class="ln">   745</span>	func mustGetTypeInfo(rt reflect.Type) *typeInfo {
+<span id="L746" class="ln">   746</span>		t, err := getTypeInfo(userType(rt))
+<span id="L747" class="ln">   747</span>		if err != nil {
+<span id="L748" class="ln">   748</span>			panic(&#34;getTypeInfo: &#34; + err.Error())
+<span id="L749" class="ln">   749</span>		}
+<span id="L750" class="ln">   750</span>		return t
+<span id="L751" class="ln">   751</span>	}
+<span id="L752" class="ln">   752</span>	
+<span id="L753" class="ln">   753</span>	<span class="comment">// GobEncoder is the interface describing data that provides its own</span>
+<span id="L754" class="ln">   754</span>	<span class="comment">// representation for encoding values for transmission to a GobDecoder.</span>
+<span id="L755" class="ln">   755</span>	<span class="comment">// A type that implements GobEncoder and GobDecoder has complete</span>
+<span id="L756" class="ln">   756</span>	<span class="comment">// control over the representation of its data and may therefore</span>
+<span id="L757" class="ln">   757</span>	<span class="comment">// contain things such as private fields, channels, and functions,</span>
+<span id="L758" class="ln">   758</span>	<span class="comment">// which are not usually transmissible in gob streams.</span>
+<span id="L759" class="ln">   759</span>	<span class="comment">//</span>
+<span id="L760" class="ln">   760</span>	<span class="comment">// Note: Since gobs can be stored permanently, It is good design</span>
+<span id="L761" class="ln">   761</span>	<span class="comment">// to guarantee the encoding used by a GobEncoder is stable as the</span>
+<span id="L762" class="ln">   762</span>	<span class="comment">// software evolves.  For instance, it might make sense for GobEncode</span>
+<span id="L763" class="ln">   763</span>	<span class="comment">// to include a version number in the encoding.</span>
+<span id="L764" class="ln">   764</span>	type GobEncoder interface {
+<span id="L765" class="ln">   765</span>		<span class="comment">// GobEncode returns a byte slice representing the encoding of the</span>
+<span id="L766" class="ln">   766</span>		<span class="comment">// receiver for transmission to a GobDecoder, usually of the same</span>
+<span id="L767" class="ln">   767</span>		<span class="comment">// concrete type.</span>
+<span id="L768" class="ln">   768</span>		GobEncode() ([]byte, error)
+<span id="L769" class="ln">   769</span>	}
+<span id="L770" class="ln">   770</span>	
+<span id="L771" class="ln">   771</span>	<span class="comment">// GobDecoder is the interface describing data that provides its own</span>
+<span id="L772" class="ln">   772</span>	<span class="comment">// routine for decoding transmitted values sent by a GobEncoder.</span>
+<span id="L773" class="ln">   773</span>	type GobDecoder interface {
+<span id="L774" class="ln">   774</span>		<span class="comment">// GobDecode overwrites the receiver, which must be a pointer,</span>
+<span id="L775" class="ln">   775</span>		<span class="comment">// with the value represented by the byte slice, which was written</span>
+<span id="L776" class="ln">   776</span>		<span class="comment">// by GobEncode, usually for the same concrete type.</span>
+<span id="L777" class="ln">   777</span>		GobDecode([]byte) error
+<span id="L778" class="ln">   778</span>	}
+<span id="L779" class="ln">   779</span>	
+<span id="L780" class="ln">   780</span>	var (
+<span id="L781" class="ln">   781</span>		registerLock       sync.RWMutex
+<span id="L782" class="ln">   782</span>		nameToConcreteType = make(map[string]reflect.Type)
+<span id="L783" class="ln">   783</span>		concreteTypeToName = make(map[reflect.Type]string)
+<span id="L784" class="ln">   784</span>	)
+<span id="L785" class="ln">   785</span>	
+<span id="L786" class="ln">   786</span>	<span class="comment">// RegisterName is like Register but uses the provided name rather than the</span>
+<span id="L787" class="ln">   787</span>	<span class="comment">// type&#39;s default.</span>
+<span id="L788" class="ln">   788</span>	func RegisterName(name string, value interface{}) {
+<span id="L789" class="ln">   789</span>		if name == &#34;&#34; {
+<span id="L790" class="ln">   790</span>			<span class="comment">// reserved for nil</span>
+<span id="L791" class="ln">   791</span>			panic(&#34;attempt to register empty name&#34;)
+<span id="L792" class="ln">   792</span>		}
+<span id="L793" class="ln">   793</span>		registerLock.Lock()
+<span id="L794" class="ln">   794</span>		defer registerLock.Unlock()
+<span id="L795" class="ln">   795</span>		ut := userType(reflect.TypeOf(value))
+<span id="L796" class="ln">   796</span>		<span class="comment">// Check for incompatible duplicates. The name must refer to the</span>
+<span id="L797" class="ln">   797</span>		<span class="comment">// same user type, and vice versa.</span>
+<span id="L798" class="ln">   798</span>		if t, ok := nameToConcreteType[name]; ok &amp;&amp; t != ut.user {
+<span id="L799" class="ln">   799</span>			panic(fmt.Sprintf(&#34;gob: registering duplicate types for %q: %s != %s&#34;, name, t, ut.user))
+<span id="L800" class="ln">   800</span>		}
+<span id="L801" class="ln">   801</span>		if n, ok := concreteTypeToName[ut.base]; ok &amp;&amp; n != name {
+<span id="L802" class="ln">   802</span>			panic(fmt.Sprintf(&#34;gob: registering duplicate names for %s: %q != %q&#34;, ut.user, n, name))
+<span id="L803" class="ln">   803</span>		}
+<span id="L804" class="ln">   804</span>		<span class="comment">// Store the name and type provided by the user....</span>
+<span id="L805" class="ln">   805</span>		nameToConcreteType[name] = reflect.TypeOf(value)
+<span id="L806" class="ln">   806</span>		<span class="comment">// but the flattened type in the type table, since that&#39;s what decode needs.</span>
+<span id="L807" class="ln">   807</span>		concreteTypeToName[ut.base] = name
+<span id="L808" class="ln">   808</span>	}
+<span id="L809" class="ln">   809</span>	
+<span id="L810" class="ln">   810</span>	<span class="comment">// Register records a type, identified by a value for that type, under its</span>
+<span id="L811" class="ln">   811</span>	<span class="comment">// internal type name.  That name will identify the concrete type of a value</span>
+<span id="L812" class="ln">   812</span>	<span class="comment">// sent or received as an interface variable.  Only types that will be</span>
+<span id="L813" class="ln">   813</span>	<span class="comment">// transferred as implementations of interface values need to be registered.</span>
+<span id="L814" class="ln">   814</span>	<span class="comment">// Expecting to be used only during initialization, it panics if the mapping</span>
+<span id="L815" class="ln">   815</span>	<span class="comment">// between types and names is not a bijection.</span>
+<span id="L816" class="ln">   816</span>	func Register(value interface{}) {
+<span id="L817" class="ln">   817</span>		<span class="comment">// Default to printed representation for unnamed types</span>
+<span id="L818" class="ln">   818</span>		rt := reflect.TypeOf(value)
+<span id="L819" class="ln">   819</span>		name := rt.String()
+<span id="L820" class="ln">   820</span>	
+<span id="L821" class="ln">   821</span>		<span class="comment">// But for named types (or pointers to them), qualify with import path (but see inner comment).</span>
+<span id="L822" class="ln">   822</span>		<span class="comment">// Dereference one pointer looking for a named type.</span>
+<span id="L823" class="ln">   823</span>		star := &#34;&#34;
+<span id="L824" class="ln">   824</span>		if rt.Name() == &#34;&#34; {
+<span id="L825" class="ln">   825</span>			if pt := rt; pt.Kind() == reflect.Ptr {
+<span id="L826" class="ln">   826</span>				star = &#34;*&#34;
+<span id="L827" class="ln">   827</span>				<span class="comment">// NOTE: The following line should be rt = pt.Elem() to implement</span>
+<span id="L828" class="ln">   828</span>				<span class="comment">// what the comment above claims, but fixing it would break compatibility</span>
+<span id="L829" class="ln">   829</span>				<span class="comment">// with existing gobs.</span>
+<span id="L830" class="ln">   830</span>				<span class="comment">//</span>
+<span id="L831" class="ln">   831</span>				<span class="comment">// Given package p imported as &#34;full/p&#34; with these definitions:</span>
+<span id="L832" class="ln">   832</span>				<span class="comment">//     package p</span>
+<span id="L833" class="ln">   833</span>				<span class="comment">//     type T1 struct { ... }</span>
+<span id="L834" class="ln">   834</span>				<span class="comment">// this table shows the intended and actual strings used by gob to</span>
+<span id="L835" class="ln">   835</span>				<span class="comment">// name the types:</span>
+<span id="L836" class="ln">   836</span>				<span class="comment">//</span>
+<span id="L837" class="ln">   837</span>				<span class="comment">// Type      Correct string     Actual string</span>
+<span id="L838" class="ln">   838</span>				<span class="comment">//</span>
+<span id="L839" class="ln">   839</span>				<span class="comment">// T1        full/p.T1          full/p.T1</span>
+<span id="L840" class="ln">   840</span>				<span class="comment">// *T1       *full/p.T1         *p.T1</span>
+<span id="L841" class="ln">   841</span>				<span class="comment">//</span>
+<span id="L842" class="ln">   842</span>				<span class="comment">// The missing full path cannot be fixed without breaking existing gob decoders.</span>
+<span id="L843" class="ln">   843</span>				rt = pt
+<span id="L844" class="ln">   844</span>			}
+<span id="L845" class="ln">   845</span>		}
+<span id="L846" class="ln">   846</span>		if rt.Name() != &#34;&#34; {
+<span id="L847" class="ln">   847</span>			if rt.PkgPath() == &#34;&#34; {
+<span id="L848" class="ln">   848</span>				name = star + rt.Name()
+<span id="L849" class="ln">   849</span>			} else {
+<span id="L850" class="ln">   850</span>				name = star + rt.PkgPath() + &#34;.&#34; + rt.Name()
+<span id="L851" class="ln">   851</span>			}
+<span id="L852" class="ln">   852</span>		}
+<span id="L853" class="ln">   853</span>	
+<span id="L854" class="ln">   854</span>		RegisterName(name, value)
+<span id="L855" class="ln">   855</span>	}
+<span id="L856" class="ln">   856</span>	
+<span id="L857" class="ln">   857</span>	func registerBasics() {
+<span id="L858" class="ln">   858</span>		Register(int(0))
+<span id="L859" class="ln">   859</span>		Register(int8(0))
+<span id="L860" class="ln">   860</span>		Register(int16(0))
+<span id="L861" class="ln">   861</span>		Register(int32(0))
+<span id="L862" class="ln">   862</span>		Register(int64(0))
+<span id="L863" class="ln">   863</span>		Register(uint(0))
+<span id="L864" class="ln">   864</span>		Register(uint8(0))
+<span id="L865" class="ln">   865</span>		Register(uint16(0))
+<span id="L866" class="ln">   866</span>		Register(uint32(0))
+<span id="L867" class="ln">   867</span>		Register(uint64(0))
+<span id="L868" class="ln">   868</span>		Register(float32(0))
+<span id="L869" class="ln">   869</span>		Register(float64(0))
+<span id="L870" class="ln">   870</span>		Register(complex64(0i))
+<span id="L871" class="ln">   871</span>		Register(complex128(0i))
+<span id="L872" class="ln">   872</span>		Register(uintptr(0))
+<span id="L873" class="ln">   873</span>		Register(false)
+<span id="L874" class="ln">   874</span>		Register(&#34;&#34;)
+<span id="L875" class="ln">   875</span>		Register([]byte(nil))
+<span id="L876" class="ln">   876</span>		Register([]int(nil))
+<span id="L877" class="ln">   877</span>		Register([]int8(nil))
+<span id="L878" class="ln">   878</span>		Register([]int16(nil))
+<span id="L879" class="ln">   879</span>		Register([]int32(nil))
+<span id="L880" class="ln">   880</span>		Register([]int64(nil))
+<span id="L881" class="ln">   881</span>		Register([]uint(nil))
+<span id="L882" class="ln">   882</span>		Register([]uint8(nil))
+<span id="L883" class="ln">   883</span>		Register([]uint16(nil))
+<span id="L884" class="ln">   884</span>		Register([]uint32(nil))
+<span id="L885" class="ln">   885</span>		Register([]uint64(nil))
+<span id="L886" class="ln">   886</span>		Register([]float32(nil))
+<span id="L887" class="ln">   887</span>		Register([]float64(nil))
+<span id="L888" class="ln">   888</span>		Register([]complex64(nil))
+<span id="L889" class="ln">   889</span>		Register([]complex128(nil))
+<span id="L890" class="ln">   890</span>		Register([]uintptr(nil))
+<span id="L891" class="ln">   891</span>		Register([]bool(nil))
+<span id="L892" class="ln">   892</span>		Register([]string(nil))
+<span id="L893" class="ln">   893</span>	}
+<span id="L894" class="ln">   894</span>	
+</pre><p><a href="type.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

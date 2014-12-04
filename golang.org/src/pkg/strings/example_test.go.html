@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/strings/example_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/strings/example_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2012 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package strings_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;strings&#34;
+<span id="L10" class="ln">    10</span>		&#34;unicode&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	func ExampleFields() {
+<span id="L14" class="ln">    14</span>		fmt.Printf(&#34;Fields are: %q&#34;, strings.Fields(&#34;  foo bar  baz   &#34;))
+<span id="L15" class="ln">    15</span>		<span class="comment">// Output: Fields are: [&#34;foo&#34; &#34;bar&#34; &#34;baz&#34;]</span>
+<span id="L16" class="ln">    16</span>	}
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>	func ExampleFieldsFunc() {
+<span id="L19" class="ln">    19</span>		f := func(c rune) bool {
+<span id="L20" class="ln">    20</span>			return !unicode.IsLetter(c) &amp;&amp; !unicode.IsNumber(c)
+<span id="L21" class="ln">    21</span>		}
+<span id="L22" class="ln">    22</span>		fmt.Printf(&#34;Fields are: %q&#34;, strings.FieldsFunc(&#34;  foo1;bar2,baz3...&#34;, f))
+<span id="L23" class="ln">    23</span>		<span class="comment">// Output: Fields are: [&#34;foo1&#34; &#34;bar2&#34; &#34;baz3&#34;]</span>
+<span id="L24" class="ln">    24</span>	}
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	func ExampleContains() {
+<span id="L27" class="ln">    27</span>		fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;foo&#34;))
+<span id="L28" class="ln">    28</span>		fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;bar&#34;))
+<span id="L29" class="ln">    29</span>		fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;&#34;))
+<span id="L30" class="ln">    30</span>		fmt.Println(strings.Contains(&#34;&#34;, &#34;&#34;))
+<span id="L31" class="ln">    31</span>		<span class="comment">// Output:</span>
+<span id="L32" class="ln">    32</span>		<span class="comment">// true</span>
+<span id="L33" class="ln">    33</span>		<span class="comment">// false</span>
+<span id="L34" class="ln">    34</span>		<span class="comment">// true</span>
+<span id="L35" class="ln">    35</span>		<span class="comment">// true</span>
+<span id="L36" class="ln">    36</span>	}
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	func ExampleContainsAny() {
+<span id="L39" class="ln">    39</span>		fmt.Println(strings.ContainsAny(&#34;team&#34;, &#34;i&#34;))
+<span id="L40" class="ln">    40</span>		fmt.Println(strings.ContainsAny(&#34;failure&#34;, &#34;u &amp; i&#34;))
+<span id="L41" class="ln">    41</span>		fmt.Println(strings.ContainsAny(&#34;foo&#34;, &#34;&#34;))
+<span id="L42" class="ln">    42</span>		fmt.Println(strings.ContainsAny(&#34;&#34;, &#34;&#34;))
+<span id="L43" class="ln">    43</span>		<span class="comment">// Output:</span>
+<span id="L44" class="ln">    44</span>		<span class="comment">// false</span>
+<span id="L45" class="ln">    45</span>		<span class="comment">// true</span>
+<span id="L46" class="ln">    46</span>		<span class="comment">// false</span>
+<span id="L47" class="ln">    47</span>		<span class="comment">// false</span>
+<span id="L48" class="ln">    48</span>	}
+<span id="L49" class="ln">    49</span>	
+<span id="L50" class="ln">    50</span>	func ExampleCount() {
+<span id="L51" class="ln">    51</span>		fmt.Println(strings.Count(&#34;cheese&#34;, &#34;e&#34;))
+<span id="L52" class="ln">    52</span>		fmt.Println(strings.Count(&#34;five&#34;, &#34;&#34;)) <span class="comment">// before &amp; after each rune</span>
+<span id="L53" class="ln">    53</span>		<span class="comment">// Output:</span>
+<span id="L54" class="ln">    54</span>		<span class="comment">// 3</span>
+<span id="L55" class="ln">    55</span>		<span class="comment">// 5</span>
+<span id="L56" class="ln">    56</span>	}
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>	func ExampleEqualFold() {
+<span id="L59" class="ln">    59</span>		fmt.Println(strings.EqualFold(&#34;Go&#34;, &#34;go&#34;))
+<span id="L60" class="ln">    60</span>		<span class="comment">// Output: true</span>
+<span id="L61" class="ln">    61</span>	}
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>	func ExampleIndex() {
+<span id="L64" class="ln">    64</span>		fmt.Println(strings.Index(&#34;chicken&#34;, &#34;ken&#34;))
+<span id="L65" class="ln">    65</span>		fmt.Println(strings.Index(&#34;chicken&#34;, &#34;dmr&#34;))
+<span id="L66" class="ln">    66</span>		<span class="comment">// Output:</span>
+<span id="L67" class="ln">    67</span>		<span class="comment">// 4</span>
+<span id="L68" class="ln">    68</span>		<span class="comment">// -1</span>
+<span id="L69" class="ln">    69</span>	}
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	func ExampleIndexFunc() {
+<span id="L72" class="ln">    72</span>		f := func(c rune) bool {
+<span id="L73" class="ln">    73</span>			return unicode.Is(unicode.Han, c)
+<span id="L74" class="ln">    74</span>		}
+<span id="L75" class="ln">    75</span>		fmt.Println(strings.IndexFunc(&#34;Hello, 世界&#34;, f))
+<span id="L76" class="ln">    76</span>		fmt.Println(strings.IndexFunc(&#34;Hello, world&#34;, f))
+<span id="L77" class="ln">    77</span>		<span class="comment">// Output:</span>
+<span id="L78" class="ln">    78</span>		<span class="comment">// 7</span>
+<span id="L79" class="ln">    79</span>		<span class="comment">// -1</span>
+<span id="L80" class="ln">    80</span>	}
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	func ExampleIndexAny() {
+<span id="L83" class="ln">    83</span>		fmt.Println(strings.IndexAny(&#34;chicken&#34;, &#34;aeiouy&#34;))
+<span id="L84" class="ln">    84</span>		fmt.Println(strings.IndexAny(&#34;crwth&#34;, &#34;aeiouy&#34;))
+<span id="L85" class="ln">    85</span>		<span class="comment">// Output:</span>
+<span id="L86" class="ln">    86</span>		<span class="comment">// 2</span>
+<span id="L87" class="ln">    87</span>		<span class="comment">// -1</span>
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	func ExampleIndexRune() {
+<span id="L91" class="ln">    91</span>		fmt.Println(strings.IndexRune(&#34;chicken&#34;, &#39;k&#39;))
+<span id="L92" class="ln">    92</span>		fmt.Println(strings.IndexRune(&#34;chicken&#34;, &#39;d&#39;))
+<span id="L93" class="ln">    93</span>		<span class="comment">// Output:</span>
+<span id="L94" class="ln">    94</span>		<span class="comment">// 4</span>
+<span id="L95" class="ln">    95</span>		<span class="comment">// -1</span>
+<span id="L96" class="ln">    96</span>	}
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>	func ExampleLastIndex() {
+<span id="L99" class="ln">    99</span>		fmt.Println(strings.Index(&#34;go gopher&#34;, &#34;go&#34;))
+<span id="L100" class="ln">   100</span>		fmt.Println(strings.LastIndex(&#34;go gopher&#34;, &#34;go&#34;))
+<span id="L101" class="ln">   101</span>		fmt.Println(strings.LastIndex(&#34;go gopher&#34;, &#34;rodent&#34;))
+<span id="L102" class="ln">   102</span>		<span class="comment">// Output:</span>
+<span id="L103" class="ln">   103</span>		<span class="comment">// 0</span>
+<span id="L104" class="ln">   104</span>		<span class="comment">// 3</span>
+<span id="L105" class="ln">   105</span>		<span class="comment">// -1</span>
+<span id="L106" class="ln">   106</span>	}
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>	func ExampleJoin() {
+<span id="L109" class="ln">   109</span>		s := []string{&#34;foo&#34;, &#34;bar&#34;, &#34;baz&#34;}
+<span id="L110" class="ln">   110</span>		fmt.Println(strings.Join(s, &#34;, &#34;))
+<span id="L111" class="ln">   111</span>		<span class="comment">// Output: foo, bar, baz</span>
+<span id="L112" class="ln">   112</span>	}
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>	func ExampleRepeat() {
+<span id="L115" class="ln">   115</span>		fmt.Println(&#34;ba&#34; + strings.Repeat(&#34;na&#34;, 2))
+<span id="L116" class="ln">   116</span>		<span class="comment">// Output: banana</span>
+<span id="L117" class="ln">   117</span>	}
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	func ExampleReplace() {
+<span id="L120" class="ln">   120</span>		fmt.Println(strings.Replace(&#34;oink oink oink&#34;, &#34;k&#34;, &#34;ky&#34;, 2))
+<span id="L121" class="ln">   121</span>		fmt.Println(strings.Replace(&#34;oink oink oink&#34;, &#34;oink&#34;, &#34;moo&#34;, -1))
+<span id="L122" class="ln">   122</span>		<span class="comment">// Output:</span>
+<span id="L123" class="ln">   123</span>		<span class="comment">// oinky oinky oink</span>
+<span id="L124" class="ln">   124</span>		<span class="comment">// moo moo moo</span>
+<span id="L125" class="ln">   125</span>	}
+<span id="L126" class="ln">   126</span>	
+<span id="L127" class="ln">   127</span>	func ExampleSplit() {
+<span id="L128" class="ln">   128</span>		fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;a,b,c&#34;, &#34;,&#34;))
+<span id="L129" class="ln">   129</span>		fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;a man a plan a canal panama&#34;, &#34;a &#34;))
+<span id="L130" class="ln">   130</span>		fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34; xyz &#34;, &#34;&#34;))
+<span id="L131" class="ln">   131</span>		fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;&#34;, &#34;Bernardo O&#39;Higgins&#34;))
+<span id="L132" class="ln">   132</span>		<span class="comment">// Output:</span>
+<span id="L133" class="ln">   133</span>		<span class="comment">// [&#34;a&#34; &#34;b&#34; &#34;c&#34;]</span>
+<span id="L134" class="ln">   134</span>		<span class="comment">// [&#34;&#34; &#34;man &#34; &#34;plan &#34; &#34;canal panama&#34;]</span>
+<span id="L135" class="ln">   135</span>		<span class="comment">// [&#34; &#34; &#34;x&#34; &#34;y&#34; &#34;z&#34; &#34; &#34;]</span>
+<span id="L136" class="ln">   136</span>		<span class="comment">// [&#34;&#34;]</span>
+<span id="L137" class="ln">   137</span>	}
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>	func ExampleSplitN() {
+<span id="L140" class="ln">   140</span>		fmt.Printf(&#34;%q\n&#34;, strings.SplitN(&#34;a,b,c&#34;, &#34;,&#34;, 2))
+<span id="L141" class="ln">   141</span>		z := strings.SplitN(&#34;a,b,c&#34;, &#34;,&#34;, 0)
+<span id="L142" class="ln">   142</span>		fmt.Printf(&#34;%q (nil = %v)\n&#34;, z, z == nil)
+<span id="L143" class="ln">   143</span>		<span class="comment">// Output:</span>
+<span id="L144" class="ln">   144</span>		<span class="comment">// [&#34;a&#34; &#34;b,c&#34;]</span>
+<span id="L145" class="ln">   145</span>		<span class="comment">// [] (nil = true)</span>
+<span id="L146" class="ln">   146</span>	}
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	func ExampleSplitAfter() {
+<span id="L149" class="ln">   149</span>		fmt.Printf(&#34;%q\n&#34;, strings.SplitAfter(&#34;a,b,c&#34;, &#34;,&#34;))
+<span id="L150" class="ln">   150</span>		<span class="comment">// Output: [&#34;a,&#34; &#34;b,&#34; &#34;c&#34;]</span>
+<span id="L151" class="ln">   151</span>	}
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>	func ExampleSplitAfterN() {
+<span id="L154" class="ln">   154</span>		fmt.Printf(&#34;%q\n&#34;, strings.SplitAfterN(&#34;a,b,c&#34;, &#34;,&#34;, 2))
+<span id="L155" class="ln">   155</span>		<span class="comment">// Output: [&#34;a,&#34; &#34;b,c&#34;]</span>
+<span id="L156" class="ln">   156</span>	}
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>	func ExampleTitle() {
+<span id="L159" class="ln">   159</span>		fmt.Println(strings.Title(&#34;her royal highness&#34;))
+<span id="L160" class="ln">   160</span>		<span class="comment">// Output: Her Royal Highness</span>
+<span id="L161" class="ln">   161</span>	}
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>	func ExampleToTitle() {
+<span id="L164" class="ln">   164</span>		fmt.Println(strings.ToTitle(&#34;loud noises&#34;))
+<span id="L165" class="ln">   165</span>		fmt.Println(strings.ToTitle(&#34;хлеб&#34;))
+<span id="L166" class="ln">   166</span>		<span class="comment">// Output:</span>
+<span id="L167" class="ln">   167</span>		<span class="comment">// LOUD NOISES</span>
+<span id="L168" class="ln">   168</span>		<span class="comment">// ХЛЕБ</span>
+<span id="L169" class="ln">   169</span>	}
+<span id="L170" class="ln">   170</span>	
+<span id="L171" class="ln">   171</span>	func ExampleTrim() {
+<span id="L172" class="ln">   172</span>		fmt.Printf(&#34;[%q]&#34;, strings.Trim(&#34; !!! Achtung! Achtung! !!! &#34;, &#34;! &#34;))
+<span id="L173" class="ln">   173</span>		<span class="comment">// Output: [&#34;Achtung! Achtung&#34;]</span>
+<span id="L174" class="ln">   174</span>	}
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>	func ExampleMap() {
+<span id="L177" class="ln">   177</span>		rot13 := func(r rune) rune {
+<span id="L178" class="ln">   178</span>			switch {
+<span id="L179" class="ln">   179</span>			case r &gt;= &#39;A&#39; &amp;&amp; r &lt;= &#39;Z&#39;:
+<span id="L180" class="ln">   180</span>				return &#39;A&#39; + (r-&#39;A&#39;+13)%26
+<span id="L181" class="ln">   181</span>			case r &gt;= &#39;a&#39; &amp;&amp; r &lt;= &#39;z&#39;:
+<span id="L182" class="ln">   182</span>				return &#39;a&#39; + (r-&#39;a&#39;+13)%26
+<span id="L183" class="ln">   183</span>			}
+<span id="L184" class="ln">   184</span>			return r
+<span id="L185" class="ln">   185</span>		}
+<span id="L186" class="ln">   186</span>		fmt.Println(strings.Map(rot13, &#34;&#39;Twas brillig and the slithy gopher...&#34;))
+<span id="L187" class="ln">   187</span>		<span class="comment">// Output: &#39;Gjnf oevyyvt naq gur fyvgul tbcure...</span>
+<span id="L188" class="ln">   188</span>	}
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>	func ExampleTrimSpace() {
+<span id="L191" class="ln">   191</span>		fmt.Println(strings.TrimSpace(&#34; \t\n a lone gopher \n\t\r\n&#34;))
+<span id="L192" class="ln">   192</span>		<span class="comment">// Output: a lone gopher</span>
+<span id="L193" class="ln">   193</span>	}
+<span id="L194" class="ln">   194</span>	
+<span id="L195" class="ln">   195</span>	func ExampleNewReplacer() {
+<span id="L196" class="ln">   196</span>		r := strings.NewReplacer(&#34;&lt;&#34;, &#34;&amp;lt;&#34;, &#34;&gt;&#34;, &#34;&amp;gt;&#34;)
+<span id="L197" class="ln">   197</span>		fmt.Println(r.Replace(&#34;This is &lt;b&gt;HTML&lt;/b&gt;!&#34;))
+<span id="L198" class="ln">   198</span>		<span class="comment">// Output: This is &amp;lt;b&amp;gt;HTML&amp;lt;/b&amp;gt;!</span>
+<span id="L199" class="ln">   199</span>	}
+<span id="L200" class="ln">   200</span>	
+<span id="L201" class="ln">   201</span>	func ExampleToUpper() {
+<span id="L202" class="ln">   202</span>		fmt.Println(strings.ToUpper(&#34;Gopher&#34;))
+<span id="L203" class="ln">   203</span>		<span class="comment">// Output: GOPHER</span>
+<span id="L204" class="ln">   204</span>	}
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	func ExampleToLower() {
+<span id="L207" class="ln">   207</span>		fmt.Println(strings.ToLower(&#34;Gopher&#34;))
+<span id="L208" class="ln">   208</span>		<span class="comment">// Output: gopher</span>
+<span id="L209" class="ln">   209</span>	}
+<span id="L210" class="ln">   210</span>	
+<span id="L211" class="ln">   211</span>	func ExampleTrimSuffix() {
+<span id="L212" class="ln">   212</span>		var s = &#34;Hello, goodbye, etc!&#34;
+<span id="L213" class="ln">   213</span>		s = strings.TrimSuffix(s, &#34;goodbye, etc!&#34;)
+<span id="L214" class="ln">   214</span>		s = strings.TrimSuffix(s, &#34;planet&#34;)
+<span id="L215" class="ln">   215</span>		fmt.Print(s, &#34;world!&#34;)
+<span id="L216" class="ln">   216</span>		<span class="comment">// Output: Hello, world!</span>
+<span id="L217" class="ln">   217</span>	}
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>	func ExampleTrimPrefix() {
+<span id="L220" class="ln">   220</span>		var s = &#34;Goodbye,, world!&#34;
+<span id="L221" class="ln">   221</span>		s = strings.TrimPrefix(s, &#34;Goodbye,&#34;)
+<span id="L222" class="ln">   222</span>		s = strings.TrimPrefix(s, &#34;Howdy,&#34;)
+<span id="L223" class="ln">   223</span>		fmt.Print(&#34;Hello&#34; + s)
+<span id="L224" class="ln">   224</span>		<span class="comment">// Output: Hello, world!</span>
+<span id="L225" class="ln">   225</span>	}
+<span id="L226" class="ln">   226</span>	
+</pre><p><a href="http://golang.org/src/pkg/strings/example_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

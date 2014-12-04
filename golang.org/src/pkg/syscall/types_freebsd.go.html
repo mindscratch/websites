@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/syscall/types_freebsd.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/syscall/types_freebsd.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// +build ignore</span>
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">/*
+<span id="L8" class="ln">     8</span>	Input to cgo -godefs.  See also mkerrors.sh and mkall.sh
+<span id="L9" class="ln">     9</span>	*/</span>
+<span id="L10" class="ln">    10</span>	
+<span id="L11" class="ln">    11</span>	<span class="comment">// +godefs map struct_in_addr [4]byte /* in_addr */</span>
+<span id="L12" class="ln">    12</span>	<span class="comment">// +godefs map struct_in6_addr [16]byte /* in6_addr */</span>
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	package syscall
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	<span class="comment">/*
+<span id="L17" class="ln">    17</span>	#define KERNEL
+<span id="L18" class="ln">    18</span>	#include &lt;dirent.h&gt;
+<span id="L19" class="ln">    19</span>	#include &lt;fcntl.h&gt;
+<span id="L20" class="ln">    20</span>	#include &lt;signal.h&gt;
+<span id="L21" class="ln">    21</span>	#include &lt;termios.h&gt;
+<span id="L22" class="ln">    22</span>	#include &lt;stdio.h&gt;
+<span id="L23" class="ln">    23</span>	#include &lt;unistd.h&gt;
+<span id="L24" class="ln">    24</span>	#include &lt;sys/event.h&gt;
+<span id="L25" class="ln">    25</span>	#include &lt;sys/mman.h&gt;
+<span id="L26" class="ln">    26</span>	#include &lt;sys/mount.h&gt;
+<span id="L27" class="ln">    27</span>	#include &lt;sys/param.h&gt;
+<span id="L28" class="ln">    28</span>	#include &lt;sys/ptrace.h&gt;
+<span id="L29" class="ln">    29</span>	#include &lt;sys/resource.h&gt;
+<span id="L30" class="ln">    30</span>	#include &lt;sys/select.h&gt;
+<span id="L31" class="ln">    31</span>	#include &lt;sys/signal.h&gt;
+<span id="L32" class="ln">    32</span>	#include &lt;sys/socket.h&gt;
+<span id="L33" class="ln">    33</span>	#include &lt;sys/stat.h&gt;
+<span id="L34" class="ln">    34</span>	#include &lt;sys/time.h&gt;
+<span id="L35" class="ln">    35</span>	#include &lt;sys/types.h&gt;
+<span id="L36" class="ln">    36</span>	#include &lt;sys/un.h&gt;
+<span id="L37" class="ln">    37</span>	#include &lt;sys/wait.h&gt;
+<span id="L38" class="ln">    38</span>	#include &lt;net/bpf.h&gt;
+<span id="L39" class="ln">    39</span>	#include &lt;net/if.h&gt;
+<span id="L40" class="ln">    40</span>	#include &lt;net/if_dl.h&gt;
+<span id="L41" class="ln">    41</span>	#include &lt;net/route.h&gt;
+<span id="L42" class="ln">    42</span>	#include &lt;netinet/in.h&gt;
+<span id="L43" class="ln">    43</span>	#include &lt;netinet/icmp6.h&gt;
+<span id="L44" class="ln">    44</span>	#include &lt;netinet/tcp.h&gt;
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	enum {
+<span id="L47" class="ln">    47</span>		sizeofPtr = sizeof(void*),
+<span id="L48" class="ln">    48</span>	};
+<span id="L49" class="ln">    49</span>	
+<span id="L50" class="ln">    50</span>	union sockaddr_all {
+<span id="L51" class="ln">    51</span>		struct sockaddr s1;	// this one gets used for fields
+<span id="L52" class="ln">    52</span>		struct sockaddr_in s2;	// these pad it out
+<span id="L53" class="ln">    53</span>		struct sockaddr_in6 s3;
+<span id="L54" class="ln">    54</span>		struct sockaddr_un s4;
+<span id="L55" class="ln">    55</span>		struct sockaddr_dl s5;
+<span id="L56" class="ln">    56</span>	};
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>	struct sockaddr_any {
+<span id="L59" class="ln">    59</span>		struct sockaddr addr;
+<span id="L60" class="ln">    60</span>		char pad[sizeof(union sockaddr_all) - sizeof(struct sockaddr)];
+<span id="L61" class="ln">    61</span>	};
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>	// This structure is a duplicate of stat on FreeBSD 8-STABLE.
+<span id="L64" class="ln">    64</span>	// See /usr/include/sys/stat.h.
+<span id="L65" class="ln">    65</span>	struct stat8 {
+<span id="L66" class="ln">    66</span>	#undef st_atimespec	st_atim
+<span id="L67" class="ln">    67</span>	#undef st_mtimespec	st_mtim
+<span id="L68" class="ln">    68</span>	#undef st_ctimespec	st_ctim
+<span id="L69" class="ln">    69</span>	#undef st_birthtimespec	st_birthtim
+<span id="L70" class="ln">    70</span>		__dev_t   st_dev;
+<span id="L71" class="ln">    71</span>		ino_t     st_ino;
+<span id="L72" class="ln">    72</span>		mode_t    st_mode;
+<span id="L73" class="ln">    73</span>		nlink_t   st_nlink;
+<span id="L74" class="ln">    74</span>		uid_t     st_uid;
+<span id="L75" class="ln">    75</span>		gid_t     st_gid;
+<span id="L76" class="ln">    76</span>		__dev_t   st_rdev;
+<span id="L77" class="ln">    77</span>	#if __BSD_VISIBLE
+<span id="L78" class="ln">    78</span>		struct  timespec st_atimespec;
+<span id="L79" class="ln">    79</span>		struct  timespec st_mtimespec;
+<span id="L80" class="ln">    80</span>		struct  timespec st_ctimespec;
+<span id="L81" class="ln">    81</span>	#else
+<span id="L82" class="ln">    82</span>		time_t    st_atime;
+<span id="L83" class="ln">    83</span>		long      __st_atimensec;
+<span id="L84" class="ln">    84</span>		time_t    st_mtime;
+<span id="L85" class="ln">    85</span>		long      __st_mtimensec;
+<span id="L86" class="ln">    86</span>		time_t    st_ctime;
+<span id="L87" class="ln">    87</span>		long      __st_ctimensec;
+<span id="L88" class="ln">    88</span>	#endif
+<span id="L89" class="ln">    89</span>		off_t     st_size;
+<span id="L90" class="ln">    90</span>		blkcnt_t st_blocks;
+<span id="L91" class="ln">    91</span>		blksize_t st_blksize;
+<span id="L92" class="ln">    92</span>		fflags_t  st_flags;
+<span id="L93" class="ln">    93</span>		__uint32_t st_gen;
+<span id="L94" class="ln">    94</span>		__int32_t st_lspare;
+<span id="L95" class="ln">    95</span>	#if __BSD_VISIBLE
+<span id="L96" class="ln">    96</span>		struct timespec st_birthtimespec;
+<span id="L97" class="ln">    97</span>		unsigned int :(8 / 2) * (16 - (int)sizeof(struct timespec));
+<span id="L98" class="ln">    98</span>		unsigned int :(8 / 2) * (16 - (int)sizeof(struct timespec));
+<span id="L99" class="ln">    99</span>	#else
+<span id="L100" class="ln">   100</span>		time_t    st_birthtime;
+<span id="L101" class="ln">   101</span>		long      st_birthtimensec;
+<span id="L102" class="ln">   102</span>		unsigned int :(8 / 2) * (16 - (int)sizeof(struct __timespec));
+<span id="L103" class="ln">   103</span>		unsigned int :(8 / 2) * (16 - (int)sizeof(struct __timespec));
+<span id="L104" class="ln">   104</span>	#endif
+<span id="L105" class="ln">   105</span>	};
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>	// This structure is a duplicate of if_data on FreeBSD 8-STABLE.
+<span id="L108" class="ln">   108</span>	// See /usr/include/net/if.h.
+<span id="L109" class="ln">   109</span>	struct if_data8 {
+<span id="L110" class="ln">   110</span>		u_char  ifi_type;
+<span id="L111" class="ln">   111</span>		u_char  ifi_physical;
+<span id="L112" class="ln">   112</span>		u_char  ifi_addrlen;
+<span id="L113" class="ln">   113</span>		u_char  ifi_hdrlen;
+<span id="L114" class="ln">   114</span>		u_char  ifi_link_state;
+<span id="L115" class="ln">   115</span>		u_char  ifi_spare_char1;
+<span id="L116" class="ln">   116</span>		u_char  ifi_spare_char2;
+<span id="L117" class="ln">   117</span>		u_char  ifi_datalen;
+<span id="L118" class="ln">   118</span>		u_long  ifi_mtu;
+<span id="L119" class="ln">   119</span>		u_long  ifi_metric;
+<span id="L120" class="ln">   120</span>		u_long  ifi_baudrate;
+<span id="L121" class="ln">   121</span>		u_long  ifi_ipackets;
+<span id="L122" class="ln">   122</span>		u_long  ifi_ierrors;
+<span id="L123" class="ln">   123</span>		u_long  ifi_opackets;
+<span id="L124" class="ln">   124</span>		u_long  ifi_oerrors;
+<span id="L125" class="ln">   125</span>		u_long  ifi_collisions;
+<span id="L126" class="ln">   126</span>		u_long  ifi_ibytes;
+<span id="L127" class="ln">   127</span>		u_long  ifi_obytes;
+<span id="L128" class="ln">   128</span>		u_long  ifi_imcasts;
+<span id="L129" class="ln">   129</span>		u_long  ifi_omcasts;
+<span id="L130" class="ln">   130</span>		u_long  ifi_iqdrops;
+<span id="L131" class="ln">   131</span>		u_long  ifi_noproto;
+<span id="L132" class="ln">   132</span>		u_long  ifi_hwassist;
+<span id="L133" class="ln">   133</span>		time_t  ifi_epoch;
+<span id="L134" class="ln">   134</span>		struct  timeval ifi_lastchange;
+<span id="L135" class="ln">   135</span>	};
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>	// This structure is a duplicate of if_msghdr on FreeBSD 8-STABLE.
+<span id="L138" class="ln">   138</span>	// See /usr/include/net/if.h.
+<span id="L139" class="ln">   139</span>	struct if_msghdr8 {
+<span id="L140" class="ln">   140</span>		u_short ifm_msglen;
+<span id="L141" class="ln">   141</span>		u_char  ifm_version;
+<span id="L142" class="ln">   142</span>		u_char  ifm_type;
+<span id="L143" class="ln">   143</span>		int     ifm_addrs;
+<span id="L144" class="ln">   144</span>		int     ifm_flags;
+<span id="L145" class="ln">   145</span>		u_short ifm_index;
+<span id="L146" class="ln">   146</span>		struct  if_data8 ifm_data;
+<span id="L147" class="ln">   147</span>	};
+<span id="L148" class="ln">   148</span>	*/</span>
+<span id="L149" class="ln">   149</span>	import &#34;C&#34;
+<span id="L150" class="ln">   150</span>	
+<span id="L151" class="ln">   151</span>	<span class="comment">// Machine characteristics; for internal use.</span>
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>	const (
+<span id="L154" class="ln">   154</span>		sizeofPtr      = C.sizeofPtr
+<span id="L155" class="ln">   155</span>		sizeofShort    = C.sizeof_short
+<span id="L156" class="ln">   156</span>		sizeofInt      = C.sizeof_int
+<span id="L157" class="ln">   157</span>		sizeofLong     = C.sizeof_long
+<span id="L158" class="ln">   158</span>		sizeofLongLong = C.sizeof_longlong
+<span id="L159" class="ln">   159</span>	)
+<span id="L160" class="ln">   160</span>	
+<span id="L161" class="ln">   161</span>	<span class="comment">// Basic types</span>
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>	type (
+<span id="L164" class="ln">   164</span>		_C_short     C.short
+<span id="L165" class="ln">   165</span>		_C_int       C.int
+<span id="L166" class="ln">   166</span>		_C_long      C.long
+<span id="L167" class="ln">   167</span>		_C_long_long C.longlong
+<span id="L168" class="ln">   168</span>	)
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>	<span class="comment">// Time</span>
+<span id="L171" class="ln">   171</span>	
+<span id="L172" class="ln">   172</span>	type Timespec C.struct_timespec
+<span id="L173" class="ln">   173</span>	
+<span id="L174" class="ln">   174</span>	type Timeval C.struct_timeval
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>	<span class="comment">// Processes</span>
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>	type Rusage C.struct_rusage
+<span id="L179" class="ln">   179</span>	
+<span id="L180" class="ln">   180</span>	type Rlimit C.struct_rlimit
+<span id="L181" class="ln">   181</span>	
+<span id="L182" class="ln">   182</span>	type _Gid_t C.gid_t
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	<span class="comment">// Files</span>
+<span id="L185" class="ln">   185</span>	
+<span id="L186" class="ln">   186</span>	const ( <span class="comment">// Directory mode bits</span>
+<span id="L187" class="ln">   187</span>		S_IFMT   = C.S_IFMT
+<span id="L188" class="ln">   188</span>		S_IFIFO  = C.S_IFIFO
+<span id="L189" class="ln">   189</span>		S_IFCHR  = C.S_IFCHR
+<span id="L190" class="ln">   190</span>		S_IFDIR  = C.S_IFDIR
+<span id="L191" class="ln">   191</span>		S_IFBLK  = C.S_IFBLK
+<span id="L192" class="ln">   192</span>		S_IFREG  = C.S_IFREG
+<span id="L193" class="ln">   193</span>		S_IFLNK  = C.S_IFLNK
+<span id="L194" class="ln">   194</span>		S_IFSOCK = C.S_IFSOCK
+<span id="L195" class="ln">   195</span>		S_ISUID  = C.S_ISUID
+<span id="L196" class="ln">   196</span>		S_ISGID  = C.S_ISGID
+<span id="L197" class="ln">   197</span>		S_ISVTX  = C.S_ISVTX
+<span id="L198" class="ln">   198</span>		S_IRUSR  = C.S_IRUSR
+<span id="L199" class="ln">   199</span>		S_IWUSR  = C.S_IWUSR
+<span id="L200" class="ln">   200</span>		S_IXUSR  = C.S_IXUSR
+<span id="L201" class="ln">   201</span>	)
+<span id="L202" class="ln">   202</span>	
+<span id="L203" class="ln">   203</span>	type Stat_t C.struct_stat8
+<span id="L204" class="ln">   204</span>	
+<span id="L205" class="ln">   205</span>	type Statfs_t C.struct_statfs
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>	type Flock_t C.struct_flock
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	type Dirent C.struct_dirent
+<span id="L210" class="ln">   210</span>	
+<span id="L211" class="ln">   211</span>	type Fsid C.struct_fsid
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	<span class="comment">// Sockets</span>
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>	type RawSockaddrInet4 C.struct_sockaddr_in
+<span id="L216" class="ln">   216</span>	
+<span id="L217" class="ln">   217</span>	type RawSockaddrInet6 C.struct_sockaddr_in6
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>	type RawSockaddrUnix C.struct_sockaddr_un
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	type RawSockaddrDatalink C.struct_sockaddr_dl
+<span id="L222" class="ln">   222</span>	
+<span id="L223" class="ln">   223</span>	type RawSockaddr C.struct_sockaddr
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>	type RawSockaddrAny C.struct_sockaddr_any
+<span id="L226" class="ln">   226</span>	
+<span id="L227" class="ln">   227</span>	type _Socklen C.socklen_t
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>	type Linger C.struct_linger
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>	type Iovec C.struct_iovec
+<span id="L232" class="ln">   232</span>	
+<span id="L233" class="ln">   233</span>	type IPMreq C.struct_ip_mreq
+<span id="L234" class="ln">   234</span>	
+<span id="L235" class="ln">   235</span>	type IPMreqn C.struct_ip_mreqn
+<span id="L236" class="ln">   236</span>	
+<span id="L237" class="ln">   237</span>	type IPv6Mreq C.struct_ipv6_mreq
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>	type Msghdr C.struct_msghdr
+<span id="L240" class="ln">   240</span>	
+<span id="L241" class="ln">   241</span>	type Cmsghdr C.struct_cmsghdr
+<span id="L242" class="ln">   242</span>	
+<span id="L243" class="ln">   243</span>	type Inet6Pktinfo C.struct_in6_pktinfo
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>	type IPv6MTUInfo C.struct_ip6_mtuinfo
+<span id="L246" class="ln">   246</span>	
+<span id="L247" class="ln">   247</span>	type ICMPv6Filter C.struct_icmp6_filter
+<span id="L248" class="ln">   248</span>	
+<span id="L249" class="ln">   249</span>	const (
+<span id="L250" class="ln">   250</span>		SizeofSockaddrInet4    = C.sizeof_struct_sockaddr_in
+<span id="L251" class="ln">   251</span>		SizeofSockaddrInet6    = C.sizeof_struct_sockaddr_in6
+<span id="L252" class="ln">   252</span>		SizeofSockaddrAny      = C.sizeof_struct_sockaddr_any
+<span id="L253" class="ln">   253</span>		SizeofSockaddrUnix     = C.sizeof_struct_sockaddr_un
+<span id="L254" class="ln">   254</span>		SizeofSockaddrDatalink = C.sizeof_struct_sockaddr_dl
+<span id="L255" class="ln">   255</span>		SizeofLinger           = C.sizeof_struct_linger
+<span id="L256" class="ln">   256</span>		SizeofIPMreq           = C.sizeof_struct_ip_mreq
+<span id="L257" class="ln">   257</span>		SizeofIPMreqn          = C.sizeof_struct_ip_mreqn
+<span id="L258" class="ln">   258</span>		SizeofIPv6Mreq         = C.sizeof_struct_ipv6_mreq
+<span id="L259" class="ln">   259</span>		SizeofMsghdr           = C.sizeof_struct_msghdr
+<span id="L260" class="ln">   260</span>		SizeofCmsghdr          = C.sizeof_struct_cmsghdr
+<span id="L261" class="ln">   261</span>		SizeofInet6Pktinfo     = C.sizeof_struct_in6_pktinfo
+<span id="L262" class="ln">   262</span>		SizeofIPv6MTUInfo      = C.sizeof_struct_ip6_mtuinfo
+<span id="L263" class="ln">   263</span>		SizeofICMPv6Filter     = C.sizeof_struct_icmp6_filter
+<span id="L264" class="ln">   264</span>	)
+<span id="L265" class="ln">   265</span>	
+<span id="L266" class="ln">   266</span>	<span class="comment">// Ptrace requests</span>
+<span id="L267" class="ln">   267</span>	
+<span id="L268" class="ln">   268</span>	const (
+<span id="L269" class="ln">   269</span>		PTRACE_TRACEME = C.PT_TRACE_ME
+<span id="L270" class="ln">   270</span>		PTRACE_CONT    = C.PT_CONTINUE
+<span id="L271" class="ln">   271</span>		PTRACE_KILL    = C.PT_KILL
+<span id="L272" class="ln">   272</span>	)
+<span id="L273" class="ln">   273</span>	
+<span id="L274" class="ln">   274</span>	<span class="comment">// Events (kqueue, kevent)</span>
+<span id="L275" class="ln">   275</span>	
+<span id="L276" class="ln">   276</span>	type Kevent_t C.struct_kevent
+<span id="L277" class="ln">   277</span>	
+<span id="L278" class="ln">   278</span>	<span class="comment">// Select</span>
+<span id="L279" class="ln">   279</span>	
+<span id="L280" class="ln">   280</span>	type FdSet C.fd_set
+<span id="L281" class="ln">   281</span>	
+<span id="L282" class="ln">   282</span>	<span class="comment">// Routing and interface messages</span>
+<span id="L283" class="ln">   283</span>	
+<span id="L284" class="ln">   284</span>	const (
+<span id="L285" class="ln">   285</span>		sizeofIfMsghdr         = C.sizeof_struct_if_msghdr
+<span id="L286" class="ln">   286</span>		SizeofIfMsghdr         = C.sizeof_struct_if_msghdr8
+<span id="L287" class="ln">   287</span>		sizeofIfData           = C.sizeof_struct_if_data
+<span id="L288" class="ln">   288</span>		SizeofIfData           = C.sizeof_struct_if_data8
+<span id="L289" class="ln">   289</span>		SizeofIfaMsghdr        = C.sizeof_struct_ifa_msghdr
+<span id="L290" class="ln">   290</span>		SizeofIfmaMsghdr       = C.sizeof_struct_ifma_msghdr
+<span id="L291" class="ln">   291</span>		SizeofIfAnnounceMsghdr = C.sizeof_struct_if_announcemsghdr
+<span id="L292" class="ln">   292</span>		SizeofRtMsghdr         = C.sizeof_struct_rt_msghdr
+<span id="L293" class="ln">   293</span>		SizeofRtMetrics        = C.sizeof_struct_rt_metrics
+<span id="L294" class="ln">   294</span>	)
+<span id="L295" class="ln">   295</span>	
+<span id="L296" class="ln">   296</span>	type ifMsghdr C.struct_if_msghdr
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>	type IfMsghdr C.struct_if_msghdr8
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>	type ifData C.struct_if_data
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>	type IfData C.struct_if_data8
+<span id="L303" class="ln">   303</span>	
+<span id="L304" class="ln">   304</span>	type IfaMsghdr C.struct_ifa_msghdr
+<span id="L305" class="ln">   305</span>	
+<span id="L306" class="ln">   306</span>	type IfmaMsghdr C.struct_ifma_msghdr
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	type IfAnnounceMsghdr C.struct_if_announcemsghdr
+<span id="L309" class="ln">   309</span>	
+<span id="L310" class="ln">   310</span>	type RtMsghdr C.struct_rt_msghdr
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>	type RtMetrics C.struct_rt_metrics
+<span id="L313" class="ln">   313</span>	
+<span id="L314" class="ln">   314</span>	<span class="comment">// Berkeley packet filter</span>
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>	const (
+<span id="L317" class="ln">   317</span>		SizeofBpfVersion    = C.sizeof_struct_bpf_version
+<span id="L318" class="ln">   318</span>		SizeofBpfStat       = C.sizeof_struct_bpf_stat
+<span id="L319" class="ln">   319</span>		SizeofBpfZbuf       = C.sizeof_struct_bpf_zbuf
+<span id="L320" class="ln">   320</span>		SizeofBpfProgram    = C.sizeof_struct_bpf_program
+<span id="L321" class="ln">   321</span>		SizeofBpfInsn       = C.sizeof_struct_bpf_insn
+<span id="L322" class="ln">   322</span>		SizeofBpfHdr        = C.sizeof_struct_bpf_hdr
+<span id="L323" class="ln">   323</span>		SizeofBpfZbufHeader = C.sizeof_struct_bpf_zbuf_header
+<span id="L324" class="ln">   324</span>	)
+<span id="L325" class="ln">   325</span>	
+<span id="L326" class="ln">   326</span>	type BpfVersion C.struct_bpf_version
+<span id="L327" class="ln">   327</span>	
+<span id="L328" class="ln">   328</span>	type BpfStat C.struct_bpf_stat
+<span id="L329" class="ln">   329</span>	
+<span id="L330" class="ln">   330</span>	type BpfZbuf C.struct_bpf_zbuf
+<span id="L331" class="ln">   331</span>	
+<span id="L332" class="ln">   332</span>	type BpfProgram C.struct_bpf_program
+<span id="L333" class="ln">   333</span>	
+<span id="L334" class="ln">   334</span>	type BpfInsn C.struct_bpf_insn
+<span id="L335" class="ln">   335</span>	
+<span id="L336" class="ln">   336</span>	type BpfHdr C.struct_bpf_hdr
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>	type BpfZbufHeader C.struct_bpf_zbuf_header
+<span id="L339" class="ln">   339</span>	
+<span id="L340" class="ln">   340</span>	<span class="comment">// Terminal handling</span>
+<span id="L341" class="ln">   341</span>	
+<span id="L342" class="ln">   342</span>	type Termios C.struct_termios
+<span id="L343" class="ln">   343</span>	
+</pre><p><a href="http://golang.org/src/pkg/syscall/types_freebsd.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

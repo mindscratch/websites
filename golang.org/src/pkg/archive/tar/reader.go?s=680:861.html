@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/archive/tar/reader.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/archive/tar/reader.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package tar
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">// TODO(dsymonds):</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">//   - pax extensions</span>
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	import (
+<span id="L11" class="ln">    11</span>		&#34;bytes&#34;
+<span id="L12" class="ln">    12</span>		&#34;errors&#34;
+<span id="L13" class="ln">    13</span>		&#34;io&#34;
+<span id="L14" class="ln">    14</span>		&#34;io/ioutil&#34;
+<span id="L15" class="ln">    15</span>		&#34;os&#34;
+<span id="L16" class="ln">    16</span>		&#34;strconv&#34;
+<span id="L17" class="ln">    17</span>		&#34;strings&#34;
+<span id="L18" class="ln">    18</span>		&#34;time&#34;
+<span id="L19" class="ln">    19</span>	)
+<span id="L20" class="ln">    20</span>	
+<span id="L21" class="ln">    21</span>	var (
+<span id="L22" class="ln">    22</span>		ErrHeader = errors.New(&#34;archive/tar: invalid tar header&#34;)
+<span id="L23" class="ln">    23</span>	)
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	const maxNanoSecondIntSize = 9
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	<span class="comment">// A Reader provides sequential access to the contents of a tar archive.</span>
+<span id="L28" class="ln">    28</span>	<span class="comment">// A tar archive consists of a sequence of files.</span>
+<span id="L29" class="ln">    29</span>	<span class="comment">// The Next method advances to the next file in the archive (including the first),</span>
+<span id="L30" class="ln">    30</span>	<span class="comment">// and then it can be treated as an io.Reader to access the file&#39;s data.</span>
+<span id="L31" class="ln">    31</span>	<span class="selection">type Reader struct {
+<span id="L32" class="ln">    32</span>		r    io.Reader
+<span id="L33" class="ln">    33</span>		err  error
+<span id="L34" class="ln">    34</span>		pad  int64          </span><span class="selection-comment">// amount of padding (ignored) after current file entry</span><span class="selection">
+<span id="L35" class="ln">    35</span>		curr numBytesReader </span><span class="selection-comment">// reader for current file entry</span><span class="selection">
+<span id="L36" class="ln">    36</span>	}</span>
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	<span class="comment">// A numBytesReader is an io.Reader with a numBytes method, returning the number</span>
+<span id="L39" class="ln">    39</span>	<span class="comment">// of bytes remaining in the underlying encoded data.</span>
+<span id="L40" class="ln">    40</span>	type numBytesReader interface {
+<span id="L41" class="ln">    41</span>		io.Reader
+<span id="L42" class="ln">    42</span>		numBytes() int64
+<span id="L43" class="ln">    43</span>	}
+<span id="L44" class="ln">    44</span>	
+<span id="L45" class="ln">    45</span>	<span class="comment">// A regFileReader is a numBytesReader for reading file data from a tar archive.</span>
+<span id="L46" class="ln">    46</span>	type regFileReader struct {
+<span id="L47" class="ln">    47</span>		r  io.Reader <span class="comment">// underlying reader</span>
+<span id="L48" class="ln">    48</span>		nb int64     <span class="comment">// number of unread bytes for current file entry</span>
+<span id="L49" class="ln">    49</span>	}
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>	<span class="comment">// A sparseFileReader is a numBytesReader for reading sparse file data from a tar archive.</span>
+<span id="L52" class="ln">    52</span>	type sparseFileReader struct {
+<span id="L53" class="ln">    53</span>		rfr *regFileReader <span class="comment">// reads the sparse-encoded file data</span>
+<span id="L54" class="ln">    54</span>		sp  []sparseEntry  <span class="comment">// the sparse map for the file</span>
+<span id="L55" class="ln">    55</span>		pos int64          <span class="comment">// keeps track of file position</span>
+<span id="L56" class="ln">    56</span>		tot int64          <span class="comment">// total size of the file</span>
+<span id="L57" class="ln">    57</span>	}
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	<span class="comment">// Keywords for GNU sparse files in a PAX extended header</span>
+<span id="L60" class="ln">    60</span>	const (
+<span id="L61" class="ln">    61</span>		paxGNUSparseNumBlocks = &#34;GNU.sparse.numblocks&#34;
+<span id="L62" class="ln">    62</span>		paxGNUSparseOffset    = &#34;GNU.sparse.offset&#34;
+<span id="L63" class="ln">    63</span>		paxGNUSparseNumBytes  = &#34;GNU.sparse.numbytes&#34;
+<span id="L64" class="ln">    64</span>		paxGNUSparseMap       = &#34;GNU.sparse.map&#34;
+<span id="L65" class="ln">    65</span>		paxGNUSparseName      = &#34;GNU.sparse.name&#34;
+<span id="L66" class="ln">    66</span>		paxGNUSparseMajor     = &#34;GNU.sparse.major&#34;
+<span id="L67" class="ln">    67</span>		paxGNUSparseMinor     = &#34;GNU.sparse.minor&#34;
+<span id="L68" class="ln">    68</span>		paxGNUSparseSize      = &#34;GNU.sparse.size&#34;
+<span id="L69" class="ln">    69</span>		paxGNUSparseRealSize  = &#34;GNU.sparse.realsize&#34;
+<span id="L70" class="ln">    70</span>	)
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	<span class="comment">// Keywords for old GNU sparse headers</span>
+<span id="L73" class="ln">    73</span>	const (
+<span id="L74" class="ln">    74</span>		oldGNUSparseMainHeaderOffset               = 386
+<span id="L75" class="ln">    75</span>		oldGNUSparseMainHeaderIsExtendedOffset     = 482
+<span id="L76" class="ln">    76</span>		oldGNUSparseMainHeaderNumEntries           = 4
+<span id="L77" class="ln">    77</span>		oldGNUSparseExtendedHeaderIsExtendedOffset = 504
+<span id="L78" class="ln">    78</span>		oldGNUSparseExtendedHeaderNumEntries       = 21
+<span id="L79" class="ln">    79</span>		oldGNUSparseOffsetSize                     = 12
+<span id="L80" class="ln">    80</span>		oldGNUSparseNumBytesSize                   = 12
+<span id="L81" class="ln">    81</span>	)
+<span id="L82" class="ln">    82</span>	
+<span id="L83" class="ln">    83</span>	<span class="comment">// NewReader creates a new Reader reading from r.</span>
+<span id="L84" class="ln">    84</span>	func NewReader(r io.Reader) *Reader { return &amp;Reader{r: r} }
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>	<span class="comment">// Next advances to the next entry in the tar archive.</span>
+<span id="L87" class="ln">    87</span>	func (tr *Reader) Next() (*Header, error) {
+<span id="L88" class="ln">    88</span>		var hdr *Header
+<span id="L89" class="ln">    89</span>		if tr.err == nil {
+<span id="L90" class="ln">    90</span>			tr.skipUnread()
+<span id="L91" class="ln">    91</span>		}
+<span id="L92" class="ln">    92</span>		if tr.err != nil {
+<span id="L93" class="ln">    93</span>			return hdr, tr.err
+<span id="L94" class="ln">    94</span>		}
+<span id="L95" class="ln">    95</span>		hdr = tr.readHeader()
+<span id="L96" class="ln">    96</span>		if hdr == nil {
+<span id="L97" class="ln">    97</span>			return hdr, tr.err
+<span id="L98" class="ln">    98</span>		}
+<span id="L99" class="ln">    99</span>		<span class="comment">// Check for PAX/GNU header.</span>
+<span id="L100" class="ln">   100</span>		switch hdr.Typeflag {
+<span id="L101" class="ln">   101</span>		case TypeXHeader:
+<span id="L102" class="ln">   102</span>			<span class="comment">//  PAX extended header</span>
+<span id="L103" class="ln">   103</span>			headers, err := parsePAX(tr)
+<span id="L104" class="ln">   104</span>			if err != nil {
+<span id="L105" class="ln">   105</span>				return nil, err
+<span id="L106" class="ln">   106</span>			}
+<span id="L107" class="ln">   107</span>			<span class="comment">// We actually read the whole file,</span>
+<span id="L108" class="ln">   108</span>			<span class="comment">// but this skips alignment padding</span>
+<span id="L109" class="ln">   109</span>			tr.skipUnread()
+<span id="L110" class="ln">   110</span>			hdr = tr.readHeader()
+<span id="L111" class="ln">   111</span>			mergePAX(hdr, headers)
+<span id="L112" class="ln">   112</span>	
+<span id="L113" class="ln">   113</span>			<span class="comment">// Check for a PAX format sparse file</span>
+<span id="L114" class="ln">   114</span>			sp, err := tr.checkForGNUSparsePAXHeaders(hdr, headers)
+<span id="L115" class="ln">   115</span>			if err != nil {
+<span id="L116" class="ln">   116</span>				tr.err = err
+<span id="L117" class="ln">   117</span>				return nil, err
+<span id="L118" class="ln">   118</span>			}
+<span id="L119" class="ln">   119</span>			if sp != nil {
+<span id="L120" class="ln">   120</span>				<span class="comment">// Current file is a PAX format GNU sparse file.</span>
+<span id="L121" class="ln">   121</span>				<span class="comment">// Set the current file reader to a sparse file reader.</span>
+<span id="L122" class="ln">   122</span>				tr.curr = &amp;sparseFileReader{rfr: tr.curr.(*regFileReader), sp: sp, tot: hdr.Size}
+<span id="L123" class="ln">   123</span>			}
+<span id="L124" class="ln">   124</span>			return hdr, nil
+<span id="L125" class="ln">   125</span>		case TypeGNULongName:
+<span id="L126" class="ln">   126</span>			<span class="comment">// We have a GNU long name header. Its contents are the real file name.</span>
+<span id="L127" class="ln">   127</span>			realname, err := ioutil.ReadAll(tr)
+<span id="L128" class="ln">   128</span>			if err != nil {
+<span id="L129" class="ln">   129</span>				return nil, err
+<span id="L130" class="ln">   130</span>			}
+<span id="L131" class="ln">   131</span>			hdr, err := tr.Next()
+<span id="L132" class="ln">   132</span>			hdr.Name = cString(realname)
+<span id="L133" class="ln">   133</span>			return hdr, err
+<span id="L134" class="ln">   134</span>		case TypeGNULongLink:
+<span id="L135" class="ln">   135</span>			<span class="comment">// We have a GNU long link header.</span>
+<span id="L136" class="ln">   136</span>			realname, err := ioutil.ReadAll(tr)
+<span id="L137" class="ln">   137</span>			if err != nil {
+<span id="L138" class="ln">   138</span>				return nil, err
+<span id="L139" class="ln">   139</span>			}
+<span id="L140" class="ln">   140</span>			hdr, err := tr.Next()
+<span id="L141" class="ln">   141</span>			hdr.Linkname = cString(realname)
+<span id="L142" class="ln">   142</span>			return hdr, err
+<span id="L143" class="ln">   143</span>		}
+<span id="L144" class="ln">   144</span>		return hdr, tr.err
+<span id="L145" class="ln">   145</span>	}
+<span id="L146" class="ln">   146</span>	
+<span id="L147" class="ln">   147</span>	<span class="comment">// checkForGNUSparsePAXHeaders checks the PAX headers for GNU sparse headers. If they are found, then</span>
+<span id="L148" class="ln">   148</span>	<span class="comment">// this function reads the sparse map and returns it. Unknown sparse formats are ignored, causing the file to</span>
+<span id="L149" class="ln">   149</span>	<span class="comment">// be treated as a regular file.</span>
+<span id="L150" class="ln">   150</span>	func (tr *Reader) checkForGNUSparsePAXHeaders(hdr *Header, headers map[string]string) ([]sparseEntry, error) {
+<span id="L151" class="ln">   151</span>		var sparseFormat string
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>		<span class="comment">// Check for sparse format indicators</span>
+<span id="L154" class="ln">   154</span>		major, majorOk := headers[paxGNUSparseMajor]
+<span id="L155" class="ln">   155</span>		minor, minorOk := headers[paxGNUSparseMinor]
+<span id="L156" class="ln">   156</span>		sparseName, sparseNameOk := headers[paxGNUSparseName]
+<span id="L157" class="ln">   157</span>		_, sparseMapOk := headers[paxGNUSparseMap]
+<span id="L158" class="ln">   158</span>		sparseSize, sparseSizeOk := headers[paxGNUSparseSize]
+<span id="L159" class="ln">   159</span>		sparseRealSize, sparseRealSizeOk := headers[paxGNUSparseRealSize]
+<span id="L160" class="ln">   160</span>	
+<span id="L161" class="ln">   161</span>		<span class="comment">// Identify which, if any, sparse format applies from which PAX headers are set</span>
+<span id="L162" class="ln">   162</span>		if majorOk &amp;&amp; minorOk {
+<span id="L163" class="ln">   163</span>			sparseFormat = major + &#34;.&#34; + minor
+<span id="L164" class="ln">   164</span>		} else if sparseNameOk &amp;&amp; sparseMapOk {
+<span id="L165" class="ln">   165</span>			sparseFormat = &#34;0.1&#34;
+<span id="L166" class="ln">   166</span>		} else if sparseSizeOk {
+<span id="L167" class="ln">   167</span>			sparseFormat = &#34;0.0&#34;
+<span id="L168" class="ln">   168</span>		} else {
+<span id="L169" class="ln">   169</span>			<span class="comment">// Not a PAX format GNU sparse file.</span>
+<span id="L170" class="ln">   170</span>			return nil, nil
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>	
+<span id="L173" class="ln">   173</span>		<span class="comment">// Check for unknown sparse format</span>
+<span id="L174" class="ln">   174</span>		if sparseFormat != &#34;0.0&#34; &amp;&amp; sparseFormat != &#34;0.1&#34; &amp;&amp; sparseFormat != &#34;1.0&#34; {
+<span id="L175" class="ln">   175</span>			return nil, nil
+<span id="L176" class="ln">   176</span>		}
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>		<span class="comment">// Update hdr from GNU sparse PAX headers</span>
+<span id="L179" class="ln">   179</span>		if sparseNameOk {
+<span id="L180" class="ln">   180</span>			hdr.Name = sparseName
+<span id="L181" class="ln">   181</span>		}
+<span id="L182" class="ln">   182</span>		if sparseSizeOk {
+<span id="L183" class="ln">   183</span>			realSize, err := strconv.ParseInt(sparseSize, 10, 0)
+<span id="L184" class="ln">   184</span>			if err != nil {
+<span id="L185" class="ln">   185</span>				return nil, ErrHeader
+<span id="L186" class="ln">   186</span>			}
+<span id="L187" class="ln">   187</span>			hdr.Size = realSize
+<span id="L188" class="ln">   188</span>		} else if sparseRealSizeOk {
+<span id="L189" class="ln">   189</span>			realSize, err := strconv.ParseInt(sparseRealSize, 10, 0)
+<span id="L190" class="ln">   190</span>			if err != nil {
+<span id="L191" class="ln">   191</span>				return nil, ErrHeader
+<span id="L192" class="ln">   192</span>			}
+<span id="L193" class="ln">   193</span>			hdr.Size = realSize
+<span id="L194" class="ln">   194</span>		}
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>		<span class="comment">// Set up the sparse map, according to the particular sparse format in use</span>
+<span id="L197" class="ln">   197</span>		var sp []sparseEntry
+<span id="L198" class="ln">   198</span>		var err error
+<span id="L199" class="ln">   199</span>		switch sparseFormat {
+<span id="L200" class="ln">   200</span>		case &#34;0.0&#34;, &#34;0.1&#34;:
+<span id="L201" class="ln">   201</span>			sp, err = readGNUSparseMap0x1(headers)
+<span id="L202" class="ln">   202</span>		case &#34;1.0&#34;:
+<span id="L203" class="ln">   203</span>			sp, err = readGNUSparseMap1x0(tr.curr)
+<span id="L204" class="ln">   204</span>		}
+<span id="L205" class="ln">   205</span>		return sp, err
+<span id="L206" class="ln">   206</span>	}
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>	<span class="comment">// mergePAX merges well known headers according to PAX standard.</span>
+<span id="L209" class="ln">   209</span>	<span class="comment">// In general headers with the same name as those found</span>
+<span id="L210" class="ln">   210</span>	<span class="comment">// in the header struct overwrite those found in the header</span>
+<span id="L211" class="ln">   211</span>	<span class="comment">// struct with higher precision or longer values. Esp. useful</span>
+<span id="L212" class="ln">   212</span>	<span class="comment">// for name and linkname fields.</span>
+<span id="L213" class="ln">   213</span>	func mergePAX(hdr *Header, headers map[string]string) error {
+<span id="L214" class="ln">   214</span>		for k, v := range headers {
+<span id="L215" class="ln">   215</span>			switch k {
+<span id="L216" class="ln">   216</span>			case paxPath:
+<span id="L217" class="ln">   217</span>				hdr.Name = v
+<span id="L218" class="ln">   218</span>			case paxLinkpath:
+<span id="L219" class="ln">   219</span>				hdr.Linkname = v
+<span id="L220" class="ln">   220</span>			case paxGname:
+<span id="L221" class="ln">   221</span>				hdr.Gname = v
+<span id="L222" class="ln">   222</span>			case paxUname:
+<span id="L223" class="ln">   223</span>				hdr.Uname = v
+<span id="L224" class="ln">   224</span>			case paxUid:
+<span id="L225" class="ln">   225</span>				uid, err := strconv.ParseInt(v, 10, 0)
+<span id="L226" class="ln">   226</span>				if err != nil {
+<span id="L227" class="ln">   227</span>					return err
+<span id="L228" class="ln">   228</span>				}
+<span id="L229" class="ln">   229</span>				hdr.Uid = int(uid)
+<span id="L230" class="ln">   230</span>			case paxGid:
+<span id="L231" class="ln">   231</span>				gid, err := strconv.ParseInt(v, 10, 0)
+<span id="L232" class="ln">   232</span>				if err != nil {
+<span id="L233" class="ln">   233</span>					return err
+<span id="L234" class="ln">   234</span>				}
+<span id="L235" class="ln">   235</span>				hdr.Gid = int(gid)
+<span id="L236" class="ln">   236</span>			case paxAtime:
+<span id="L237" class="ln">   237</span>				t, err := parsePAXTime(v)
+<span id="L238" class="ln">   238</span>				if err != nil {
+<span id="L239" class="ln">   239</span>					return err
+<span id="L240" class="ln">   240</span>				}
+<span id="L241" class="ln">   241</span>				hdr.AccessTime = t
+<span id="L242" class="ln">   242</span>			case paxMtime:
+<span id="L243" class="ln">   243</span>				t, err := parsePAXTime(v)
+<span id="L244" class="ln">   244</span>				if err != nil {
+<span id="L245" class="ln">   245</span>					return err
+<span id="L246" class="ln">   246</span>				}
+<span id="L247" class="ln">   247</span>				hdr.ModTime = t
+<span id="L248" class="ln">   248</span>			case paxCtime:
+<span id="L249" class="ln">   249</span>				t, err := parsePAXTime(v)
+<span id="L250" class="ln">   250</span>				if err != nil {
+<span id="L251" class="ln">   251</span>					return err
+<span id="L252" class="ln">   252</span>				}
+<span id="L253" class="ln">   253</span>				hdr.ChangeTime = t
+<span id="L254" class="ln">   254</span>			case paxSize:
+<span id="L255" class="ln">   255</span>				size, err := strconv.ParseInt(v, 10, 0)
+<span id="L256" class="ln">   256</span>				if err != nil {
+<span id="L257" class="ln">   257</span>					return err
+<span id="L258" class="ln">   258</span>				}
+<span id="L259" class="ln">   259</span>				hdr.Size = int64(size)
+<span id="L260" class="ln">   260</span>			default:
+<span id="L261" class="ln">   261</span>				if strings.HasPrefix(k, paxXattr) {
+<span id="L262" class="ln">   262</span>					if hdr.Xattrs == nil {
+<span id="L263" class="ln">   263</span>						hdr.Xattrs = make(map[string]string)
+<span id="L264" class="ln">   264</span>					}
+<span id="L265" class="ln">   265</span>					hdr.Xattrs[k[len(paxXattr):]] = v
+<span id="L266" class="ln">   266</span>				}
+<span id="L267" class="ln">   267</span>			}
+<span id="L268" class="ln">   268</span>		}
+<span id="L269" class="ln">   269</span>		return nil
+<span id="L270" class="ln">   270</span>	}
+<span id="L271" class="ln">   271</span>	
+<span id="L272" class="ln">   272</span>	<span class="comment">// parsePAXTime takes a string of the form %d.%d as described in</span>
+<span id="L273" class="ln">   273</span>	<span class="comment">// the PAX specification.</span>
+<span id="L274" class="ln">   274</span>	func parsePAXTime(t string) (time.Time, error) {
+<span id="L275" class="ln">   275</span>		buf := []byte(t)
+<span id="L276" class="ln">   276</span>		pos := bytes.IndexByte(buf, &#39;.&#39;)
+<span id="L277" class="ln">   277</span>		var seconds, nanoseconds int64
+<span id="L278" class="ln">   278</span>		var err error
+<span id="L279" class="ln">   279</span>		if pos == -1 {
+<span id="L280" class="ln">   280</span>			seconds, err = strconv.ParseInt(t, 10, 0)
+<span id="L281" class="ln">   281</span>			if err != nil {
+<span id="L282" class="ln">   282</span>				return time.Time{}, err
+<span id="L283" class="ln">   283</span>			}
+<span id="L284" class="ln">   284</span>		} else {
+<span id="L285" class="ln">   285</span>			seconds, err = strconv.ParseInt(string(buf[:pos]), 10, 0)
+<span id="L286" class="ln">   286</span>			if err != nil {
+<span id="L287" class="ln">   287</span>				return time.Time{}, err
+<span id="L288" class="ln">   288</span>			}
+<span id="L289" class="ln">   289</span>			nano_buf := string(buf[pos+1:])
+<span id="L290" class="ln">   290</span>			<span class="comment">// Pad as needed before converting to a decimal.</span>
+<span id="L291" class="ln">   291</span>			<span class="comment">// For example .030 -&gt; .030000000 -&gt; 30000000 nanoseconds</span>
+<span id="L292" class="ln">   292</span>			if len(nano_buf) &lt; maxNanoSecondIntSize {
+<span id="L293" class="ln">   293</span>				<span class="comment">// Right pad</span>
+<span id="L294" class="ln">   294</span>				nano_buf += strings.Repeat(&#34;0&#34;, maxNanoSecondIntSize-len(nano_buf))
+<span id="L295" class="ln">   295</span>			} else if len(nano_buf) &gt; maxNanoSecondIntSize {
+<span id="L296" class="ln">   296</span>				<span class="comment">// Right truncate</span>
+<span id="L297" class="ln">   297</span>				nano_buf = nano_buf[:maxNanoSecondIntSize]
+<span id="L298" class="ln">   298</span>			}
+<span id="L299" class="ln">   299</span>			nanoseconds, err = strconv.ParseInt(string(nano_buf), 10, 0)
+<span id="L300" class="ln">   300</span>			if err != nil {
+<span id="L301" class="ln">   301</span>				return time.Time{}, err
+<span id="L302" class="ln">   302</span>			}
+<span id="L303" class="ln">   303</span>		}
+<span id="L304" class="ln">   304</span>		ts := time.Unix(seconds, nanoseconds)
+<span id="L305" class="ln">   305</span>		return ts, nil
+<span id="L306" class="ln">   306</span>	}
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	<span class="comment">// parsePAX parses PAX headers.</span>
+<span id="L309" class="ln">   309</span>	<span class="comment">// If an extended header (type &#39;x&#39;) is invalid, ErrHeader is returned</span>
+<span id="L310" class="ln">   310</span>	func parsePAX(r io.Reader) (map[string]string, error) {
+<span id="L311" class="ln">   311</span>		buf, err := ioutil.ReadAll(r)
+<span id="L312" class="ln">   312</span>		if err != nil {
+<span id="L313" class="ln">   313</span>			return nil, err
+<span id="L314" class="ln">   314</span>		}
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		<span class="comment">// For GNU PAX sparse format 0.0 support.</span>
+<span id="L317" class="ln">   317</span>		<span class="comment">// This function transforms the sparse format 0.0 headers into sparse format 0.1 headers.</span>
+<span id="L318" class="ln">   318</span>		var sparseMap bytes.Buffer
+<span id="L319" class="ln">   319</span>	
+<span id="L320" class="ln">   320</span>		headers := make(map[string]string)
+<span id="L321" class="ln">   321</span>		<span class="comment">// Each record is constructed as</span>
+<span id="L322" class="ln">   322</span>		<span class="comment">//     &#34;%d %s=%s\n&#34;, length, keyword, value</span>
+<span id="L323" class="ln">   323</span>		for len(buf) &gt; 0 {
+<span id="L324" class="ln">   324</span>			<span class="comment">// or the header was empty to start with.</span>
+<span id="L325" class="ln">   325</span>			var sp int
+<span id="L326" class="ln">   326</span>			<span class="comment">// The size field ends at the first space.</span>
+<span id="L327" class="ln">   327</span>			sp = bytes.IndexByte(buf, &#39; &#39;)
+<span id="L328" class="ln">   328</span>			if sp == -1 {
+<span id="L329" class="ln">   329</span>				return nil, ErrHeader
+<span id="L330" class="ln">   330</span>			}
+<span id="L331" class="ln">   331</span>			<span class="comment">// Parse the first token as a decimal integer.</span>
+<span id="L332" class="ln">   332</span>			n, err := strconv.ParseInt(string(buf[:sp]), 10, 0)
+<span id="L333" class="ln">   333</span>			if err != nil {
+<span id="L334" class="ln">   334</span>				return nil, ErrHeader
+<span id="L335" class="ln">   335</span>			}
+<span id="L336" class="ln">   336</span>			<span class="comment">// Extract everything between the decimal and the n -1 on the</span>
+<span id="L337" class="ln">   337</span>			<span class="comment">// beginning to eat the &#39; &#39;, -1 on the end to skip the newline.</span>
+<span id="L338" class="ln">   338</span>			var record []byte
+<span id="L339" class="ln">   339</span>			record, buf = buf[sp+1:n-1], buf[n:]
+<span id="L340" class="ln">   340</span>			<span class="comment">// The first equals is guaranteed to mark the end of the key.</span>
+<span id="L341" class="ln">   341</span>			<span class="comment">// Everything else is value.</span>
+<span id="L342" class="ln">   342</span>			eq := bytes.IndexByte(record, &#39;=&#39;)
+<span id="L343" class="ln">   343</span>			if eq == -1 {
+<span id="L344" class="ln">   344</span>				return nil, ErrHeader
+<span id="L345" class="ln">   345</span>			}
+<span id="L346" class="ln">   346</span>			key, value := record[:eq], record[eq+1:]
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>			keyStr := string(key)
+<span id="L349" class="ln">   349</span>			if keyStr == paxGNUSparseOffset || keyStr == paxGNUSparseNumBytes {
+<span id="L350" class="ln">   350</span>				<span class="comment">// GNU sparse format 0.0 special key. Write to sparseMap instead of using the headers map.</span>
+<span id="L351" class="ln">   351</span>				sparseMap.Write(value)
+<span id="L352" class="ln">   352</span>				sparseMap.Write([]byte{&#39;,&#39;})
+<span id="L353" class="ln">   353</span>			} else {
+<span id="L354" class="ln">   354</span>				<span class="comment">// Normal key. Set the value in the headers map.</span>
+<span id="L355" class="ln">   355</span>				headers[keyStr] = string(value)
+<span id="L356" class="ln">   356</span>			}
+<span id="L357" class="ln">   357</span>		}
+<span id="L358" class="ln">   358</span>		if sparseMap.Len() != 0 {
+<span id="L359" class="ln">   359</span>			<span class="comment">// Add sparse info to headers, chopping off the extra comma</span>
+<span id="L360" class="ln">   360</span>			sparseMap.Truncate(sparseMap.Len() - 1)
+<span id="L361" class="ln">   361</span>			headers[paxGNUSparseMap] = sparseMap.String()
+<span id="L362" class="ln">   362</span>		}
+<span id="L363" class="ln">   363</span>		return headers, nil
+<span id="L364" class="ln">   364</span>	}
+<span id="L365" class="ln">   365</span>	
+<span id="L366" class="ln">   366</span>	<span class="comment">// cString parses bytes as a NUL-terminated C-style string.</span>
+<span id="L367" class="ln">   367</span>	<span class="comment">// If a NUL byte is not found then the whole slice is returned as a string.</span>
+<span id="L368" class="ln">   368</span>	func cString(b []byte) string {
+<span id="L369" class="ln">   369</span>		n := 0
+<span id="L370" class="ln">   370</span>		for n &lt; len(b) &amp;&amp; b[n] != 0 {
+<span id="L371" class="ln">   371</span>			n++
+<span id="L372" class="ln">   372</span>		}
+<span id="L373" class="ln">   373</span>		return string(b[0:n])
+<span id="L374" class="ln">   374</span>	}
+<span id="L375" class="ln">   375</span>	
+<span id="L376" class="ln">   376</span>	func (tr *Reader) octal(b []byte) int64 {
+<span id="L377" class="ln">   377</span>		<span class="comment">// Check for binary format first.</span>
+<span id="L378" class="ln">   378</span>		if len(b) &gt; 0 &amp;&amp; b[0]&amp;0x80 != 0 {
+<span id="L379" class="ln">   379</span>			var x int64
+<span id="L380" class="ln">   380</span>			for i, c := range b {
+<span id="L381" class="ln">   381</span>				if i == 0 {
+<span id="L382" class="ln">   382</span>					c &amp;= 0x7f <span class="comment">// ignore signal bit in first byte</span>
+<span id="L383" class="ln">   383</span>				}
+<span id="L384" class="ln">   384</span>				x = x&lt;&lt;8 | int64(c)
+<span id="L385" class="ln">   385</span>			}
+<span id="L386" class="ln">   386</span>			return x
+<span id="L387" class="ln">   387</span>		}
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>		<span class="comment">// Because unused fields are filled with NULs, we need</span>
+<span id="L390" class="ln">   390</span>		<span class="comment">// to skip leading NULs. Fields may also be padded with</span>
+<span id="L391" class="ln">   391</span>		<span class="comment">// spaces or NULs.</span>
+<span id="L392" class="ln">   392</span>		<span class="comment">// So we remove leading and trailing NULs and spaces to</span>
+<span id="L393" class="ln">   393</span>		<span class="comment">// be sure.</span>
+<span id="L394" class="ln">   394</span>		b = bytes.Trim(b, &#34; \x00&#34;)
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>		if len(b) == 0 {
+<span id="L397" class="ln">   397</span>			return 0
+<span id="L398" class="ln">   398</span>		}
+<span id="L399" class="ln">   399</span>		x, err := strconv.ParseUint(cString(b), 8, 64)
+<span id="L400" class="ln">   400</span>		if err != nil {
+<span id="L401" class="ln">   401</span>			tr.err = err
+<span id="L402" class="ln">   402</span>		}
+<span id="L403" class="ln">   403</span>		return int64(x)
+<span id="L404" class="ln">   404</span>	}
+<span id="L405" class="ln">   405</span>	
+<span id="L406" class="ln">   406</span>	<span class="comment">// skipUnread skips any unread bytes in the existing file entry, as well as any alignment padding.</span>
+<span id="L407" class="ln">   407</span>	func (tr *Reader) skipUnread() {
+<span id="L408" class="ln">   408</span>		nr := tr.numBytes() + tr.pad <span class="comment">// number of bytes to skip</span>
+<span id="L409" class="ln">   409</span>		tr.curr, tr.pad = nil, 0
+<span id="L410" class="ln">   410</span>		if sr, ok := tr.r.(io.Seeker); ok {
+<span id="L411" class="ln">   411</span>			if _, err := sr.Seek(nr, os.SEEK_CUR); err == nil {
+<span id="L412" class="ln">   412</span>				return
+<span id="L413" class="ln">   413</span>			}
+<span id="L414" class="ln">   414</span>		}
+<span id="L415" class="ln">   415</span>		_, tr.err = io.CopyN(ioutil.Discard, tr.r, nr)
+<span id="L416" class="ln">   416</span>	}
+<span id="L417" class="ln">   417</span>	
+<span id="L418" class="ln">   418</span>	func (tr *Reader) verifyChecksum(header []byte) bool {
+<span id="L419" class="ln">   419</span>		if tr.err != nil {
+<span id="L420" class="ln">   420</span>			return false
+<span id="L421" class="ln">   421</span>		}
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>		given := tr.octal(header[148:156])
+<span id="L424" class="ln">   424</span>		unsigned, signed := checksum(header)
+<span id="L425" class="ln">   425</span>		return given == unsigned || given == signed
+<span id="L426" class="ln">   426</span>	}
+<span id="L427" class="ln">   427</span>	
+<span id="L428" class="ln">   428</span>	func (tr *Reader) readHeader() *Header {
+<span id="L429" class="ln">   429</span>		header := make([]byte, blockSize)
+<span id="L430" class="ln">   430</span>		if _, tr.err = io.ReadFull(tr.r, header); tr.err != nil {
+<span id="L431" class="ln">   431</span>			return nil
+<span id="L432" class="ln">   432</span>		}
+<span id="L433" class="ln">   433</span>	
+<span id="L434" class="ln">   434</span>		<span class="comment">// Two blocks of zero bytes marks the end of the archive.</span>
+<span id="L435" class="ln">   435</span>		if bytes.Equal(header, zeroBlock[0:blockSize]) {
+<span id="L436" class="ln">   436</span>			if _, tr.err = io.ReadFull(tr.r, header); tr.err != nil {
+<span id="L437" class="ln">   437</span>				return nil
+<span id="L438" class="ln">   438</span>			}
+<span id="L439" class="ln">   439</span>			if bytes.Equal(header, zeroBlock[0:blockSize]) {
+<span id="L440" class="ln">   440</span>				tr.err = io.EOF
+<span id="L441" class="ln">   441</span>			} else {
+<span id="L442" class="ln">   442</span>				tr.err = ErrHeader <span class="comment">// zero block and then non-zero block</span>
+<span id="L443" class="ln">   443</span>			}
+<span id="L444" class="ln">   444</span>			return nil
+<span id="L445" class="ln">   445</span>		}
+<span id="L446" class="ln">   446</span>	
+<span id="L447" class="ln">   447</span>		if !tr.verifyChecksum(header) {
+<span id="L448" class="ln">   448</span>			tr.err = ErrHeader
+<span id="L449" class="ln">   449</span>			return nil
+<span id="L450" class="ln">   450</span>		}
+<span id="L451" class="ln">   451</span>	
+<span id="L452" class="ln">   452</span>		<span class="comment">// Unpack</span>
+<span id="L453" class="ln">   453</span>		hdr := new(Header)
+<span id="L454" class="ln">   454</span>		s := slicer(header)
+<span id="L455" class="ln">   455</span>	
+<span id="L456" class="ln">   456</span>		hdr.Name = cString(s.next(100))
+<span id="L457" class="ln">   457</span>		hdr.Mode = tr.octal(s.next(8))
+<span id="L458" class="ln">   458</span>		hdr.Uid = int(tr.octal(s.next(8)))
+<span id="L459" class="ln">   459</span>		hdr.Gid = int(tr.octal(s.next(8)))
+<span id="L460" class="ln">   460</span>		hdr.Size = tr.octal(s.next(12))
+<span id="L461" class="ln">   461</span>		hdr.ModTime = time.Unix(tr.octal(s.next(12)), 0)
+<span id="L462" class="ln">   462</span>		s.next(8) <span class="comment">// chksum</span>
+<span id="L463" class="ln">   463</span>		hdr.Typeflag = s.next(1)[0]
+<span id="L464" class="ln">   464</span>		hdr.Linkname = cString(s.next(100))
+<span id="L465" class="ln">   465</span>	
+<span id="L466" class="ln">   466</span>		<span class="comment">// The remainder of the header depends on the value of magic.</span>
+<span id="L467" class="ln">   467</span>		<span class="comment">// The original (v7) version of tar had no explicit magic field,</span>
+<span id="L468" class="ln">   468</span>		<span class="comment">// so its magic bytes, like the rest of the block, are NULs.</span>
+<span id="L469" class="ln">   469</span>		magic := string(s.next(8)) <span class="comment">// contains version field as well.</span>
+<span id="L470" class="ln">   470</span>		var format string
+<span id="L471" class="ln">   471</span>		switch {
+<span id="L472" class="ln">   472</span>		case magic[:6] == &#34;ustar\x00&#34;: <span class="comment">// POSIX tar (1003.1-1988)</span>
+<span id="L473" class="ln">   473</span>			if string(header[508:512]) == &#34;tar\x00&#34; {
+<span id="L474" class="ln">   474</span>				format = &#34;star&#34;
+<span id="L475" class="ln">   475</span>			} else {
+<span id="L476" class="ln">   476</span>				format = &#34;posix&#34;
+<span id="L477" class="ln">   477</span>			}
+<span id="L478" class="ln">   478</span>		case magic == &#34;ustar  \x00&#34;: <span class="comment">// old GNU tar</span>
+<span id="L479" class="ln">   479</span>			format = &#34;gnu&#34;
+<span id="L480" class="ln">   480</span>		}
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>		switch format {
+<span id="L483" class="ln">   483</span>		case &#34;posix&#34;, &#34;gnu&#34;, &#34;star&#34;:
+<span id="L484" class="ln">   484</span>			hdr.Uname = cString(s.next(32))
+<span id="L485" class="ln">   485</span>			hdr.Gname = cString(s.next(32))
+<span id="L486" class="ln">   486</span>			devmajor := s.next(8)
+<span id="L487" class="ln">   487</span>			devminor := s.next(8)
+<span id="L488" class="ln">   488</span>			if hdr.Typeflag == TypeChar || hdr.Typeflag == TypeBlock {
+<span id="L489" class="ln">   489</span>				hdr.Devmajor = tr.octal(devmajor)
+<span id="L490" class="ln">   490</span>				hdr.Devminor = tr.octal(devminor)
+<span id="L491" class="ln">   491</span>			}
+<span id="L492" class="ln">   492</span>			var prefix string
+<span id="L493" class="ln">   493</span>			switch format {
+<span id="L494" class="ln">   494</span>			case &#34;posix&#34;, &#34;gnu&#34;:
+<span id="L495" class="ln">   495</span>				prefix = cString(s.next(155))
+<span id="L496" class="ln">   496</span>			case &#34;star&#34;:
+<span id="L497" class="ln">   497</span>				prefix = cString(s.next(131))
+<span id="L498" class="ln">   498</span>				hdr.AccessTime = time.Unix(tr.octal(s.next(12)), 0)
+<span id="L499" class="ln">   499</span>				hdr.ChangeTime = time.Unix(tr.octal(s.next(12)), 0)
+<span id="L500" class="ln">   500</span>			}
+<span id="L501" class="ln">   501</span>			if len(prefix) &gt; 0 {
+<span id="L502" class="ln">   502</span>				hdr.Name = prefix + &#34;/&#34; + hdr.Name
+<span id="L503" class="ln">   503</span>			}
+<span id="L504" class="ln">   504</span>		}
+<span id="L505" class="ln">   505</span>	
+<span id="L506" class="ln">   506</span>		if tr.err != nil {
+<span id="L507" class="ln">   507</span>			tr.err = ErrHeader
+<span id="L508" class="ln">   508</span>			return nil
+<span id="L509" class="ln">   509</span>		}
+<span id="L510" class="ln">   510</span>	
+<span id="L511" class="ln">   511</span>		<span class="comment">// Maximum value of hdr.Size is 64 GB (12 octal digits),</span>
+<span id="L512" class="ln">   512</span>		<span class="comment">// so there&#39;s no risk of int64 overflowing.</span>
+<span id="L513" class="ln">   513</span>		nb := int64(hdr.Size)
+<span id="L514" class="ln">   514</span>		tr.pad = -nb &amp; (blockSize - 1) <span class="comment">// blockSize is a power of two</span>
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>		<span class="comment">// Set the current file reader.</span>
+<span id="L517" class="ln">   517</span>		tr.curr = &amp;regFileReader{r: tr.r, nb: nb}
+<span id="L518" class="ln">   518</span>	
+<span id="L519" class="ln">   519</span>		<span class="comment">// Check for old GNU sparse format entry.</span>
+<span id="L520" class="ln">   520</span>		if hdr.Typeflag == TypeGNUSparse {
+<span id="L521" class="ln">   521</span>			<span class="comment">// Get the real size of the file.</span>
+<span id="L522" class="ln">   522</span>			hdr.Size = tr.octal(header[483:495])
+<span id="L523" class="ln">   523</span>	
+<span id="L524" class="ln">   524</span>			<span class="comment">// Read the sparse map.</span>
+<span id="L525" class="ln">   525</span>			sp := tr.readOldGNUSparseMap(header)
+<span id="L526" class="ln">   526</span>			if tr.err != nil {
+<span id="L527" class="ln">   527</span>				return nil
+<span id="L528" class="ln">   528</span>			}
+<span id="L529" class="ln">   529</span>			<span class="comment">// Current file is a GNU sparse file. Update the current file reader.</span>
+<span id="L530" class="ln">   530</span>			tr.curr = &amp;sparseFileReader{rfr: tr.curr.(*regFileReader), sp: sp, tot: hdr.Size}
+<span id="L531" class="ln">   531</span>		}
+<span id="L532" class="ln">   532</span>	
+<span id="L533" class="ln">   533</span>		return hdr
+<span id="L534" class="ln">   534</span>	}
+<span id="L535" class="ln">   535</span>	
+<span id="L536" class="ln">   536</span>	<span class="comment">// A sparseEntry holds a single entry in a sparse file&#39;s sparse map.</span>
+<span id="L537" class="ln">   537</span>	<span class="comment">// A sparse entry indicates the offset and size in a sparse file of a</span>
+<span id="L538" class="ln">   538</span>	<span class="comment">// block of data.</span>
+<span id="L539" class="ln">   539</span>	type sparseEntry struct {
+<span id="L540" class="ln">   540</span>		offset   int64
+<span id="L541" class="ln">   541</span>		numBytes int64
+<span id="L542" class="ln">   542</span>	}
+<span id="L543" class="ln">   543</span>	
+<span id="L544" class="ln">   544</span>	<span class="comment">// readOldGNUSparseMap reads the sparse map as stored in the old GNU sparse format.</span>
+<span id="L545" class="ln">   545</span>	<span class="comment">// The sparse map is stored in the tar header if it&#39;s small enough. If it&#39;s larger than four entries,</span>
+<span id="L546" class="ln">   546</span>	<span class="comment">// then one or more extension headers are used to store the rest of the sparse map.</span>
+<span id="L547" class="ln">   547</span>	func (tr *Reader) readOldGNUSparseMap(header []byte) []sparseEntry {
+<span id="L548" class="ln">   548</span>		isExtended := header[oldGNUSparseMainHeaderIsExtendedOffset] != 0
+<span id="L549" class="ln">   549</span>		spCap := oldGNUSparseMainHeaderNumEntries
+<span id="L550" class="ln">   550</span>		if isExtended {
+<span id="L551" class="ln">   551</span>			spCap += oldGNUSparseExtendedHeaderNumEntries
+<span id="L552" class="ln">   552</span>		}
+<span id="L553" class="ln">   553</span>		sp := make([]sparseEntry, 0, spCap)
+<span id="L554" class="ln">   554</span>		s := slicer(header[oldGNUSparseMainHeaderOffset:])
+<span id="L555" class="ln">   555</span>	
+<span id="L556" class="ln">   556</span>		<span class="comment">// Read the four entries from the main tar header</span>
+<span id="L557" class="ln">   557</span>		for i := 0; i &lt; oldGNUSparseMainHeaderNumEntries; i++ {
+<span id="L558" class="ln">   558</span>			offset := tr.octal(s.next(oldGNUSparseOffsetSize))
+<span id="L559" class="ln">   559</span>			numBytes := tr.octal(s.next(oldGNUSparseNumBytesSize))
+<span id="L560" class="ln">   560</span>			if tr.err != nil {
+<span id="L561" class="ln">   561</span>				tr.err = ErrHeader
+<span id="L562" class="ln">   562</span>				return nil
+<span id="L563" class="ln">   563</span>			}
+<span id="L564" class="ln">   564</span>			if offset == 0 &amp;&amp; numBytes == 0 {
+<span id="L565" class="ln">   565</span>				break
+<span id="L566" class="ln">   566</span>			}
+<span id="L567" class="ln">   567</span>			sp = append(sp, sparseEntry{offset: offset, numBytes: numBytes})
+<span id="L568" class="ln">   568</span>		}
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>		for isExtended {
+<span id="L571" class="ln">   571</span>			<span class="comment">// There are more entries. Read an extension header and parse its entries.</span>
+<span id="L572" class="ln">   572</span>			sparseHeader := make([]byte, blockSize)
+<span id="L573" class="ln">   573</span>			if _, tr.err = io.ReadFull(tr.r, sparseHeader); tr.err != nil {
+<span id="L574" class="ln">   574</span>				return nil
+<span id="L575" class="ln">   575</span>			}
+<span id="L576" class="ln">   576</span>			isExtended = sparseHeader[oldGNUSparseExtendedHeaderIsExtendedOffset] != 0
+<span id="L577" class="ln">   577</span>			s = slicer(sparseHeader)
+<span id="L578" class="ln">   578</span>			for i := 0; i &lt; oldGNUSparseExtendedHeaderNumEntries; i++ {
+<span id="L579" class="ln">   579</span>				offset := tr.octal(s.next(oldGNUSparseOffsetSize))
+<span id="L580" class="ln">   580</span>				numBytes := tr.octal(s.next(oldGNUSparseNumBytesSize))
+<span id="L581" class="ln">   581</span>				if tr.err != nil {
+<span id="L582" class="ln">   582</span>					tr.err = ErrHeader
+<span id="L583" class="ln">   583</span>					return nil
+<span id="L584" class="ln">   584</span>				}
+<span id="L585" class="ln">   585</span>				if offset == 0 &amp;&amp; numBytes == 0 {
+<span id="L586" class="ln">   586</span>					break
+<span id="L587" class="ln">   587</span>				}
+<span id="L588" class="ln">   588</span>				sp = append(sp, sparseEntry{offset: offset, numBytes: numBytes})
+<span id="L589" class="ln">   589</span>			}
+<span id="L590" class="ln">   590</span>		}
+<span id="L591" class="ln">   591</span>		return sp
+<span id="L592" class="ln">   592</span>	}
+<span id="L593" class="ln">   593</span>	
+<span id="L594" class="ln">   594</span>	<span class="comment">// readGNUSparseMap1x0 reads the sparse map as stored in GNU&#39;s PAX sparse format version 1.0.</span>
+<span id="L595" class="ln">   595</span>	<span class="comment">// The sparse map is stored just before the file data and padded out to the nearest block boundary.</span>
+<span id="L596" class="ln">   596</span>	func readGNUSparseMap1x0(r io.Reader) ([]sparseEntry, error) {
+<span id="L597" class="ln">   597</span>		buf := make([]byte, 2*blockSize)
+<span id="L598" class="ln">   598</span>		sparseHeader := buf[:blockSize]
+<span id="L599" class="ln">   599</span>	
+<span id="L600" class="ln">   600</span>		<span class="comment">// readDecimal is a helper function to read a decimal integer from the sparse map</span>
+<span id="L601" class="ln">   601</span>		<span class="comment">// while making sure to read from the file in blocks of size blockSize</span>
+<span id="L602" class="ln">   602</span>		readDecimal := func() (int64, error) {
+<span id="L603" class="ln">   603</span>			<span class="comment">// Look for newline</span>
+<span id="L604" class="ln">   604</span>			nl := bytes.IndexByte(sparseHeader, &#39;\n&#39;)
+<span id="L605" class="ln">   605</span>			if nl == -1 {
+<span id="L606" class="ln">   606</span>				if len(sparseHeader) &gt;= blockSize {
+<span id="L607" class="ln">   607</span>					<span class="comment">// This is an error</span>
+<span id="L608" class="ln">   608</span>					return 0, ErrHeader
+<span id="L609" class="ln">   609</span>				}
+<span id="L610" class="ln">   610</span>				oldLen := len(sparseHeader)
+<span id="L611" class="ln">   611</span>				newLen := oldLen + blockSize
+<span id="L612" class="ln">   612</span>				if cap(sparseHeader) &lt; newLen {
+<span id="L613" class="ln">   613</span>					<span class="comment">// There&#39;s more header, but we need to make room for the next block</span>
+<span id="L614" class="ln">   614</span>					copy(buf, sparseHeader)
+<span id="L615" class="ln">   615</span>					sparseHeader = buf[:newLen]
+<span id="L616" class="ln">   616</span>				} else {
+<span id="L617" class="ln">   617</span>					<span class="comment">// There&#39;s more header, and we can just reslice</span>
+<span id="L618" class="ln">   618</span>					sparseHeader = sparseHeader[:newLen]
+<span id="L619" class="ln">   619</span>				}
+<span id="L620" class="ln">   620</span>	
+<span id="L621" class="ln">   621</span>				<span class="comment">// Now that sparseHeader is large enough, read next block</span>
+<span id="L622" class="ln">   622</span>				if _, err := io.ReadFull(r, sparseHeader[oldLen:newLen]); err != nil {
+<span id="L623" class="ln">   623</span>					return 0, err
+<span id="L624" class="ln">   624</span>				}
+<span id="L625" class="ln">   625</span>	
+<span id="L626" class="ln">   626</span>				<span class="comment">// Look for a newline in the new data</span>
+<span id="L627" class="ln">   627</span>				nl = bytes.IndexByte(sparseHeader[oldLen:newLen], &#39;\n&#39;)
+<span id="L628" class="ln">   628</span>				if nl == -1 {
+<span id="L629" class="ln">   629</span>					<span class="comment">// This is an error</span>
+<span id="L630" class="ln">   630</span>					return 0, ErrHeader
+<span id="L631" class="ln">   631</span>				}
+<span id="L632" class="ln">   632</span>				nl += oldLen <span class="comment">// We want the position from the beginning</span>
+<span id="L633" class="ln">   633</span>			}
+<span id="L634" class="ln">   634</span>			<span class="comment">// Now that we&#39;ve found a newline, read a number</span>
+<span id="L635" class="ln">   635</span>			n, err := strconv.ParseInt(string(sparseHeader[:nl]), 10, 0)
+<span id="L636" class="ln">   636</span>			if err != nil {
+<span id="L637" class="ln">   637</span>				return 0, ErrHeader
+<span id="L638" class="ln">   638</span>			}
+<span id="L639" class="ln">   639</span>	
+<span id="L640" class="ln">   640</span>			<span class="comment">// Update sparseHeader to consume this number</span>
+<span id="L641" class="ln">   641</span>			sparseHeader = sparseHeader[nl+1:]
+<span id="L642" class="ln">   642</span>			return n, nil
+<span id="L643" class="ln">   643</span>		}
+<span id="L644" class="ln">   644</span>	
+<span id="L645" class="ln">   645</span>		<span class="comment">// Read the first block</span>
+<span id="L646" class="ln">   646</span>		if _, err := io.ReadFull(r, sparseHeader); err != nil {
+<span id="L647" class="ln">   647</span>			return nil, err
+<span id="L648" class="ln">   648</span>		}
+<span id="L649" class="ln">   649</span>	
+<span id="L650" class="ln">   650</span>		<span class="comment">// The first line contains the number of entries</span>
+<span id="L651" class="ln">   651</span>		numEntries, err := readDecimal()
+<span id="L652" class="ln">   652</span>		if err != nil {
+<span id="L653" class="ln">   653</span>			return nil, err
+<span id="L654" class="ln">   654</span>		}
+<span id="L655" class="ln">   655</span>	
+<span id="L656" class="ln">   656</span>		<span class="comment">// Read all the entries</span>
+<span id="L657" class="ln">   657</span>		sp := make([]sparseEntry, 0, numEntries)
+<span id="L658" class="ln">   658</span>		for i := int64(0); i &lt; numEntries; i++ {
+<span id="L659" class="ln">   659</span>			<span class="comment">// Read the offset</span>
+<span id="L660" class="ln">   660</span>			offset, err := readDecimal()
+<span id="L661" class="ln">   661</span>			if err != nil {
+<span id="L662" class="ln">   662</span>				return nil, err
+<span id="L663" class="ln">   663</span>			}
+<span id="L664" class="ln">   664</span>			<span class="comment">// Read numBytes</span>
+<span id="L665" class="ln">   665</span>			numBytes, err := readDecimal()
+<span id="L666" class="ln">   666</span>			if err != nil {
+<span id="L667" class="ln">   667</span>				return nil, err
+<span id="L668" class="ln">   668</span>			}
+<span id="L669" class="ln">   669</span>	
+<span id="L670" class="ln">   670</span>			sp = append(sp, sparseEntry{offset: offset, numBytes: numBytes})
+<span id="L671" class="ln">   671</span>		}
+<span id="L672" class="ln">   672</span>	
+<span id="L673" class="ln">   673</span>		return sp, nil
+<span id="L674" class="ln">   674</span>	}
+<span id="L675" class="ln">   675</span>	
+<span id="L676" class="ln">   676</span>	<span class="comment">// readGNUSparseMap0x1 reads the sparse map as stored in GNU&#39;s PAX sparse format version 0.1.</span>
+<span id="L677" class="ln">   677</span>	<span class="comment">// The sparse map is stored in the PAX headers.</span>
+<span id="L678" class="ln">   678</span>	func readGNUSparseMap0x1(headers map[string]string) ([]sparseEntry, error) {
+<span id="L679" class="ln">   679</span>		<span class="comment">// Get number of entries</span>
+<span id="L680" class="ln">   680</span>		numEntriesStr, ok := headers[paxGNUSparseNumBlocks]
+<span id="L681" class="ln">   681</span>		if !ok {
+<span id="L682" class="ln">   682</span>			return nil, ErrHeader
+<span id="L683" class="ln">   683</span>		}
+<span id="L684" class="ln">   684</span>		numEntries, err := strconv.ParseInt(numEntriesStr, 10, 0)
+<span id="L685" class="ln">   685</span>		if err != nil {
+<span id="L686" class="ln">   686</span>			return nil, ErrHeader
+<span id="L687" class="ln">   687</span>		}
+<span id="L688" class="ln">   688</span>	
+<span id="L689" class="ln">   689</span>		sparseMap := strings.Split(headers[paxGNUSparseMap], &#34;,&#34;)
+<span id="L690" class="ln">   690</span>	
+<span id="L691" class="ln">   691</span>		<span class="comment">// There should be two numbers in sparseMap for each entry</span>
+<span id="L692" class="ln">   692</span>		if int64(len(sparseMap)) != 2*numEntries {
+<span id="L693" class="ln">   693</span>			return nil, ErrHeader
+<span id="L694" class="ln">   694</span>		}
+<span id="L695" class="ln">   695</span>	
+<span id="L696" class="ln">   696</span>		<span class="comment">// Loop through the entries in the sparse map</span>
+<span id="L697" class="ln">   697</span>		sp := make([]sparseEntry, 0, numEntries)
+<span id="L698" class="ln">   698</span>		for i := int64(0); i &lt; numEntries; i++ {
+<span id="L699" class="ln">   699</span>			offset, err := strconv.ParseInt(sparseMap[2*i], 10, 0)
+<span id="L700" class="ln">   700</span>			if err != nil {
+<span id="L701" class="ln">   701</span>				return nil, ErrHeader
+<span id="L702" class="ln">   702</span>			}
+<span id="L703" class="ln">   703</span>			numBytes, err := strconv.ParseInt(sparseMap[2*i+1], 10, 0)
+<span id="L704" class="ln">   704</span>			if err != nil {
+<span id="L705" class="ln">   705</span>				return nil, ErrHeader
+<span id="L706" class="ln">   706</span>			}
+<span id="L707" class="ln">   707</span>			sp = append(sp, sparseEntry{offset: offset, numBytes: numBytes})
+<span id="L708" class="ln">   708</span>		}
+<span id="L709" class="ln">   709</span>	
+<span id="L710" class="ln">   710</span>		return sp, nil
+<span id="L711" class="ln">   711</span>	}
+<span id="L712" class="ln">   712</span>	
+<span id="L713" class="ln">   713</span>	<span class="comment">// numBytes returns the number of bytes left to read in the current file&#39;s entry</span>
+<span id="L714" class="ln">   714</span>	<span class="comment">// in the tar archive, or 0 if there is no current file.</span>
+<span id="L715" class="ln">   715</span>	func (tr *Reader) numBytes() int64 {
+<span id="L716" class="ln">   716</span>		if tr.curr == nil {
+<span id="L717" class="ln">   717</span>			<span class="comment">// No current file, so no bytes</span>
+<span id="L718" class="ln">   718</span>			return 0
+<span id="L719" class="ln">   719</span>		}
+<span id="L720" class="ln">   720</span>		return tr.curr.numBytes()
+<span id="L721" class="ln">   721</span>	}
+<span id="L722" class="ln">   722</span>	
+<span id="L723" class="ln">   723</span>	<span class="comment">// Read reads from the current entry in the tar archive.</span>
+<span id="L724" class="ln">   724</span>	<span class="comment">// It returns 0, io.EOF when it reaches the end of that entry,</span>
+<span id="L725" class="ln">   725</span>	<span class="comment">// until Next is called to advance to the next entry.</span>
+<span id="L726" class="ln">   726</span>	func (tr *Reader) Read(b []byte) (n int, err error) {
+<span id="L727" class="ln">   727</span>		if tr.curr == nil {
+<span id="L728" class="ln">   728</span>			return 0, io.EOF
+<span id="L729" class="ln">   729</span>		}
+<span id="L730" class="ln">   730</span>		n, err = tr.curr.Read(b)
+<span id="L731" class="ln">   731</span>		if err != nil &amp;&amp; err != io.EOF {
+<span id="L732" class="ln">   732</span>			tr.err = err
+<span id="L733" class="ln">   733</span>		}
+<span id="L734" class="ln">   734</span>		return
+<span id="L735" class="ln">   735</span>	}
+<span id="L736" class="ln">   736</span>	
+<span id="L737" class="ln">   737</span>	func (rfr *regFileReader) Read(b []byte) (n int, err error) {
+<span id="L738" class="ln">   738</span>		if rfr.nb == 0 {
+<span id="L739" class="ln">   739</span>			<span class="comment">// file consumed</span>
+<span id="L740" class="ln">   740</span>			return 0, io.EOF
+<span id="L741" class="ln">   741</span>		}
+<span id="L742" class="ln">   742</span>		if int64(len(b)) &gt; rfr.nb {
+<span id="L743" class="ln">   743</span>			b = b[0:rfr.nb]
+<span id="L744" class="ln">   744</span>		}
+<span id="L745" class="ln">   745</span>		n, err = rfr.r.Read(b)
+<span id="L746" class="ln">   746</span>		rfr.nb -= int64(n)
+<span id="L747" class="ln">   747</span>	
+<span id="L748" class="ln">   748</span>		if err == io.EOF &amp;&amp; rfr.nb &gt; 0 {
+<span id="L749" class="ln">   749</span>			err = io.ErrUnexpectedEOF
+<span id="L750" class="ln">   750</span>		}
+<span id="L751" class="ln">   751</span>		return
+<span id="L752" class="ln">   752</span>	}
+<span id="L753" class="ln">   753</span>	
+<span id="L754" class="ln">   754</span>	<span class="comment">// numBytes returns the number of bytes left to read in the file&#39;s data in the tar archive.</span>
+<span id="L755" class="ln">   755</span>	func (rfr *regFileReader) numBytes() int64 {
+<span id="L756" class="ln">   756</span>		return rfr.nb
+<span id="L757" class="ln">   757</span>	}
+<span id="L758" class="ln">   758</span>	
+<span id="L759" class="ln">   759</span>	<span class="comment">// readHole reads a sparse file hole ending at offset toOffset</span>
+<span id="L760" class="ln">   760</span>	func (sfr *sparseFileReader) readHole(b []byte, toOffset int64) int {
+<span id="L761" class="ln">   761</span>		n64 := toOffset - sfr.pos
+<span id="L762" class="ln">   762</span>		if n64 &gt; int64(len(b)) {
+<span id="L763" class="ln">   763</span>			n64 = int64(len(b))
+<span id="L764" class="ln">   764</span>		}
+<span id="L765" class="ln">   765</span>		n := int(n64)
+<span id="L766" class="ln">   766</span>		for i := 0; i &lt; n; i++ {
+<span id="L767" class="ln">   767</span>			b[i] = 0
+<span id="L768" class="ln">   768</span>		}
+<span id="L769" class="ln">   769</span>		sfr.pos += n64
+<span id="L770" class="ln">   770</span>		return n
+<span id="L771" class="ln">   771</span>	}
+<span id="L772" class="ln">   772</span>	
+<span id="L773" class="ln">   773</span>	<span class="comment">// Read reads the sparse file data in expanded form.</span>
+<span id="L774" class="ln">   774</span>	func (sfr *sparseFileReader) Read(b []byte) (n int, err error) {
+<span id="L775" class="ln">   775</span>		if len(sfr.sp) == 0 {
+<span id="L776" class="ln">   776</span>			<span class="comment">// No more data fragments to read from.</span>
+<span id="L777" class="ln">   777</span>			if sfr.pos &lt; sfr.tot {
+<span id="L778" class="ln">   778</span>				<span class="comment">// We&#39;re in the last hole</span>
+<span id="L779" class="ln">   779</span>				n = sfr.readHole(b, sfr.tot)
+<span id="L780" class="ln">   780</span>				return
+<span id="L781" class="ln">   781</span>			}
+<span id="L782" class="ln">   782</span>			<span class="comment">// Otherwise, we&#39;re at the end of the file</span>
+<span id="L783" class="ln">   783</span>			return 0, io.EOF
+<span id="L784" class="ln">   784</span>		}
+<span id="L785" class="ln">   785</span>		if sfr.pos &lt; sfr.sp[0].offset {
+<span id="L786" class="ln">   786</span>			<span class="comment">// We&#39;re in a hole</span>
+<span id="L787" class="ln">   787</span>			n = sfr.readHole(b, sfr.sp[0].offset)
+<span id="L788" class="ln">   788</span>			return
+<span id="L789" class="ln">   789</span>		}
+<span id="L790" class="ln">   790</span>	
+<span id="L791" class="ln">   791</span>		<span class="comment">// We&#39;re not in a hole, so we&#39;ll read from the next data fragment</span>
+<span id="L792" class="ln">   792</span>		posInFragment := sfr.pos - sfr.sp[0].offset
+<span id="L793" class="ln">   793</span>		bytesLeft := sfr.sp[0].numBytes - posInFragment
+<span id="L794" class="ln">   794</span>		if int64(len(b)) &gt; bytesLeft {
+<span id="L795" class="ln">   795</span>			b = b[0:bytesLeft]
+<span id="L796" class="ln">   796</span>		}
+<span id="L797" class="ln">   797</span>	
+<span id="L798" class="ln">   798</span>		n, err = sfr.rfr.Read(b)
+<span id="L799" class="ln">   799</span>		sfr.pos += int64(n)
+<span id="L800" class="ln">   800</span>	
+<span id="L801" class="ln">   801</span>		if int64(n) == bytesLeft {
+<span id="L802" class="ln">   802</span>			<span class="comment">// We&#39;re done with this fragment</span>
+<span id="L803" class="ln">   803</span>			sfr.sp = sfr.sp[1:]
+<span id="L804" class="ln">   804</span>		}
+<span id="L805" class="ln">   805</span>	
+<span id="L806" class="ln">   806</span>		if err == io.EOF &amp;&amp; sfr.pos &lt; sfr.tot {
+<span id="L807" class="ln">   807</span>			<span class="comment">// We reached the end of the last fragment&#39;s data, but there&#39;s a final hole</span>
+<span id="L808" class="ln">   808</span>			err = nil
+<span id="L809" class="ln">   809</span>		}
+<span id="L810" class="ln">   810</span>		return
+<span id="L811" class="ln">   811</span>	}
+<span id="L812" class="ln">   812</span>	
+<span id="L813" class="ln">   813</span>	<span class="comment">// numBytes returns the number of bytes left to read in the sparse file&#39;s</span>
+<span id="L814" class="ln">   814</span>	<span class="comment">// sparse-encoded data in the tar archive.</span>
+<span id="L815" class="ln">   815</span>	func (sfr *sparseFileReader) numBytes() int64 {
+<span id="L816" class="ln">   816</span>		return sfr.rfr.nb
+<span id="L817" class="ln">   817</span>	}
+<span id="L818" class="ln">   818</span>	
+</pre><p><a href="reader.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

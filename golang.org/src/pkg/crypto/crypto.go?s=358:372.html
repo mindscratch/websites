@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/crypto/crypto.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/crypto/crypto.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package crypto collects common cryptographic constants.</span>
+<span id="L6" class="ln">     6</span>	package crypto
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	import (
+<span id="L9" class="ln">     9</span>		&#34;hash&#34;
+<span id="L10" class="ln">    10</span>		&#34;strconv&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	<span class="comment">// Hash identifies a cryptographic hash function that is implemented in another</span>
+<span id="L14" class="ln">    14</span>	<span class="comment">// package.</span>
+<span id="L15" class="ln">    15</span>	<span class="selection">type Hash uint</span>
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	const (
+<span id="L18" class="ln">    18</span>		MD4       Hash = 1 + iota <span class="comment">// import code.google.com/p/go.crypto/md4</span>
+<span id="L19" class="ln">    19</span>		MD5                       <span class="comment">// import crypto/md5</span>
+<span id="L20" class="ln">    20</span>		SHA1                      <span class="comment">// import crypto/sha1</span>
+<span id="L21" class="ln">    21</span>		SHA224                    <span class="comment">// import crypto/sha256</span>
+<span id="L22" class="ln">    22</span>		SHA256                    <span class="comment">// import crypto/sha256</span>
+<span id="L23" class="ln">    23</span>		SHA384                    <span class="comment">// import crypto/sha512</span>
+<span id="L24" class="ln">    24</span>		SHA512                    <span class="comment">// import crypto/sha512</span>
+<span id="L25" class="ln">    25</span>		MD5SHA1                   <span class="comment">// no implementation; MD5+SHA1 used for TLS RSA</span>
+<span id="L26" class="ln">    26</span>		RIPEMD160                 <span class="comment">// import code.google.com/p/go.crypto/ripemd160</span>
+<span id="L27" class="ln">    27</span>		maxHash
+<span id="L28" class="ln">    28</span>	)
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	var digestSizes = []uint8{
+<span id="L31" class="ln">    31</span>		MD4:       16,
+<span id="L32" class="ln">    32</span>		MD5:       16,
+<span id="L33" class="ln">    33</span>		SHA1:      20,
+<span id="L34" class="ln">    34</span>		SHA224:    28,
+<span id="L35" class="ln">    35</span>		SHA256:    32,
+<span id="L36" class="ln">    36</span>		SHA384:    48,
+<span id="L37" class="ln">    37</span>		SHA512:    64,
+<span id="L38" class="ln">    38</span>		MD5SHA1:   36,
+<span id="L39" class="ln">    39</span>		RIPEMD160: 20,
+<span id="L40" class="ln">    40</span>	}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	<span class="comment">// Size returns the length, in bytes, of a digest resulting from the given hash</span>
+<span id="L43" class="ln">    43</span>	<span class="comment">// function. It doesn&#39;t require that the hash function in question be linked</span>
+<span id="L44" class="ln">    44</span>	<span class="comment">// into the program.</span>
+<span id="L45" class="ln">    45</span>	func (h Hash) Size() int {
+<span id="L46" class="ln">    46</span>		if h &gt; 0 &amp;&amp; h &lt; maxHash {
+<span id="L47" class="ln">    47</span>			return int(digestSizes[h])
+<span id="L48" class="ln">    48</span>		}
+<span id="L49" class="ln">    49</span>		panic(&#34;crypto: Size of unknown hash function&#34;)
+<span id="L50" class="ln">    50</span>	}
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>	var hashes = make([]func() hash.Hash, maxHash)
+<span id="L53" class="ln">    53</span>	
+<span id="L54" class="ln">    54</span>	<span class="comment">// New returns a new hash.Hash calculating the given hash function. New panics</span>
+<span id="L55" class="ln">    55</span>	<span class="comment">// if the hash function is not linked into the binary.</span>
+<span id="L56" class="ln">    56</span>	func (h Hash) New() hash.Hash {
+<span id="L57" class="ln">    57</span>		if h &gt; 0 &amp;&amp; h &lt; maxHash {
+<span id="L58" class="ln">    58</span>			f := hashes[h]
+<span id="L59" class="ln">    59</span>			if f != nil {
+<span id="L60" class="ln">    60</span>				return f()
+<span id="L61" class="ln">    61</span>			}
+<span id="L62" class="ln">    62</span>		}
+<span id="L63" class="ln">    63</span>		panic(&#34;crypto: requested hash function #&#34; + strconv.Itoa(int(h)) + &#34; is unavailable&#34;)
+<span id="L64" class="ln">    64</span>	}
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	<span class="comment">// Available reports whether the given hash function is linked into the binary.</span>
+<span id="L67" class="ln">    67</span>	func (h Hash) Available() bool {
+<span id="L68" class="ln">    68</span>		return h &lt; maxHash &amp;&amp; hashes[h] != nil
+<span id="L69" class="ln">    69</span>	}
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	<span class="comment">// RegisterHash registers a function that returns a new instance of the given</span>
+<span id="L72" class="ln">    72</span>	<span class="comment">// hash function. This is intended to be called from the init function in</span>
+<span id="L73" class="ln">    73</span>	<span class="comment">// packages that implement hash functions.</span>
+<span id="L74" class="ln">    74</span>	func RegisterHash(h Hash, f func() hash.Hash) {
+<span id="L75" class="ln">    75</span>		if h &gt;= maxHash {
+<span id="L76" class="ln">    76</span>			panic(&#34;crypto: RegisterHash of unknown hash function&#34;)
+<span id="L77" class="ln">    77</span>		}
+<span id="L78" class="ln">    78</span>		hashes[h] = f
+<span id="L79" class="ln">    79</span>	}
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>	<span class="comment">// PublicKey represents a public key using an unspecified algorithm.</span>
+<span id="L82" class="ln">    82</span>	type PublicKey interface{}
+<span id="L83" class="ln">    83</span>	
+<span id="L84" class="ln">    84</span>	<span class="comment">// PrivateKey represents a private key using an unspecified algorithm.</span>
+<span id="L85" class="ln">    85</span>	type PrivateKey interface{}
+<span id="L86" class="ln">    86</span>	
+</pre><p><a href="crypto.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/index/suffixarray/qsufsort.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/index/suffixarray/qsufsort.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// This algorithm is based on &#34;Faster Suffix Sorting&#34;</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">//   by N. Jesper Larsson and Kunihiko Sadakane</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// paper: http://www.larsson.dogma.net/ssrev-tr.pdf</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">// code:  http://www.larsson.dogma.net/qsufsort.c</span>
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	<span class="comment">// This algorithm computes the suffix array sa by computing its inverse.</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">// Consecutive groups of suffixes in sa are labeled as sorted groups or</span>
+<span id="L12" class="ln">    12</span>	<span class="comment">// unsorted groups. For a given pass of the sorter, all suffixes are ordered</span>
+<span id="L13" class="ln">    13</span>	<span class="comment">// up to their first h characters, and sa is h-ordered. Suffixes in their</span>
+<span id="L14" class="ln">    14</span>	<span class="comment">// final positions and unambiguously sorted in h-order are in a sorted group.</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// Consecutive groups of suffixes with identical first h characters are an</span>
+<span id="L16" class="ln">    16</span>	<span class="comment">// unsorted group. In each pass of the algorithm, unsorted groups are sorted</span>
+<span id="L17" class="ln">    17</span>	<span class="comment">// according to the group number of their following suffix.</span>
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	<span class="comment">// In the implementation, if sa[i] is negative, it indicates that i is</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">// the first element of a sorted group of length -sa[i], and can be skipped.</span>
+<span id="L21" class="ln">    21</span>	<span class="comment">// An unsorted group sa[i:k] is given the group number of the index of its</span>
+<span id="L22" class="ln">    22</span>	<span class="comment">// last element, k-1. The group numbers are stored in the inverse slice (inv),</span>
+<span id="L23" class="ln">    23</span>	<span class="comment">// and when all groups are sorted, this slice is the inverse suffix array.</span>
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	package suffixarray
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	import &#34;sort&#34;
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	func qsufsort(data []byte) []int {
+<span id="L30" class="ln">    30</span>		<span class="comment">// initial sorting by first byte of suffix</span>
+<span id="L31" class="ln">    31</span>		sa := sortedByFirstByte(data)
+<span id="L32" class="ln">    32</span>		if len(sa) &lt; 2 {
+<span id="L33" class="ln">    33</span>			return sa
+<span id="L34" class="ln">    34</span>		}
+<span id="L35" class="ln">    35</span>		<span class="comment">// initialize the group lookup table</span>
+<span id="L36" class="ln">    36</span>		<span class="comment">// this becomes the inverse of the suffix array when all groups are sorted</span>
+<span id="L37" class="ln">    37</span>		inv := initGroups(sa, data)
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>		<span class="comment">// the index starts 1-ordered</span>
+<span id="L40" class="ln">    40</span>		sufSortable := &amp;suffixSortable{sa: sa, inv: inv, h: 1}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>		for sa[0] &gt; -len(sa) { <span class="comment">// until all suffixes are one big sorted group</span>
+<span id="L43" class="ln">    43</span>			<span class="comment">// The suffixes are h-ordered, make them 2*h-ordered</span>
+<span id="L44" class="ln">    44</span>			pi := 0 <span class="comment">// pi is first position of first group</span>
+<span id="L45" class="ln">    45</span>			sl := 0 <span class="comment">// sl is negated length of sorted groups</span>
+<span id="L46" class="ln">    46</span>			for pi &lt; len(sa) {
+<span id="L47" class="ln">    47</span>				if s := sa[pi]; s &lt; 0 { <span class="comment">// if pi starts sorted group</span>
+<span id="L48" class="ln">    48</span>					pi -= s <span class="comment">// skip over sorted group</span>
+<span id="L49" class="ln">    49</span>					sl += s <span class="comment">// add negated length to sl</span>
+<span id="L50" class="ln">    50</span>				} else { <span class="comment">// if pi starts unsorted group</span>
+<span id="L51" class="ln">    51</span>					if sl != 0 {
+<span id="L52" class="ln">    52</span>						sa[pi+sl] = sl <span class="comment">// combine sorted groups before pi</span>
+<span id="L53" class="ln">    53</span>						sl = 0
+<span id="L54" class="ln">    54</span>					}
+<span id="L55" class="ln">    55</span>					pk := inv[s] + 1 <span class="comment">// pk-1 is last position of unsorted group</span>
+<span id="L56" class="ln">    56</span>					sufSortable.sa = sa[pi:pk]
+<span id="L57" class="ln">    57</span>					sort.Sort(sufSortable)
+<span id="L58" class="ln">    58</span>					sufSortable.updateGroups(pi)
+<span id="L59" class="ln">    59</span>					pi = pk <span class="comment">// next group</span>
+<span id="L60" class="ln">    60</span>				}
+<span id="L61" class="ln">    61</span>			}
+<span id="L62" class="ln">    62</span>			if sl != 0 { <span class="comment">// if the array ends with a sorted group</span>
+<span id="L63" class="ln">    63</span>				sa[pi+sl] = sl <span class="comment">// combine sorted groups at end of sa</span>
+<span id="L64" class="ln">    64</span>			}
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>			sufSortable.h *= 2 <span class="comment">// double sorted depth</span>
+<span id="L67" class="ln">    67</span>		}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>		for i := range sa { <span class="comment">// reconstruct suffix array from inverse</span>
+<span id="L70" class="ln">    70</span>			sa[inv[i]] = i
+<span id="L71" class="ln">    71</span>		}
+<span id="L72" class="ln">    72</span>		return sa
+<span id="L73" class="ln">    73</span>	}
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>	func sortedByFirstByte(data []byte) []int {
+<span id="L76" class="ln">    76</span>		<span class="comment">// total byte counts</span>
+<span id="L77" class="ln">    77</span>		var count [256]int
+<span id="L78" class="ln">    78</span>		for _, b := range data {
+<span id="L79" class="ln">    79</span>			count[b]++
+<span id="L80" class="ln">    80</span>		}
+<span id="L81" class="ln">    81</span>		<span class="comment">// make count[b] equal index of first occurrence of b in sorted array</span>
+<span id="L82" class="ln">    82</span>		sum := 0
+<span id="L83" class="ln">    83</span>		for b := range count {
+<span id="L84" class="ln">    84</span>			count[b], sum = sum, count[b]+sum
+<span id="L85" class="ln">    85</span>		}
+<span id="L86" class="ln">    86</span>		<span class="comment">// iterate through bytes, placing index into the correct spot in sa</span>
+<span id="L87" class="ln">    87</span>		sa := make([]int, len(data))
+<span id="L88" class="ln">    88</span>		for i, b := range data {
+<span id="L89" class="ln">    89</span>			sa[count[b]] = i
+<span id="L90" class="ln">    90</span>			count[b]++
+<span id="L91" class="ln">    91</span>		}
+<span id="L92" class="ln">    92</span>		return sa
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	func initGroups(sa []int, data []byte) []int {
+<span id="L96" class="ln">    96</span>		<span class="comment">// label contiguous same-letter groups with the same group number</span>
+<span id="L97" class="ln">    97</span>		inv := make([]int, len(data))
+<span id="L98" class="ln">    98</span>		prevGroup := len(sa) - 1
+<span id="L99" class="ln">    99</span>		groupByte := data[sa[prevGroup]]
+<span id="L100" class="ln">   100</span>		for i := len(sa) - 1; i &gt;= 0; i-- {
+<span id="L101" class="ln">   101</span>			if b := data[sa[i]]; b &lt; groupByte {
+<span id="L102" class="ln">   102</span>				if prevGroup == i+1 {
+<span id="L103" class="ln">   103</span>					sa[i+1] = -1
+<span id="L104" class="ln">   104</span>				}
+<span id="L105" class="ln">   105</span>				groupByte = b
+<span id="L106" class="ln">   106</span>				prevGroup = i
+<span id="L107" class="ln">   107</span>			}
+<span id="L108" class="ln">   108</span>			inv[sa[i]] = prevGroup
+<span id="L109" class="ln">   109</span>			if prevGroup == 0 {
+<span id="L110" class="ln">   110</span>				sa[0] = -1
+<span id="L111" class="ln">   111</span>			}
+<span id="L112" class="ln">   112</span>		}
+<span id="L113" class="ln">   113</span>		<span class="comment">// Separate out the final suffix to the start of its group.</span>
+<span id="L114" class="ln">   114</span>		<span class="comment">// This is necessary to ensure the suffix &#34;a&#34; is before &#34;aba&#34;</span>
+<span id="L115" class="ln">   115</span>		<span class="comment">// when using a potentially unstable sort.</span>
+<span id="L116" class="ln">   116</span>		lastByte := data[len(data)-1]
+<span id="L117" class="ln">   117</span>		s := -1
+<span id="L118" class="ln">   118</span>		for i := range sa {
+<span id="L119" class="ln">   119</span>			if sa[i] &gt;= 0 {
+<span id="L120" class="ln">   120</span>				if data[sa[i]] == lastByte &amp;&amp; s == -1 {
+<span id="L121" class="ln">   121</span>					s = i
+<span id="L122" class="ln">   122</span>				}
+<span id="L123" class="ln">   123</span>				if sa[i] == len(sa)-1 {
+<span id="L124" class="ln">   124</span>					sa[i], sa[s] = sa[s], sa[i]
+<span id="L125" class="ln">   125</span>					inv[sa[s]] = s
+<span id="L126" class="ln">   126</span>					sa[s] = -1 <span class="comment">// mark it as an isolated sorted group</span>
+<span id="L127" class="ln">   127</span>					break
+<span id="L128" class="ln">   128</span>				}
+<span id="L129" class="ln">   129</span>			}
+<span id="L130" class="ln">   130</span>		}
+<span id="L131" class="ln">   131</span>		return inv
+<span id="L132" class="ln">   132</span>	}
+<span id="L133" class="ln">   133</span>	
+<span id="L134" class="ln">   134</span>	type suffixSortable struct {
+<span id="L135" class="ln">   135</span>		sa  []int
+<span id="L136" class="ln">   136</span>		inv []int
+<span id="L137" class="ln">   137</span>		h   int
+<span id="L138" class="ln">   138</span>		buf []int <span class="comment">// common scratch space</span>
+<span id="L139" class="ln">   139</span>	}
+<span id="L140" class="ln">   140</span>	
+<span id="L141" class="ln">   141</span>	func (x *suffixSortable) Len() int           { return len(x.sa) }
+<span id="L142" class="ln">   142</span>	func (x *suffixSortable) Less(i, j int) bool { return x.inv[x.sa[i]+x.h] &lt; x.inv[x.sa[j]+x.h] }
+<span id="L143" class="ln">   143</span>	func (x *suffixSortable) Swap(i, j int)      { x.sa[i], x.sa[j] = x.sa[j], x.sa[i] }
+<span id="L144" class="ln">   144</span>	
+<span id="L145" class="ln">   145</span>	func (x *suffixSortable) updateGroups(offset int) {
+<span id="L146" class="ln">   146</span>		bounds := x.buf[0:0]
+<span id="L147" class="ln">   147</span>		group := x.inv[x.sa[0]+x.h]
+<span id="L148" class="ln">   148</span>		for i := 1; i &lt; len(x.sa); i++ {
+<span id="L149" class="ln">   149</span>			if g := x.inv[x.sa[i]+x.h]; g &gt; group {
+<span id="L150" class="ln">   150</span>				bounds = append(bounds, i)
+<span id="L151" class="ln">   151</span>				group = g
+<span id="L152" class="ln">   152</span>			}
+<span id="L153" class="ln">   153</span>		}
+<span id="L154" class="ln">   154</span>		bounds = append(bounds, len(x.sa))
+<span id="L155" class="ln">   155</span>		x.buf = bounds
+<span id="L156" class="ln">   156</span>	
+<span id="L157" class="ln">   157</span>		<span class="comment">// update the group numberings after all new groups are determined</span>
+<span id="L158" class="ln">   158</span>		prev := 0
+<span id="L159" class="ln">   159</span>		for _, b := range bounds {
+<span id="L160" class="ln">   160</span>			for i := prev; i &lt; b; i++ {
+<span id="L161" class="ln">   161</span>				x.inv[x.sa[i]] = offset + b - 1
+<span id="L162" class="ln">   162</span>			}
+<span id="L163" class="ln">   163</span>			if b-prev == 1 {
+<span id="L164" class="ln">   164</span>				x.sa[prev] = -1
+<span id="L165" class="ln">   165</span>			}
+<span id="L166" class="ln">   166</span>			prev = b
+<span id="L167" class="ln">   167</span>		}
+<span id="L168" class="ln">   168</span>	}
+<span id="L169" class="ln">   169</span>	
+</pre><p><a href="qsufsort.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

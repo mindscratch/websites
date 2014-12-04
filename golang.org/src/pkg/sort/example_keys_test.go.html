@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/sort/example_keys_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/sort/example_keys_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2013 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package sort_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;sort&#34;
+<span id="L10" class="ln">    10</span>	)
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	<span class="comment">// A couple of type definitions to make the units clear.</span>
+<span id="L13" class="ln">    13</span>	type earthMass float64
+<span id="L14" class="ln">    14</span>	type au float64
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	<span class="comment">// A Planet defines the properties of a solar system object.</span>
+<span id="L17" class="ln">    17</span>	type Planet struct {
+<span id="L18" class="ln">    18</span>		name     string
+<span id="L19" class="ln">    19</span>		mass     earthMass
+<span id="L20" class="ln">    20</span>		distance au
+<span id="L21" class="ln">    21</span>	}
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	<span class="comment">// By is the type of a &#34;less&#34; function that defines the ordering of its Planet arguments.</span>
+<span id="L24" class="ln">    24</span>	type By func(p1, p2 *Planet) bool
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	<span class="comment">// Sort is a method on the function type, By, that sorts the argument slice according to the function.</span>
+<span id="L27" class="ln">    27</span>	func (by By) Sort(planets []Planet) {
+<span id="L28" class="ln">    28</span>		ps := &amp;planetSorter{
+<span id="L29" class="ln">    29</span>			planets: planets,
+<span id="L30" class="ln">    30</span>			by:      by, <span class="comment">// The Sort method&#39;s receiver is the function (closure) that defines the sort order.</span>
+<span id="L31" class="ln">    31</span>		}
+<span id="L32" class="ln">    32</span>		sort.Sort(ps)
+<span id="L33" class="ln">    33</span>	}
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>	<span class="comment">// planetSorter joins a By function and a slice of Planets to be sorted.</span>
+<span id="L36" class="ln">    36</span>	type planetSorter struct {
+<span id="L37" class="ln">    37</span>		planets []Planet
+<span id="L38" class="ln">    38</span>		by      func(p1, p2 *Planet) bool <span class="comment">// Closure used in the Less method.</span>
+<span id="L39" class="ln">    39</span>	}
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>	<span class="comment">// Len is part of sort.Interface.</span>
+<span id="L42" class="ln">    42</span>	func (s *planetSorter) Len() int {
+<span id="L43" class="ln">    43</span>		return len(s.planets)
+<span id="L44" class="ln">    44</span>	}
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	<span class="comment">// Swap is part of sort.Interface.</span>
+<span id="L47" class="ln">    47</span>	func (s *planetSorter) Swap(i, j int) {
+<span id="L48" class="ln">    48</span>		s.planets[i], s.planets[j] = s.planets[j], s.planets[i]
+<span id="L49" class="ln">    49</span>	}
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>	<span class="comment">// Less is part of sort.Interface. It is implemented by calling the &#34;by&#34; closure in the sorter.</span>
+<span id="L52" class="ln">    52</span>	func (s *planetSorter) Less(i, j int) bool {
+<span id="L53" class="ln">    53</span>		return s.by(&amp;s.planets[i], &amp;s.planets[j])
+<span id="L54" class="ln">    54</span>	}
+<span id="L55" class="ln">    55</span>	
+<span id="L56" class="ln">    56</span>	var planets = []Planet{
+<span id="L57" class="ln">    57</span>		{&#34;Mercury&#34;, 0.055, 0.4},
+<span id="L58" class="ln">    58</span>		{&#34;Venus&#34;, 0.815, 0.7},
+<span id="L59" class="ln">    59</span>		{&#34;Earth&#34;, 1.0, 1.0},
+<span id="L60" class="ln">    60</span>		{&#34;Mars&#34;, 0.107, 1.5},
+<span id="L61" class="ln">    61</span>	}
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>	<span class="comment">// ExampleSortKeys demonstrates a technique for sorting a struct type using programmable sort criteria.</span>
+<span id="L64" class="ln">    64</span>	func Example_sortKeys() {
+<span id="L65" class="ln">    65</span>		<span class="comment">// Closures that order the Planet structure.</span>
+<span id="L66" class="ln">    66</span>		name := func(p1, p2 *Planet) bool {
+<span id="L67" class="ln">    67</span>			return p1.name &lt; p2.name
+<span id="L68" class="ln">    68</span>		}
+<span id="L69" class="ln">    69</span>		mass := func(p1, p2 *Planet) bool {
+<span id="L70" class="ln">    70</span>			return p1.mass &lt; p2.mass
+<span id="L71" class="ln">    71</span>		}
+<span id="L72" class="ln">    72</span>		distance := func(p1, p2 *Planet) bool {
+<span id="L73" class="ln">    73</span>			return p1.distance &lt; p2.distance
+<span id="L74" class="ln">    74</span>		}
+<span id="L75" class="ln">    75</span>		decreasingDistance := func(p1, p2 *Planet) bool {
+<span id="L76" class="ln">    76</span>			return !distance(p1, p2)
+<span id="L77" class="ln">    77</span>		}
+<span id="L78" class="ln">    78</span>	
+<span id="L79" class="ln">    79</span>		<span class="comment">// Sort the planets by the various criteria.</span>
+<span id="L80" class="ln">    80</span>		By(name).Sort(planets)
+<span id="L81" class="ln">    81</span>		fmt.Println(&#34;By name:&#34;, planets)
+<span id="L82" class="ln">    82</span>	
+<span id="L83" class="ln">    83</span>		By(mass).Sort(planets)
+<span id="L84" class="ln">    84</span>		fmt.Println(&#34;By mass:&#34;, planets)
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>		By(distance).Sort(planets)
+<span id="L87" class="ln">    87</span>		fmt.Println(&#34;By distance:&#34;, planets)
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		By(decreasingDistance).Sort(planets)
+<span id="L90" class="ln">    90</span>		fmt.Println(&#34;By decreasing distance:&#34;, planets)
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>		<span class="comment">// Output: By name: [{Earth 1 1} {Mars 0.107 1.5} {Mercury 0.055 0.4} {Venus 0.815 0.7}]</span>
+<span id="L93" class="ln">    93</span>		<span class="comment">// By mass: [{Mercury 0.055 0.4} {Mars 0.107 1.5} {Venus 0.815 0.7} {Earth 1 1}]</span>
+<span id="L94" class="ln">    94</span>		<span class="comment">// By distance: [{Mercury 0.055 0.4} {Venus 0.815 0.7} {Earth 1 1} {Mars 0.107 1.5}]</span>
+<span id="L95" class="ln">    95</span>		<span class="comment">// By decreasing distance: [{Mars 0.107 1.5} {Earth 1 1} {Venus 0.815 0.7} {Mercury 0.055 0.4}]</span>
+<span id="L96" class="ln">    96</span>	}
+<span id="L97" class="ln">    97</span>	
+</pre><p><a href="http://golang.org/src/pkg/sort/example_keys_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

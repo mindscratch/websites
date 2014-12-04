@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/mfinal_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/runtime/mfinal_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package runtime_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;runtime&#34;
+<span id="L9" class="ln">     9</span>		&#34;testing&#34;
+<span id="L10" class="ln">    10</span>		&#34;time&#34;
+<span id="L11" class="ln">    11</span>		&#34;unsafe&#34;
+<span id="L12" class="ln">    12</span>	)
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	type Tintptr *int <span class="comment">// assignable to *int</span>
+<span id="L15" class="ln">    15</span>	type Tint int     <span class="comment">// *Tint implements Tinter, interface{}</span>
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	func (t *Tint) m() {}
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	type Tinter interface {
+<span id="L20" class="ln">    20</span>		m()
+<span id="L21" class="ln">    21</span>	}
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	func TestFinalizerType(t *testing.T) {
+<span id="L24" class="ln">    24</span>		if runtime.GOARCH != &#34;amd64&#34; {
+<span id="L25" class="ln">    25</span>			t.Skipf(&#34;Skipping on non-amd64 machine&#34;)
+<span id="L26" class="ln">    26</span>		}
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>		ch := make(chan bool, 10)
+<span id="L29" class="ln">    29</span>		finalize := func(x *int) {
+<span id="L30" class="ln">    30</span>			if *x != 97531 {
+<span id="L31" class="ln">    31</span>				t.Errorf(&#34;finalizer %d, want %d&#34;, *x, 97531)
+<span id="L32" class="ln">    32</span>			}
+<span id="L33" class="ln">    33</span>			ch &lt;- true
+<span id="L34" class="ln">    34</span>		}
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>		var finalizerTests = []struct {
+<span id="L37" class="ln">    37</span>			convert   func(*int) interface{}
+<span id="L38" class="ln">    38</span>			finalizer interface{}
+<span id="L39" class="ln">    39</span>		}{
+<span id="L40" class="ln">    40</span>			{func(x *int) interface{} { return x }, func(v *int) { finalize(v) }},
+<span id="L41" class="ln">    41</span>			{func(x *int) interface{} { return Tintptr(x) }, func(v Tintptr) { finalize(v) }},
+<span id="L42" class="ln">    42</span>			{func(x *int) interface{} { return Tintptr(x) }, func(v *int) { finalize(v) }},
+<span id="L43" class="ln">    43</span>			{func(x *int) interface{} { return (*Tint)(x) }, func(v *Tint) { finalize((*int)(v)) }},
+<span id="L44" class="ln">    44</span>			{func(x *int) interface{} { return (*Tint)(x) }, func(v Tinter) { finalize((*int)(v.(*Tint))) }},
+<span id="L45" class="ln">    45</span>		}
+<span id="L46" class="ln">    46</span>	
+<span id="L47" class="ln">    47</span>		for _, tt := range finalizerTests {
+<span id="L48" class="ln">    48</span>			done := make(chan bool, 1)
+<span id="L49" class="ln">    49</span>			go func() {
+<span id="L50" class="ln">    50</span>				v := new(int)
+<span id="L51" class="ln">    51</span>				*v = 97531
+<span id="L52" class="ln">    52</span>				runtime.SetFinalizer(tt.convert(v), tt.finalizer)
+<span id="L53" class="ln">    53</span>				v = nil
+<span id="L54" class="ln">    54</span>				done &lt;- true
+<span id="L55" class="ln">    55</span>			}()
+<span id="L56" class="ln">    56</span>			&lt;-done
+<span id="L57" class="ln">    57</span>			runtime.GC()
+<span id="L58" class="ln">    58</span>			select {
+<span id="L59" class="ln">    59</span>			case &lt;-ch:
+<span id="L60" class="ln">    60</span>			case &lt;-time.After(time.Second * 4):
+<span id="L61" class="ln">    61</span>				t.Errorf(&#34;finalizer for type %T didn&#39;t run&#34;, tt.finalizer)
+<span id="L62" class="ln">    62</span>			}
+<span id="L63" class="ln">    63</span>		}
+<span id="L64" class="ln">    64</span>	}
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	type bigValue struct {
+<span id="L67" class="ln">    67</span>		fill uint64
+<span id="L68" class="ln">    68</span>		it   bool
+<span id="L69" class="ln">    69</span>		up   string
+<span id="L70" class="ln">    70</span>	}
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	func TestFinalizerInterfaceBig(t *testing.T) {
+<span id="L73" class="ln">    73</span>		if runtime.GOARCH != &#34;amd64&#34; {
+<span id="L74" class="ln">    74</span>			t.Skipf(&#34;Skipping on non-amd64 machine&#34;)
+<span id="L75" class="ln">    75</span>		}
+<span id="L76" class="ln">    76</span>		ch := make(chan bool)
+<span id="L77" class="ln">    77</span>		done := make(chan bool, 1)
+<span id="L78" class="ln">    78</span>		go func() {
+<span id="L79" class="ln">    79</span>			v := &amp;bigValue{0xDEADBEEFDEADBEEF, true, &#34;It matters not how strait the gate&#34;}
+<span id="L80" class="ln">    80</span>			old := *v
+<span id="L81" class="ln">    81</span>			runtime.SetFinalizer(v, func(v interface{}) {
+<span id="L82" class="ln">    82</span>				i, ok := v.(*bigValue)
+<span id="L83" class="ln">    83</span>				if !ok {
+<span id="L84" class="ln">    84</span>					t.Errorf(&#34;finalizer called with type %T, want *bigValue&#34;, v)
+<span id="L85" class="ln">    85</span>				}
+<span id="L86" class="ln">    86</span>				if *i != old {
+<span id="L87" class="ln">    87</span>					t.Errorf(&#34;finalizer called with %+v, want %+v&#34;, *i, old)
+<span id="L88" class="ln">    88</span>				}
+<span id="L89" class="ln">    89</span>				close(ch)
+<span id="L90" class="ln">    90</span>			})
+<span id="L91" class="ln">    91</span>			v = nil
+<span id="L92" class="ln">    92</span>			done &lt;- true
+<span id="L93" class="ln">    93</span>		}()
+<span id="L94" class="ln">    94</span>		&lt;-done
+<span id="L95" class="ln">    95</span>		runtime.GC()
+<span id="L96" class="ln">    96</span>		select {
+<span id="L97" class="ln">    97</span>		case &lt;-ch:
+<span id="L98" class="ln">    98</span>		case &lt;-time.After(4 * time.Second):
+<span id="L99" class="ln">    99</span>			t.Errorf(&#34;finalizer for type *bigValue didn&#39;t run&#34;)
+<span id="L100" class="ln">   100</span>		}
+<span id="L101" class="ln">   101</span>	}
+<span id="L102" class="ln">   102</span>	
+<span id="L103" class="ln">   103</span>	func fin(v *int) {
+<span id="L104" class="ln">   104</span>	}
+<span id="L105" class="ln">   105</span>	
+<span id="L106" class="ln">   106</span>	<span class="comment">// Verify we don&#39;t crash at least. golang.org/issue/6857</span>
+<span id="L107" class="ln">   107</span>	func TestFinalizerZeroSizedStruct(t *testing.T) {
+<span id="L108" class="ln">   108</span>		type Z struct{}
+<span id="L109" class="ln">   109</span>		z := new(Z)
+<span id="L110" class="ln">   110</span>		runtime.SetFinalizer(z, func(*Z) {})
+<span id="L111" class="ln">   111</span>	}
+<span id="L112" class="ln">   112</span>	
+<span id="L113" class="ln">   113</span>	func BenchmarkFinalizer(b *testing.B) {
+<span id="L114" class="ln">   114</span>		const Batch = 1000
+<span id="L115" class="ln">   115</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L116" class="ln">   116</span>			var data [Batch]*int
+<span id="L117" class="ln">   117</span>			for i := 0; i &lt; Batch; i++ {
+<span id="L118" class="ln">   118</span>				data[i] = new(int)
+<span id="L119" class="ln">   119</span>			}
+<span id="L120" class="ln">   120</span>			for pb.Next() {
+<span id="L121" class="ln">   121</span>				for i := 0; i &lt; Batch; i++ {
+<span id="L122" class="ln">   122</span>					runtime.SetFinalizer(data[i], fin)
+<span id="L123" class="ln">   123</span>				}
+<span id="L124" class="ln">   124</span>				for i := 0; i &lt; Batch; i++ {
+<span id="L125" class="ln">   125</span>					runtime.SetFinalizer(data[i], nil)
+<span id="L126" class="ln">   126</span>				}
+<span id="L127" class="ln">   127</span>			}
+<span id="L128" class="ln">   128</span>		})
+<span id="L129" class="ln">   129</span>	}
+<span id="L130" class="ln">   130</span>	
+<span id="L131" class="ln">   131</span>	func BenchmarkFinalizerRun(b *testing.B) {
+<span id="L132" class="ln">   132</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L133" class="ln">   133</span>			for pb.Next() {
+<span id="L134" class="ln">   134</span>				v := new(int)
+<span id="L135" class="ln">   135</span>				runtime.SetFinalizer(v, fin)
+<span id="L136" class="ln">   136</span>			}
+<span id="L137" class="ln">   137</span>		})
+<span id="L138" class="ln">   138</span>	}
+<span id="L139" class="ln">   139</span>	
+<span id="L140" class="ln">   140</span>	<span class="comment">// One chunk must be exactly one sizeclass in size.</span>
+<span id="L141" class="ln">   141</span>	<span class="comment">// It should be a sizeclass not used much by others, so we</span>
+<span id="L142" class="ln">   142</span>	<span class="comment">// have a greater chance of finding adjacent ones.</span>
+<span id="L143" class="ln">   143</span>	<span class="comment">// size class 19: 320 byte objects, 25 per page, 1 page alloc at a time</span>
+<span id="L144" class="ln">   144</span>	const objsize = 320
+<span id="L145" class="ln">   145</span>	
+<span id="L146" class="ln">   146</span>	type objtype [objsize]byte
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	func adjChunks() (*objtype, *objtype) {
+<span id="L149" class="ln">   149</span>		var s []*objtype
+<span id="L150" class="ln">   150</span>	
+<span id="L151" class="ln">   151</span>		for {
+<span id="L152" class="ln">   152</span>			c := new(objtype)
+<span id="L153" class="ln">   153</span>			for _, d := range s {
+<span id="L154" class="ln">   154</span>				if uintptr(unsafe.Pointer(c))+unsafe.Sizeof(*c) == uintptr(unsafe.Pointer(d)) {
+<span id="L155" class="ln">   155</span>					return c, d
+<span id="L156" class="ln">   156</span>				}
+<span id="L157" class="ln">   157</span>				if uintptr(unsafe.Pointer(d))+unsafe.Sizeof(*c) == uintptr(unsafe.Pointer(c)) {
+<span id="L158" class="ln">   158</span>					return d, c
+<span id="L159" class="ln">   159</span>				}
+<span id="L160" class="ln">   160</span>			}
+<span id="L161" class="ln">   161</span>			s = append(s, c)
+<span id="L162" class="ln">   162</span>		}
+<span id="L163" class="ln">   163</span>	}
+<span id="L164" class="ln">   164</span>	
+<span id="L165" class="ln">   165</span>	<span class="comment">// Make sure an empty slice on the stack doesn&#39;t pin the next object in memory.</span>
+<span id="L166" class="ln">   166</span>	func TestEmptySlice(t *testing.T) {
+<span id="L167" class="ln">   167</span>		if true { <span class="comment">// disable until bug 7564 is fixed.</span>
+<span id="L168" class="ln">   168</span>			return
+<span id="L169" class="ln">   169</span>		}
+<span id="L170" class="ln">   170</span>		x, y := adjChunks()
+<span id="L171" class="ln">   171</span>	
+<span id="L172" class="ln">   172</span>		<span class="comment">// the pointer inside xs points to y.</span>
+<span id="L173" class="ln">   173</span>		xs := x[objsize:] <span class="comment">// change objsize to objsize-1 and the test passes</span>
+<span id="L174" class="ln">   174</span>	
+<span id="L175" class="ln">   175</span>		fin := make(chan bool, 1)
+<span id="L176" class="ln">   176</span>		runtime.SetFinalizer(y, func(z *objtype) { fin &lt;- true })
+<span id="L177" class="ln">   177</span>		runtime.GC()
+<span id="L178" class="ln">   178</span>		select {
+<span id="L179" class="ln">   179</span>		case &lt;-fin:
+<span id="L180" class="ln">   180</span>		case &lt;-time.After(4 * time.Second):
+<span id="L181" class="ln">   181</span>			t.Errorf(&#34;finalizer of next object in memory didn&#39;t run&#34;)
+<span id="L182" class="ln">   182</span>		}
+<span id="L183" class="ln">   183</span>		xsglobal = xs <span class="comment">// keep empty slice alive until here</span>
+<span id="L184" class="ln">   184</span>	}
+<span id="L185" class="ln">   185</span>	
+<span id="L186" class="ln">   186</span>	var xsglobal []byte
+<span id="L187" class="ln">   187</span>	
+<span id="L188" class="ln">   188</span>	func adjStringChunk() (string, *objtype) {
+<span id="L189" class="ln">   189</span>		b := make([]byte, objsize)
+<span id="L190" class="ln">   190</span>		for {
+<span id="L191" class="ln">   191</span>			s := string(b)
+<span id="L192" class="ln">   192</span>			t := new(objtype)
+<span id="L193" class="ln">   193</span>			p := *(*uintptr)(unsafe.Pointer(&amp;s))
+<span id="L194" class="ln">   194</span>			q := uintptr(unsafe.Pointer(t))
+<span id="L195" class="ln">   195</span>			if p+objsize == q {
+<span id="L196" class="ln">   196</span>				return s, t
+<span id="L197" class="ln">   197</span>			}
+<span id="L198" class="ln">   198</span>		}
+<span id="L199" class="ln">   199</span>	}
+<span id="L200" class="ln">   200</span>	
+<span id="L201" class="ln">   201</span>	<span class="comment">// Make sure an empty string on the stack doesn&#39;t pin the next object in memory.</span>
+<span id="L202" class="ln">   202</span>	func TestEmptyString(t *testing.T) {
+<span id="L203" class="ln">   203</span>		x, y := adjStringChunk()
+<span id="L204" class="ln">   204</span>	
+<span id="L205" class="ln">   205</span>		ss := x[objsize:] <span class="comment">// change objsize to objsize-1 and the test passes</span>
+<span id="L206" class="ln">   206</span>		fin := make(chan bool, 1)
+<span id="L207" class="ln">   207</span>		<span class="comment">// set finalizer on string contents of y</span>
+<span id="L208" class="ln">   208</span>		runtime.SetFinalizer(y, func(z *objtype) { fin &lt;- true })
+<span id="L209" class="ln">   209</span>		runtime.GC()
+<span id="L210" class="ln">   210</span>		select {
+<span id="L211" class="ln">   211</span>		case &lt;-fin:
+<span id="L212" class="ln">   212</span>		case &lt;-time.After(4 * time.Second):
+<span id="L213" class="ln">   213</span>			t.Errorf(&#34;finalizer of next string in memory didn&#39;t run&#34;)
+<span id="L214" class="ln">   214</span>		}
+<span id="L215" class="ln">   215</span>		ssglobal = ss <span class="comment">// keep 0-length string live until here</span>
+<span id="L216" class="ln">   216</span>	}
+<span id="L217" class="ln">   217</span>	
+<span id="L218" class="ln">   218</span>	var ssglobal string
+<span id="L219" class="ln">   219</span>	
+<span id="L220" class="ln">   220</span>	<span class="comment">// Test for issue 7656.</span>
+<span id="L221" class="ln">   221</span>	func TestFinalizerOnGlobal(t *testing.T) {
+<span id="L222" class="ln">   222</span>		runtime.SetFinalizer(Foo1, func(p *Object1) {})
+<span id="L223" class="ln">   223</span>		runtime.SetFinalizer(Foo2, func(p *Object2) {})
+<span id="L224" class="ln">   224</span>		runtime.SetFinalizer(Foo1, nil)
+<span id="L225" class="ln">   225</span>		runtime.SetFinalizer(Foo2, nil)
+<span id="L226" class="ln">   226</span>	}
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	type Object1 struct {
+<span id="L229" class="ln">   229</span>		Something []byte
+<span id="L230" class="ln">   230</span>	}
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>	type Object2 struct {
+<span id="L233" class="ln">   233</span>		Something byte
+<span id="L234" class="ln">   234</span>	}
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	var (
+<span id="L237" class="ln">   237</span>		Foo2 = &amp;Object2{}
+<span id="L238" class="ln">   238</span>		Foo1 = &amp;Object1{}
+<span id="L239" class="ln">   239</span>	)
+<span id="L240" class="ln">   240</span>	
+</pre><p><a href="http://golang.org/src/pkg/runtime/mfinal_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>gofmt - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Command gofmt</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+        document.ANALYSIS_DATA = null;
+        document.CALLGRAPH = null;
+        </script>
+
+	
+		
+		<p>
+Gofmt formats Go programs.
+It uses tabs (width = 8) for indentation and blanks for alignment.
+</p>
+<p>
+Without an explicit path, it processes the standard input.  Given a file,
+it operates on that file; given a directory, it operates on all .go files in
+that directory, recursively.  (Files starting with a period are ignored.)
+By default, gofmt prints the reformatted sources to standard output.
+</p>
+<p>
+Usage:
+</p>
+<pre>gofmt [flags] [path ...]
+</pre>
+<p>
+The flags are:
+</p>
+<pre>-d
+	Do not print reformatted sources to standard output.
+	If a file&#39;s formatting is different than gofmt&#39;s, print diffs
+	to standard output.
+-e
+	Print all (including spurious) errors.
+-l
+	Do not print reformatted sources to standard output.
+	If a file&#39;s formatting is different from gofmt&#39;s, print its name
+	to standard output.
+-r rule
+	Apply the rewrite rule to the source before reformatting.
+-s
+	Try to simplify code (after applying the rewrite rule, if any).
+-w
+	Do not print reformatted sources to standard output.
+	If a file&#39;s formatting is different from gofmt&#39;s, overwrite it
+	with gofmt&#39;s version.
+</pre>
+<p>
+Debugging support:
+</p>
+<pre>-cpuprofile filename
+	Write cpu profile to the specified file.
+</pre>
+<p>
+The rewrite rule specified with the -r flag must be a string of the form:
+</p>
+<pre>pattern -&gt; replacement
+</pre>
+<p>
+Both pattern and replacement must be valid Go expressions.
+In the pattern, single-character lowercase identifiers serve as
+wildcards matching arbitrary sub-expressions; those expressions
+will be substituted for the same identifiers in the replacement.
+</p>
+<p>
+When gofmt reads from standard input, it accepts either a full Go program
+or a program fragment.  A program fragment must be a syntactically
+valid declaration list, statement list, or expression.  When formatting
+such a fragment, gofmt preserves leading indentation as well as leading
+and trailing spaces, so that individual sections of a Go program can be
+formatted by piping them through gofmt.
+</p>
+<h3 id="hdr-Examples">Examples</h3>
+<p>
+To check files for unnecessary parentheses:
+</p>
+<pre>gofmt -r &#39;(a) -&gt; a&#39; -l *.go
+</pre>
+<p>
+To remove the parentheses:
+</p>
+<pre>gofmt -r &#39;(a) -&gt; a&#39; -w *.go
+</pre>
+<p>
+To convert the package tree from explicit slice upper bounds to implicit ones:
+</p>
+<pre>gofmt -r &#39;α[β:len(α)] -&gt; α[β:]&#39; -w $GOROOT/src/pkg
+</pre>
+<h3 id="hdr-The_simplify_command">The simplify command</h3>
+<p>
+When invoked with -s gofmt will make the following source transformations where possible.
+</p>
+<pre>An array, slice, or map composite literal of the form:
+	[]T{T{}, T{}}
+will be simplified to:
+	[]T{{}, {}}
+
+A slice expression of the form:
+	s[a:len(s)]
+will be simplified to:
+	s[a:]
+
+A range of the form:
+	for x, _ = range v {...}
+will be simplified to:
+	for x = range v {...}
+</pre>
+
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

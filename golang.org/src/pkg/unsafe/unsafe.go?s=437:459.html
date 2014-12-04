@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/unsafe/unsafe.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/unsafe/unsafe.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">/*
+<span id="L6" class="ln">     6</span>		Package unsafe contains operations that step around the type safety of Go programs.
+<span id="L7" class="ln">     7</span>	*/</span>
+<span id="L8" class="ln">     8</span>	package unsafe
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	<span class="comment">// ArbitraryType is here for the purposes of documentation only and is not actually</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">// part of the unsafe package.  It represents the type of an arbitrary Go expression.</span>
+<span id="L12" class="ln">    12</span>	<span class="selection">type ArbitraryType int</span>
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	<span class="comment">// Pointer represents a pointer to an arbitrary type.  There are four special operations</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// available for type Pointer that are not available for other types.</span>
+<span id="L16" class="ln">    16</span>	<span class="comment">//	1) A pointer value of any type can be converted to a Pointer.</span>
+<span id="L17" class="ln">    17</span>	<span class="comment">//	2) A Pointer can be converted to a pointer value of any type.</span>
+<span id="L18" class="ln">    18</span>	<span class="comment">//	3) A uintptr can be converted to a Pointer.</span>
+<span id="L19" class="ln">    19</span>	<span class="comment">//	4) A Pointer can be converted to a uintptr.</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">// Pointer therefore allows a program to defeat the type system and read and write</span>
+<span id="L21" class="ln">    21</span>	<span class="comment">// arbitrary memory. It should be used with extreme care.</span>
+<span id="L22" class="ln">    22</span>	type Pointer *ArbitraryType
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	<span class="comment">// Sizeof returns the size in bytes occupied by the value v.  The size is that of the</span>
+<span id="L25" class="ln">    25</span>	<span class="comment">// &#34;top level&#34; of the value only.  For instance, if v is a slice, it returns the size of</span>
+<span id="L26" class="ln">    26</span>	<span class="comment">// the slice descriptor, not the size of the memory referenced by the slice.</span>
+<span id="L27" class="ln">    27</span>	func Sizeof(v ArbitraryType) uintptr
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	<span class="comment">// Offsetof returns the offset within the struct of the field represented by v,</span>
+<span id="L30" class="ln">    30</span>	<span class="comment">// which must be of the form structValue.field.  In other words, it returns the</span>
+<span id="L31" class="ln">    31</span>	<span class="comment">// number of bytes between the start of the struct and the start of the field.</span>
+<span id="L32" class="ln">    32</span>	func Offsetof(v ArbitraryType) uintptr
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	<span class="comment">// Alignof returns the alignment of the value v.  It is the maximum value m such</span>
+<span id="L35" class="ln">    35</span>	<span class="comment">// that the address of a variable with the type of v will always be zero mod m.</span>
+<span id="L36" class="ln">    36</span>	<span class="comment">// If v is of the form structValue.field, it returns the alignment of field f within struct object obj.</span>
+<span id="L37" class="ln">    37</span>	func Alignof(v ArbitraryType) uintptr
+<span id="L38" class="ln">    38</span>	
+</pre><p><a href="unsafe.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

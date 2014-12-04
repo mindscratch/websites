@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/os_plan9.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/os_plan9.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2010 The Go Authors.  All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;runtime.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;os_GOOS.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	int8 *goos = &#34;plan9&#34;;
+<span id="L11" class="ln">    11</span>	extern SigTab runtime·sigtab[];
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	int32 runtime·postnote(int32, int8*);
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	// Called to initialize a new m (including the bootstrap m).
+<span id="L16" class="ln">    16</span>	// Called on the parent thread (main thread in case of bootstrap), can allocate memory.
+<span id="L17" class="ln">    17</span>	void
+<span id="L18" class="ln">    18</span>	runtime·mpreinit(M *mp)
+<span id="L19" class="ln">    19</span>	{
+<span id="L20" class="ln">    20</span>		// Initialize stack and goroutine for note handling.
+<span id="L21" class="ln">    21</span>		mp-&gt;gsignal = runtime·malg(32*1024);
+<span id="L22" class="ln">    22</span>		mp-&gt;notesig = (int8*)runtime·malloc(ERRMAX*sizeof(int8));
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>		// Initialize stack for handling strings from the
+<span id="L25" class="ln">    25</span>		// errstr system call, as used in package syscall.
+<span id="L26" class="ln">    26</span>		mp-&gt;errstr = (byte*)runtime·malloc(ERRMAX*sizeof(byte));
+<span id="L27" class="ln">    27</span>	}
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	// Called to initialize a new m (including the bootstrap m).
+<span id="L30" class="ln">    30</span>	// Called on the new thread, can not allocate memory.
+<span id="L31" class="ln">    31</span>	void
+<span id="L32" class="ln">    32</span>	runtime·minit(void)
+<span id="L33" class="ln">    33</span>	{
+<span id="L34" class="ln">    34</span>		// Mask all SSE floating-point exceptions
+<span id="L35" class="ln">    35</span>		// when running on the 64-bit kernel.
+<span id="L36" class="ln">    36</span>		runtime·setfpmasks();
+<span id="L37" class="ln">    37</span>	}
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>	// Called from dropm to undo the effect of an minit.
+<span id="L40" class="ln">    40</span>	void
+<span id="L41" class="ln">    41</span>	runtime·unminit(void)
+<span id="L42" class="ln">    42</span>	{
+<span id="L43" class="ln">    43</span>	}
+<span id="L44" class="ln">    44</span>	
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	static int32
+<span id="L47" class="ln">    47</span>	getproccount(void)
+<span id="L48" class="ln">    48</span>	{
+<span id="L49" class="ln">    49</span>		int32 fd, i, n, ncpu;
+<span id="L50" class="ln">    50</span>		byte buf[2048];
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>		fd = runtime·open(&#34;/dev/sysstat&#34;, OREAD, 0);
+<span id="L53" class="ln">    53</span>		if(fd &lt; 0)
+<span id="L54" class="ln">    54</span>			return 1;
+<span id="L55" class="ln">    55</span>		ncpu = 0;
+<span id="L56" class="ln">    56</span>		for(;;) {
+<span id="L57" class="ln">    57</span>			n = runtime·read(fd, buf, sizeof buf);
+<span id="L58" class="ln">    58</span>			if(n &lt;= 0)
+<span id="L59" class="ln">    59</span>				break;
+<span id="L60" class="ln">    60</span>			for(i = 0; i &lt; n; i++) {
+<span id="L61" class="ln">    61</span>				if(buf[i] == &#39;\n&#39;)
+<span id="L62" class="ln">    62</span>					ncpu++;
+<span id="L63" class="ln">    63</span>			}
+<span id="L64" class="ln">    64</span>		}
+<span id="L65" class="ln">    65</span>		runtime·close(fd);
+<span id="L66" class="ln">    66</span>		return ncpu &gt; 0 ? ncpu : 1;
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	static int32
+<span id="L70" class="ln">    70</span>	getpid(void)
+<span id="L71" class="ln">    71</span>	{
+<span id="L72" class="ln">    72</span>		byte b[20], *c;
+<span id="L73" class="ln">    73</span>		int32 fd;
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>		runtime·memclr(b, sizeof(b));
+<span id="L76" class="ln">    76</span>		fd = runtime·open(&#34;#c/pid&#34;, 0, 0);
+<span id="L77" class="ln">    77</span>		if(fd &gt;= 0) {
+<span id="L78" class="ln">    78</span>			runtime·read(fd, b, sizeof(b));
+<span id="L79" class="ln">    79</span>			runtime·close(fd);
+<span id="L80" class="ln">    80</span>		}
+<span id="L81" class="ln">    81</span>		c = b;
+<span id="L82" class="ln">    82</span>		while(*c == &#39; &#39; || *c == &#39;\t&#39;)
+<span id="L83" class="ln">    83</span>			c++;
+<span id="L84" class="ln">    84</span>		return runtime·atoi(c);
+<span id="L85" class="ln">    85</span>	}
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>	void
+<span id="L88" class="ln">    88</span>	runtime·osinit(void)
+<span id="L89" class="ln">    89</span>	{
+<span id="L90" class="ln">    90</span>		runtime·ncpu = getproccount();
+<span id="L91" class="ln">    91</span>		m-&gt;procid = getpid();
+<span id="L92" class="ln">    92</span>		runtime·notify(runtime·sigtramp);
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	void
+<span id="L96" class="ln">    96</span>	runtime·crash(void)
+<span id="L97" class="ln">    97</span>	{
+<span id="L98" class="ln">    98</span>		runtime·notify(nil);
+<span id="L99" class="ln">    99</span>		*(int32*)0 = 0;
+<span id="L100" class="ln">   100</span>	}
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	void
+<span id="L103" class="ln">   103</span>	runtime·get_random_data(byte **rnd, int32 *rnd_len)
+<span id="L104" class="ln">   104</span>	{
+<span id="L105" class="ln">   105</span>		static byte random_data[HashRandomBytes];
+<span id="L106" class="ln">   106</span>		int32 fd;
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>		fd = runtime·open(&#34;/dev/random&#34;, 0 /* O_RDONLY */, 0);
+<span id="L109" class="ln">   109</span>		if(runtime·read(fd, random_data, HashRandomBytes) == HashRandomBytes) {
+<span id="L110" class="ln">   110</span>			*rnd = random_data;
+<span id="L111" class="ln">   111</span>			*rnd_len = HashRandomBytes;
+<span id="L112" class="ln">   112</span>		} else {
+<span id="L113" class="ln">   113</span>			*rnd = nil;
+<span id="L114" class="ln">   114</span>			*rnd_len = 0;
+<span id="L115" class="ln">   115</span>		}
+<span id="L116" class="ln">   116</span>		runtime·close(fd);
+<span id="L117" class="ln">   117</span>	}
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	void
+<span id="L120" class="ln">   120</span>	runtime·goenvs(void)
+<span id="L121" class="ln">   121</span>	{
+<span id="L122" class="ln">   122</span>	}
+<span id="L123" class="ln">   123</span>	
+<span id="L124" class="ln">   124</span>	void
+<span id="L125" class="ln">   125</span>	runtime·initsig(void)
+<span id="L126" class="ln">   126</span>	{
+<span id="L127" class="ln">   127</span>	}
+<span id="L128" class="ln">   128</span>	
+<span id="L129" class="ln">   129</span>	#pragma textflag NOSPLIT
+<span id="L130" class="ln">   130</span>	void
+<span id="L131" class="ln">   131</span>	runtime·osyield(void)
+<span id="L132" class="ln">   132</span>	{
+<span id="L133" class="ln">   133</span>		runtime·sleep(0);
+<span id="L134" class="ln">   134</span>	}
+<span id="L135" class="ln">   135</span>	
+<span id="L136" class="ln">   136</span>	#pragma textflag NOSPLIT
+<span id="L137" class="ln">   137</span>	void
+<span id="L138" class="ln">   138</span>	runtime·usleep(uint32 µs)
+<span id="L139" class="ln">   139</span>	{
+<span id="L140" class="ln">   140</span>		uint32 ms;
+<span id="L141" class="ln">   141</span>	
+<span id="L142" class="ln">   142</span>		ms = µs/1000;
+<span id="L143" class="ln">   143</span>		if(ms == 0)
+<span id="L144" class="ln">   144</span>			ms = 1;
+<span id="L145" class="ln">   145</span>		runtime·sleep(ms);
+<span id="L146" class="ln">   146</span>	}
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	void
+<span id="L149" class="ln">   149</span>	time·now(int64 sec, int32 nsec)
+<span id="L150" class="ln">   150</span>	{
+<span id="L151" class="ln">   151</span>		int64 ns;
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>		ns = runtime·nanotime();
+<span id="L154" class="ln">   154</span>		sec = ns / 1000000000LL;
+<span id="L155" class="ln">   155</span>		nsec = ns - sec * 1000000000LL;
+<span id="L156" class="ln">   156</span>		FLUSH(&amp;sec);
+<span id="L157" class="ln">   157</span>		FLUSH(&amp;nsec);
+<span id="L158" class="ln">   158</span>	}
+<span id="L159" class="ln">   159</span>	
+<span id="L160" class="ln">   160</span>	void
+<span id="L161" class="ln">   161</span>	runtime·itoa(int32 n, byte *p, uint32 len)
+<span id="L162" class="ln">   162</span>	{
+<span id="L163" class="ln">   163</span>		byte *q, c;
+<span id="L164" class="ln">   164</span>		uint32 i;
+<span id="L165" class="ln">   165</span>	
+<span id="L166" class="ln">   166</span>		if(len &lt;= 1)
+<span id="L167" class="ln">   167</span>			return;
+<span id="L168" class="ln">   168</span>	
+<span id="L169" class="ln">   169</span>		runtime·memclr(p, len);
+<span id="L170" class="ln">   170</span>		q = p;
+<span id="L171" class="ln">   171</span>	
+<span id="L172" class="ln">   172</span>		if(n==0) {
+<span id="L173" class="ln">   173</span>			*q++ = &#39;0&#39;;
+<span id="L174" class="ln">   174</span>			USED(q);
+<span id="L175" class="ln">   175</span>			return;
+<span id="L176" class="ln">   176</span>		}
+<span id="L177" class="ln">   177</span>		if(n &lt; 0) {
+<span id="L178" class="ln">   178</span>			*q++ = &#39;-&#39;;
+<span id="L179" class="ln">   179</span>			p++;
+<span id="L180" class="ln">   180</span>			n = -n;
+<span id="L181" class="ln">   181</span>		}
+<span id="L182" class="ln">   182</span>		for(i=0; n &gt; 0 &amp;&amp; i &lt; len; i++) {
+<span id="L183" class="ln">   183</span>			*q++ = &#39;0&#39; + (n%10);
+<span id="L184" class="ln">   184</span>			n = n/10;
+<span id="L185" class="ln">   185</span>		}
+<span id="L186" class="ln">   186</span>		for(q--; q &gt;= p; ) {
+<span id="L187" class="ln">   187</span>			c = *p;
+<span id="L188" class="ln">   188</span>			*p++ = *q;
+<span id="L189" class="ln">   189</span>			*q-- = c;
+<span id="L190" class="ln">   190</span>		}
+<span id="L191" class="ln">   191</span>	}
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>	void
+<span id="L194" class="ln">   194</span>	runtime·goexitsall(int8 *status)
+<span id="L195" class="ln">   195</span>	{
+<span id="L196" class="ln">   196</span>		int8 buf[ERRMAX];
+<span id="L197" class="ln">   197</span>		M *mp;
+<span id="L198" class="ln">   198</span>		int32 pid;
+<span id="L199" class="ln">   199</span>	
+<span id="L200" class="ln">   200</span>		runtime·snprintf((byte*)buf, sizeof buf, &#34;go: exit %s&#34;, status);
+<span id="L201" class="ln">   201</span>		pid = getpid();
+<span id="L202" class="ln">   202</span>		for(mp=runtime·atomicloadp(&amp;runtime·allm); mp; mp=mp-&gt;alllink)
+<span id="L203" class="ln">   203</span>			if(mp-&gt;procid != pid)
+<span id="L204" class="ln">   204</span>				runtime·postnote(mp-&gt;procid, buf);
+<span id="L205" class="ln">   205</span>	}
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>	int32
+<span id="L208" class="ln">   208</span>	runtime·postnote(int32 pid, int8* msg)
+<span id="L209" class="ln">   209</span>	{
+<span id="L210" class="ln">   210</span>		int32 fd;
+<span id="L211" class="ln">   211</span>		intgo len;
+<span id="L212" class="ln">   212</span>		uint8 buf[128];
+<span id="L213" class="ln">   213</span>		uint8 tmp[16];
+<span id="L214" class="ln">   214</span>		uint8 *p, *q;
+<span id="L215" class="ln">   215</span>	
+<span id="L216" class="ln">   216</span>		runtime·memclr(buf, sizeof buf);
+<span id="L217" class="ln">   217</span>	
+<span id="L218" class="ln">   218</span>		/* build path string /proc/pid/note */
+<span id="L219" class="ln">   219</span>		q = tmp;
+<span id="L220" class="ln">   220</span>		p = buf;
+<span id="L221" class="ln">   221</span>		runtime·itoa(pid, tmp, sizeof tmp);
+<span id="L222" class="ln">   222</span>		runtime·memmove((void*)p, (void*)&#34;/proc/&#34;, 6);
+<span id="L223" class="ln">   223</span>		for(p += 6; *p++ = *q++; );
+<span id="L224" class="ln">   224</span>		p--;
+<span id="L225" class="ln">   225</span>		runtime·memmove((void*)p, (void*)&#34;/note&#34;, 5);
+<span id="L226" class="ln">   226</span>	
+<span id="L227" class="ln">   227</span>		fd = runtime·open((int8*)buf, OWRITE, 0);
+<span id="L228" class="ln">   228</span>		if(fd &lt; 0)
+<span id="L229" class="ln">   229</span>			return -1;
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>		len = runtime·findnull((byte*)msg);
+<span id="L232" class="ln">   232</span>		if(runtime·write(fd, msg, len) != len) {
+<span id="L233" class="ln">   233</span>			runtime·close(fd);
+<span id="L234" class="ln">   234</span>			return -1;
+<span id="L235" class="ln">   235</span>		}
+<span id="L236" class="ln">   236</span>		runtime·close(fd);
+<span id="L237" class="ln">   237</span>		return 0;
+<span id="L238" class="ln">   238</span>	}
+<span id="L239" class="ln">   239</span>	
+<span id="L240" class="ln">   240</span>	void
+<span id="L241" class="ln">   241</span>	runtime·exit(int32 e)
+<span id="L242" class="ln">   242</span>	{
+<span id="L243" class="ln">   243</span>		byte tmp[16];
+<span id="L244" class="ln">   244</span>		int8 *status;
+<span id="L245" class="ln">   245</span>	 
+<span id="L246" class="ln">   246</span>		if(e == 0)
+<span id="L247" class="ln">   247</span>			status = &#34;&#34;;
+<span id="L248" class="ln">   248</span>		else {
+<span id="L249" class="ln">   249</span>			/* build error string */
+<span id="L250" class="ln">   250</span>			runtime·itoa(e, tmp, sizeof tmp);
+<span id="L251" class="ln">   251</span>			status = (int8*)tmp;
+<span id="L252" class="ln">   252</span>		}
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>		runtime·goexitsall(status);
+<span id="L255" class="ln">   255</span>		runtime·exits(status);
+<span id="L256" class="ln">   256</span>	}
+<span id="L257" class="ln">   257</span>	
+<span id="L258" class="ln">   258</span>	void
+<span id="L259" class="ln">   259</span>	runtime·newosproc(M *mp, void *stk)
+<span id="L260" class="ln">   260</span>	{
+<span id="L261" class="ln">   261</span>		mp-&gt;tls[0] = mp-&gt;id;	// so 386 asm can find it
+<span id="L262" class="ln">   262</span>		if(0){
+<span id="L263" class="ln">   263</span>			runtime·printf(&#34;newosproc stk=%p m=%p g=%p rfork=%p id=%d/%d ostk=%p\n&#34;,
+<span id="L264" class="ln">   264</span>				stk, mp, mp-&gt;g0, runtime·rfork, mp-&gt;id, (int32)mp-&gt;tls[0], &amp;mp);
+<span id="L265" class="ln">   265</span>		}
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		if(runtime·rfork(RFPROC|RFMEM|RFNOWAIT, stk, mp, mp-&gt;g0, runtime·mstart) &lt; 0)
+<span id="L268" class="ln">   268</span>			runtime·throw(&#34;newosproc: rfork failed&#34;);
+<span id="L269" class="ln">   269</span>	}
+<span id="L270" class="ln">   270</span>	
+<span id="L271" class="ln">   271</span>	uintptr
+<span id="L272" class="ln">   272</span>	runtime·semacreate(void)
+<span id="L273" class="ln">   273</span>	{
+<span id="L274" class="ln">   274</span>		return 1;
+<span id="L275" class="ln">   275</span>	}
+<span id="L276" class="ln">   276</span>	
+<span id="L277" class="ln">   277</span>	#pragma textflag NOSPLIT
+<span id="L278" class="ln">   278</span>	int32
+<span id="L279" class="ln">   279</span>	runtime·semasleep(int64 ns)
+<span id="L280" class="ln">   280</span>	{
+<span id="L281" class="ln">   281</span>		int32 ret;
+<span id="L282" class="ln">   282</span>		int32 ms;
+<span id="L283" class="ln">   283</span>	
+<span id="L284" class="ln">   284</span>		if(ns &gt;= 0) {
+<span id="L285" class="ln">   285</span>			ms = runtime·timediv(ns, 1000000, nil);
+<span id="L286" class="ln">   286</span>			if(ms == 0)
+<span id="L287" class="ln">   287</span>				ms = 1;
+<span id="L288" class="ln">   288</span>			ret = runtime·plan9_tsemacquire(&amp;m-&gt;waitsemacount, ms);
+<span id="L289" class="ln">   289</span>			if(ret == 1)
+<span id="L290" class="ln">   290</span>				return 0;  // success
+<span id="L291" class="ln">   291</span>			return -1;  // timeout or interrupted
+<span id="L292" class="ln">   292</span>		}
+<span id="L293" class="ln">   293</span>	
+<span id="L294" class="ln">   294</span>		while(runtime·plan9_semacquire(&amp;m-&gt;waitsemacount, 1) &lt; 0) {
+<span id="L295" class="ln">   295</span>			/* interrupted; try again (c.f. lock_sema.c) */
+<span id="L296" class="ln">   296</span>		}
+<span id="L297" class="ln">   297</span>		return 0;  // success
+<span id="L298" class="ln">   298</span>	}
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>	void
+<span id="L301" class="ln">   301</span>	runtime·semawakeup(M *mp)
+<span id="L302" class="ln">   302</span>	{
+<span id="L303" class="ln">   303</span>		runtime·plan9_semrelease(&amp;mp-&gt;waitsemacount, 1);
+<span id="L304" class="ln">   304</span>	}
+<span id="L305" class="ln">   305</span>	
+<span id="L306" class="ln">   306</span>	void
+<span id="L307" class="ln">   307</span>	os·sigpipe(void)
+<span id="L308" class="ln">   308</span>	{
+<span id="L309" class="ln">   309</span>		runtime·throw(&#34;too many writes on closed pipe&#34;);
+<span id="L310" class="ln">   310</span>	}
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>	static int64
+<span id="L313" class="ln">   313</span>	atolwhex(byte *p)
+<span id="L314" class="ln">   314</span>	{
+<span id="L315" class="ln">   315</span>		int64 n;
+<span id="L316" class="ln">   316</span>		int32 f;
+<span id="L317" class="ln">   317</span>	
+<span id="L318" class="ln">   318</span>		n = 0;
+<span id="L319" class="ln">   319</span>		f = 0;
+<span id="L320" class="ln">   320</span>		while(*p == &#39; &#39; || *p == &#39;\t&#39;)
+<span id="L321" class="ln">   321</span>			p++;
+<span id="L322" class="ln">   322</span>		if(*p == &#39;-&#39; || *p == &#39;+&#39;) {
+<span id="L323" class="ln">   323</span>			if(*p++ == &#39;-&#39;)
+<span id="L324" class="ln">   324</span>				f = 1;
+<span id="L325" class="ln">   325</span>			while(*p == &#39; &#39; || *p == &#39;\t&#39;)
+<span id="L326" class="ln">   326</span>				p++;
+<span id="L327" class="ln">   327</span>		}
+<span id="L328" class="ln">   328</span>		if(p[0] == &#39;0&#39; &amp;&amp; p[1]) {
+<span id="L329" class="ln">   329</span>			if(p[1] == &#39;x&#39; || p[1] == &#39;X&#39;) {
+<span id="L330" class="ln">   330</span>				p += 2;
+<span id="L331" class="ln">   331</span>				for(;;) {
+<span id="L332" class="ln">   332</span>					if(&#39;0&#39; &lt;= *p &amp;&amp; *p &lt;= &#39;9&#39;)
+<span id="L333" class="ln">   333</span>						n = n*16 + *p++ - &#39;0&#39;;
+<span id="L334" class="ln">   334</span>					else if(&#39;a&#39; &lt;= *p &amp;&amp; *p &lt;= &#39;f&#39;)
+<span id="L335" class="ln">   335</span>						n = n*16 + *p++ - &#39;a&#39; + 10;
+<span id="L336" class="ln">   336</span>					else if(&#39;A&#39; &lt;= *p &amp;&amp; *p &lt;= &#39;F&#39;)
+<span id="L337" class="ln">   337</span>						n = n*16 + *p++ - &#39;A&#39; + 10;
+<span id="L338" class="ln">   338</span>					else
+<span id="L339" class="ln">   339</span>						break;
+<span id="L340" class="ln">   340</span>				}
+<span id="L341" class="ln">   341</span>			} else
+<span id="L342" class="ln">   342</span>				while(&#39;0&#39; &lt;= *p &amp;&amp; *p &lt;= &#39;7&#39;)
+<span id="L343" class="ln">   343</span>					n = n*8 + *p++ - &#39;0&#39;;
+<span id="L344" class="ln">   344</span>		} else
+<span id="L345" class="ln">   345</span>			while(&#39;0&#39; &lt;= *p &amp;&amp; *p &lt;= &#39;9&#39;)
+<span id="L346" class="ln">   346</span>				n = n*10 + *p++ - &#39;0&#39;;
+<span id="L347" class="ln">   347</span>		if(f)
+<span id="L348" class="ln">   348</span>			n = -n;
+<span id="L349" class="ln">   349</span>		return n;
+<span id="L350" class="ln">   350</span>	}
+<span id="L351" class="ln">   351</span>	
+<span id="L352" class="ln">   352</span>	void
+<span id="L353" class="ln">   353</span>	runtime·sigpanic(void)
+<span id="L354" class="ln">   354</span>	{
+<span id="L355" class="ln">   355</span>		byte *p;
+<span id="L356" class="ln">   356</span>	
+<span id="L357" class="ln">   357</span>		if(!runtime·canpanic(g))
+<span id="L358" class="ln">   358</span>			runtime·throw(&#34;unexpected signal during runtime execution&#34;);
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>		switch(g-&gt;sig) {
+<span id="L361" class="ln">   361</span>		case SIGRFAULT:
+<span id="L362" class="ln">   362</span>		case SIGWFAULT:
+<span id="L363" class="ln">   363</span>			p = runtime·strstr((byte*)m-&gt;notesig, (byte*)&#34;addr=&#34;)+5;
+<span id="L364" class="ln">   364</span>			g-&gt;sigcode1 = atolwhex(p);
+<span id="L365" class="ln">   365</span>			if(g-&gt;sigcode1 &lt; 0x1000 || g-&gt;paniconfault) {
+<span id="L366" class="ln">   366</span>				if(g-&gt;sigpc == 0)
+<span id="L367" class="ln">   367</span>					runtime·panicstring(&#34;call of nil func value&#34;);
+<span id="L368" class="ln">   368</span>				runtime·panicstring(&#34;invalid memory address or nil pointer dereference&#34;);
+<span id="L369" class="ln">   369</span>			}
+<span id="L370" class="ln">   370</span>			runtime·printf(&#34;unexpected fault address %p\n&#34;, g-&gt;sigcode1);
+<span id="L371" class="ln">   371</span>			runtime·throw(&#34;fault&#34;);
+<span id="L372" class="ln">   372</span>			break;
+<span id="L373" class="ln">   373</span>		case SIGTRAP:
+<span id="L374" class="ln">   374</span>			if(g-&gt;paniconfault)
+<span id="L375" class="ln">   375</span>				runtime·panicstring(&#34;invalid memory address or nil pointer dereference&#34;);
+<span id="L376" class="ln">   376</span>			runtime·throw(m-&gt;notesig);
+<span id="L377" class="ln">   377</span>			break;
+<span id="L378" class="ln">   378</span>		case SIGINTDIV:
+<span id="L379" class="ln">   379</span>			runtime·panicstring(&#34;integer divide by zero&#34;);
+<span id="L380" class="ln">   380</span>			break;
+<span id="L381" class="ln">   381</span>		case SIGFLOAT:
+<span id="L382" class="ln">   382</span>			runtime·panicstring(&#34;floating point error&#34;);
+<span id="L383" class="ln">   383</span>			break;
+<span id="L384" class="ln">   384</span>		default:
+<span id="L385" class="ln">   385</span>			runtime·panicstring(m-&gt;notesig);
+<span id="L386" class="ln">   386</span>			break;
+<span id="L387" class="ln">   387</span>		}
+<span id="L388" class="ln">   388</span>	}
+<span id="L389" class="ln">   389</span>	
+<span id="L390" class="ln">   390</span>	int32
+<span id="L391" class="ln">   391</span>	runtime·read(int32 fd, void *buf, int32 nbytes)
+<span id="L392" class="ln">   392</span>	{
+<span id="L393" class="ln">   393</span>		return runtime·pread(fd, buf, nbytes, -1LL);
+<span id="L394" class="ln">   394</span>	}
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>	int32
+<span id="L397" class="ln">   397</span>	runtime·write(uintptr fd, void *buf, int32 nbytes)
+<span id="L398" class="ln">   398</span>	{
+<span id="L399" class="ln">   399</span>		return runtime·pwrite((int32)fd, buf, nbytes, -1LL);
+<span id="L400" class="ln">   400</span>	}
+<span id="L401" class="ln">   401</span>	
+<span id="L402" class="ln">   402</span>	uintptr
+<span id="L403" class="ln">   403</span>	runtime·memlimit(void)
+<span id="L404" class="ln">   404</span>	{
+<span id="L405" class="ln">   405</span>		return 0;
+<span id="L406" class="ln">   406</span>	}
+<span id="L407" class="ln">   407</span>	
+<span id="L408" class="ln">   408</span>	#pragma dataflag NOPTR
+<span id="L409" class="ln">   409</span>	static int8 badsignal[] = &#34;runtime: signal received on thread not created by Go.\n&#34;;
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	// This runs on a foreign stack, without an m or a g.  No stack split.
+<span id="L412" class="ln">   412</span>	#pragma textflag NOSPLIT
+<span id="L413" class="ln">   413</span>	void
+<span id="L414" class="ln">   414</span>	runtime·badsignal2(void)
+<span id="L415" class="ln">   415</span>	{
+<span id="L416" class="ln">   416</span>		runtime·pwrite(2, badsignal, sizeof badsignal - 1, -1LL);
+<span id="L417" class="ln">   417</span>		runtime·exits(badsignal);
+<span id="L418" class="ln">   418</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/os_plan9.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

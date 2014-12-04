@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/malloc.h - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/malloc.h</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// Memory allocator, based on tcmalloc.
+<span id="L6" class="ln">     6</span>	// http://goog-perftools.sourceforge.net/doc/tcmalloc.html
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	// The main allocator works in runs of pages.
+<span id="L9" class="ln">     9</span>	// Small allocation sizes (up to and including 32 kB) are
+<span id="L10" class="ln">    10</span>	// rounded to one of about 100 size classes, each of which
+<span id="L11" class="ln">    11</span>	// has its own free list of objects of exactly that size.
+<span id="L12" class="ln">    12</span>	// Any free page of memory can be split into a set of objects
+<span id="L13" class="ln">    13</span>	// of one size class, which are then managed using free list
+<span id="L14" class="ln">    14</span>	// allocators.
+<span id="L15" class="ln">    15</span>	//
+<span id="L16" class="ln">    16</span>	// The allocator&#39;s data structures are:
+<span id="L17" class="ln">    17</span>	//
+<span id="L18" class="ln">    18</span>	//	FixAlloc: a free-list allocator for fixed-size objects,
+<span id="L19" class="ln">    19</span>	//		used to manage storage used by the allocator.
+<span id="L20" class="ln">    20</span>	//	MHeap: the malloc heap, managed at page (4096-byte) granularity.
+<span id="L21" class="ln">    21</span>	//	MSpan: a run of pages managed by the MHeap.
+<span id="L22" class="ln">    22</span>	//	MCentral: a shared free list for a given size class.
+<span id="L23" class="ln">    23</span>	//	MCache: a per-thread (in Go, per-P) cache for small objects.
+<span id="L24" class="ln">    24</span>	//	MStats: allocation statistics.
+<span id="L25" class="ln">    25</span>	//
+<span id="L26" class="ln">    26</span>	// Allocating a small object proceeds up a hierarchy of caches:
+<span id="L27" class="ln">    27</span>	//
+<span id="L28" class="ln">    28</span>	//	1. Round the size up to one of the small size classes
+<span id="L29" class="ln">    29</span>	//	   and look in the corresponding MCache free list.
+<span id="L30" class="ln">    30</span>	//	   If the list is not empty, allocate an object from it.
+<span id="L31" class="ln">    31</span>	//	   This can all be done without acquiring a lock.
+<span id="L32" class="ln">    32</span>	//
+<span id="L33" class="ln">    33</span>	//	2. If the MCache free list is empty, replenish it by
+<span id="L34" class="ln">    34</span>	//	   taking a bunch of objects from the MCentral free list.
+<span id="L35" class="ln">    35</span>	//	   Moving a bunch amortizes the cost of acquiring the MCentral lock.
+<span id="L36" class="ln">    36</span>	//
+<span id="L37" class="ln">    37</span>	//	3. If the MCentral free list is empty, replenish it by
+<span id="L38" class="ln">    38</span>	//	   allocating a run of pages from the MHeap and then
+<span id="L39" class="ln">    39</span>	//	   chopping that memory into a objects of the given size.
+<span id="L40" class="ln">    40</span>	//	   Allocating many objects amortizes the cost of locking
+<span id="L41" class="ln">    41</span>	//	   the heap.
+<span id="L42" class="ln">    42</span>	//
+<span id="L43" class="ln">    43</span>	//	4. If the MHeap is empty or has no page runs large enough,
+<span id="L44" class="ln">    44</span>	//	   allocate a new group of pages (at least 1MB) from the
+<span id="L45" class="ln">    45</span>	//	   operating system.  Allocating a large run of pages
+<span id="L46" class="ln">    46</span>	//	   amortizes the cost of talking to the operating system.
+<span id="L47" class="ln">    47</span>	//
+<span id="L48" class="ln">    48</span>	// Freeing a small object proceeds up the same hierarchy:
+<span id="L49" class="ln">    49</span>	//
+<span id="L50" class="ln">    50</span>	//	1. Look up the size class for the object and add it to
+<span id="L51" class="ln">    51</span>	//	   the MCache free list.
+<span id="L52" class="ln">    52</span>	//
+<span id="L53" class="ln">    53</span>	//	2. If the MCache free list is too long or the MCache has
+<span id="L54" class="ln">    54</span>	//	   too much memory, return some to the MCentral free lists.
+<span id="L55" class="ln">    55</span>	//
+<span id="L56" class="ln">    56</span>	//	3. If all the objects in a given span have returned to
+<span id="L57" class="ln">    57</span>	//	   the MCentral list, return that span to the page heap.
+<span id="L58" class="ln">    58</span>	//
+<span id="L59" class="ln">    59</span>	//	4. If the heap has too much memory, return some to the
+<span id="L60" class="ln">    60</span>	//	   operating system.
+<span id="L61" class="ln">    61</span>	//
+<span id="L62" class="ln">    62</span>	//	TODO(rsc): Step 4 is not implemented.
+<span id="L63" class="ln">    63</span>	//
+<span id="L64" class="ln">    64</span>	// Allocating and freeing a large object uses the page heap
+<span id="L65" class="ln">    65</span>	// directly, bypassing the MCache and MCentral free lists.
+<span id="L66" class="ln">    66</span>	//
+<span id="L67" class="ln">    67</span>	// The small objects on the MCache and MCentral free lists
+<span id="L68" class="ln">    68</span>	// may or may not be zeroed.  They are zeroed if and only if
+<span id="L69" class="ln">    69</span>	// the second word of the object is zero.  A span in the
+<span id="L70" class="ln">    70</span>	// page heap is zeroed unless s-&gt;needzero is set. When a span
+<span id="L71" class="ln">    71</span>	// is allocated to break into small objects, it is zeroed if needed
+<span id="L72" class="ln">    72</span>	// and s-&gt;needzero is set. There are two main benefits to delaying the
+<span id="L73" class="ln">    73</span>	// zeroing this way:
+<span id="L74" class="ln">    74</span>	//
+<span id="L75" class="ln">    75</span>	//	1. stack frames allocated from the small object lists
+<span id="L76" class="ln">    76</span>	//	   or the page heap can avoid zeroing altogether.
+<span id="L77" class="ln">    77</span>	//	2. the cost of zeroing when reusing a small object is
+<span id="L78" class="ln">    78</span>	//	   charged to the mutator, not the garbage collector.
+<span id="L79" class="ln">    79</span>	//
+<span id="L80" class="ln">    80</span>	// This C code was written with an eye toward translating to Go
+<span id="L81" class="ln">    81</span>	// in the future.  Methods have the form Type_Method(Type *t, ...).
+<span id="L82" class="ln">    82</span>	
+<span id="L83" class="ln">    83</span>	typedef struct MCentral	MCentral;
+<span id="L84" class="ln">    84</span>	typedef struct MHeap	MHeap;
+<span id="L85" class="ln">    85</span>	typedef struct MSpan	MSpan;
+<span id="L86" class="ln">    86</span>	typedef struct MStats	MStats;
+<span id="L87" class="ln">    87</span>	typedef struct MLink	MLink;
+<span id="L88" class="ln">    88</span>	typedef struct MTypes	MTypes;
+<span id="L89" class="ln">    89</span>	typedef struct GCStats	GCStats;
+<span id="L90" class="ln">    90</span>	
+<span id="L91" class="ln">    91</span>	enum
+<span id="L92" class="ln">    92</span>	{
+<span id="L93" class="ln">    93</span>		PageShift	= 13,
+<span id="L94" class="ln">    94</span>		PageSize	= 1&lt;&lt;PageShift,
+<span id="L95" class="ln">    95</span>		PageMask	= PageSize - 1,
+<span id="L96" class="ln">    96</span>	};
+<span id="L97" class="ln">    97</span>	typedef	uintptr	PageID;		// address &gt;&gt; PageShift
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>	enum
+<span id="L100" class="ln">   100</span>	{
+<span id="L101" class="ln">   101</span>		// Computed constant.  The definition of MaxSmallSize and the
+<span id="L102" class="ln">   102</span>		// algorithm in msize.c produce some number of different allocation
+<span id="L103" class="ln">   103</span>		// size classes.  NumSizeClasses is that number.  It&#39;s needed here
+<span id="L104" class="ln">   104</span>		// because there are static arrays of this length; when msize runs its
+<span id="L105" class="ln">   105</span>		// size choosing algorithm it double-checks that NumSizeClasses agrees.
+<span id="L106" class="ln">   106</span>		NumSizeClasses = 67,
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>		// Tunable constants.
+<span id="L109" class="ln">   109</span>		MaxSmallSize = 32&lt;&lt;10,
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>		// Tiny allocator parameters, see &#34;Tiny allocator&#34; comment in malloc.goc.
+<span id="L112" class="ln">   112</span>		TinySize = 16,
+<span id="L113" class="ln">   113</span>		TinySizeClass = 2,
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>		FixAllocChunk = 16&lt;&lt;10,		// Chunk size for FixAlloc
+<span id="L116" class="ln">   116</span>		MaxMHeapList = 1&lt;&lt;(20 - PageShift),	// Maximum page length for fixed-size list in MHeap.
+<span id="L117" class="ln">   117</span>		HeapAllocChunk = 1&lt;&lt;20,		// Chunk size for heap growth
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>		// Number of bits in page to span calculations (4k pages).
+<span id="L120" class="ln">   120</span>		// On Windows 64-bit we limit the arena to 32GB or 35 bits (see below for reason).
+<span id="L121" class="ln">   121</span>		// On other 64-bit platforms, we limit the arena to 128GB, or 37 bits.
+<span id="L122" class="ln">   122</span>		// On 32-bit, we don&#39;t bother limiting anything, so we use the full 32-bit address.
+<span id="L123" class="ln">   123</span>	#ifdef _64BIT
+<span id="L124" class="ln">   124</span>	#ifdef GOOS_windows
+<span id="L125" class="ln">   125</span>		// Windows counts memory used by page table into committed memory
+<span id="L126" class="ln">   126</span>		// of the process, so we can&#39;t reserve too much memory.
+<span id="L127" class="ln">   127</span>		// See http://golang.org/issue/5402 and http://golang.org/issue/5236.
+<span id="L128" class="ln">   128</span>		MHeapMap_Bits = 35 - PageShift,
+<span id="L129" class="ln">   129</span>	#else
+<span id="L130" class="ln">   130</span>		MHeapMap_Bits = 37 - PageShift,
+<span id="L131" class="ln">   131</span>	#endif
+<span id="L132" class="ln">   132</span>	#else
+<span id="L133" class="ln">   133</span>		MHeapMap_Bits = 32 - PageShift,
+<span id="L134" class="ln">   134</span>	#endif
+<span id="L135" class="ln">   135</span>	
+<span id="L136" class="ln">   136</span>		// Max number of threads to run garbage collection.
+<span id="L137" class="ln">   137</span>		// 2, 3, and 4 are all plausible maximums depending
+<span id="L138" class="ln">   138</span>		// on the hardware details of the machine.  The garbage
+<span id="L139" class="ln">   139</span>		// collector scales well to 8 cpus.
+<span id="L140" class="ln">   140</span>		MaxGcproc = 8,
+<span id="L141" class="ln">   141</span>	};
+<span id="L142" class="ln">   142</span>	
+<span id="L143" class="ln">   143</span>	// Maximum memory allocation size, a hint for callers.
+<span id="L144" class="ln">   144</span>	// This must be a #define instead of an enum because it
+<span id="L145" class="ln">   145</span>	// is so large.
+<span id="L146" class="ln">   146</span>	#ifdef _64BIT
+<span id="L147" class="ln">   147</span>	#define	MaxMem	(1ULL&lt;&lt;(MHeapMap_Bits+PageShift))	/* 128 GB or 32 GB */
+<span id="L148" class="ln">   148</span>	#else
+<span id="L149" class="ln">   149</span>	#define	MaxMem	((uintptr)-1)
+<span id="L150" class="ln">   150</span>	#endif
+<span id="L151" class="ln">   151</span>	
+<span id="L152" class="ln">   152</span>	// A generic linked list of blocks.  (Typically the block is bigger than sizeof(MLink).)
+<span id="L153" class="ln">   153</span>	struct MLink
+<span id="L154" class="ln">   154</span>	{
+<span id="L155" class="ln">   155</span>		MLink *next;
+<span id="L156" class="ln">   156</span>	};
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>	// SysAlloc obtains a large chunk of zeroed memory from the
+<span id="L159" class="ln">   159</span>	// operating system, typically on the order of a hundred kilobytes
+<span id="L160" class="ln">   160</span>	// or a megabyte.
+<span id="L161" class="ln">   161</span>	// NOTE: SysAlloc returns OS-aligned memory, but the heap allocator
+<span id="L162" class="ln">   162</span>	// may use larger alignment, so the caller must be careful to realign the
+<span id="L163" class="ln">   163</span>	// memory obtained by SysAlloc.
+<span id="L164" class="ln">   164</span>	//
+<span id="L165" class="ln">   165</span>	// SysUnused notifies the operating system that the contents
+<span id="L166" class="ln">   166</span>	// of the memory region are no longer needed and can be reused
+<span id="L167" class="ln">   167</span>	// for other purposes.
+<span id="L168" class="ln">   168</span>	// SysUsed notifies the operating system that the contents
+<span id="L169" class="ln">   169</span>	// of the memory region are needed again.
+<span id="L170" class="ln">   170</span>	//
+<span id="L171" class="ln">   171</span>	// SysFree returns it unconditionally; this is only used if
+<span id="L172" class="ln">   172</span>	// an out-of-memory error has been detected midway through
+<span id="L173" class="ln">   173</span>	// an allocation.  It is okay if SysFree is a no-op.
+<span id="L174" class="ln">   174</span>	//
+<span id="L175" class="ln">   175</span>	// SysReserve reserves address space without allocating memory.
+<span id="L176" class="ln">   176</span>	// If the pointer passed to it is non-nil, the caller wants the
+<span id="L177" class="ln">   177</span>	// reservation there, but SysReserve can still choose another
+<span id="L178" class="ln">   178</span>	// location if that one is unavailable.  On some systems and in some
+<span id="L179" class="ln">   179</span>	// cases SysReserve will simply check that the address space is
+<span id="L180" class="ln">   180</span>	// available and not actually reserve it.  If SysReserve returns
+<span id="L181" class="ln">   181</span>	// non-nil, it sets *reserved to true if the address space is
+<span id="L182" class="ln">   182</span>	// reserved, false if it has merely been checked.
+<span id="L183" class="ln">   183</span>	// NOTE: SysReserve returns OS-aligned memory, but the heap allocator
+<span id="L184" class="ln">   184</span>	// may use larger alignment, so the caller must be careful to realign the
+<span id="L185" class="ln">   185</span>	// memory obtained by SysAlloc.
+<span id="L186" class="ln">   186</span>	//
+<span id="L187" class="ln">   187</span>	// SysMap maps previously reserved address space for use.
+<span id="L188" class="ln">   188</span>	// The reserved argument is true if the address space was really
+<span id="L189" class="ln">   189</span>	// reserved, not merely checked.
+<span id="L190" class="ln">   190</span>	//
+<span id="L191" class="ln">   191</span>	// SysFault marks a (already SysAlloc&#39;d) region to fault
+<span id="L192" class="ln">   192</span>	// if accessed.  Used only for debugging the runtime.
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>	void*	runtime·SysAlloc(uintptr nbytes, uint64 *stat);
+<span id="L195" class="ln">   195</span>	void	runtime·SysFree(void *v, uintptr nbytes, uint64 *stat);
+<span id="L196" class="ln">   196</span>	void	runtime·SysUnused(void *v, uintptr nbytes);
+<span id="L197" class="ln">   197</span>	void	runtime·SysUsed(void *v, uintptr nbytes);
+<span id="L198" class="ln">   198</span>	void	runtime·SysMap(void *v, uintptr nbytes, bool reserved, uint64 *stat);
+<span id="L199" class="ln">   199</span>	void*	runtime·SysReserve(void *v, uintptr nbytes, bool *reserved);
+<span id="L200" class="ln">   200</span>	void	runtime·SysFault(void *v, uintptr nbytes);
+<span id="L201" class="ln">   201</span>	
+<span id="L202" class="ln">   202</span>	// FixAlloc is a simple free-list allocator for fixed size objects.
+<span id="L203" class="ln">   203</span>	// Malloc uses a FixAlloc wrapped around SysAlloc to manages its
+<span id="L204" class="ln">   204</span>	// MCache and MSpan objects.
+<span id="L205" class="ln">   205</span>	//
+<span id="L206" class="ln">   206</span>	// Memory returned by FixAlloc_Alloc is not zeroed.
+<span id="L207" class="ln">   207</span>	// The caller is responsible for locking around FixAlloc calls.
+<span id="L208" class="ln">   208</span>	// Callers can keep state in the object but the first word is
+<span id="L209" class="ln">   209</span>	// smashed by freeing and reallocating.
+<span id="L210" class="ln">   210</span>	struct FixAlloc
+<span id="L211" class="ln">   211</span>	{
+<span id="L212" class="ln">   212</span>		uintptr	size;
+<span id="L213" class="ln">   213</span>		void	(*first)(void *arg, byte *p);	// called first time p is returned
+<span id="L214" class="ln">   214</span>		void*	arg;
+<span id="L215" class="ln">   215</span>		MLink*	list;
+<span id="L216" class="ln">   216</span>		byte*	chunk;
+<span id="L217" class="ln">   217</span>		uint32	nchunk;
+<span id="L218" class="ln">   218</span>		uintptr	inuse;	// in-use bytes now
+<span id="L219" class="ln">   219</span>		uint64*	stat;
+<span id="L220" class="ln">   220</span>	};
+<span id="L221" class="ln">   221</span>	
+<span id="L222" class="ln">   222</span>	void	runtime·FixAlloc_Init(FixAlloc *f, uintptr size, void (*first)(void*, byte*), void *arg, uint64 *stat);
+<span id="L223" class="ln">   223</span>	void*	runtime·FixAlloc_Alloc(FixAlloc *f);
+<span id="L224" class="ln">   224</span>	void	runtime·FixAlloc_Free(FixAlloc *f, void *p);
+<span id="L225" class="ln">   225</span>	
+<span id="L226" class="ln">   226</span>	
+<span id="L227" class="ln">   227</span>	// Statistics.
+<span id="L228" class="ln">   228</span>	// Shared with Go: if you edit this structure, also edit type MemStats in mem.go.
+<span id="L229" class="ln">   229</span>	struct MStats
+<span id="L230" class="ln">   230</span>	{
+<span id="L231" class="ln">   231</span>		// General statistics.
+<span id="L232" class="ln">   232</span>		uint64	alloc;		// bytes allocated and still in use
+<span id="L233" class="ln">   233</span>		uint64	total_alloc;	// bytes allocated (even if freed)
+<span id="L234" class="ln">   234</span>		uint64	sys;		// bytes obtained from system (should be sum of xxx_sys below, no locking, approximate)
+<span id="L235" class="ln">   235</span>		uint64	nlookup;	// number of pointer lookups
+<span id="L236" class="ln">   236</span>		uint64	nmalloc;	// number of mallocs
+<span id="L237" class="ln">   237</span>		uint64	nfree;  // number of frees
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		// Statistics about malloc heap.
+<span id="L240" class="ln">   240</span>		// protected by mheap.Lock
+<span id="L241" class="ln">   241</span>		uint64	heap_alloc;	// bytes allocated and still in use
+<span id="L242" class="ln">   242</span>		uint64	heap_sys;	// bytes obtained from system
+<span id="L243" class="ln">   243</span>		uint64	heap_idle;	// bytes in idle spans
+<span id="L244" class="ln">   244</span>		uint64	heap_inuse;	// bytes in non-idle spans
+<span id="L245" class="ln">   245</span>		uint64	heap_released;	// bytes released to the OS
+<span id="L246" class="ln">   246</span>		uint64	heap_objects;	// total number of allocated objects
+<span id="L247" class="ln">   247</span>	
+<span id="L248" class="ln">   248</span>		// Statistics about allocation of low-level fixed-size structures.
+<span id="L249" class="ln">   249</span>		// Protected by FixAlloc locks.
+<span id="L250" class="ln">   250</span>		uint64	stacks_inuse;	// bootstrap stacks
+<span id="L251" class="ln">   251</span>		uint64	stacks_sys;
+<span id="L252" class="ln">   252</span>		uint64	mspan_inuse;	// MSpan structures
+<span id="L253" class="ln">   253</span>		uint64	mspan_sys;
+<span id="L254" class="ln">   254</span>		uint64	mcache_inuse;	// MCache structures
+<span id="L255" class="ln">   255</span>		uint64	mcache_sys;
+<span id="L256" class="ln">   256</span>		uint64	buckhash_sys;	// profiling bucket hash table
+<span id="L257" class="ln">   257</span>		uint64	gc_sys;
+<span id="L258" class="ln">   258</span>		uint64	other_sys;
+<span id="L259" class="ln">   259</span>	
+<span id="L260" class="ln">   260</span>		// Statistics about garbage collector.
+<span id="L261" class="ln">   261</span>		// Protected by mheap or stopping the world during GC.
+<span id="L262" class="ln">   262</span>		uint64	next_gc;	// next GC (in heap_alloc time)
+<span id="L263" class="ln">   263</span>		uint64  last_gc;	// last GC (in absolute time)
+<span id="L264" class="ln">   264</span>		uint64	pause_total_ns;
+<span id="L265" class="ln">   265</span>		uint64	pause_ns[256];
+<span id="L266" class="ln">   266</span>		uint32	numgc;
+<span id="L267" class="ln">   267</span>		bool	enablegc;
+<span id="L268" class="ln">   268</span>		bool	debuggc;
+<span id="L269" class="ln">   269</span>	
+<span id="L270" class="ln">   270</span>		// Statistics about allocation size classes.
+<span id="L271" class="ln">   271</span>		struct {
+<span id="L272" class="ln">   272</span>			uint32 size;
+<span id="L273" class="ln">   273</span>			uint64 nmalloc;
+<span id="L274" class="ln">   274</span>			uint64 nfree;
+<span id="L275" class="ln">   275</span>		} by_size[NumSizeClasses];
+<span id="L276" class="ln">   276</span>	};
+<span id="L277" class="ln">   277</span>	
+<span id="L278" class="ln">   278</span>	#define mstats runtime·memStats
+<span id="L279" class="ln">   279</span>	extern MStats mstats;
+<span id="L280" class="ln">   280</span>	void	runtime·updatememstats(GCStats *stats);
+<span id="L281" class="ln">   281</span>	
+<span id="L282" class="ln">   282</span>	// Size classes.  Computed and initialized by InitSizes.
+<span id="L283" class="ln">   283</span>	//
+<span id="L284" class="ln">   284</span>	// SizeToClass(0 &lt;= n &lt;= MaxSmallSize) returns the size class,
+<span id="L285" class="ln">   285</span>	//	1 &lt;= sizeclass &lt; NumSizeClasses, for n.
+<span id="L286" class="ln">   286</span>	//	Size class 0 is reserved to mean &#34;not small&#34;.
+<span id="L287" class="ln">   287</span>	//
+<span id="L288" class="ln">   288</span>	// class_to_size[i] = largest size in class i
+<span id="L289" class="ln">   289</span>	// class_to_allocnpages[i] = number of pages to allocate when
+<span id="L290" class="ln">   290</span>	//	making new objects in class i
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>	int32	runtime·SizeToClass(int32);
+<span id="L293" class="ln">   293</span>	uintptr	runtime·roundupsize(uintptr);
+<span id="L294" class="ln">   294</span>	extern	int32	runtime·class_to_size[NumSizeClasses];
+<span id="L295" class="ln">   295</span>	extern	int32	runtime·class_to_allocnpages[NumSizeClasses];
+<span id="L296" class="ln">   296</span>	extern	int8	runtime·size_to_class8[1024/8 + 1];
+<span id="L297" class="ln">   297</span>	extern	int8	runtime·size_to_class128[(MaxSmallSize-1024)/128 + 1];
+<span id="L298" class="ln">   298</span>	extern	void	runtime·InitSizes(void);
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>	
+<span id="L301" class="ln">   301</span>	typedef struct MCacheList MCacheList;
+<span id="L302" class="ln">   302</span>	struct MCacheList
+<span id="L303" class="ln">   303</span>	{
+<span id="L304" class="ln">   304</span>		MLink *list;
+<span id="L305" class="ln">   305</span>		uint32 nlist;
+<span id="L306" class="ln">   306</span>	};
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	// Per-thread (in Go, per-P) cache for small objects.
+<span id="L309" class="ln">   309</span>	// No locking needed because it is per-thread (per-P).
+<span id="L310" class="ln">   310</span>	struct MCache
+<span id="L311" class="ln">   311</span>	{
+<span id="L312" class="ln">   312</span>		// The following members are accessed on every malloc,
+<span id="L313" class="ln">   313</span>		// so they are grouped here for better caching.
+<span id="L314" class="ln">   314</span>		int32 next_sample;		// trigger heap sample after allocating this many bytes
+<span id="L315" class="ln">   315</span>		intptr local_cachealloc;	// bytes allocated (or freed) from cache since last lock of heap
+<span id="L316" class="ln">   316</span>		// Allocator cache for tiny objects w/o pointers.
+<span id="L317" class="ln">   317</span>		// See &#34;Tiny allocator&#34; comment in malloc.goc.
+<span id="L318" class="ln">   318</span>		byte*	tiny;
+<span id="L319" class="ln">   319</span>		uintptr	tinysize;
+<span id="L320" class="ln">   320</span>		// The rest is not accessed on every malloc.
+<span id="L321" class="ln">   321</span>		MSpan*	alloc[NumSizeClasses];	// spans to allocate from
+<span id="L322" class="ln">   322</span>		MCacheList free[NumSizeClasses];// lists of explicitly freed objects
+<span id="L323" class="ln">   323</span>		// Local allocator stats, flushed during GC.
+<span id="L324" class="ln">   324</span>		uintptr local_nlookup;		// number of pointer lookups
+<span id="L325" class="ln">   325</span>		uintptr local_largefree;	// bytes freed for large objects (&gt;MaxSmallSize)
+<span id="L326" class="ln">   326</span>		uintptr local_nlargefree;	// number of frees for large objects (&gt;MaxSmallSize)
+<span id="L327" class="ln">   327</span>		uintptr local_nsmallfree[NumSizeClasses];	// number of frees for small objects (&lt;=MaxSmallSize)
+<span id="L328" class="ln">   328</span>	};
+<span id="L329" class="ln">   329</span>	
+<span id="L330" class="ln">   330</span>	MSpan*	runtime·MCache_Refill(MCache *c, int32 sizeclass);
+<span id="L331" class="ln">   331</span>	void	runtime·MCache_Free(MCache *c, MLink *p, int32 sizeclass, uintptr size);
+<span id="L332" class="ln">   332</span>	void	runtime·MCache_ReleaseAll(MCache *c);
+<span id="L333" class="ln">   333</span>	
+<span id="L334" class="ln">   334</span>	// MTypes describes the types of blocks allocated within a span.
+<span id="L335" class="ln">   335</span>	// The compression field describes the layout of the data.
+<span id="L336" class="ln">   336</span>	//
+<span id="L337" class="ln">   337</span>	// MTypes_Empty:
+<span id="L338" class="ln">   338</span>	//     All blocks are free, or no type information is available for
+<span id="L339" class="ln">   339</span>	//     allocated blocks.
+<span id="L340" class="ln">   340</span>	//     The data field has no meaning.
+<span id="L341" class="ln">   341</span>	// MTypes_Single:
+<span id="L342" class="ln">   342</span>	//     The span contains just one block.
+<span id="L343" class="ln">   343</span>	//     The data field holds the type information.
+<span id="L344" class="ln">   344</span>	//     The sysalloc field has no meaning.
+<span id="L345" class="ln">   345</span>	// MTypes_Words:
+<span id="L346" class="ln">   346</span>	//     The span contains multiple blocks.
+<span id="L347" class="ln">   347</span>	//     The data field points to an array of type [NumBlocks]uintptr,
+<span id="L348" class="ln">   348</span>	//     and each element of the array holds the type of the corresponding
+<span id="L349" class="ln">   349</span>	//     block.
+<span id="L350" class="ln">   350</span>	// MTypes_Bytes:
+<span id="L351" class="ln">   351</span>	//     The span contains at most seven different types of blocks.
+<span id="L352" class="ln">   352</span>	//     The data field points to the following structure:
+<span id="L353" class="ln">   353</span>	//         struct {
+<span id="L354" class="ln">   354</span>	//             type  [8]uintptr       // type[0] is always 0
+<span id="L355" class="ln">   355</span>	//             index [NumBlocks]byte
+<span id="L356" class="ln">   356</span>	//         }
+<span id="L357" class="ln">   357</span>	//     The type of the i-th block is: data.type[data.index[i]]
+<span id="L358" class="ln">   358</span>	enum
+<span id="L359" class="ln">   359</span>	{
+<span id="L360" class="ln">   360</span>		MTypes_Empty = 0,
+<span id="L361" class="ln">   361</span>		MTypes_Single = 1,
+<span id="L362" class="ln">   362</span>		MTypes_Words = 2,
+<span id="L363" class="ln">   363</span>		MTypes_Bytes = 3,
+<span id="L364" class="ln">   364</span>	};
+<span id="L365" class="ln">   365</span>	struct MTypes
+<span id="L366" class="ln">   366</span>	{
+<span id="L367" class="ln">   367</span>		byte	compression;	// one of MTypes_*
+<span id="L368" class="ln">   368</span>		uintptr	data;
+<span id="L369" class="ln">   369</span>	};
+<span id="L370" class="ln">   370</span>	
+<span id="L371" class="ln">   371</span>	enum
+<span id="L372" class="ln">   372</span>	{
+<span id="L373" class="ln">   373</span>		KindSpecialFinalizer = 1,
+<span id="L374" class="ln">   374</span>		KindSpecialProfile = 2,
+<span id="L375" class="ln">   375</span>		// Note: The finalizer special must be first because if we&#39;re freeing
+<span id="L376" class="ln">   376</span>		// an object, a finalizer special will cause the freeing operation
+<span id="L377" class="ln">   377</span>		// to abort, and we want to keep the other special records around
+<span id="L378" class="ln">   378</span>		// if that happens.
+<span id="L379" class="ln">   379</span>	};
+<span id="L380" class="ln">   380</span>	
+<span id="L381" class="ln">   381</span>	typedef struct Special Special;
+<span id="L382" class="ln">   382</span>	struct Special
+<span id="L383" class="ln">   383</span>	{
+<span id="L384" class="ln">   384</span>		Special*	next;	// linked list in span
+<span id="L385" class="ln">   385</span>		uint16		offset;	// span offset of object
+<span id="L386" class="ln">   386</span>		byte		kind;	// kind of Special
+<span id="L387" class="ln">   387</span>	};
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>	// The described object has a finalizer set for it.
+<span id="L390" class="ln">   390</span>	typedef struct SpecialFinalizer SpecialFinalizer;
+<span id="L391" class="ln">   391</span>	struct SpecialFinalizer
+<span id="L392" class="ln">   392</span>	{
+<span id="L393" class="ln">   393</span>		Special;
+<span id="L394" class="ln">   394</span>		FuncVal*	fn;
+<span id="L395" class="ln">   395</span>		uintptr		nret;
+<span id="L396" class="ln">   396</span>		Type*		fint;
+<span id="L397" class="ln">   397</span>		PtrType*	ot;
+<span id="L398" class="ln">   398</span>	};
+<span id="L399" class="ln">   399</span>	
+<span id="L400" class="ln">   400</span>	// The described object is being heap profiled.
+<span id="L401" class="ln">   401</span>	typedef struct Bucket Bucket; // from mprof.goc
+<span id="L402" class="ln">   402</span>	typedef struct SpecialProfile SpecialProfile;
+<span id="L403" class="ln">   403</span>	struct SpecialProfile
+<span id="L404" class="ln">   404</span>	{
+<span id="L405" class="ln">   405</span>		Special;
+<span id="L406" class="ln">   406</span>		Bucket*	b;
+<span id="L407" class="ln">   407</span>	};
+<span id="L408" class="ln">   408</span>	
+<span id="L409" class="ln">   409</span>	// An MSpan is a run of pages.
+<span id="L410" class="ln">   410</span>	enum
+<span id="L411" class="ln">   411</span>	{
+<span id="L412" class="ln">   412</span>		MSpanInUse = 0,
+<span id="L413" class="ln">   413</span>		MSpanFree,
+<span id="L414" class="ln">   414</span>		MSpanListHead,
+<span id="L415" class="ln">   415</span>		MSpanDead,
+<span id="L416" class="ln">   416</span>	};
+<span id="L417" class="ln">   417</span>	struct MSpan
+<span id="L418" class="ln">   418</span>	{
+<span id="L419" class="ln">   419</span>		MSpan	*next;		// in a span linked list
+<span id="L420" class="ln">   420</span>		MSpan	*prev;		// in a span linked list
+<span id="L421" class="ln">   421</span>		PageID	start;		// starting page number
+<span id="L422" class="ln">   422</span>		uintptr	npages;		// number of pages in span
+<span id="L423" class="ln">   423</span>		MLink	*freelist;	// list of free objects
+<span id="L424" class="ln">   424</span>		// sweep generation:
+<span id="L425" class="ln">   425</span>		// if sweepgen == h-&gt;sweepgen - 2, the span needs sweeping
+<span id="L426" class="ln">   426</span>		// if sweepgen == h-&gt;sweepgen - 1, the span is currently being swept
+<span id="L427" class="ln">   427</span>		// if sweepgen == h-&gt;sweepgen, the span is swept and ready to use
+<span id="L428" class="ln">   428</span>		// h-&gt;sweepgen is incremented by 2 after every GC
+<span id="L429" class="ln">   429</span>		uint32	sweepgen;
+<span id="L430" class="ln">   430</span>		uint16	ref;		// capacity - number of objects in freelist
+<span id="L431" class="ln">   431</span>		uint8	sizeclass;	// size class
+<span id="L432" class="ln">   432</span>		bool	incache;	// being used by an MCache
+<span id="L433" class="ln">   433</span>		uint8	state;		// MSpanInUse etc
+<span id="L434" class="ln">   434</span>		uint8	needzero;	// needs to be zeroed before allocation
+<span id="L435" class="ln">   435</span>		uintptr	elemsize;	// computed from sizeclass or from npages
+<span id="L436" class="ln">   436</span>		int64   unusedsince;	// First time spotted by GC in MSpanFree state
+<span id="L437" class="ln">   437</span>		uintptr npreleased;	// number of pages released to the OS
+<span id="L438" class="ln">   438</span>		byte	*limit;		// end of data in span
+<span id="L439" class="ln">   439</span>		MTypes	types;		// types of allocated objects in this span
+<span id="L440" class="ln">   440</span>		Lock	specialLock;	// guards specials list
+<span id="L441" class="ln">   441</span>		Special	*specials;	// linked list of special records sorted by offset.
+<span id="L442" class="ln">   442</span>		MLink	*freebuf;	// objects freed explicitly, not incorporated into freelist yet
+<span id="L443" class="ln">   443</span>	};
+<span id="L444" class="ln">   444</span>	
+<span id="L445" class="ln">   445</span>	void	runtime·MSpan_Init(MSpan *span, PageID start, uintptr npages);
+<span id="L446" class="ln">   446</span>	void	runtime·MSpan_EnsureSwept(MSpan *span);
+<span id="L447" class="ln">   447</span>	bool	runtime·MSpan_Sweep(MSpan *span);
+<span id="L448" class="ln">   448</span>	
+<span id="L449" class="ln">   449</span>	// Every MSpan is in one doubly-linked list,
+<span id="L450" class="ln">   450</span>	// either one of the MHeap&#39;s free lists or one of the
+<span id="L451" class="ln">   451</span>	// MCentral&#39;s span lists.  We use empty MSpan structures as list heads.
+<span id="L452" class="ln">   452</span>	void	runtime·MSpanList_Init(MSpan *list);
+<span id="L453" class="ln">   453</span>	bool	runtime·MSpanList_IsEmpty(MSpan *list);
+<span id="L454" class="ln">   454</span>	void	runtime·MSpanList_Insert(MSpan *list, MSpan *span);
+<span id="L455" class="ln">   455</span>	void	runtime·MSpanList_InsertBack(MSpan *list, MSpan *span);
+<span id="L456" class="ln">   456</span>	void	runtime·MSpanList_Remove(MSpan *span);	// from whatever list it is in
+<span id="L457" class="ln">   457</span>	
+<span id="L458" class="ln">   458</span>	
+<span id="L459" class="ln">   459</span>	// Central list of free objects of a given size.
+<span id="L460" class="ln">   460</span>	struct MCentral
+<span id="L461" class="ln">   461</span>	{
+<span id="L462" class="ln">   462</span>		Lock;
+<span id="L463" class="ln">   463</span>		int32 sizeclass;
+<span id="L464" class="ln">   464</span>		MSpan nonempty;	// list of spans with a free object
+<span id="L465" class="ln">   465</span>		MSpan empty;	// list of spans with no free objects (or cached in an MCache)
+<span id="L466" class="ln">   466</span>		int32 nfree;	// # of objects available in nonempty spans
+<span id="L467" class="ln">   467</span>	};
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>	void	runtime·MCentral_Init(MCentral *c, int32 sizeclass);
+<span id="L470" class="ln">   470</span>	MSpan*	runtime·MCentral_CacheSpan(MCentral *c);
+<span id="L471" class="ln">   471</span>	void	runtime·MCentral_UncacheSpan(MCentral *c, MSpan *s);
+<span id="L472" class="ln">   472</span>	bool	runtime·MCentral_FreeSpan(MCentral *c, MSpan *s, int32 n, MLink *start, MLink *end);
+<span id="L473" class="ln">   473</span>	void	runtime·MCentral_FreeList(MCentral *c, MLink *start); // TODO: need this?
+<span id="L474" class="ln">   474</span>	
+<span id="L475" class="ln">   475</span>	// Main malloc heap.
+<span id="L476" class="ln">   476</span>	// The heap itself is the &#34;free[]&#34; and &#34;large&#34; arrays,
+<span id="L477" class="ln">   477</span>	// but all the other global data is here too.
+<span id="L478" class="ln">   478</span>	struct MHeap
+<span id="L479" class="ln">   479</span>	{
+<span id="L480" class="ln">   480</span>		Lock;
+<span id="L481" class="ln">   481</span>		MSpan free[MaxMHeapList];	// free lists of given length
+<span id="L482" class="ln">   482</span>		MSpan freelarge;		// free lists length &gt;= MaxMHeapList
+<span id="L483" class="ln">   483</span>		MSpan busy[MaxMHeapList];	// busy lists of large objects of given length
+<span id="L484" class="ln">   484</span>		MSpan busylarge;		// busy lists of large objects length &gt;= MaxMHeapList
+<span id="L485" class="ln">   485</span>		MSpan **allspans;		// all spans out there
+<span id="L486" class="ln">   486</span>		MSpan **sweepspans;		// copy of allspans referenced by sweeper
+<span id="L487" class="ln">   487</span>		uint32	nspan;
+<span id="L488" class="ln">   488</span>		uint32	nspancap;
+<span id="L489" class="ln">   489</span>		uint32	sweepgen;		// sweep generation, see comment in MSpan
+<span id="L490" class="ln">   490</span>		uint32	sweepdone;		// all spans are swept
+<span id="L491" class="ln">   491</span>	
+<span id="L492" class="ln">   492</span>		// span lookup
+<span id="L493" class="ln">   493</span>		MSpan**	spans;
+<span id="L494" class="ln">   494</span>		uintptr	spans_mapped;
+<span id="L495" class="ln">   495</span>	
+<span id="L496" class="ln">   496</span>		// range of addresses we might see in the heap
+<span id="L497" class="ln">   497</span>		byte *bitmap;
+<span id="L498" class="ln">   498</span>		uintptr bitmap_mapped;
+<span id="L499" class="ln">   499</span>		byte *arena_start;
+<span id="L500" class="ln">   500</span>		byte *arena_used;
+<span id="L501" class="ln">   501</span>		byte *arena_end;
+<span id="L502" class="ln">   502</span>		bool arena_reserved;
+<span id="L503" class="ln">   503</span>	
+<span id="L504" class="ln">   504</span>		// central free lists for small size classes.
+<span id="L505" class="ln">   505</span>		// the padding makes sure that the MCentrals are
+<span id="L506" class="ln">   506</span>		// spaced CacheLineSize bytes apart, so that each MCentral.Lock
+<span id="L507" class="ln">   507</span>		// gets its own cache line.
+<span id="L508" class="ln">   508</span>		struct {
+<span id="L509" class="ln">   509</span>			MCentral;
+<span id="L510" class="ln">   510</span>			byte pad[CacheLineSize];
+<span id="L511" class="ln">   511</span>		} central[NumSizeClasses];
+<span id="L512" class="ln">   512</span>	
+<span id="L513" class="ln">   513</span>		FixAlloc spanalloc;	// allocator for Span*
+<span id="L514" class="ln">   514</span>		FixAlloc cachealloc;	// allocator for MCache*
+<span id="L515" class="ln">   515</span>		FixAlloc specialfinalizeralloc;	// allocator for SpecialFinalizer*
+<span id="L516" class="ln">   516</span>		FixAlloc specialprofilealloc;	// allocator for SpecialProfile*
+<span id="L517" class="ln">   517</span>		Lock speciallock; // lock for sepcial record allocators.
+<span id="L518" class="ln">   518</span>	
+<span id="L519" class="ln">   519</span>		// Malloc stats.
+<span id="L520" class="ln">   520</span>		uint64 largefree;	// bytes freed for large objects (&gt;MaxSmallSize)
+<span id="L521" class="ln">   521</span>		uint64 nlargefree;	// number of frees for large objects (&gt;MaxSmallSize)
+<span id="L522" class="ln">   522</span>		uint64 nsmallfree[NumSizeClasses];	// number of frees for small objects (&lt;=MaxSmallSize)
+<span id="L523" class="ln">   523</span>	};
+<span id="L524" class="ln">   524</span>	extern MHeap runtime·mheap;
+<span id="L525" class="ln">   525</span>	
+<span id="L526" class="ln">   526</span>	void	runtime·MHeap_Init(MHeap *h);
+<span id="L527" class="ln">   527</span>	MSpan*	runtime·MHeap_Alloc(MHeap *h, uintptr npage, int32 sizeclass, bool large, bool needzero);
+<span id="L528" class="ln">   528</span>	void	runtime·MHeap_Free(MHeap *h, MSpan *s, int32 acct);
+<span id="L529" class="ln">   529</span>	MSpan*	runtime·MHeap_Lookup(MHeap *h, void *v);
+<span id="L530" class="ln">   530</span>	MSpan*	runtime·MHeap_LookupMaybe(MHeap *h, void *v);
+<span id="L531" class="ln">   531</span>	void	runtime·MGetSizeClassInfo(int32 sizeclass, uintptr *size, int32 *npages, int32 *nobj);
+<span id="L532" class="ln">   532</span>	void*	runtime·MHeap_SysAlloc(MHeap *h, uintptr n);
+<span id="L533" class="ln">   533</span>	void	runtime·MHeap_MapBits(MHeap *h);
+<span id="L534" class="ln">   534</span>	void	runtime·MHeap_MapSpans(MHeap *h);
+<span id="L535" class="ln">   535</span>	void	runtime·MHeap_Scavenger(void);
+<span id="L536" class="ln">   536</span>	void	runtime·MHeap_SplitSpan(MHeap *h, MSpan *s);
+<span id="L537" class="ln">   537</span>	
+<span id="L538" class="ln">   538</span>	void*	runtime·mallocgc(uintptr size, uintptr typ, uint32 flag);
+<span id="L539" class="ln">   539</span>	void*	runtime·persistentalloc(uintptr size, uintptr align, uint64 *stat);
+<span id="L540" class="ln">   540</span>	int32	runtime·mlookup(void *v, byte **base, uintptr *size, MSpan **s);
+<span id="L541" class="ln">   541</span>	void	runtime·gc(int32 force);
+<span id="L542" class="ln">   542</span>	uintptr	runtime·sweepone(void);
+<span id="L543" class="ln">   543</span>	void	runtime·markscan(void *v);
+<span id="L544" class="ln">   544</span>	void	runtime·marknogc(void *v);
+<span id="L545" class="ln">   545</span>	void	runtime·checkallocated(void *v, uintptr n);
+<span id="L546" class="ln">   546</span>	void	runtime·markfreed(void *v);
+<span id="L547" class="ln">   547</span>	void	runtime·checkfreed(void *v, uintptr n);
+<span id="L548" class="ln">   548</span>	extern	int32	runtime·checking;
+<span id="L549" class="ln">   549</span>	void	runtime·markspan(void *v, uintptr size, uintptr n, bool leftover);
+<span id="L550" class="ln">   550</span>	void	runtime·unmarkspan(void *v, uintptr size);
+<span id="L551" class="ln">   551</span>	void	runtime·purgecachedstats(MCache*);
+<span id="L552" class="ln">   552</span>	void*	runtime·cnew(Type*);
+<span id="L553" class="ln">   553</span>	void*	runtime·cnewarray(Type*, intgo);
+<span id="L554" class="ln">   554</span>	void	runtime·tracealloc(void*, uintptr, uintptr);
+<span id="L555" class="ln">   555</span>	void	runtime·tracefree(void*, uintptr);
+<span id="L556" class="ln">   556</span>	void	runtime·tracegc(void);
+<span id="L557" class="ln">   557</span>	
+<span id="L558" class="ln">   558</span>	uintptr	runtime·gettype(void*);
+<span id="L559" class="ln">   559</span>	
+<span id="L560" class="ln">   560</span>	enum
+<span id="L561" class="ln">   561</span>	{
+<span id="L562" class="ln">   562</span>		// flags to malloc
+<span id="L563" class="ln">   563</span>		FlagNoScan	= 1&lt;&lt;0,	// GC doesn&#39;t have to scan object
+<span id="L564" class="ln">   564</span>		FlagNoProfiling	= 1&lt;&lt;1,	// must not profile
+<span id="L565" class="ln">   565</span>		FlagNoGC	= 1&lt;&lt;2,	// must not free or scan for pointers
+<span id="L566" class="ln">   566</span>		FlagNoZero	= 1&lt;&lt;3, // don&#39;t zero memory
+<span id="L567" class="ln">   567</span>		FlagNoInvokeGC	= 1&lt;&lt;4, // don&#39;t invoke GC
+<span id="L568" class="ln">   568</span>	};
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>	void	runtime·MProf_Malloc(void*, uintptr);
+<span id="L571" class="ln">   571</span>	void	runtime·MProf_Free(Bucket*, uintptr, bool);
+<span id="L572" class="ln">   572</span>	void	runtime·MProf_GC(void);
+<span id="L573" class="ln">   573</span>	void	runtime·iterate_memprof(void (*callback)(Bucket*, uintptr, uintptr*, uintptr, uintptr, uintptr));
+<span id="L574" class="ln">   574</span>	int32	runtime·gcprocs(void);
+<span id="L575" class="ln">   575</span>	void	runtime·helpgc(int32 nproc);
+<span id="L576" class="ln">   576</span>	void	runtime·gchelper(void);
+<span id="L577" class="ln">   577</span>	void	runtime·createfing(void);
+<span id="L578" class="ln">   578</span>	G*	runtime·wakefing(void);
+<span id="L579" class="ln">   579</span>	extern bool	runtime·fingwait;
+<span id="L580" class="ln">   580</span>	extern bool	runtime·fingwake;
+<span id="L581" class="ln">   581</span>	
+<span id="L582" class="ln">   582</span>	void	runtime·setprofilebucket(void *p, Bucket *b);
+<span id="L583" class="ln">   583</span>	
+<span id="L584" class="ln">   584</span>	bool	runtime·addfinalizer(void*, FuncVal *fn, uintptr, Type*, PtrType*);
+<span id="L585" class="ln">   585</span>	void	runtime·removefinalizer(void*);
+<span id="L586" class="ln">   586</span>	void	runtime·queuefinalizer(byte *p, FuncVal *fn, uintptr nret, Type *fint, PtrType *ot);
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>	void	runtime·freeallspecials(MSpan *span, void *p, uintptr size);
+<span id="L589" class="ln">   589</span>	bool	runtime·freespecial(Special *s, void *p, uintptr size, bool freed);
+<span id="L590" class="ln">   590</span>	
+<span id="L591" class="ln">   591</span>	enum
+<span id="L592" class="ln">   592</span>	{
+<span id="L593" class="ln">   593</span>		TypeInfo_SingleObject = 0,
+<span id="L594" class="ln">   594</span>		TypeInfo_Array = 1,
+<span id="L595" class="ln">   595</span>		TypeInfo_Chan = 2,
+<span id="L596" class="ln">   596</span>	
+<span id="L597" class="ln">   597</span>		// Enables type information at the end of blocks allocated from heap	
+<span id="L598" class="ln">   598</span>		DebugTypeAtBlockEnd = 0,
+<span id="L599" class="ln">   599</span>	};
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>	// Information from the compiler about the layout of stack frames.
+<span id="L602" class="ln">   602</span>	typedef struct BitVector BitVector;
+<span id="L603" class="ln">   603</span>	struct BitVector
+<span id="L604" class="ln">   604</span>	{
+<span id="L605" class="ln">   605</span>		int32 n; // # of bits
+<span id="L606" class="ln">   606</span>		uint32 *data;
+<span id="L607" class="ln">   607</span>	};
+<span id="L608" class="ln">   608</span>	typedef struct StackMap StackMap;
+<span id="L609" class="ln">   609</span>	struct StackMap
+<span id="L610" class="ln">   610</span>	{
+<span id="L611" class="ln">   611</span>		int32 n; // number of bitmaps
+<span id="L612" class="ln">   612</span>		int32 nbit; // number of bits in each bitmap
+<span id="L613" class="ln">   613</span>		uint32 data[];
+<span id="L614" class="ln">   614</span>	};
+<span id="L615" class="ln">   615</span>	enum {
+<span id="L616" class="ln">   616</span>		// Pointer map
+<span id="L617" class="ln">   617</span>		BitsPerPointer = 2,
+<span id="L618" class="ln">   618</span>		BitsDead = 0,
+<span id="L619" class="ln">   619</span>		BitsScalar = 1,
+<span id="L620" class="ln">   620</span>		BitsPointer = 2,
+<span id="L621" class="ln">   621</span>		BitsMultiWord = 3,
+<span id="L622" class="ln">   622</span>		// BitsMultiWord will be set for the first word of a multi-word item.
+<span id="L623" class="ln">   623</span>		// When it is set, one of the following will be set for the second word.
+<span id="L624" class="ln">   624</span>		BitsString = 0,
+<span id="L625" class="ln">   625</span>		BitsSlice = 1,
+<span id="L626" class="ln">   626</span>		BitsIface = 2,
+<span id="L627" class="ln">   627</span>		BitsEface = 3,
+<span id="L628" class="ln">   628</span>	};
+<span id="L629" class="ln">   629</span>	// Returns pointer map data for the given stackmap index
+<span id="L630" class="ln">   630</span>	// (the index is encoded in PCDATA_StackMapIndex).
+<span id="L631" class="ln">   631</span>	BitVector	runtime·stackmapdata(StackMap *stackmap, int32 n);
+<span id="L632" class="ln">   632</span>	
+<span id="L633" class="ln">   633</span>	// defined in mgc0.go
+<span id="L634" class="ln">   634</span>	void	runtime·gc_m_ptr(Eface*);
+<span id="L635" class="ln">   635</span>	void	runtime·gc_g_ptr(Eface*);
+<span id="L636" class="ln">   636</span>	void	runtime·gc_itab_ptr(Eface*);
+<span id="L637" class="ln">   637</span>	
+<span id="L638" class="ln">   638</span>	void	runtime·memorydump(void);
+<span id="L639" class="ln">   639</span>	int32	runtime·setgcpercent(int32);
+<span id="L640" class="ln">   640</span>	
+<span id="L641" class="ln">   641</span>	// Value we use to mark dead pointers when GODEBUG=gcdead=1.
+<span id="L642" class="ln">   642</span>	#define PoisonGC ((uintptr)0xf969696969696969ULL)
+<span id="L643" class="ln">   643</span>	#define PoisonStack ((uintptr)0x6868686868686868ULL)
+</pre><p><a href="http://golang.org/src/pkg/runtime/malloc.h?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

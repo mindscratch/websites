@@ -1,0 +1,331 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="http://godoc.org/-/site.css?v=77a375cde004447959d56a1c99a85585729361d2" rel="stylesheet">
+  
+  <title>vet - GoDoc</title>
+  
+    <meta name="twitter:title" content="Command vet">
+    <meta property="og:title" content="Command vet">
+    <meta name="description" content="Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.">
+    <meta name="twitter:description" content="Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.">
+    <meta property="og:description" content="Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  <div class="clearfix" id="x-projnav">
+  <a href="https://golang.org/x/tools"><strong>tools:</strong></a>
+  <a href="http://godoc.org/golang.org/x/tools">golang.org/x/tools</a><span class="text-muted">/</span><a href="http://godoc.org/golang.org/x/tools/cmd">cmd</a><span class="text-muted">/</span><span class="text-muted">vet</span>
+  
+</div>
+  <h2>Command vet</h2>
+  <p>
+Vet examines Go source code and reports suspicious constructs, such as Printf
+calls whose arguments do not align with the format string. Vet uses heuristics
+that do not guarantee all reports are genuine problems, but it can find errors
+not caught by the compilers.
+</p>
+<p>
+It can be invoked three ways:
+</p>
+<p>
+By package, from the go tool:
+</p>
+<pre>go vet package/path/name
+</pre>
+<p>
+vets the package whose path is provided.
+</p>
+<p>
+By files:
+</p>
+<pre>go tool vet source/directory/*.go
+</pre>
+<p>
+vets the files named, all of which must be in the same package.
+</p>
+<p>
+By directory:
+</p>
+<pre>go tool vet source/directory
+</pre>
+<p>
+recursively descends the directory, vetting each file in isolation.
+Package-level type-checking is disabled, so the vetting is weaker.
+</p>
+<p>
+Vet&#39;s exit code is 2 for erroneous invocation of the tool, 1 if a
+problem was reported, and 0 otherwise. Note that the tool does not
+check every possible problem and depends on unreliable heuristics
+so it should be used as guidance only, not as a firm indicator of
+program correctness.
+</p>
+<p>
+By default all checks are performed. If any flags are explicitly set
+to true, only those tests are run. Conversely, if any flag is
+explicitly set to false, only those tests are disabled.
+Thus -printf=true runs the printf check, -printf=false runs all checks
+except the printf check.
+</p>
+<p>
+Available checks:
+</p>
+<h4 id="hdr-Printf_family">Printf family <a class="permalink" href="index.html#hdr-Printf_family">&para</a></h4>
+<p>
+Flag: -printf
+</p>
+<p>
+Suspicious calls to functions in the Printf family, including any functions
+with these names, disregarding case:
+</p>
+<pre>Print Printf Println
+Fprint Fprintf Fprintln
+Sprint Sprintf Sprintln
+Error Errorf
+Fatal Fatalf
+Log Logf
+Panic Panicf Panicln
+</pre>
+<p>
+If the function name ends with an &#39;f&#39;, the function is assumed to take
+a format descriptor string in the manner of fmt.Printf. If not, vet
+complains about arguments that look like format descriptor strings.
+</p>
+<p>
+It also checks for errors such as using a Writer as the first argument of
+Printf.
+</p>
+<h4 id="hdr-Methods">Methods <a class="permalink" href="index.html#hdr-Methods">&para</a></h4>
+<p>
+Flag: -methods
+</p>
+<p>
+Non-standard signatures for methods with familiar names, including:
+</p>
+<pre>Format GobEncode GobDecode MarshalJSON MarshalXML
+Peek ReadByte ReadFrom ReadRune Scan Seek
+UnmarshalJSON UnreadByte UnreadRune WriteByte
+WriteTo
+</pre>
+<h4 id="hdr-Struct_tags">Struct tags <a class="permalink" href="index.html#hdr-Struct_tags">&para</a></h4>
+<p>
+Flag: -structtags
+</p>
+<p>
+Struct tags that do not follow the format understood by reflect.StructTag.Get.
+Well-known encoding struct tags (json, xml) used with unexported fields.
+</p>
+<h4 id="hdr-Unkeyed_composite_literals">Unkeyed composite literals <a class="permalink" href="index.html#hdr-Unkeyed_composite_literals">&para</a></h4>
+<p>
+Flag: -composites
+</p>
+<p>
+Composite struct literals that do not use the field-keyed syntax.
+</p>
+<h4 id="hdr-Assembly_declarations">Assembly declarations <a class="permalink" href="index.html#hdr-Assembly_declarations">&para</a></h4>
+<p>
+Flag: -asmdecl
+</p>
+<p>
+Mismatches between assembly files and Go function declarations.
+</p>
+<h4 id="hdr-Useless_assignments">Useless assignments <a class="permalink" href="index.html#hdr-Useless_assignments">&para</a></h4>
+<p>
+Flag: -assign
+</p>
+<p>
+Check for useless assignments.
+</p>
+<h4 id="hdr-Atomic_mistakes">Atomic mistakes <a class="permalink" href="index.html#hdr-Atomic_mistakes">&para</a></h4>
+<p>
+Flag: -atomic
+</p>
+<p>
+Common mistaken usages of the sync/atomic package.
+</p>
+<h4 id="hdr-Boolean_conditions">Boolean conditions <a class="permalink" href="index.html#hdr-Boolean_conditions">&para</a></h4>
+<p>
+Flag: -bool
+</p>
+<p>
+Mistakes involving boolean operators.
+</p>
+<h4 id="hdr-Build_tags">Build tags <a class="permalink" href="index.html#hdr-Build_tags">&para</a></h4>
+<p>
+Flag: -buildtags
+</p>
+<p>
+Badly formed or misplaced +build tags.
+</p>
+<h4 id="hdr-Copying_locks">Copying locks <a class="permalink" href="index.html#hdr-Copying_locks">&para</a></h4>
+<p>
+Flag: -copylocks
+</p>
+<p>
+Locks that are erroneously passed by value.
+</p>
+<h4 id="hdr-Nil_function_comparison">Nil function comparison <a class="permalink" href="index.html#hdr-Nil_function_comparison">&para</a></h4>
+<p>
+Flag: -nilfunc
+</p>
+<p>
+Comparisons between functions and nil.
+</p>
+<h4 id="hdr-Range_loop_variables">Range loop variables <a class="permalink" href="index.html#hdr-Range_loop_variables">&para</a></h4>
+<p>
+Flag: -rangeloops
+</p>
+<p>
+Incorrect uses of range loop variables in closures.
+</p>
+<h4 id="hdr-Unreachable_code">Unreachable code <a class="permalink" href="index.html#hdr-Unreachable_code">&para</a></h4>
+<p>
+Flag: -unreachable
+</p>
+<p>
+Unreachable code.
+</p>
+<h4 id="hdr-Shadowed_variables">Shadowed variables <a class="permalink" href="index.html#hdr-Shadowed_variables">&para</a></h4>
+<p>
+Flag: -shadow=false (experimental; must be set explicitly)
+</p>
+<p>
+Variables that may have been unintentionally shadowed.
+</p>
+<h4 id="hdr-Misuse_of_unsafe_Pointers">Misuse of unsafe Pointers <a class="permalink" href="index.html#hdr-Misuse_of_unsafe_Pointers">&para</a></h4>
+<p>
+Flag: -unsafeptr
+</p>
+<p>
+Likely incorrect uses of unsafe.Pointer to convert integers to pointers.
+A conversion from uintptr to unsafe.Pointer is invalid if it implies that
+there is a uintptr-typed word in memory that holds a pointer value,
+because that word will be invisible to stack copying and to the garbage
+collector.
+</p>
+<h4 id="hdr-Shifts">Shifts <a class="permalink" href="index.html#hdr-Shifts">&para</a></h4>
+<p>
+Flag: -shift
+</p>
+<p>
+Shifts equal to or longer than the variable&#39;s length.
+</p>
+<h4 id="hdr-Other_flags">Other flags <a class="permalink" href="index.html#hdr-Other_flags">&para</a></h4>
+<p>
+These flags configure the behavior of vet:
+</p>
+<pre>-all (default true)
+	Check everything; disabled if any explicit check is requested.
+-v
+	Verbose mode
+-printfuncs
+	A comma-separated list of print-like functions to supplement
+	the standard list.  Each entry is in the form Name:N where N
+	is the zero-based argument position of the first argument
+	involved in the print: either the format or the first print
+	argument for non-formatted prints.  For example,
+	if you have Warn and Warnf functions that take an
+	io.Writer as their first argument, like Fprintf,
+		-printfuncs=Warn:1,Warnf:1
+-shadowstrict
+	Whether to be strict about shadowing; can be noisy.
+-test
+	For testing only: sets -all and -shadow.
+</pre>
+<p>
+Vet is a simple checker for static errors in Go source code.
+See doc.go for more information.</p>
+
+  
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="index.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="http://godoc.org/golang.org/x/tools/cmd/vet/whitelist">whitelist</a><td>Package whitelist defines exceptions for the vet tool.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="golang.org/x/tools/cmd/vet"></form>
+  <p>Package main imports <a href="http://godoc.org/golang.org/x/tools/cmd/vet?imports">21 packages</a> (<a href="http://godoc.org/golang.org/x/tools/cmd/vet?import-graph">graph</a>).
+  Updated <span class="timeago" title="2014-12-04T09:44:18Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="http://godoc.org/golang.org/x/tools/cmd/vet?tools">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="index.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr class="text-muted"><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr class="text-muted"><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="http://godoc.org/-/site.js?v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

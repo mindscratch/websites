@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/go/scanner/errors.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/go/scanner/errors.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package scanner
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;go/token&#34;
+<span id="L10" class="ln">    10</span>		&#34;io&#34;
+<span id="L11" class="ln">    11</span>		&#34;sort&#34;
+<span id="L12" class="ln">    12</span>	)
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	<span class="comment">// In an ErrorList, an error is represented by an *Error.</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// The position Pos, if valid, points to the beginning of</span>
+<span id="L16" class="ln">    16</span>	<span class="comment">// the offending token, and the error condition is described</span>
+<span id="L17" class="ln">    17</span>	<span class="comment">// by Msg.</span>
+<span id="L18" class="ln">    18</span>	<span class="comment">//</span>
+<span id="L19" class="ln">    19</span>	type Error struct {
+<span id="L20" class="ln">    20</span>		Pos token.Position
+<span id="L21" class="ln">    21</span>		Msg string
+<span id="L22" class="ln">    22</span>	}
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	<span class="comment">// Error implements the error interface.</span>
+<span id="L25" class="ln">    25</span>	func (e Error) Error() string {
+<span id="L26" class="ln">    26</span>		if e.Pos.Filename != &#34;&#34; || e.Pos.IsValid() {
+<span id="L27" class="ln">    27</span>			<span class="comment">// don&#39;t print &#34;&lt;unknown position&gt;&#34;</span>
+<span id="L28" class="ln">    28</span>			<span class="comment">// TODO(gri) reconsider the semantics of Position.IsValid</span>
+<span id="L29" class="ln">    29</span>			return e.Pos.String() + &#34;: &#34; + e.Msg
+<span id="L30" class="ln">    30</span>		}
+<span id="L31" class="ln">    31</span>		return e.Msg
+<span id="L32" class="ln">    32</span>	}
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	<span class="comment">// ErrorList is a list of *Errors.</span>
+<span id="L35" class="ln">    35</span>	<span class="comment">// The zero value for an ErrorList is an empty ErrorList ready to use.</span>
+<span id="L36" class="ln">    36</span>	<span class="comment">//</span>
+<span id="L37" class="ln">    37</span>	type ErrorList []*Error
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>	<span class="comment">// Add adds an Error with given position and error message to an ErrorList.</span>
+<span id="L40" class="ln">    40</span>	func (p *ErrorList) Add(pos token.Position, msg string) {
+<span id="L41" class="ln">    41</span>		*p = append(*p, &amp;Error{pos, msg})
+<span id="L42" class="ln">    42</span>	}
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>	<span class="comment">// Reset resets an ErrorList to no errors.</span>
+<span id="L45" class="ln">    45</span>	<span class="selection">func (p *ErrorList) Reset()</span> { *p = (*p)[0:0] }
+<span id="L46" class="ln">    46</span>	
+<span id="L47" class="ln">    47</span>	<span class="comment">// ErrorList implements the sort Interface.</span>
+<span id="L48" class="ln">    48</span>	func (p ErrorList) Len() int      { return len(p) }
+<span id="L49" class="ln">    49</span>	func (p ErrorList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>	func (p ErrorList) Less(i, j int) bool {
+<span id="L52" class="ln">    52</span>		e := &amp;p[i].Pos
+<span id="L53" class="ln">    53</span>		f := &amp;p[j].Pos
+<span id="L54" class="ln">    54</span>		<span class="comment">// Note that it is not sufficient to simply compare file offsets because</span>
+<span id="L55" class="ln">    55</span>		<span class="comment">// the offsets do not reflect modified line information (through //line</span>
+<span id="L56" class="ln">    56</span>		<span class="comment">// comments).</span>
+<span id="L57" class="ln">    57</span>		if e.Filename &lt; f.Filename {
+<span id="L58" class="ln">    58</span>			return true
+<span id="L59" class="ln">    59</span>		}
+<span id="L60" class="ln">    60</span>		if e.Filename == f.Filename {
+<span id="L61" class="ln">    61</span>			if e.Line &lt; f.Line {
+<span id="L62" class="ln">    62</span>				return true
+<span id="L63" class="ln">    63</span>			}
+<span id="L64" class="ln">    64</span>			if e.Line == f.Line {
+<span id="L65" class="ln">    65</span>				return e.Column &lt; f.Column
+<span id="L66" class="ln">    66</span>			}
+<span id="L67" class="ln">    67</span>		}
+<span id="L68" class="ln">    68</span>		return false
+<span id="L69" class="ln">    69</span>	}
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	<span class="comment">// Sort sorts an ErrorList. *Error entries are sorted by position,</span>
+<span id="L72" class="ln">    72</span>	<span class="comment">// other errors are sorted by error message, and before any *Error</span>
+<span id="L73" class="ln">    73</span>	<span class="comment">// entry.</span>
+<span id="L74" class="ln">    74</span>	<span class="comment">//</span>
+<span id="L75" class="ln">    75</span>	func (p ErrorList) Sort() {
+<span id="L76" class="ln">    76</span>		sort.Sort(p)
+<span id="L77" class="ln">    77</span>	}
+<span id="L78" class="ln">    78</span>	
+<span id="L79" class="ln">    79</span>	<span class="comment">// RemoveMultiples sorts an ErrorList and removes all but the first error per line.</span>
+<span id="L80" class="ln">    80</span>	func (p *ErrorList) RemoveMultiples() {
+<span id="L81" class="ln">    81</span>		sort.Sort(p)
+<span id="L82" class="ln">    82</span>		var last token.Position <span class="comment">// initial last.Line is != any legal error line</span>
+<span id="L83" class="ln">    83</span>		i := 0
+<span id="L84" class="ln">    84</span>		for _, e := range *p {
+<span id="L85" class="ln">    85</span>			if e.Pos.Filename != last.Filename || e.Pos.Line != last.Line {
+<span id="L86" class="ln">    86</span>				last = e.Pos
+<span id="L87" class="ln">    87</span>				(*p)[i] = e
+<span id="L88" class="ln">    88</span>				i++
+<span id="L89" class="ln">    89</span>			}
+<span id="L90" class="ln">    90</span>		}
+<span id="L91" class="ln">    91</span>		(*p) = (*p)[0:i]
+<span id="L92" class="ln">    92</span>	}
+<span id="L93" class="ln">    93</span>	
+<span id="L94" class="ln">    94</span>	<span class="comment">// An ErrorList implements the error interface.</span>
+<span id="L95" class="ln">    95</span>	func (p ErrorList) Error() string {
+<span id="L96" class="ln">    96</span>		switch len(p) {
+<span id="L97" class="ln">    97</span>		case 0:
+<span id="L98" class="ln">    98</span>			return &#34;no errors&#34;
+<span id="L99" class="ln">    99</span>		case 1:
+<span id="L100" class="ln">   100</span>			return p[0].Error()
+<span id="L101" class="ln">   101</span>		}
+<span id="L102" class="ln">   102</span>		return fmt.Sprintf(&#34;%s (and %d more errors)&#34;, p[0], len(p)-1)
+<span id="L103" class="ln">   103</span>	}
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>	<span class="comment">// Err returns an error equivalent to this error list.</span>
+<span id="L106" class="ln">   106</span>	<span class="comment">// If the list is empty, Err returns nil.</span>
+<span id="L107" class="ln">   107</span>	func (p ErrorList) Err() error {
+<span id="L108" class="ln">   108</span>		if len(p) == 0 {
+<span id="L109" class="ln">   109</span>			return nil
+<span id="L110" class="ln">   110</span>		}
+<span id="L111" class="ln">   111</span>		return p
+<span id="L112" class="ln">   112</span>	}
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>	<span class="comment">// PrintError is a utility function that prints a list of errors to w,</span>
+<span id="L115" class="ln">   115</span>	<span class="comment">// one error per line, if the err parameter is an ErrorList. Otherwise</span>
+<span id="L116" class="ln">   116</span>	<span class="comment">// it prints the err string.</span>
+<span id="L117" class="ln">   117</span>	<span class="comment">//</span>
+<span id="L118" class="ln">   118</span>	func PrintError(w io.Writer, err error) {
+<span id="L119" class="ln">   119</span>		if list, ok := err.(ErrorList); ok {
+<span id="L120" class="ln">   120</span>			for _, e := range list {
+<span id="L121" class="ln">   121</span>				fmt.Fprintf(w, &#34;%s\n&#34;, e)
+<span id="L122" class="ln">   122</span>			}
+<span id="L123" class="ln">   123</span>		} else if err != nil {
+<span id="L124" class="ln">   124</span>			fmt.Fprintf(w, &#34;%s\n&#34;, err)
+<span id="L125" class="ln">   125</span>		}
+<span id="L126" class="ln">   126</span>	}
+<span id="L127" class="ln">   127</span>	
+</pre><p><a href="errors.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

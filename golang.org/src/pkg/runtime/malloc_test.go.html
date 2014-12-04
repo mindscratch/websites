@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/malloc_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/runtime/malloc_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2013 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package runtime_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;flag&#34;
+<span id="L9" class="ln">     9</span>		. &#34;runtime&#34;
+<span id="L10" class="ln">    10</span>		&#34;testing&#34;
+<span id="L11" class="ln">    11</span>		&#34;time&#34;
+<span id="L12" class="ln">    12</span>		&#34;unsafe&#34;
+<span id="L13" class="ln">    13</span>	)
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	func TestMemStats(t *testing.T) {
+<span id="L16" class="ln">    16</span>		<span class="comment">// Test that MemStats has sane values.</span>
+<span id="L17" class="ln">    17</span>		st := new(MemStats)
+<span id="L18" class="ln">    18</span>		ReadMemStats(st)
+<span id="L19" class="ln">    19</span>		if st.HeapSys == 0 || st.StackSys == 0 || st.MSpanSys == 0 || st.MCacheSys == 0 ||
+<span id="L20" class="ln">    20</span>			st.BuckHashSys == 0 || st.GCSys == 0 || st.OtherSys == 0 {
+<span id="L21" class="ln">    21</span>			t.Fatalf(&#34;Zero sys value: %+v&#34;, *st)
+<span id="L22" class="ln">    22</span>		}
+<span id="L23" class="ln">    23</span>		if st.Sys != st.HeapSys+st.StackSys+st.MSpanSys+st.MCacheSys+
+<span id="L24" class="ln">    24</span>			st.BuckHashSys+st.GCSys+st.OtherSys {
+<span id="L25" class="ln">    25</span>			t.Fatalf(&#34;Bad sys value: %+v&#34;, *st)
+<span id="L26" class="ln">    26</span>		}
+<span id="L27" class="ln">    27</span>	}
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	var mallocSink uintptr
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	func BenchmarkMalloc8(b *testing.B) {
+<span id="L32" class="ln">    32</span>		var x uintptr
+<span id="L33" class="ln">    33</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L34" class="ln">    34</span>			p := new(int64)
+<span id="L35" class="ln">    35</span>			x ^= uintptr(unsafe.Pointer(p))
+<span id="L36" class="ln">    36</span>		}
+<span id="L37" class="ln">    37</span>		mallocSink = x
+<span id="L38" class="ln">    38</span>	}
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>	func BenchmarkMalloc16(b *testing.B) {
+<span id="L41" class="ln">    41</span>		var x uintptr
+<span id="L42" class="ln">    42</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L43" class="ln">    43</span>			p := new([2]int64)
+<span id="L44" class="ln">    44</span>			x ^= uintptr(unsafe.Pointer(p))
+<span id="L45" class="ln">    45</span>		}
+<span id="L46" class="ln">    46</span>		mallocSink = x
+<span id="L47" class="ln">    47</span>	}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	func BenchmarkMallocTypeInfo8(b *testing.B) {
+<span id="L50" class="ln">    50</span>		var x uintptr
+<span id="L51" class="ln">    51</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L52" class="ln">    52</span>			p := new(struct {
+<span id="L53" class="ln">    53</span>				p [8 / unsafe.Sizeof(uintptr(0))]*int
+<span id="L54" class="ln">    54</span>			})
+<span id="L55" class="ln">    55</span>			x ^= uintptr(unsafe.Pointer(p))
+<span id="L56" class="ln">    56</span>		}
+<span id="L57" class="ln">    57</span>		mallocSink = x
+<span id="L58" class="ln">    58</span>	}
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>	func BenchmarkMallocTypeInfo16(b *testing.B) {
+<span id="L61" class="ln">    61</span>		var x uintptr
+<span id="L62" class="ln">    62</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L63" class="ln">    63</span>			p := new(struct {
+<span id="L64" class="ln">    64</span>				p [16 / unsafe.Sizeof(uintptr(0))]*int
+<span id="L65" class="ln">    65</span>			})
+<span id="L66" class="ln">    66</span>			x ^= uintptr(unsafe.Pointer(p))
+<span id="L67" class="ln">    67</span>		}
+<span id="L68" class="ln">    68</span>		mallocSink = x
+<span id="L69" class="ln">    69</span>	}
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	var n = flag.Int(&#34;n&#34;, 1000, &#34;number of goroutines&#34;)
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>	func BenchmarkGoroutineSelect(b *testing.B) {
+<span id="L74" class="ln">    74</span>		quit := make(chan struct{})
+<span id="L75" class="ln">    75</span>		read := func(ch chan struct{}) {
+<span id="L76" class="ln">    76</span>			for {
+<span id="L77" class="ln">    77</span>				select {
+<span id="L78" class="ln">    78</span>				case _, ok := &lt;-ch:
+<span id="L79" class="ln">    79</span>					if !ok {
+<span id="L80" class="ln">    80</span>						return
+<span id="L81" class="ln">    81</span>					}
+<span id="L82" class="ln">    82</span>				case &lt;-quit:
+<span id="L83" class="ln">    83</span>					return
+<span id="L84" class="ln">    84</span>				}
+<span id="L85" class="ln">    85</span>			}
+<span id="L86" class="ln">    86</span>		}
+<span id="L87" class="ln">    87</span>		benchHelper(b, *n, read)
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	func BenchmarkGoroutineBlocking(b *testing.B) {
+<span id="L91" class="ln">    91</span>		read := func(ch chan struct{}) {
+<span id="L92" class="ln">    92</span>			for {
+<span id="L93" class="ln">    93</span>				if _, ok := &lt;-ch; !ok {
+<span id="L94" class="ln">    94</span>					return
+<span id="L95" class="ln">    95</span>				}
+<span id="L96" class="ln">    96</span>			}
+<span id="L97" class="ln">    97</span>		}
+<span id="L98" class="ln">    98</span>		benchHelper(b, *n, read)
+<span id="L99" class="ln">    99</span>	}
+<span id="L100" class="ln">   100</span>	
+<span id="L101" class="ln">   101</span>	func BenchmarkGoroutineForRange(b *testing.B) {
+<span id="L102" class="ln">   102</span>		read := func(ch chan struct{}) {
+<span id="L103" class="ln">   103</span>			for _ = range ch {
+<span id="L104" class="ln">   104</span>			}
+<span id="L105" class="ln">   105</span>		}
+<span id="L106" class="ln">   106</span>		benchHelper(b, *n, read)
+<span id="L107" class="ln">   107</span>	}
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>	func benchHelper(b *testing.B, n int, read func(chan struct{})) {
+<span id="L110" class="ln">   110</span>		m := make([]chan struct{}, n)
+<span id="L111" class="ln">   111</span>		for i := range m {
+<span id="L112" class="ln">   112</span>			m[i] = make(chan struct{}, 1)
+<span id="L113" class="ln">   113</span>			go read(m[i])
+<span id="L114" class="ln">   114</span>		}
+<span id="L115" class="ln">   115</span>		b.StopTimer()
+<span id="L116" class="ln">   116</span>		b.ResetTimer()
+<span id="L117" class="ln">   117</span>		GC()
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L120" class="ln">   120</span>			for _, ch := range m {
+<span id="L121" class="ln">   121</span>				if ch != nil {
+<span id="L122" class="ln">   122</span>					ch &lt;- struct{}{}
+<span id="L123" class="ln">   123</span>				}
+<span id="L124" class="ln">   124</span>			}
+<span id="L125" class="ln">   125</span>			time.Sleep(10 * time.Millisecond)
+<span id="L126" class="ln">   126</span>			b.StartTimer()
+<span id="L127" class="ln">   127</span>			GC()
+<span id="L128" class="ln">   128</span>			b.StopTimer()
+<span id="L129" class="ln">   129</span>		}
+<span id="L130" class="ln">   130</span>	
+<span id="L131" class="ln">   131</span>		for _, ch := range m {
+<span id="L132" class="ln">   132</span>			close(ch)
+<span id="L133" class="ln">   133</span>		}
+<span id="L134" class="ln">   134</span>		time.Sleep(10 * time.Millisecond)
+<span id="L135" class="ln">   135</span>	}
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>	func BenchmarkGoroutineIdle(b *testing.B) {
+<span id="L138" class="ln">   138</span>		quit := make(chan struct{})
+<span id="L139" class="ln">   139</span>		fn := func() {
+<span id="L140" class="ln">   140</span>			&lt;-quit
+<span id="L141" class="ln">   141</span>		}
+<span id="L142" class="ln">   142</span>		for i := 0; i &lt; *n; i++ {
+<span id="L143" class="ln">   143</span>			go fn()
+<span id="L144" class="ln">   144</span>		}
+<span id="L145" class="ln">   145</span>	
+<span id="L146" class="ln">   146</span>		GC()
+<span id="L147" class="ln">   147</span>		b.ResetTimer()
+<span id="L148" class="ln">   148</span>	
+<span id="L149" class="ln">   149</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L150" class="ln">   150</span>			GC()
+<span id="L151" class="ln">   151</span>		}
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>		b.StopTimer()
+<span id="L154" class="ln">   154</span>		close(quit)
+<span id="L155" class="ln">   155</span>		time.Sleep(10 * time.Millisecond)
+<span id="L156" class="ln">   156</span>	}
+<span id="L157" class="ln">   157</span>	
+</pre><p><a href="http://golang.org/src/pkg/runtime/malloc_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

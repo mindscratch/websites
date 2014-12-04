@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/lock_sema.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/lock_sema.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2011 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// +build darwin nacl netbsd openbsd plan9 solaris windows
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	#include &#34;runtime.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;stack.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L10" class="ln">    10</span>	
+<span id="L11" class="ln">    11</span>	// This implementation depends on OS-specific implementations of
+<span id="L12" class="ln">    12</span>	//
+<span id="L13" class="ln">    13</span>	//	uintptr runtime·semacreate(void)
+<span id="L14" class="ln">    14</span>	//		Create a semaphore, which will be assigned to m-&gt;waitsema.
+<span id="L15" class="ln">    15</span>	//		The zero value is treated as absence of any semaphore,
+<span id="L16" class="ln">    16</span>	//		so be sure to return a non-zero value.
+<span id="L17" class="ln">    17</span>	//
+<span id="L18" class="ln">    18</span>	//	int32 runtime·semasleep(int64 ns)
+<span id="L19" class="ln">    19</span>	//		If ns &lt; 0, acquire m-&gt;waitsema and return 0.
+<span id="L20" class="ln">    20</span>	//		If ns &gt;= 0, try to acquire m-&gt;waitsema for at most ns nanoseconds.
+<span id="L21" class="ln">    21</span>	//		Return 0 if the semaphore was acquired, -1 if interrupted or timed out.
+<span id="L22" class="ln">    22</span>	//
+<span id="L23" class="ln">    23</span>	//	int32 runtime·semawakeup(M *mp)
+<span id="L24" class="ln">    24</span>	//		Wake up mp, which is or will soon be sleeping on mp-&gt;waitsema.
+<span id="L25" class="ln">    25</span>	//
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	enum
+<span id="L28" class="ln">    28</span>	{
+<span id="L29" class="ln">    29</span>		LOCKED = 1,
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>		ACTIVE_SPIN = 4,
+<span id="L32" class="ln">    32</span>		ACTIVE_SPIN_CNT = 30,
+<span id="L33" class="ln">    33</span>		PASSIVE_SPIN = 1,
+<span id="L34" class="ln">    34</span>	};
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>	void
+<span id="L37" class="ln">    37</span>	runtime·lock(Lock *l)
+<span id="L38" class="ln">    38</span>	{
+<span id="L39" class="ln">    39</span>		uintptr v;
+<span id="L40" class="ln">    40</span>		uint32 i, spin;
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>		if(m-&gt;locks++ &lt; 0)
+<span id="L43" class="ln">    43</span>			runtime·throw(&#34;runtime·lock: lock count&#34;);
+<span id="L44" class="ln">    44</span>	
+<span id="L45" class="ln">    45</span>		// Speculative grab for lock.
+<span id="L46" class="ln">    46</span>		if(runtime·casp((void**)&amp;l-&gt;key, nil, (void*)LOCKED))
+<span id="L47" class="ln">    47</span>			return;
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>		if(m-&gt;waitsema == 0)
+<span id="L50" class="ln">    50</span>			m-&gt;waitsema = runtime·semacreate();
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>		// On uniprocessor&#39;s, no point spinning.
+<span id="L53" class="ln">    53</span>		// On multiprocessors, spin for ACTIVE_SPIN attempts.
+<span id="L54" class="ln">    54</span>		spin = 0;
+<span id="L55" class="ln">    55</span>		if(runtime·ncpu &gt; 1)
+<span id="L56" class="ln">    56</span>			spin = ACTIVE_SPIN;
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>		for(i=0;; i++) {
+<span id="L59" class="ln">    59</span>			v = (uintptr)runtime·atomicloadp((void**)&amp;l-&gt;key);
+<span id="L60" class="ln">    60</span>			if((v&amp;LOCKED) == 0) {
+<span id="L61" class="ln">    61</span>	unlocked:
+<span id="L62" class="ln">    62</span>				if(runtime·casp((void**)&amp;l-&gt;key, (void*)v, (void*)(v|LOCKED)))
+<span id="L63" class="ln">    63</span>					return;
+<span id="L64" class="ln">    64</span>				i = 0;
+<span id="L65" class="ln">    65</span>			}
+<span id="L66" class="ln">    66</span>			if(i&lt;spin)
+<span id="L67" class="ln">    67</span>				runtime·procyield(ACTIVE_SPIN_CNT);
+<span id="L68" class="ln">    68</span>			else if(i&lt;spin+PASSIVE_SPIN)
+<span id="L69" class="ln">    69</span>				runtime·osyield();
+<span id="L70" class="ln">    70</span>			else {
+<span id="L71" class="ln">    71</span>				// Someone else has it.
+<span id="L72" class="ln">    72</span>				// l-&gt;waitm points to a linked list of M&#39;s waiting
+<span id="L73" class="ln">    73</span>				// for this lock, chained through m-&gt;nextwaitm.
+<span id="L74" class="ln">    74</span>				// Queue this M.
+<span id="L75" class="ln">    75</span>				for(;;) {
+<span id="L76" class="ln">    76</span>					m-&gt;nextwaitm = (void*)(v&amp;~LOCKED);
+<span id="L77" class="ln">    77</span>					if(runtime·casp((void**)&amp;l-&gt;key, (void*)v, (void*)((uintptr)m|LOCKED)))
+<span id="L78" class="ln">    78</span>						break;
+<span id="L79" class="ln">    79</span>					v = (uintptr)runtime·atomicloadp((void**)&amp;l-&gt;key);
+<span id="L80" class="ln">    80</span>					if((v&amp;LOCKED) == 0)
+<span id="L81" class="ln">    81</span>						goto unlocked;
+<span id="L82" class="ln">    82</span>				}
+<span id="L83" class="ln">    83</span>				if(v&amp;LOCKED) {
+<span id="L84" class="ln">    84</span>					// Queued.  Wait.
+<span id="L85" class="ln">    85</span>					runtime·semasleep(-1);
+<span id="L86" class="ln">    86</span>					i = 0;
+<span id="L87" class="ln">    87</span>				}
+<span id="L88" class="ln">    88</span>			}
+<span id="L89" class="ln">    89</span>		}
+<span id="L90" class="ln">    90</span>	}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	void
+<span id="L93" class="ln">    93</span>	runtime·unlock(Lock *l)
+<span id="L94" class="ln">    94</span>	{
+<span id="L95" class="ln">    95</span>		uintptr v;
+<span id="L96" class="ln">    96</span>		M *mp;
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>		for(;;) {
+<span id="L99" class="ln">    99</span>			v = (uintptr)runtime·atomicloadp((void**)&amp;l-&gt;key);
+<span id="L100" class="ln">   100</span>			if(v == LOCKED) {
+<span id="L101" class="ln">   101</span>				if(runtime·casp((void**)&amp;l-&gt;key, (void*)LOCKED, nil))
+<span id="L102" class="ln">   102</span>					break;
+<span id="L103" class="ln">   103</span>			} else {
+<span id="L104" class="ln">   104</span>				// Other M&#39;s are waiting for the lock.
+<span id="L105" class="ln">   105</span>				// Dequeue an M.
+<span id="L106" class="ln">   106</span>				mp = (void*)(v&amp;~LOCKED);
+<span id="L107" class="ln">   107</span>				if(runtime·casp((void**)&amp;l-&gt;key, (void*)v, mp-&gt;nextwaitm)) {
+<span id="L108" class="ln">   108</span>					// Dequeued an M.  Wake it.
+<span id="L109" class="ln">   109</span>					runtime·semawakeup(mp);
+<span id="L110" class="ln">   110</span>					break;
+<span id="L111" class="ln">   111</span>				}
+<span id="L112" class="ln">   112</span>			}
+<span id="L113" class="ln">   113</span>		}
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>		if(--m-&gt;locks &lt; 0)
+<span id="L116" class="ln">   116</span>			runtime·throw(&#34;runtime·unlock: lock count&#34;);
+<span id="L117" class="ln">   117</span>		if(m-&gt;locks == 0 &amp;&amp; g-&gt;preempt)  // restore the preemption request in case we&#39;ve cleared it in newstack
+<span id="L118" class="ln">   118</span>			g-&gt;stackguard0 = StackPreempt;
+<span id="L119" class="ln">   119</span>	}
+<span id="L120" class="ln">   120</span>	
+<span id="L121" class="ln">   121</span>	// One-time notifications.
+<span id="L122" class="ln">   122</span>	void
+<span id="L123" class="ln">   123</span>	runtime·noteclear(Note *n)
+<span id="L124" class="ln">   124</span>	{
+<span id="L125" class="ln">   125</span>		n-&gt;key = 0;
+<span id="L126" class="ln">   126</span>	}
+<span id="L127" class="ln">   127</span>	
+<span id="L128" class="ln">   128</span>	void
+<span id="L129" class="ln">   129</span>	runtime·notewakeup(Note *n)
+<span id="L130" class="ln">   130</span>	{
+<span id="L131" class="ln">   131</span>		M *mp;
+<span id="L132" class="ln">   132</span>	
+<span id="L133" class="ln">   133</span>		do
+<span id="L134" class="ln">   134</span>			mp = runtime·atomicloadp((void**)&amp;n-&gt;key);
+<span id="L135" class="ln">   135</span>		while(!runtime·casp((void**)&amp;n-&gt;key, mp, (void*)LOCKED));
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>		// Successfully set waitm to LOCKED.
+<span id="L138" class="ln">   138</span>		// What was it before?
+<span id="L139" class="ln">   139</span>		if(mp == nil) {
+<span id="L140" class="ln">   140</span>			// Nothing was waiting.  Done.
+<span id="L141" class="ln">   141</span>		} else if(mp == (M*)LOCKED) {
+<span id="L142" class="ln">   142</span>			// Two notewakeups!  Not allowed.
+<span id="L143" class="ln">   143</span>			runtime·throw(&#34;notewakeup - double wakeup&#34;);
+<span id="L144" class="ln">   144</span>		} else {
+<span id="L145" class="ln">   145</span>			// Must be the waiting m.  Wake it up.
+<span id="L146" class="ln">   146</span>			runtime·semawakeup(mp);
+<span id="L147" class="ln">   147</span>		}
+<span id="L148" class="ln">   148</span>	}
+<span id="L149" class="ln">   149</span>	
+<span id="L150" class="ln">   150</span>	void
+<span id="L151" class="ln">   151</span>	runtime·notesleep(Note *n)
+<span id="L152" class="ln">   152</span>	{
+<span id="L153" class="ln">   153</span>		if(g != m-&gt;g0)
+<span id="L154" class="ln">   154</span>			runtime·throw(&#34;notesleep not on g0&#34;);
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>		if(m-&gt;waitsema == 0)
+<span id="L157" class="ln">   157</span>			m-&gt;waitsema = runtime·semacreate();
+<span id="L158" class="ln">   158</span>		if(!runtime·casp((void**)&amp;n-&gt;key, nil, m)) {  // must be LOCKED (got wakeup)
+<span id="L159" class="ln">   159</span>			if(n-&gt;key != LOCKED)
+<span id="L160" class="ln">   160</span>				runtime·throw(&#34;notesleep - waitm out of sync&#34;);
+<span id="L161" class="ln">   161</span>			return;
+<span id="L162" class="ln">   162</span>		}
+<span id="L163" class="ln">   163</span>		// Queued.  Sleep.
+<span id="L164" class="ln">   164</span>		m-&gt;blocked = true;
+<span id="L165" class="ln">   165</span>		runtime·semasleep(-1);
+<span id="L166" class="ln">   166</span>		m-&gt;blocked = false;
+<span id="L167" class="ln">   167</span>	}
+<span id="L168" class="ln">   168</span>	
+<span id="L169" class="ln">   169</span>	#pragma textflag NOSPLIT
+<span id="L170" class="ln">   170</span>	static bool
+<span id="L171" class="ln">   171</span>	notetsleep(Note *n, int64 ns, int64 deadline, M *mp)
+<span id="L172" class="ln">   172</span>	{
+<span id="L173" class="ln">   173</span>		// Conceptually, deadline and mp are local variables.
+<span id="L174" class="ln">   174</span>		// They are passed as arguments so that the space for them
+<span id="L175" class="ln">   175</span>		// does not count against our nosplit stack sequence.
+<span id="L176" class="ln">   176</span>	
+<span id="L177" class="ln">   177</span>		// Register for wakeup on n-&gt;waitm.
+<span id="L178" class="ln">   178</span>		if(!runtime·casp((void**)&amp;n-&gt;key, nil, m)) {  // must be LOCKED (got wakeup already)
+<span id="L179" class="ln">   179</span>			if(n-&gt;key != LOCKED)
+<span id="L180" class="ln">   180</span>				runtime·throw(&#34;notetsleep - waitm out of sync&#34;);
+<span id="L181" class="ln">   181</span>			return true;
+<span id="L182" class="ln">   182</span>		}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>		if(ns &lt; 0) {
+<span id="L185" class="ln">   185</span>			// Queued.  Sleep.
+<span id="L186" class="ln">   186</span>			m-&gt;blocked = true;
+<span id="L187" class="ln">   187</span>			runtime·semasleep(-1);
+<span id="L188" class="ln">   188</span>			m-&gt;blocked = false;
+<span id="L189" class="ln">   189</span>			return true;
+<span id="L190" class="ln">   190</span>		}
+<span id="L191" class="ln">   191</span>	
+<span id="L192" class="ln">   192</span>		deadline = runtime·nanotime() + ns;
+<span id="L193" class="ln">   193</span>		for(;;) {
+<span id="L194" class="ln">   194</span>			// Registered.  Sleep.
+<span id="L195" class="ln">   195</span>			m-&gt;blocked = true;
+<span id="L196" class="ln">   196</span>			if(runtime·semasleep(ns) &gt;= 0) {
+<span id="L197" class="ln">   197</span>				m-&gt;blocked = false;
+<span id="L198" class="ln">   198</span>				// Acquired semaphore, semawakeup unregistered us.
+<span id="L199" class="ln">   199</span>				// Done.
+<span id="L200" class="ln">   200</span>				return true;
+<span id="L201" class="ln">   201</span>			}
+<span id="L202" class="ln">   202</span>			m-&gt;blocked = false;
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>			// Interrupted or timed out.  Still registered.  Semaphore not acquired.
+<span id="L205" class="ln">   205</span>			ns = deadline - runtime·nanotime();
+<span id="L206" class="ln">   206</span>			if(ns &lt;= 0)
+<span id="L207" class="ln">   207</span>				break;
+<span id="L208" class="ln">   208</span>			// Deadline hasn&#39;t arrived.  Keep sleeping.
+<span id="L209" class="ln">   209</span>		}
+<span id="L210" class="ln">   210</span>	
+<span id="L211" class="ln">   211</span>		// Deadline arrived.  Still registered.  Semaphore not acquired.
+<span id="L212" class="ln">   212</span>		// Want to give up and return, but have to unregister first,
+<span id="L213" class="ln">   213</span>		// so that any notewakeup racing with the return does not
+<span id="L214" class="ln">   214</span>		// try to grant us the semaphore when we don&#39;t expect it.
+<span id="L215" class="ln">   215</span>		for(;;) {
+<span id="L216" class="ln">   216</span>			mp = runtime·atomicloadp((void**)&amp;n-&gt;key);
+<span id="L217" class="ln">   217</span>			if(mp == m) {
+<span id="L218" class="ln">   218</span>				// No wakeup yet; unregister if possible.
+<span id="L219" class="ln">   219</span>				if(runtime·casp((void**)&amp;n-&gt;key, mp, nil))
+<span id="L220" class="ln">   220</span>					return false;
+<span id="L221" class="ln">   221</span>			} else if(mp == (M*)LOCKED) {
+<span id="L222" class="ln">   222</span>				// Wakeup happened so semaphore is available.
+<span id="L223" class="ln">   223</span>				// Grab it to avoid getting out of sync.
+<span id="L224" class="ln">   224</span>				m-&gt;blocked = true;
+<span id="L225" class="ln">   225</span>				if(runtime·semasleep(-1) &lt; 0)
+<span id="L226" class="ln">   226</span>					runtime·throw(&#34;runtime: unable to acquire - semaphore out of sync&#34;);
+<span id="L227" class="ln">   227</span>				m-&gt;blocked = false;
+<span id="L228" class="ln">   228</span>				return true;
+<span id="L229" class="ln">   229</span>			} else
+<span id="L230" class="ln">   230</span>				runtime·throw(&#34;runtime: unexpected waitm - semaphore out of sync&#34;);
+<span id="L231" class="ln">   231</span>		}
+<span id="L232" class="ln">   232</span>	}
+<span id="L233" class="ln">   233</span>	
+<span id="L234" class="ln">   234</span>	bool
+<span id="L235" class="ln">   235</span>	runtime·notetsleep(Note *n, int64 ns)
+<span id="L236" class="ln">   236</span>	{
+<span id="L237" class="ln">   237</span>		bool res;
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		if(g != m-&gt;g0 &amp;&amp; !m-&gt;gcing)
+<span id="L240" class="ln">   240</span>			runtime·throw(&#34;notetsleep not on g0&#34;);
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>		if(m-&gt;waitsema == 0)
+<span id="L243" class="ln">   243</span>			m-&gt;waitsema = runtime·semacreate();
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>		res = notetsleep(n, ns, 0, nil);
+<span id="L246" class="ln">   246</span>		return res;
+<span id="L247" class="ln">   247</span>	}
+<span id="L248" class="ln">   248</span>	
+<span id="L249" class="ln">   249</span>	// same as runtime·notetsleep, but called on user g (not g0)
+<span id="L250" class="ln">   250</span>	// calls only nosplit functions between entersyscallblock/exitsyscall
+<span id="L251" class="ln">   251</span>	bool
+<span id="L252" class="ln">   252</span>	runtime·notetsleepg(Note *n, int64 ns)
+<span id="L253" class="ln">   253</span>	{
+<span id="L254" class="ln">   254</span>		bool res;
+<span id="L255" class="ln">   255</span>	
+<span id="L256" class="ln">   256</span>		if(g == m-&gt;g0)
+<span id="L257" class="ln">   257</span>			runtime·throw(&#34;notetsleepg on g0&#34;);
+<span id="L258" class="ln">   258</span>	
+<span id="L259" class="ln">   259</span>		if(m-&gt;waitsema == 0)
+<span id="L260" class="ln">   260</span>			m-&gt;waitsema = runtime·semacreate();
+<span id="L261" class="ln">   261</span>	
+<span id="L262" class="ln">   262</span>		runtime·entersyscallblock();
+<span id="L263" class="ln">   263</span>		res = notetsleep(n, ns, 0, nil);
+<span id="L264" class="ln">   264</span>		runtime·exitsyscall();
+<span id="L265" class="ln">   265</span>		return res;
+<span id="L266" class="ln">   266</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/lock_sema.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

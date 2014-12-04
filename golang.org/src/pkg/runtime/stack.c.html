@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/stack.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/stack.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2013 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;runtime.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;malloc.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;stack.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;funcdata.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;typekind.h&#34;
+<span id="L11" class="ln">    11</span>	#include &#34;type.h&#34;
+<span id="L12" class="ln">    12</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	enum
+<span id="L15" class="ln">    15</span>	{
+<span id="L16" class="ln">    16</span>		// StackDebug == 0: no logging
+<span id="L17" class="ln">    17</span>		//            == 1: logging of per-stack operations
+<span id="L18" class="ln">    18</span>		//            == 2: logging of per-frame operations
+<span id="L19" class="ln">    19</span>		//            == 3: logging of per-word updates
+<span id="L20" class="ln">    20</span>		//            == 4: logging of per-word reads
+<span id="L21" class="ln">    21</span>		StackDebug = 0,
+<span id="L22" class="ln">    22</span>		StackFromSystem = 0,	// allocate stacks from system memory instead of the heap
+<span id="L23" class="ln">    23</span>		StackFaultOnFree = 0,	// old stacks are mapped noaccess to detect use after free
+<span id="L24" class="ln">    24</span>	};
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	typedef struct StackCacheNode StackCacheNode;
+<span id="L27" class="ln">    27</span>	struct StackCacheNode
+<span id="L28" class="ln">    28</span>	{
+<span id="L29" class="ln">    29</span>		StackCacheNode *next;
+<span id="L30" class="ln">    30</span>		void*	batch[StackCacheBatch-1];
+<span id="L31" class="ln">    31</span>	};
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>	static StackCacheNode *stackcache;
+<span id="L34" class="ln">    34</span>	static Lock stackcachemu;
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>	// stackcacherefill/stackcacherelease implement a global cache of stack segments.
+<span id="L37" class="ln">    37</span>	// The cache is required to prevent unlimited growth of per-thread caches.
+<span id="L38" class="ln">    38</span>	static void
+<span id="L39" class="ln">    39</span>	stackcacherefill(void)
+<span id="L40" class="ln">    40</span>	{
+<span id="L41" class="ln">    41</span>		StackCacheNode *n;
+<span id="L42" class="ln">    42</span>		int32 i, pos;
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>		runtime·lock(&amp;stackcachemu);
+<span id="L45" class="ln">    45</span>		n = stackcache;
+<span id="L46" class="ln">    46</span>		if(n)
+<span id="L47" class="ln">    47</span>			stackcache = n-&gt;next;
+<span id="L48" class="ln">    48</span>		runtime·unlock(&amp;stackcachemu);
+<span id="L49" class="ln">    49</span>		if(n == nil) {
+<span id="L50" class="ln">    50</span>			n = (StackCacheNode*)runtime·SysAlloc(FixedStack*StackCacheBatch, &amp;mstats.stacks_sys);
+<span id="L51" class="ln">    51</span>			if(n == nil)
+<span id="L52" class="ln">    52</span>				runtime·throw(&#34;out of memory (stackcacherefill)&#34;);
+<span id="L53" class="ln">    53</span>			for(i = 0; i &lt; StackCacheBatch-1; i++)
+<span id="L54" class="ln">    54</span>				n-&gt;batch[i] = (byte*)n + (i+1)*FixedStack;
+<span id="L55" class="ln">    55</span>		}
+<span id="L56" class="ln">    56</span>		pos = m-&gt;stackcachepos;
+<span id="L57" class="ln">    57</span>		for(i = 0; i &lt; StackCacheBatch-1; i++) {
+<span id="L58" class="ln">    58</span>			m-&gt;stackcache[pos] = n-&gt;batch[i];
+<span id="L59" class="ln">    59</span>			pos = (pos + 1) % StackCacheSize;
+<span id="L60" class="ln">    60</span>		}
+<span id="L61" class="ln">    61</span>		m-&gt;stackcache[pos] = n;
+<span id="L62" class="ln">    62</span>		pos = (pos + 1) % StackCacheSize;
+<span id="L63" class="ln">    63</span>		m-&gt;stackcachepos = pos;
+<span id="L64" class="ln">    64</span>		m-&gt;stackcachecnt += StackCacheBatch;
+<span id="L65" class="ln">    65</span>	}
+<span id="L66" class="ln">    66</span>	
+<span id="L67" class="ln">    67</span>	static void
+<span id="L68" class="ln">    68</span>	stackcacherelease(void)
+<span id="L69" class="ln">    69</span>	{
+<span id="L70" class="ln">    70</span>		StackCacheNode *n;
+<span id="L71" class="ln">    71</span>		uint32 i, pos;
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>		pos = (m-&gt;stackcachepos - m-&gt;stackcachecnt) % StackCacheSize;
+<span id="L74" class="ln">    74</span>		n = (StackCacheNode*)m-&gt;stackcache[pos];
+<span id="L75" class="ln">    75</span>		pos = (pos + 1) % StackCacheSize;
+<span id="L76" class="ln">    76</span>		for(i = 0; i &lt; StackCacheBatch-1; i++) {
+<span id="L77" class="ln">    77</span>			n-&gt;batch[i] = m-&gt;stackcache[pos];
+<span id="L78" class="ln">    78</span>			pos = (pos + 1) % StackCacheSize;
+<span id="L79" class="ln">    79</span>		}
+<span id="L80" class="ln">    80</span>		m-&gt;stackcachecnt -= StackCacheBatch;
+<span id="L81" class="ln">    81</span>		runtime·lock(&amp;stackcachemu);
+<span id="L82" class="ln">    82</span>		n-&gt;next = stackcache;
+<span id="L83" class="ln">    83</span>		stackcache = n;
+<span id="L84" class="ln">    84</span>		runtime·unlock(&amp;stackcachemu);
+<span id="L85" class="ln">    85</span>	}
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>	void*
+<span id="L88" class="ln">    88</span>	runtime·stackalloc(G *gp, uint32 n)
+<span id="L89" class="ln">    89</span>	{
+<span id="L90" class="ln">    90</span>		uint32 pos;
+<span id="L91" class="ln">    91</span>		void *v;
+<span id="L92" class="ln">    92</span>		bool malloced;
+<span id="L93" class="ln">    93</span>		Stktop *top;
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>		// Stackalloc must be called on scheduler stack, so that we
+<span id="L96" class="ln">    96</span>		// never try to grow the stack during the code that stackalloc runs.
+<span id="L97" class="ln">    97</span>		// Doing so would cause a deadlock (issue 1547).
+<span id="L98" class="ln">    98</span>		if(g != m-&gt;g0)
+<span id="L99" class="ln">    99</span>			runtime·throw(&#34;stackalloc not on scheduler stack&#34;);
+<span id="L100" class="ln">   100</span>		if((n &amp; (n-1)) != 0)
+<span id="L101" class="ln">   101</span>			runtime·throw(&#34;stack size not a power of 2&#34;);
+<span id="L102" class="ln">   102</span>		if(StackDebug &gt;= 1)
+<span id="L103" class="ln">   103</span>			runtime·printf(&#34;stackalloc %d\n&#34;, n);
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>		gp-&gt;stacksize += n;
+<span id="L106" class="ln">   106</span>		if(runtime·debug.efence || StackFromSystem) {
+<span id="L107" class="ln">   107</span>			v = runtime·SysAlloc(ROUND(n, PageSize), &amp;mstats.stacks_sys);
+<span id="L108" class="ln">   108</span>			if(v == nil)
+<span id="L109" class="ln">   109</span>				runtime·throw(&#34;out of memory (stackalloc)&#34;);
+<span id="L110" class="ln">   110</span>			return v;
+<span id="L111" class="ln">   111</span>		}
+<span id="L112" class="ln">   112</span>	
+<span id="L113" class="ln">   113</span>		// Minimum-sized stacks are allocated with a fixed-size free-list allocator,
+<span id="L114" class="ln">   114</span>		// but if we need a stack of a bigger size, we fall back on malloc
+<span id="L115" class="ln">   115</span>		// (assuming that inside malloc all the stack frames are small,
+<span id="L116" class="ln">   116</span>		// so that we do not deadlock).
+<span id="L117" class="ln">   117</span>		malloced = true;
+<span id="L118" class="ln">   118</span>		if(n == FixedStack || m-&gt;mallocing) {
+<span id="L119" class="ln">   119</span>			if(n != FixedStack) {
+<span id="L120" class="ln">   120</span>				runtime·printf(&#34;stackalloc: in malloc, size=%d want %d\n&#34;, FixedStack, n);
+<span id="L121" class="ln">   121</span>				runtime·throw(&#34;stackalloc&#34;);
+<span id="L122" class="ln">   122</span>			}
+<span id="L123" class="ln">   123</span>			if(m-&gt;stackcachecnt == 0)
+<span id="L124" class="ln">   124</span>				stackcacherefill();
+<span id="L125" class="ln">   125</span>			pos = m-&gt;stackcachepos;
+<span id="L126" class="ln">   126</span>			pos = (pos - 1) % StackCacheSize;
+<span id="L127" class="ln">   127</span>			v = m-&gt;stackcache[pos];
+<span id="L128" class="ln">   128</span>			m-&gt;stackcachepos = pos;
+<span id="L129" class="ln">   129</span>			m-&gt;stackcachecnt--;
+<span id="L130" class="ln">   130</span>			m-&gt;stackinuse++;
+<span id="L131" class="ln">   131</span>			malloced = false;
+<span id="L132" class="ln">   132</span>		} else
+<span id="L133" class="ln">   133</span>			v = runtime·mallocgc(n, 0, FlagNoProfiling|FlagNoGC|FlagNoZero|FlagNoInvokeGC);
+<span id="L134" class="ln">   134</span>	
+<span id="L135" class="ln">   135</span>		top = (Stktop*)((byte*)v+n-sizeof(Stktop));
+<span id="L136" class="ln">   136</span>		runtime·memclr((byte*)top, sizeof(*top));
+<span id="L137" class="ln">   137</span>		top-&gt;malloced = malloced;
+<span id="L138" class="ln">   138</span>		return v;
+<span id="L139" class="ln">   139</span>	}
+<span id="L140" class="ln">   140</span>	
+<span id="L141" class="ln">   141</span>	void
+<span id="L142" class="ln">   142</span>	runtime·stackfree(G *gp, void *v, Stktop *top)
+<span id="L143" class="ln">   143</span>	{
+<span id="L144" class="ln">   144</span>		uint32 pos;
+<span id="L145" class="ln">   145</span>		uintptr n;
+<span id="L146" class="ln">   146</span>	
+<span id="L147" class="ln">   147</span>		n = (uintptr)(top+1) - (uintptr)v;
+<span id="L148" class="ln">   148</span>		if(StackDebug &gt;= 1)
+<span id="L149" class="ln">   149</span>			runtime·printf(&#34;stackfree %p %d\n&#34;, v, (int32)n);
+<span id="L150" class="ln">   150</span>		gp-&gt;stacksize -= n;
+<span id="L151" class="ln">   151</span>		if(runtime·debug.efence || StackFromSystem) {
+<span id="L152" class="ln">   152</span>			if(runtime·debug.efence || StackFaultOnFree)
+<span id="L153" class="ln">   153</span>				runtime·SysFault(v, n);
+<span id="L154" class="ln">   154</span>			else
+<span id="L155" class="ln">   155</span>				runtime·SysFree(v, n, &amp;mstats.stacks_sys);
+<span id="L156" class="ln">   156</span>			return;
+<span id="L157" class="ln">   157</span>		}
+<span id="L158" class="ln">   158</span>		if(top-&gt;malloced) {
+<span id="L159" class="ln">   159</span>			runtime·free(v);
+<span id="L160" class="ln">   160</span>			return;
+<span id="L161" class="ln">   161</span>		}
+<span id="L162" class="ln">   162</span>		if(n != FixedStack)
+<span id="L163" class="ln">   163</span>			runtime·throw(&#34;stackfree: bad fixed size&#34;);
+<span id="L164" class="ln">   164</span>		if(m-&gt;stackcachecnt == StackCacheSize)
+<span id="L165" class="ln">   165</span>			stackcacherelease();
+<span id="L166" class="ln">   166</span>		pos = m-&gt;stackcachepos;
+<span id="L167" class="ln">   167</span>		m-&gt;stackcache[pos] = v;
+<span id="L168" class="ln">   168</span>		m-&gt;stackcachepos = (pos + 1) % StackCacheSize;
+<span id="L169" class="ln">   169</span>		m-&gt;stackcachecnt++;
+<span id="L170" class="ln">   170</span>		m-&gt;stackinuse--;
+<span id="L171" class="ln">   171</span>	}
+<span id="L172" class="ln">   172</span>	
+<span id="L173" class="ln">   173</span>	// Called from runtime·lessstack when returning from a function which
+<span id="L174" class="ln">   174</span>	// allocated a new stack segment.  The function&#39;s return value is in
+<span id="L175" class="ln">   175</span>	// m-&gt;cret.
+<span id="L176" class="ln">   176</span>	void
+<span id="L177" class="ln">   177</span>	runtime·oldstack(void)
+<span id="L178" class="ln">   178</span>	{
+<span id="L179" class="ln">   179</span>		Stktop *top;
+<span id="L180" class="ln">   180</span>		uint32 argsize;
+<span id="L181" class="ln">   181</span>		byte *sp, *old;
+<span id="L182" class="ln">   182</span>		uintptr *src, *dst, *dstend;
+<span id="L183" class="ln">   183</span>		G *gp;
+<span id="L184" class="ln">   184</span>		int64 goid;
+<span id="L185" class="ln">   185</span>		int32 oldstatus;
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>		gp = m-&gt;curg;
+<span id="L188" class="ln">   188</span>		top = (Stktop*)gp-&gt;stackbase;
+<span id="L189" class="ln">   189</span>		old = (byte*)gp-&gt;stackguard - StackGuard;
+<span id="L190" class="ln">   190</span>		sp = (byte*)top;
+<span id="L191" class="ln">   191</span>		argsize = top-&gt;argsize;
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>		if(StackDebug &gt;= 1) {
+<span id="L194" class="ln">   194</span>			runtime·printf(&#34;runtime: oldstack gobuf={pc:%p sp:%p lr:%p} cret=%p argsize=%p\n&#34;,
+<span id="L195" class="ln">   195</span>				top-&gt;gobuf.pc, top-&gt;gobuf.sp, top-&gt;gobuf.lr, (uintptr)m-&gt;cret, (uintptr)argsize);
+<span id="L196" class="ln">   196</span>		}
+<span id="L197" class="ln">   197</span>	
+<span id="L198" class="ln">   198</span>		// gp-&gt;status is usually Grunning, but it could be Gsyscall if a stack overflow
+<span id="L199" class="ln">   199</span>		// happens during a function call inside entersyscall.
+<span id="L200" class="ln">   200</span>		oldstatus = gp-&gt;status;
+<span id="L201" class="ln">   201</span>		
+<span id="L202" class="ln">   202</span>		gp-&gt;sched = top-&gt;gobuf;
+<span id="L203" class="ln">   203</span>		gp-&gt;sched.ret = m-&gt;cret;
+<span id="L204" class="ln">   204</span>		m-&gt;cret = 0; // drop reference
+<span id="L205" class="ln">   205</span>		gp-&gt;status = Gwaiting;
+<span id="L206" class="ln">   206</span>		gp-&gt;waitreason = &#34;stack unsplit&#34;;
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>		if(argsize &gt; 0) {
+<span id="L209" class="ln">   209</span>			sp -= argsize;
+<span id="L210" class="ln">   210</span>			dst = (uintptr*)top-&gt;argp;
+<span id="L211" class="ln">   211</span>			dstend = dst + argsize/sizeof(*dst);
+<span id="L212" class="ln">   212</span>			src = (uintptr*)sp;
+<span id="L213" class="ln">   213</span>			while(dst &lt; dstend)
+<span id="L214" class="ln">   214</span>				*dst++ = *src++;
+<span id="L215" class="ln">   215</span>		}
+<span id="L216" class="ln">   216</span>		goid = top-&gt;gobuf.g-&gt;goid;	// fault if g is bad, before gogo
+<span id="L217" class="ln">   217</span>		USED(goid);
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>		gp-&gt;stackbase = top-&gt;stackbase;
+<span id="L220" class="ln">   220</span>		gp-&gt;stackguard = top-&gt;stackguard;
+<span id="L221" class="ln">   221</span>		gp-&gt;stackguard0 = gp-&gt;stackguard;
+<span id="L222" class="ln">   222</span>		gp-&gt;panicwrap = top-&gt;panicwrap;
+<span id="L223" class="ln">   223</span>		runtime·stackfree(gp, old, top);
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>		gp-&gt;status = oldstatus;
+<span id="L226" class="ln">   226</span>		runtime·gogo(&amp;gp-&gt;sched);
+<span id="L227" class="ln">   227</span>	}
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>	uintptr runtime·maxstacksize = 1&lt;&lt;20; // enough until runtime.main sets it for real
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>	static uint8*
+<span id="L232" class="ln">   232</span>	mapnames[] = {
+<span id="L233" class="ln">   233</span>		(uint8*)&#34;---&#34;,
+<span id="L234" class="ln">   234</span>		(uint8*)&#34;scalar&#34;,
+<span id="L235" class="ln">   235</span>		(uint8*)&#34;ptr&#34;,
+<span id="L236" class="ln">   236</span>		(uint8*)&#34;multi&#34;,
+<span id="L237" class="ln">   237</span>	};
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>	// Stack frame layout
+<span id="L240" class="ln">   240</span>	//
+<span id="L241" class="ln">   241</span>	// (x86)
+<span id="L242" class="ln">   242</span>	// +------------------+
+<span id="L243" class="ln">   243</span>	// | args from caller |
+<span id="L244" class="ln">   244</span>	// +------------------+ &lt;- frame-&gt;argp
+<span id="L245" class="ln">   245</span>	// |  return address  |
+<span id="L246" class="ln">   246</span>	// +------------------+ &lt;- frame-&gt;varp
+<span id="L247" class="ln">   247</span>	// |     locals       |
+<span id="L248" class="ln">   248</span>	// +------------------+
+<span id="L249" class="ln">   249</span>	// |  args to callee  |
+<span id="L250" class="ln">   250</span>	// +------------------+ &lt;- frame-&gt;sp
+<span id="L251" class="ln">   251</span>	//
+<span id="L252" class="ln">   252</span>	// (arm: TODO)
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>	typedef struct CopyableInfo CopyableInfo;
+<span id="L255" class="ln">   255</span>	struct CopyableInfo {
+<span id="L256" class="ln">   256</span>		byte *stk;	// bottom address of segment
+<span id="L257" class="ln">   257</span>		byte *base;	// top address of segment (including Stktop)
+<span id="L258" class="ln">   258</span>		int32 frames;	// count of copyable frames (-1 = not copyable)
+<span id="L259" class="ln">   259</span>	};
+<span id="L260" class="ln">   260</span>	
+<span id="L261" class="ln">   261</span>	void runtime·main(void);
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>	static bool
+<span id="L264" class="ln">   264</span>	checkframecopy(Stkframe *frame, void *arg)
+<span id="L265" class="ln">   265</span>	{
+<span id="L266" class="ln">   266</span>		CopyableInfo *cinfo;
+<span id="L267" class="ln">   267</span>		Func *f;
+<span id="L268" class="ln">   268</span>		StackMap *stackmap;
+<span id="L269" class="ln">   269</span>	
+<span id="L270" class="ln">   270</span>		cinfo = arg;
+<span id="L271" class="ln">   271</span>		f = frame-&gt;fn;
+<span id="L272" class="ln">   272</span>		if(StackDebug &gt;= 2)
+<span id="L273" class="ln">   273</span>			runtime·printf(&#34;    checking %s frame=[%p,%p] stk=[%p,%p]\n&#34;, runtime·funcname(f), frame-&gt;sp, frame-&gt;fp, cinfo-&gt;stk, cinfo-&gt;base);
+<span id="L274" class="ln">   274</span>		// if we&#39;re not in the segment any more, return immediately.
+<span id="L275" class="ln">   275</span>		if(frame-&gt;varp &lt; cinfo-&gt;stk || frame-&gt;varp &gt;= cinfo-&gt;base) {
+<span id="L276" class="ln">   276</span>			if(StackDebug &gt;= 2)
+<span id="L277" class="ln">   277</span>				runtime·printf(&#34;    &lt;next segment&gt;\n&#34;);
+<span id="L278" class="ln">   278</span>			return false; // stop traceback
+<span id="L279" class="ln">   279</span>		}
+<span id="L280" class="ln">   280</span>		if(f-&gt;entry == (uintptr)runtime·main) {
+<span id="L281" class="ln">   281</span>			// A special routine at the TOS of the main routine.
+<span id="L282" class="ln">   282</span>			// We will allow it to be copied even though we don&#39;t
+<span id="L283" class="ln">   283</span>			// have full GC info for it (because it is written in C).
+<span id="L284" class="ln">   284</span>			cinfo-&gt;frames++;
+<span id="L285" class="ln">   285</span>			return false; // stop traceback
+<span id="L286" class="ln">   286</span>		}
+<span id="L287" class="ln">   287</span>		if(frame-&gt;varp != (byte*)frame-&gt;sp) { // not in prologue (and has at least one local or outarg)
+<span id="L288" class="ln">   288</span>			stackmap = runtime·funcdata(f, FUNCDATA_LocalsPointerMaps);
+<span id="L289" class="ln">   289</span>			if(stackmap == nil) {
+<span id="L290" class="ln">   290</span>				cinfo-&gt;frames = -1;
+<span id="L291" class="ln">   291</span>				if(StackDebug &gt;= 1)
+<span id="L292" class="ln">   292</span>					runtime·printf(&#34;copystack: no locals info for %s\n&#34;, runtime·funcname(f));
+<span id="L293" class="ln">   293</span>				return false;
+<span id="L294" class="ln">   294</span>			}
+<span id="L295" class="ln">   295</span>			if(stackmap-&gt;n &lt;= 0) {
+<span id="L296" class="ln">   296</span>				cinfo-&gt;frames = -1;
+<span id="L297" class="ln">   297</span>				if(StackDebug &gt;= 1)
+<span id="L298" class="ln">   298</span>					runtime·printf(&#34;copystack: locals size info only for %s\n&#34;, runtime·funcname(f));
+<span id="L299" class="ln">   299</span>				return false;
+<span id="L300" class="ln">   300</span>			}
+<span id="L301" class="ln">   301</span>		}
+<span id="L302" class="ln">   302</span>		if(frame-&gt;arglen != 0) {
+<span id="L303" class="ln">   303</span>			stackmap = runtime·funcdata(f, FUNCDATA_ArgsPointerMaps);
+<span id="L304" class="ln">   304</span>			if(stackmap == nil) {
+<span id="L305" class="ln">   305</span>				cinfo-&gt;frames = -1;
+<span id="L306" class="ln">   306</span>				if(StackDebug &gt;= 1)
+<span id="L307" class="ln">   307</span>					runtime·printf(&#34;copystack: no arg info for %s\n&#34;, runtime·funcname(f));
+<span id="L308" class="ln">   308</span>				return false;
+<span id="L309" class="ln">   309</span>			}
+<span id="L310" class="ln">   310</span>		}
+<span id="L311" class="ln">   311</span>		cinfo-&gt;frames++;
+<span id="L312" class="ln">   312</span>		return true; // this frame is ok; keep going
+<span id="L313" class="ln">   313</span>	}
+<span id="L314" class="ln">   314</span>	
+<span id="L315" class="ln">   315</span>	// If the top segment of the stack contains an uncopyable
+<span id="L316" class="ln">   316</span>	// frame, return -1.  Otherwise return the number of frames
+<span id="L317" class="ln">   317</span>	// in the top segment, all of which are copyable.
+<span id="L318" class="ln">   318</span>	static int32
+<span id="L319" class="ln">   319</span>	copyabletopsegment(G *gp)
+<span id="L320" class="ln">   320</span>	{
+<span id="L321" class="ln">   321</span>		CopyableInfo cinfo;
+<span id="L322" class="ln">   322</span>		Defer *d;
+<span id="L323" class="ln">   323</span>		Func *f;
+<span id="L324" class="ln">   324</span>		FuncVal *fn;
+<span id="L325" class="ln">   325</span>		StackMap *stackmap;
+<span id="L326" class="ln">   326</span>	
+<span id="L327" class="ln">   327</span>		cinfo.stk = (byte*)gp-&gt;stackguard - StackGuard;
+<span id="L328" class="ln">   328</span>		cinfo.base = (byte*)gp-&gt;stackbase + sizeof(Stktop);
+<span id="L329" class="ln">   329</span>		cinfo.frames = 0;
+<span id="L330" class="ln">   330</span>	
+<span id="L331" class="ln">   331</span>		// Check that each frame is copyable.  As a side effect,
+<span id="L332" class="ln">   332</span>		// count the frames.
+<span id="L333" class="ln">   333</span>		runtime·gentraceback(~(uintptr)0, ~(uintptr)0, 0, gp, 0, nil, 0x7fffffff, checkframecopy, &amp;cinfo, false);
+<span id="L334" class="ln">   334</span>		if(StackDebug &gt;= 1 &amp;&amp; cinfo.frames != -1)
+<span id="L335" class="ln">   335</span>			runtime·printf(&#34;copystack: %d copyable frames\n&#34;, cinfo.frames);
+<span id="L336" class="ln">   336</span>	
+<span id="L337" class="ln">   337</span>		// Check to make sure all Defers are copyable
+<span id="L338" class="ln">   338</span>		for(d = gp-&gt;defer; d != nil; d = d-&gt;link) {
+<span id="L339" class="ln">   339</span>			if(cinfo.stk &lt;= (byte*)d &amp;&amp; (byte*)d &lt; cinfo.base) {
+<span id="L340" class="ln">   340</span>				// Defer is on the stack.  Its copyableness has
+<span id="L341" class="ln">   341</span>				// been established during stack walking.
+<span id="L342" class="ln">   342</span>				// For now, this only happens with the Defer in runtime.main.
+<span id="L343" class="ln">   343</span>				continue;
+<span id="L344" class="ln">   344</span>			}
+<span id="L345" class="ln">   345</span>			if(d-&gt;argp &lt; cinfo.stk || cinfo.base &lt;= d-&gt;argp)
+<span id="L346" class="ln">   346</span>				break; // a defer for the next segment
+<span id="L347" class="ln">   347</span>			fn = d-&gt;fn;
+<span id="L348" class="ln">   348</span>			if(fn == nil) // See issue 8047
+<span id="L349" class="ln">   349</span>				continue;
+<span id="L350" class="ln">   350</span>			f = runtime·findfunc((uintptr)fn-&gt;fn);
+<span id="L351" class="ln">   351</span>			if(f == nil)
+<span id="L352" class="ln">   352</span>				return -1;
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>			// Check to make sure we have an args pointer map for the defer&#39;s args.
+<span id="L355" class="ln">   355</span>			// We only need the args map, but we check
+<span id="L356" class="ln">   356</span>			// for the locals map also, because when the locals map
+<span id="L357" class="ln">   357</span>			// isn&#39;t provided it means the ptr map came from C and
+<span id="L358" class="ln">   358</span>			// C (particularly, cgo) lies to us.  See issue 7695.
+<span id="L359" class="ln">   359</span>			stackmap = runtime·funcdata(f, FUNCDATA_ArgsPointerMaps);
+<span id="L360" class="ln">   360</span>			if(stackmap == nil || stackmap-&gt;n &lt;= 0)
+<span id="L361" class="ln">   361</span>				return -1;
+<span id="L362" class="ln">   362</span>			stackmap = runtime·funcdata(f, FUNCDATA_LocalsPointerMaps);
+<span id="L363" class="ln">   363</span>			if(stackmap == nil || stackmap-&gt;n &lt;= 0)
+<span id="L364" class="ln">   364</span>				return -1;
+<span id="L365" class="ln">   365</span>	
+<span id="L366" class="ln">   366</span>			if(cinfo.stk &lt;= (byte*)fn &amp;&amp; (byte*)fn &lt; cinfo.base) {
+<span id="L367" class="ln">   367</span>				// FuncVal is on the stack.  Again, its copyableness
+<span id="L368" class="ln">   368</span>				// was established during stack walking.
+<span id="L369" class="ln">   369</span>				continue;
+<span id="L370" class="ln">   370</span>			}
+<span id="L371" class="ln">   371</span>			// The FuncVal may have pointers in it, but fortunately for us
+<span id="L372" class="ln">   372</span>			// the compiler won&#39;t put pointers into the stack in a
+<span id="L373" class="ln">   373</span>			// heap-allocated FuncVal.
+<span id="L374" class="ln">   374</span>			// One day if we do need to check this, we&#39;ll need maps of the
+<span id="L375" class="ln">   375</span>			// pointerness of the closure args.  The only place we have that map
+<span id="L376" class="ln">   376</span>			// right now is in the gc program for the FuncVal.  Ugh.
+<span id="L377" class="ln">   377</span>		}
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>		return cinfo.frames;
+<span id="L380" class="ln">   380</span>	}
+<span id="L381" class="ln">   381</span>	
+<span id="L382" class="ln">   382</span>	typedef struct AdjustInfo AdjustInfo;
+<span id="L383" class="ln">   383</span>	struct AdjustInfo {
+<span id="L384" class="ln">   384</span>		byte *oldstk;	// bottom address of segment
+<span id="L385" class="ln">   385</span>		byte *oldbase;	// top address of segment (after Stktop)
+<span id="L386" class="ln">   386</span>		uintptr delta;  // ptr distance from old to new stack (newbase - oldbase)
+<span id="L387" class="ln">   387</span>	};
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>	// bv describes the memory starting at address scanp.
+<span id="L390" class="ln">   390</span>	// Adjust any pointers contained therein.
+<span id="L391" class="ln">   391</span>	static void
+<span id="L392" class="ln">   392</span>	adjustpointers(byte **scanp, BitVector *bv, AdjustInfo *adjinfo, Func *f)
+<span id="L393" class="ln">   393</span>	{
+<span id="L394" class="ln">   394</span>		uintptr delta;
+<span id="L395" class="ln">   395</span>		int32 num, i;
+<span id="L396" class="ln">   396</span>		byte *p, *minp, *maxp;
+<span id="L397" class="ln">   397</span>		Type *t;
+<span id="L398" class="ln">   398</span>		Itab *tab;
+<span id="L399" class="ln">   399</span>		
+<span id="L400" class="ln">   400</span>		minp = adjinfo-&gt;oldstk;
+<span id="L401" class="ln">   401</span>		maxp = adjinfo-&gt;oldbase;
+<span id="L402" class="ln">   402</span>		delta = adjinfo-&gt;delta;
+<span id="L403" class="ln">   403</span>		num = bv-&gt;n / BitsPerPointer;
+<span id="L404" class="ln">   404</span>		for(i = 0; i &lt; num; i++) {
+<span id="L405" class="ln">   405</span>			if(StackDebug &gt;= 4)
+<span id="L406" class="ln">   406</span>				runtime·printf(&#34;        %p:%s:%p\n&#34;, &amp;scanp[i], mapnames[bv-&gt;data[i / (32 / BitsPerPointer)] &gt;&gt; (i * BitsPerPointer &amp; 31) &amp; 3], scanp[i]);
+<span id="L407" class="ln">   407</span>			switch(bv-&gt;data[i / (32 / BitsPerPointer)] &gt;&gt; (i * BitsPerPointer &amp; 31) &amp; 3) {
+<span id="L408" class="ln">   408</span>			case BitsDead:
+<span id="L409" class="ln">   409</span>				if(runtime·debug.gcdead)
+<span id="L410" class="ln">   410</span>					scanp[i] = (byte*)PoisonStack;
+<span id="L411" class="ln">   411</span>				break;
+<span id="L412" class="ln">   412</span>			case BitsScalar:
+<span id="L413" class="ln">   413</span>				break;
+<span id="L414" class="ln">   414</span>			case BitsPointer:
+<span id="L415" class="ln">   415</span>				p = scanp[i];
+<span id="L416" class="ln">   416</span>				if(f != nil &amp;&amp; (byte*)0 &lt; p &amp;&amp; (p &lt; (byte*)PageSize || (uintptr)p == PoisonGC || (uintptr)p == PoisonStack)) {
+<span id="L417" class="ln">   417</span>					// Looks like a junk value in a pointer slot.
+<span id="L418" class="ln">   418</span>					// Live analysis wrong?
+<span id="L419" class="ln">   419</span>					m-&gt;traceback = 2;
+<span id="L420" class="ln">   420</span>					runtime·printf(&#34;runtime: bad pointer in frame %s at %p: %p\n&#34;, runtime·funcname(f), &amp;scanp[i], p);
+<span id="L421" class="ln">   421</span>					runtime·throw(&#34;bad pointer!&#34;);
+<span id="L422" class="ln">   422</span>				}
+<span id="L423" class="ln">   423</span>				if(minp &lt;= p &amp;&amp; p &lt; maxp) {
+<span id="L424" class="ln">   424</span>					if(StackDebug &gt;= 3)
+<span id="L425" class="ln">   425</span>						runtime·printf(&#34;adjust ptr %p %s\n&#34;, p, runtime·funcname(f));
+<span id="L426" class="ln">   426</span>					scanp[i] = p + delta;
+<span id="L427" class="ln">   427</span>				}
+<span id="L428" class="ln">   428</span>				break;
+<span id="L429" class="ln">   429</span>			case BitsMultiWord:
+<span id="L430" class="ln">   430</span>				switch(bv-&gt;data[(i+1) / (32 / BitsPerPointer)] &gt;&gt; ((i+1) * BitsPerPointer &amp; 31) &amp; 3) {
+<span id="L431" class="ln">   431</span>				case BitsString:
+<span id="L432" class="ln">   432</span>					// string referents are never on the stack, never need to be adjusted
+<span id="L433" class="ln">   433</span>					i++; // skip len
+<span id="L434" class="ln">   434</span>					break;
+<span id="L435" class="ln">   435</span>				case BitsSlice:
+<span id="L436" class="ln">   436</span>					p = scanp[i];
+<span id="L437" class="ln">   437</span>					if(minp &lt;= p &amp;&amp; p &lt; maxp) {
+<span id="L438" class="ln">   438</span>						if(StackDebug &gt;= 3)
+<span id="L439" class="ln">   439</span>							runtime·printf(&#34;adjust slice %p\n&#34;, p);
+<span id="L440" class="ln">   440</span>						scanp[i] = p + delta;
+<span id="L441" class="ln">   441</span>					}
+<span id="L442" class="ln">   442</span>					i += 2; // skip len, cap
+<span id="L443" class="ln">   443</span>					break;
+<span id="L444" class="ln">   444</span>				case BitsEface:
+<span id="L445" class="ln">   445</span>					t = (Type*)scanp[i];
+<span id="L446" class="ln">   446</span>					if(t != nil &amp;&amp; (t-&gt;size &gt; PtrSize || (t-&gt;kind &amp; KindNoPointers) == 0)) {
+<span id="L447" class="ln">   447</span>						p = scanp[i+1];
+<span id="L448" class="ln">   448</span>						if(minp &lt;= p &amp;&amp; p &lt; maxp) {
+<span id="L449" class="ln">   449</span>							if(StackDebug &gt;= 3)
+<span id="L450" class="ln">   450</span>								runtime·printf(&#34;adjust eface %p\n&#34;, p);
+<span id="L451" class="ln">   451</span>							if(t-&gt;size &gt; PtrSize) // currently we always allocate such objects on the heap
+<span id="L452" class="ln">   452</span>								runtime·throw(&#34;large interface value found on stack&#34;);
+<span id="L453" class="ln">   453</span>							scanp[i+1] = p + delta;
+<span id="L454" class="ln">   454</span>						}
+<span id="L455" class="ln">   455</span>					}
+<span id="L456" class="ln">   456</span>					i++;
+<span id="L457" class="ln">   457</span>					break;
+<span id="L458" class="ln">   458</span>				case BitsIface:
+<span id="L459" class="ln">   459</span>					tab = (Itab*)scanp[i];
+<span id="L460" class="ln">   460</span>					if(tab != nil) {
+<span id="L461" class="ln">   461</span>						t = tab-&gt;type;
+<span id="L462" class="ln">   462</span>						//runtime·printf(&#34;          type=%p\n&#34;, t);
+<span id="L463" class="ln">   463</span>						if(t-&gt;size &gt; PtrSize || (t-&gt;kind &amp; KindNoPointers) == 0) {
+<span id="L464" class="ln">   464</span>							p = scanp[i+1];
+<span id="L465" class="ln">   465</span>							if(minp &lt;= p &amp;&amp; p &lt; maxp) {
+<span id="L466" class="ln">   466</span>								if(StackDebug &gt;= 3)
+<span id="L467" class="ln">   467</span>									runtime·printf(&#34;adjust iface %p\n&#34;, p);
+<span id="L468" class="ln">   468</span>								if(t-&gt;size &gt; PtrSize) // currently we always allocate such objects on the heap
+<span id="L469" class="ln">   469</span>									runtime·throw(&#34;large interface value found on stack&#34;);
+<span id="L470" class="ln">   470</span>								scanp[i+1] = p + delta;
+<span id="L471" class="ln">   471</span>							}
+<span id="L472" class="ln">   472</span>						}
+<span id="L473" class="ln">   473</span>					}
+<span id="L474" class="ln">   474</span>					i++;
+<span id="L475" class="ln">   475</span>					break;
+<span id="L476" class="ln">   476</span>				}
+<span id="L477" class="ln">   477</span>				break;
+<span id="L478" class="ln">   478</span>			}
+<span id="L479" class="ln">   479</span>		}
+<span id="L480" class="ln">   480</span>	}
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>	// Note: the argument/return area is adjusted by the callee.
+<span id="L483" class="ln">   483</span>	static bool
+<span id="L484" class="ln">   484</span>	adjustframe(Stkframe *frame, void *arg)
+<span id="L485" class="ln">   485</span>	{
+<span id="L486" class="ln">   486</span>		AdjustInfo *adjinfo;
+<span id="L487" class="ln">   487</span>		Func *f;
+<span id="L488" class="ln">   488</span>		StackMap *stackmap;
+<span id="L489" class="ln">   489</span>		int32 pcdata;
+<span id="L490" class="ln">   490</span>		BitVector bv;
+<span id="L491" class="ln">   491</span>		uintptr targetpc;
+<span id="L492" class="ln">   492</span>	
+<span id="L493" class="ln">   493</span>		adjinfo = arg;
+<span id="L494" class="ln">   494</span>		f = frame-&gt;fn;
+<span id="L495" class="ln">   495</span>		if(StackDebug &gt;= 2)
+<span id="L496" class="ln">   496</span>			runtime·printf(&#34;    adjusting %s frame=[%p,%p] pc=%p continpc=%p\n&#34;, runtime·funcname(f), frame-&gt;sp, frame-&gt;fp, frame-&gt;pc, frame-&gt;continpc);
+<span id="L497" class="ln">   497</span>		if(f-&gt;entry == (uintptr)runtime·main)
+<span id="L498" class="ln">   498</span>			return true;
+<span id="L499" class="ln">   499</span>		targetpc = frame-&gt;continpc;
+<span id="L500" class="ln">   500</span>		if(targetpc == 0) {
+<span id="L501" class="ln">   501</span>			// Frame is dead.
+<span id="L502" class="ln">   502</span>			return true;
+<span id="L503" class="ln">   503</span>		}
+<span id="L504" class="ln">   504</span>		if(targetpc != f-&gt;entry)
+<span id="L505" class="ln">   505</span>			targetpc--;
+<span id="L506" class="ln">   506</span>		pcdata = runtime·pcdatavalue(f, PCDATA_StackMapIndex, targetpc);
+<span id="L507" class="ln">   507</span>		if(pcdata == -1)
+<span id="L508" class="ln">   508</span>			pcdata = 0; // in prologue
+<span id="L509" class="ln">   509</span>	
+<span id="L510" class="ln">   510</span>		// adjust local pointers
+<span id="L511" class="ln">   511</span>		if(frame-&gt;varp != (byte*)frame-&gt;sp) {
+<span id="L512" class="ln">   512</span>			stackmap = runtime·funcdata(f, FUNCDATA_LocalsPointerMaps);
+<span id="L513" class="ln">   513</span>			if(stackmap == nil)
+<span id="L514" class="ln">   514</span>				runtime·throw(&#34;no locals info&#34;);
+<span id="L515" class="ln">   515</span>			if(stackmap-&gt;n &lt;= 0)
+<span id="L516" class="ln">   516</span>				runtime·throw(&#34;locals size info only&#34;);
+<span id="L517" class="ln">   517</span>			bv = runtime·stackmapdata(stackmap, pcdata);
+<span id="L518" class="ln">   518</span>			if(StackDebug &gt;= 3)
+<span id="L519" class="ln">   519</span>				runtime·printf(&#34;      locals\n&#34;);
+<span id="L520" class="ln">   520</span>			adjustpointers((byte**)frame-&gt;varp - bv.n / BitsPerPointer, &amp;bv, adjinfo, f);
+<span id="L521" class="ln">   521</span>		}
+<span id="L522" class="ln">   522</span>		// adjust inargs and outargs
+<span id="L523" class="ln">   523</span>		if(frame-&gt;arglen != 0) {
+<span id="L524" class="ln">   524</span>			stackmap = runtime·funcdata(f, FUNCDATA_ArgsPointerMaps);
+<span id="L525" class="ln">   525</span>			if(stackmap == nil)
+<span id="L526" class="ln">   526</span>				runtime·throw(&#34;no arg info&#34;);
+<span id="L527" class="ln">   527</span>			bv = runtime·stackmapdata(stackmap, pcdata);
+<span id="L528" class="ln">   528</span>			if(StackDebug &gt;= 3)
+<span id="L529" class="ln">   529</span>				runtime·printf(&#34;      args\n&#34;);
+<span id="L530" class="ln">   530</span>			adjustpointers((byte**)frame-&gt;argp, &amp;bv, adjinfo, nil);
+<span id="L531" class="ln">   531</span>		}
+<span id="L532" class="ln">   532</span>		return true;
+<span id="L533" class="ln">   533</span>	}
+<span id="L534" class="ln">   534</span>	
+<span id="L535" class="ln">   535</span>	static void
+<span id="L536" class="ln">   536</span>	adjustctxt(G *gp, AdjustInfo *adjinfo)
+<span id="L537" class="ln">   537</span>	{
+<span id="L538" class="ln">   538</span>		if(adjinfo-&gt;oldstk &lt;= (byte*)gp-&gt;sched.ctxt &amp;&amp; (byte*)gp-&gt;sched.ctxt &lt; adjinfo-&gt;oldbase)
+<span id="L539" class="ln">   539</span>			gp-&gt;sched.ctxt = (byte*)gp-&gt;sched.ctxt + adjinfo-&gt;delta;
+<span id="L540" class="ln">   540</span>	}
+<span id="L541" class="ln">   541</span>	
+<span id="L542" class="ln">   542</span>	static void
+<span id="L543" class="ln">   543</span>	adjustdefers(G *gp, AdjustInfo *adjinfo)
+<span id="L544" class="ln">   544</span>	{
+<span id="L545" class="ln">   545</span>		Defer *d, **dp;
+<span id="L546" class="ln">   546</span>		Func *f;
+<span id="L547" class="ln">   547</span>		FuncVal *fn;
+<span id="L548" class="ln">   548</span>		StackMap *stackmap;
+<span id="L549" class="ln">   549</span>		BitVector bv;
+<span id="L550" class="ln">   550</span>	
+<span id="L551" class="ln">   551</span>		for(dp = &amp;gp-&gt;defer, d = *dp; d != nil; dp = &amp;d-&gt;link, d = *dp) {
+<span id="L552" class="ln">   552</span>			if(adjinfo-&gt;oldstk &lt;= (byte*)d &amp;&amp; (byte*)d &lt; adjinfo-&gt;oldbase) {
+<span id="L553" class="ln">   553</span>				// The Defer record is on the stack.  Its fields will
+<span id="L554" class="ln">   554</span>				// get adjusted appropriately.
+<span id="L555" class="ln">   555</span>				// This only happens for runtime.main now, but a compiler
+<span id="L556" class="ln">   556</span>				// optimization could do more of this.
+<span id="L557" class="ln">   557</span>				*dp = (Defer*)((byte*)d + adjinfo-&gt;delta);
+<span id="L558" class="ln">   558</span>				continue;
+<span id="L559" class="ln">   559</span>			}
+<span id="L560" class="ln">   560</span>			if(d-&gt;argp &lt; adjinfo-&gt;oldstk || adjinfo-&gt;oldbase &lt;= d-&gt;argp)
+<span id="L561" class="ln">   561</span>				break; // a defer for the next segment
+<span id="L562" class="ln">   562</span>			fn = d-&gt;fn;
+<span id="L563" class="ln">   563</span>			if(fn == nil) {
+<span id="L564" class="ln">   564</span>				// Defer of nil function.  It will panic when run, and there
+<span id="L565" class="ln">   565</span>				// aren&#39;t any args to adjust.  See issue 8047.
+<span id="L566" class="ln">   566</span>				d-&gt;argp += adjinfo-&gt;delta;
+<span id="L567" class="ln">   567</span>				continue;
+<span id="L568" class="ln">   568</span>			}
+<span id="L569" class="ln">   569</span>			f = runtime·findfunc((uintptr)fn-&gt;fn);
+<span id="L570" class="ln">   570</span>			if(f == nil)
+<span id="L571" class="ln">   571</span>				runtime·throw(&#34;can&#39;t adjust unknown defer&#34;);
+<span id="L572" class="ln">   572</span>			if(StackDebug &gt;= 4)
+<span id="L573" class="ln">   573</span>				runtime·printf(&#34;  checking defer %s\n&#34;, runtime·funcname(f));
+<span id="L574" class="ln">   574</span>			// Defer&#39;s FuncVal might be on the stack
+<span id="L575" class="ln">   575</span>			if(adjinfo-&gt;oldstk &lt;= (byte*)fn &amp;&amp; (byte*)fn &lt; adjinfo-&gt;oldbase) {
+<span id="L576" class="ln">   576</span>				if(StackDebug &gt;= 3)
+<span id="L577" class="ln">   577</span>					runtime·printf(&#34;    adjust defer fn %s\n&#34;, runtime·funcname(f));
+<span id="L578" class="ln">   578</span>				d-&gt;fn = (FuncVal*)((byte*)fn + adjinfo-&gt;delta);
+<span id="L579" class="ln">   579</span>			} else {
+<span id="L580" class="ln">   580</span>				// deferred function&#39;s args might point into the stack.
+<span id="L581" class="ln">   581</span>				if(StackDebug &gt;= 3)
+<span id="L582" class="ln">   582</span>					runtime·printf(&#34;    adjust deferred args for %s\n&#34;, runtime·funcname(f));
+<span id="L583" class="ln">   583</span>				stackmap = runtime·funcdata(f, FUNCDATA_ArgsPointerMaps);
+<span id="L584" class="ln">   584</span>				if(stackmap == nil)
+<span id="L585" class="ln">   585</span>					runtime·throw(&#34;runtime: deferred function has no arg ptr map&#34;);
+<span id="L586" class="ln">   586</span>				bv = runtime·stackmapdata(stackmap, 0);
+<span id="L587" class="ln">   587</span>				adjustpointers(d-&gt;args, &amp;bv, adjinfo, f);
+<span id="L588" class="ln">   588</span>			}
+<span id="L589" class="ln">   589</span>			d-&gt;argp += adjinfo-&gt;delta;
+<span id="L590" class="ln">   590</span>		}
+<span id="L591" class="ln">   591</span>	}
+<span id="L592" class="ln">   592</span>	
+<span id="L593" class="ln">   593</span>	// Copies the top stack segment of gp to a new stack segment of a
+<span id="L594" class="ln">   594</span>	// different size.  The top segment must contain nframes frames.
+<span id="L595" class="ln">   595</span>	static void
+<span id="L596" class="ln">   596</span>	copystack(G *gp, uintptr nframes, uintptr newsize)
+<span id="L597" class="ln">   597</span>	{
+<span id="L598" class="ln">   598</span>		byte *oldstk, *oldbase, *newstk, *newbase;
+<span id="L599" class="ln">   599</span>		uintptr oldsize, used;
+<span id="L600" class="ln">   600</span>		AdjustInfo adjinfo;
+<span id="L601" class="ln">   601</span>		Stktop *oldtop, *newtop;
+<span id="L602" class="ln">   602</span>		bool malloced;
+<span id="L603" class="ln">   603</span>	
+<span id="L604" class="ln">   604</span>		if(gp-&gt;syscallstack != 0)
+<span id="L605" class="ln">   605</span>			runtime·throw(&#34;can&#39;t handle stack copy in syscall yet&#34;);
+<span id="L606" class="ln">   606</span>		oldstk = (byte*)gp-&gt;stackguard - StackGuard;
+<span id="L607" class="ln">   607</span>		oldbase = (byte*)gp-&gt;stackbase + sizeof(Stktop);
+<span id="L608" class="ln">   608</span>		oldsize = oldbase - oldstk;
+<span id="L609" class="ln">   609</span>		used = oldbase - (byte*)gp-&gt;sched.sp;
+<span id="L610" class="ln">   610</span>		oldtop = (Stktop*)gp-&gt;stackbase;
+<span id="L611" class="ln">   611</span>	
+<span id="L612" class="ln">   612</span>		// allocate new stack
+<span id="L613" class="ln">   613</span>		newstk = runtime·stackalloc(gp, newsize);
+<span id="L614" class="ln">   614</span>		newbase = newstk + newsize;
+<span id="L615" class="ln">   615</span>		newtop = (Stktop*)(newbase - sizeof(Stktop));
+<span id="L616" class="ln">   616</span>		malloced = newtop-&gt;malloced;
+<span id="L617" class="ln">   617</span>	
+<span id="L618" class="ln">   618</span>		if(StackDebug &gt;= 1)
+<span id="L619" class="ln">   619</span>			runtime·printf(&#34;copystack [%p %p]/%d -&gt; [%p %p]/%d\n&#34;, oldstk, oldbase, (int32)oldsize, newstk, newbase, (int32)newsize);
+<span id="L620" class="ln">   620</span>		USED(oldsize);
+<span id="L621" class="ln">   621</span>		
+<span id="L622" class="ln">   622</span>		// adjust pointers in the to-be-copied frames
+<span id="L623" class="ln">   623</span>		adjinfo.oldstk = oldstk;
+<span id="L624" class="ln">   624</span>		adjinfo.oldbase = oldbase;
+<span id="L625" class="ln">   625</span>		adjinfo.delta = newbase - oldbase;
+<span id="L626" class="ln">   626</span>		runtime·gentraceback(~(uintptr)0, ~(uintptr)0, 0, gp, 0, nil, nframes, adjustframe, &amp;adjinfo, false);
+<span id="L627" class="ln">   627</span>		
+<span id="L628" class="ln">   628</span>		// adjust other miscellaneous things that have pointers into stacks.
+<span id="L629" class="ln">   629</span>		adjustctxt(gp, &amp;adjinfo);
+<span id="L630" class="ln">   630</span>		adjustdefers(gp, &amp;adjinfo);
+<span id="L631" class="ln">   631</span>		
+<span id="L632" class="ln">   632</span>		// copy the stack (including Stktop) to the new location
+<span id="L633" class="ln">   633</span>		runtime·memmove(newbase - used, oldbase - used, used);
+<span id="L634" class="ln">   634</span>		newtop-&gt;malloced = malloced;
+<span id="L635" class="ln">   635</span>		
+<span id="L636" class="ln">   636</span>		// Swap out old stack for new one
+<span id="L637" class="ln">   637</span>		gp-&gt;stackbase = (uintptr)newtop;
+<span id="L638" class="ln">   638</span>		gp-&gt;stackguard = (uintptr)newstk + StackGuard;
+<span id="L639" class="ln">   639</span>		gp-&gt;stackguard0 = (uintptr)newstk + StackGuard; // NOTE: might clobber a preempt request
+<span id="L640" class="ln">   640</span>		if(gp-&gt;stack0 == (uintptr)oldstk)
+<span id="L641" class="ln">   641</span>			gp-&gt;stack0 = (uintptr)newstk;
+<span id="L642" class="ln">   642</span>		gp-&gt;sched.sp = (uintptr)(newbase - used);
+<span id="L643" class="ln">   643</span>	
+<span id="L644" class="ln">   644</span>		// free old stack
+<span id="L645" class="ln">   645</span>		runtime·stackfree(gp, oldstk, oldtop);
+<span id="L646" class="ln">   646</span>	}
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>	// round x up to a power of 2.
+<span id="L649" class="ln">   649</span>	int32
+<span id="L650" class="ln">   650</span>	runtime·round2(int32 x)
+<span id="L651" class="ln">   651</span>	{
+<span id="L652" class="ln">   652</span>		int32 s;
+<span id="L653" class="ln">   653</span>	
+<span id="L654" class="ln">   654</span>		s = 0;
+<span id="L655" class="ln">   655</span>		while((1 &lt;&lt; s) &lt; x)
+<span id="L656" class="ln">   656</span>			s++;
+<span id="L657" class="ln">   657</span>		return 1 &lt;&lt; s;
+<span id="L658" class="ln">   658</span>	}
+<span id="L659" class="ln">   659</span>	
+<span id="L660" class="ln">   660</span>	// Called from runtime·newstackcall or from runtime·morestack when a new
+<span id="L661" class="ln">   661</span>	// stack segment is needed.  Allocate a new stack big enough for
+<span id="L662" class="ln">   662</span>	// m-&gt;moreframesize bytes, copy m-&gt;moreargsize bytes to the new frame,
+<span id="L663" class="ln">   663</span>	// and then act as though runtime·lessstack called the function at
+<span id="L664" class="ln">   664</span>	// m-&gt;morepc.
+<span id="L665" class="ln">   665</span>	void
+<span id="L666" class="ln">   666</span>	runtime·newstack(void)
+<span id="L667" class="ln">   667</span>	{
+<span id="L668" class="ln">   668</span>		int32 framesize, argsize, oldstatus, oldsize, newsize, nframes;
+<span id="L669" class="ln">   669</span>		Stktop *top, *oldtop;
+<span id="L670" class="ln">   670</span>		byte *stk, *oldstk, *oldbase;
+<span id="L671" class="ln">   671</span>		uintptr sp;
+<span id="L672" class="ln">   672</span>		uintptr *src, *dst, *dstend;
+<span id="L673" class="ln">   673</span>		G *gp;
+<span id="L674" class="ln">   674</span>		Gobuf label, morebuf;
+<span id="L675" class="ln">   675</span>		void *moreargp;
+<span id="L676" class="ln">   676</span>		bool newstackcall;
+<span id="L677" class="ln">   677</span>	
+<span id="L678" class="ln">   678</span>		if(m-&gt;forkstackguard)
+<span id="L679" class="ln">   679</span>			runtime·throw(&#34;split stack after fork&#34;);
+<span id="L680" class="ln">   680</span>		if(m-&gt;morebuf.g != m-&gt;curg) {
+<span id="L681" class="ln">   681</span>			runtime·printf(&#34;runtime: newstack called from g=%p\n&#34;
+<span id="L682" class="ln">   682</span>				&#34;\tm=%p m-&gt;curg=%p m-&gt;g0=%p m-&gt;gsignal=%p\n&#34;,
+<span id="L683" class="ln">   683</span>				m-&gt;morebuf.g, m, m-&gt;curg, m-&gt;g0, m-&gt;gsignal);
+<span id="L684" class="ln">   684</span>			runtime·throw(&#34;runtime: wrong goroutine in newstack&#34;);
+<span id="L685" class="ln">   685</span>		}
+<span id="L686" class="ln">   686</span>	
+<span id="L687" class="ln">   687</span>		// gp-&gt;status is usually Grunning, but it could be Gsyscall if a stack overflow
+<span id="L688" class="ln">   688</span>		// happens during a function call inside entersyscall.
+<span id="L689" class="ln">   689</span>		gp = m-&gt;curg;
+<span id="L690" class="ln">   690</span>		oldstatus = gp-&gt;status;
+<span id="L691" class="ln">   691</span>	
+<span id="L692" class="ln">   692</span>		framesize = m-&gt;moreframesize;
+<span id="L693" class="ln">   693</span>		argsize = m-&gt;moreargsize;
+<span id="L694" class="ln">   694</span>		moreargp = m-&gt;moreargp;
+<span id="L695" class="ln">   695</span>		m-&gt;moreargp = nil;
+<span id="L696" class="ln">   696</span>		morebuf = m-&gt;morebuf;
+<span id="L697" class="ln">   697</span>		m-&gt;morebuf.pc = (uintptr)nil;
+<span id="L698" class="ln">   698</span>		m-&gt;morebuf.lr = (uintptr)nil;
+<span id="L699" class="ln">   699</span>		m-&gt;morebuf.sp = (uintptr)nil;
+<span id="L700" class="ln">   700</span>		gp-&gt;status = Gwaiting;
+<span id="L701" class="ln">   701</span>		gp-&gt;waitreason = &#34;stack growth&#34;;
+<span id="L702" class="ln">   702</span>		newstackcall = framesize==1;
+<span id="L703" class="ln">   703</span>		if(newstackcall)
+<span id="L704" class="ln">   704</span>			framesize = 0;
+<span id="L705" class="ln">   705</span>	
+<span id="L706" class="ln">   706</span>		// For newstackcall the context already points to beginning of runtime·newstackcall.
+<span id="L707" class="ln">   707</span>		if(!newstackcall)
+<span id="L708" class="ln">   708</span>			runtime·rewindmorestack(&amp;gp-&gt;sched);
+<span id="L709" class="ln">   709</span>	
+<span id="L710" class="ln">   710</span>		sp = gp-&gt;sched.sp;
+<span id="L711" class="ln">   711</span>		if(thechar == &#39;6&#39; || thechar == &#39;8&#39;) {
+<span id="L712" class="ln">   712</span>			// The call to morestack cost a word.
+<span id="L713" class="ln">   713</span>			sp -= sizeof(uintptr);
+<span id="L714" class="ln">   714</span>		}
+<span id="L715" class="ln">   715</span>		if(StackDebug &gt;= 1 || sp &lt; gp-&gt;stackguard - StackGuard) {
+<span id="L716" class="ln">   716</span>			runtime·printf(&#34;runtime: newstack framesize=%p argsize=%p sp=%p stack=[%p, %p]\n&#34;
+<span id="L717" class="ln">   717</span>				&#34;\tmorebuf={pc:%p sp:%p lr:%p}\n&#34;
+<span id="L718" class="ln">   718</span>				&#34;\tsched={pc:%p sp:%p lr:%p ctxt:%p}\n&#34;,
+<span id="L719" class="ln">   719</span>				(uintptr)framesize, (uintptr)argsize, sp, gp-&gt;stackguard - StackGuard, gp-&gt;stackbase,
+<span id="L720" class="ln">   720</span>				m-&gt;morebuf.pc, m-&gt;morebuf.sp, m-&gt;morebuf.lr,
+<span id="L721" class="ln">   721</span>				gp-&gt;sched.pc, gp-&gt;sched.sp, gp-&gt;sched.lr, gp-&gt;sched.ctxt);
+<span id="L722" class="ln">   722</span>		}
+<span id="L723" class="ln">   723</span>		if(sp &lt; gp-&gt;stackguard - StackGuard) {
+<span id="L724" class="ln">   724</span>			runtime·printf(&#34;runtime: split stack overflow: %p &lt; %p\n&#34;, sp, gp-&gt;stackguard - StackGuard);
+<span id="L725" class="ln">   725</span>			runtime·throw(&#34;runtime: split stack overflow&#34;);
+<span id="L726" class="ln">   726</span>		}
+<span id="L727" class="ln">   727</span>	
+<span id="L728" class="ln">   728</span>		if(argsize % sizeof(uintptr) != 0) {
+<span id="L729" class="ln">   729</span>			runtime·printf(&#34;runtime: stack growth with misaligned argsize %d\n&#34;, argsize);
+<span id="L730" class="ln">   730</span>			runtime·throw(&#34;runtime: stack growth argsize&#34;);
+<span id="L731" class="ln">   731</span>		}
+<span id="L732" class="ln">   732</span>	
+<span id="L733" class="ln">   733</span>		if(gp-&gt;stackguard0 == (uintptr)StackPreempt) {
+<span id="L734" class="ln">   734</span>			if(gp == m-&gt;g0)
+<span id="L735" class="ln">   735</span>				runtime·throw(&#34;runtime: preempt g0&#34;);
+<span id="L736" class="ln">   736</span>			if(oldstatus == Grunning &amp;&amp; m-&gt;p == nil &amp;&amp; m-&gt;locks == 0)
+<span id="L737" class="ln">   737</span>				runtime·throw(&#34;runtime: g is running but p is not&#34;);
+<span id="L738" class="ln">   738</span>			if(oldstatus == Gsyscall &amp;&amp; m-&gt;locks == 0)
+<span id="L739" class="ln">   739</span>				runtime·throw(&#34;runtime: stack growth during syscall&#34;);
+<span id="L740" class="ln">   740</span>			// Be conservative about where we preempt.
+<span id="L741" class="ln">   741</span>			// We are interested in preempting user Go code, not runtime code.
+<span id="L742" class="ln">   742</span>			if(oldstatus != Grunning || m-&gt;locks || m-&gt;mallocing || m-&gt;gcing || m-&gt;p-&gt;status != Prunning) {
+<span id="L743" class="ln">   743</span>				// Let the goroutine keep running for now.
+<span id="L744" class="ln">   744</span>				// gp-&gt;preempt is set, so it will be preempted next time.
+<span id="L745" class="ln">   745</span>				gp-&gt;stackguard0 = gp-&gt;stackguard;
+<span id="L746" class="ln">   746</span>				gp-&gt;status = oldstatus;
+<span id="L747" class="ln">   747</span>				runtime·gogo(&amp;gp-&gt;sched);	// never return
+<span id="L748" class="ln">   748</span>			}
+<span id="L749" class="ln">   749</span>			// Act like goroutine called runtime.Gosched.
+<span id="L750" class="ln">   750</span>			gp-&gt;status = oldstatus;
+<span id="L751" class="ln">   751</span>			runtime·gosched0(gp);	// never return
+<span id="L752" class="ln">   752</span>		}
+<span id="L753" class="ln">   753</span>	
+<span id="L754" class="ln">   754</span>		// If every frame on the top segment is copyable, allocate a bigger segment
+<span id="L755" class="ln">   755</span>		// and move the segment instead of allocating a new segment.
+<span id="L756" class="ln">   756</span>		if(runtime·copystack) {
+<span id="L757" class="ln">   757</span>			if(!runtime·precisestack)
+<span id="L758" class="ln">   758</span>				runtime·throw(&#34;can&#39;t copy stacks without precise stacks&#34;);
+<span id="L759" class="ln">   759</span>			nframes = copyabletopsegment(gp);
+<span id="L760" class="ln">   760</span>			if(nframes != -1) {
+<span id="L761" class="ln">   761</span>				oldstk = (byte*)gp-&gt;stackguard - StackGuard;
+<span id="L762" class="ln">   762</span>				oldbase = (byte*)gp-&gt;stackbase + sizeof(Stktop);
+<span id="L763" class="ln">   763</span>				oldsize = oldbase - oldstk;
+<span id="L764" class="ln">   764</span>				newsize = oldsize * 2;
+<span id="L765" class="ln">   765</span>				copystack(gp, nframes, newsize);
+<span id="L766" class="ln">   766</span>				if(StackDebug &gt;= 1)
+<span id="L767" class="ln">   767</span>					runtime·printf(&#34;stack grow done\n&#34;);
+<span id="L768" class="ln">   768</span>				if(gp-&gt;stacksize &gt; runtime·maxstacksize) {
+<span id="L769" class="ln">   769</span>					runtime·printf(&#34;runtime: goroutine stack exceeds %D-byte limit\n&#34;, (uint64)runtime·maxstacksize);
+<span id="L770" class="ln">   770</span>					runtime·throw(&#34;stack overflow&#34;);
+<span id="L771" class="ln">   771</span>				}
+<span id="L772" class="ln">   772</span>				gp-&gt;status = oldstatus;
+<span id="L773" class="ln">   773</span>				runtime·gogo(&amp;gp-&gt;sched);
+<span id="L774" class="ln">   774</span>			}
+<span id="L775" class="ln">   775</span>			// TODO: if stack is uncopyable because we&#39;re in C code, patch return value at
+<span id="L776" class="ln">   776</span>			// end of C code to trigger a copy as soon as C code exits.  That way, we&#39;ll
+<span id="L777" class="ln">   777</span>			// have stack available if we get this deep again.
+<span id="L778" class="ln">   778</span>		}
+<span id="L779" class="ln">   779</span>	
+<span id="L780" class="ln">   780</span>		// allocate new segment.
+<span id="L781" class="ln">   781</span>		framesize += argsize;
+<span id="L782" class="ln">   782</span>		framesize += StackExtra;	// room for more functions, Stktop.
+<span id="L783" class="ln">   783</span>		if(framesize &lt; StackMin)
+<span id="L784" class="ln">   784</span>			framesize = StackMin;
+<span id="L785" class="ln">   785</span>		framesize += StackSystem;
+<span id="L786" class="ln">   786</span>		framesize = runtime·round2(framesize);
+<span id="L787" class="ln">   787</span>		stk = runtime·stackalloc(gp, framesize);
+<span id="L788" class="ln">   788</span>		if(gp-&gt;stacksize &gt; runtime·maxstacksize) {
+<span id="L789" class="ln">   789</span>			runtime·printf(&#34;runtime: goroutine stack exceeds %D-byte limit\n&#34;, (uint64)runtime·maxstacksize);
+<span id="L790" class="ln">   790</span>			runtime·throw(&#34;stack overflow&#34;);
+<span id="L791" class="ln">   791</span>		}
+<span id="L792" class="ln">   792</span>		top = (Stktop*)(stk+framesize-sizeof(*top));
+<span id="L793" class="ln">   793</span>	
+<span id="L794" class="ln">   794</span>		if(StackDebug &gt;= 1) {
+<span id="L795" class="ln">   795</span>			runtime·printf(&#34;\t-&gt; new stack [%p, %p]\n&#34;, stk, top);
+<span id="L796" class="ln">   796</span>		}
+<span id="L797" class="ln">   797</span>	
+<span id="L798" class="ln">   798</span>		top-&gt;stackbase = gp-&gt;stackbase;
+<span id="L799" class="ln">   799</span>		top-&gt;stackguard = gp-&gt;stackguard;
+<span id="L800" class="ln">   800</span>		top-&gt;gobuf = morebuf;
+<span id="L801" class="ln">   801</span>		top-&gt;argp = moreargp;
+<span id="L802" class="ln">   802</span>		top-&gt;argsize = argsize;
+<span id="L803" class="ln">   803</span>	
+<span id="L804" class="ln">   804</span>		// copy flag from panic
+<span id="L805" class="ln">   805</span>		top-&gt;panic = gp-&gt;ispanic;
+<span id="L806" class="ln">   806</span>		gp-&gt;ispanic = false;
+<span id="L807" class="ln">   807</span>		
+<span id="L808" class="ln">   808</span>		// if this isn&#39;t a panic, maybe we&#39;re splitting the stack for a panic.
+<span id="L809" class="ln">   809</span>		// if we&#39;re splitting in the top frame, propagate the panic flag
+<span id="L810" class="ln">   810</span>		// forward so that recover will know we&#39;re in a panic.
+<span id="L811" class="ln">   811</span>		oldtop = (Stktop*)top-&gt;stackbase;
+<span id="L812" class="ln">   812</span>		if(oldtop != nil &amp;&amp; oldtop-&gt;panic &amp;&amp; top-&gt;argp == (byte*)oldtop - oldtop-&gt;argsize - gp-&gt;panicwrap)
+<span id="L813" class="ln">   813</span>			top-&gt;panic = true;
+<span id="L814" class="ln">   814</span>	
+<span id="L815" class="ln">   815</span>		top-&gt;panicwrap = gp-&gt;panicwrap;
+<span id="L816" class="ln">   816</span>		gp-&gt;panicwrap = 0;
+<span id="L817" class="ln">   817</span>	
+<span id="L818" class="ln">   818</span>		gp-&gt;stackbase = (uintptr)top;
+<span id="L819" class="ln">   819</span>		gp-&gt;stackguard = (uintptr)stk + StackGuard;
+<span id="L820" class="ln">   820</span>		gp-&gt;stackguard0 = gp-&gt;stackguard;
+<span id="L821" class="ln">   821</span>	
+<span id="L822" class="ln">   822</span>		sp = (uintptr)top;
+<span id="L823" class="ln">   823</span>		if(argsize &gt; 0) {
+<span id="L824" class="ln">   824</span>			sp -= argsize;
+<span id="L825" class="ln">   825</span>			dst = (uintptr*)sp;
+<span id="L826" class="ln">   826</span>			dstend = dst + argsize/sizeof(*dst);
+<span id="L827" class="ln">   827</span>			src = (uintptr*)top-&gt;argp;
+<span id="L828" class="ln">   828</span>			while(dst &lt; dstend)
+<span id="L829" class="ln">   829</span>				*dst++ = *src++;
+<span id="L830" class="ln">   830</span>		}
+<span id="L831" class="ln">   831</span>		if(thechar == &#39;5&#39;) {
+<span id="L832" class="ln">   832</span>			// caller would have saved its LR below args.
+<span id="L833" class="ln">   833</span>			sp -= sizeof(void*);
+<span id="L834" class="ln">   834</span>			*(void**)sp = nil;
+<span id="L835" class="ln">   835</span>		}
+<span id="L836" class="ln">   836</span>	
+<span id="L837" class="ln">   837</span>		// Continue as if lessstack had just called m-&gt;morepc
+<span id="L838" class="ln">   838</span>		// (the PC that decided to grow the stack).
+<span id="L839" class="ln">   839</span>		runtime·memclr((byte*)&amp;label, sizeof label);
+<span id="L840" class="ln">   840</span>		label.sp = sp;
+<span id="L841" class="ln">   841</span>		label.pc = (uintptr)runtime·lessstack;
+<span id="L842" class="ln">   842</span>		label.g = m-&gt;curg;
+<span id="L843" class="ln">   843</span>		if(newstackcall)
+<span id="L844" class="ln">   844</span>			runtime·gostartcallfn(&amp;label, (FuncVal*)m-&gt;cret);
+<span id="L845" class="ln">   845</span>		else {
+<span id="L846" class="ln">   846</span>			runtime·gostartcall(&amp;label, (void(*)(void))gp-&gt;sched.pc, gp-&gt;sched.ctxt);
+<span id="L847" class="ln">   847</span>			gp-&gt;sched.ctxt = nil;
+<span id="L848" class="ln">   848</span>		}
+<span id="L849" class="ln">   849</span>		gp-&gt;status = oldstatus;
+<span id="L850" class="ln">   850</span>		runtime·gogo(&amp;label);
+<span id="L851" class="ln">   851</span>	
+<span id="L852" class="ln">   852</span>		*(int32*)345 = 123;	// never return
+<span id="L853" class="ln">   853</span>	}
+<span id="L854" class="ln">   854</span>	
+<span id="L855" class="ln">   855</span>	#pragma textflag NOSPLIT
+<span id="L856" class="ln">   856</span>	void
+<span id="L857" class="ln">   857</span>	runtime·nilfunc(void)
+<span id="L858" class="ln">   858</span>	{
+<span id="L859" class="ln">   859</span>		*(byte*)0 = 0;
+<span id="L860" class="ln">   860</span>	}
+<span id="L861" class="ln">   861</span>	
+<span id="L862" class="ln">   862</span>	// adjust Gobuf as if it executed a call to fn
+<span id="L863" class="ln">   863</span>	// and then did an immediate gosave.
+<span id="L864" class="ln">   864</span>	void
+<span id="L865" class="ln">   865</span>	runtime·gostartcallfn(Gobuf *gobuf, FuncVal *fv)
+<span id="L866" class="ln">   866</span>	{
+<span id="L867" class="ln">   867</span>		void *fn;
+<span id="L868" class="ln">   868</span>	
+<span id="L869" class="ln">   869</span>		if(fv != nil)
+<span id="L870" class="ln">   870</span>			fn = fv-&gt;fn;
+<span id="L871" class="ln">   871</span>		else
+<span id="L872" class="ln">   872</span>			fn = runtime·nilfunc;
+<span id="L873" class="ln">   873</span>		runtime·gostartcall(gobuf, fn, fv);
+<span id="L874" class="ln">   874</span>	}
+<span id="L875" class="ln">   875</span>	
+<span id="L876" class="ln">   876</span>	// Maybe shrink the stack being used by gp.
+<span id="L877" class="ln">   877</span>	// Called at garbage collection time.
+<span id="L878" class="ln">   878</span>	void
+<span id="L879" class="ln">   879</span>	runtime·shrinkstack(G *gp)
+<span id="L880" class="ln">   880</span>	{
+<span id="L881" class="ln">   881</span>		int32 nframes;
+<span id="L882" class="ln">   882</span>		byte *oldstk, *oldbase;
+<span id="L883" class="ln">   883</span>		uintptr used, oldsize, newsize;
+<span id="L884" class="ln">   884</span>		MSpan *span;
+<span id="L885" class="ln">   885</span>	
+<span id="L886" class="ln">   886</span>		if(!runtime·copystack)
+<span id="L887" class="ln">   887</span>			return;
+<span id="L888" class="ln">   888</span>		oldstk = (byte*)gp-&gt;stackguard - StackGuard;
+<span id="L889" class="ln">   889</span>		oldbase = (byte*)gp-&gt;stackbase + sizeof(Stktop);
+<span id="L890" class="ln">   890</span>		oldsize = oldbase - oldstk;
+<span id="L891" class="ln">   891</span>		newsize = oldsize / 2;
+<span id="L892" class="ln">   892</span>		if(newsize &lt; FixedStack)
+<span id="L893" class="ln">   893</span>			return; // don&#39;t shrink below the minimum-sized stack
+<span id="L894" class="ln">   894</span>		used = oldbase - (byte*)gp-&gt;sched.sp;
+<span id="L895" class="ln">   895</span>		if(used &gt;= oldsize / 4)
+<span id="L896" class="ln">   896</span>			return; // still using at least 1/4 of the segment.
+<span id="L897" class="ln">   897</span>	
+<span id="L898" class="ln">   898</span>		// To shrink to less than 1/2 a page, we need to copy.
+<span id="L899" class="ln">   899</span>		if(newsize &lt; PageSize/2) {
+<span id="L900" class="ln">   900</span>			if(gp-&gt;syscallstack != (uintptr)nil) // TODO: can we handle this case?
+<span id="L901" class="ln">   901</span>				return;
+<span id="L902" class="ln">   902</span>	#ifdef GOOS_windows
+<span id="L903" class="ln">   903</span>			if(gp-&gt;m != nil &amp;&amp; gp-&gt;m-&gt;libcallsp != 0)
+<span id="L904" class="ln">   904</span>				return;
+<span id="L905" class="ln">   905</span>	#endif
+<span id="L906" class="ln">   906</span>			nframes = copyabletopsegment(gp);
+<span id="L907" class="ln">   907</span>			if(nframes == -1)
+<span id="L908" class="ln">   908</span>				return;
+<span id="L909" class="ln">   909</span>			copystack(gp, nframes, newsize);
+<span id="L910" class="ln">   910</span>			return;
+<span id="L911" class="ln">   911</span>		}
+<span id="L912" class="ln">   912</span>	
+<span id="L913" class="ln">   913</span>		// To shrink a stack of one page size or more, we can shrink it
+<span id="L914" class="ln">   914</span>		// without copying.  Just deallocate the lower half.
+<span id="L915" class="ln">   915</span>		span = runtime·MHeap_LookupMaybe(&amp;runtime·mheap, oldstk);
+<span id="L916" class="ln">   916</span>		if(span == nil)
+<span id="L917" class="ln">   917</span>			return; // stack allocated outside heap.  Can&#39;t shrink it.  Can happen if stack is allocated while inside malloc.  TODO: shrink by copying?
+<span id="L918" class="ln">   918</span>		if(span-&gt;elemsize != oldsize)
+<span id="L919" class="ln">   919</span>			runtime·throw(&#34;span element size doesn&#39;t match stack size&#34;);
+<span id="L920" class="ln">   920</span>		if((uintptr)oldstk != span-&gt;start &lt;&lt; PageShift)
+<span id="L921" class="ln">   921</span>			runtime·throw(&#34;stack not at start of span&#34;);
+<span id="L922" class="ln">   922</span>	
+<span id="L923" class="ln">   923</span>		if(StackDebug)
+<span id="L924" class="ln">   924</span>			runtime·printf(&#34;shrinking stack in place %p %X-&gt;%X\n&#34;, oldstk, oldsize, newsize);
+<span id="L925" class="ln">   925</span>	
+<span id="L926" class="ln">   926</span>		// new stack guard for smaller stack
+<span id="L927" class="ln">   927</span>		gp-&gt;stackguard = (uintptr)oldstk + newsize + StackGuard;
+<span id="L928" class="ln">   928</span>		gp-&gt;stackguard0 = (uintptr)oldstk + newsize + StackGuard;
+<span id="L929" class="ln">   929</span>		if(gp-&gt;stack0 == (uintptr)oldstk)
+<span id="L930" class="ln">   930</span>			gp-&gt;stack0 = (uintptr)oldstk + newsize;
+<span id="L931" class="ln">   931</span>		gp-&gt;stacksize -= oldsize - newsize;
+<span id="L932" class="ln">   932</span>	
+<span id="L933" class="ln">   933</span>		// Free bottom half of the stack.
+<span id="L934" class="ln">   934</span>		if(runtime·debug.efence || StackFromSystem) {
+<span id="L935" class="ln">   935</span>			if(runtime·debug.efence || StackFaultOnFree)
+<span id="L936" class="ln">   936</span>				runtime·SysFault(oldstk, newsize);
+<span id="L937" class="ln">   937</span>			else
+<span id="L938" class="ln">   938</span>				runtime·SysFree(oldstk, newsize, &amp;mstats.stacks_sys);
+<span id="L939" class="ln">   939</span>			return;
+<span id="L940" class="ln">   940</span>		}
+<span id="L941" class="ln">   941</span>		// First, we trick malloc into thinking
+<span id="L942" class="ln">   942</span>		// we allocated the stack as two separate half-size allocs.  Then the
+<span id="L943" class="ln">   943</span>		// free() call does the rest of the work for us.
+<span id="L944" class="ln">   944</span>		runtime·MSpan_EnsureSwept(span);
+<span id="L945" class="ln">   945</span>		runtime·MHeap_SplitSpan(&amp;runtime·mheap, span);
+<span id="L946" class="ln">   946</span>		runtime·free(oldstk);
+<span id="L947" class="ln">   947</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/stack.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

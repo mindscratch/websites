@@ -1,0 +1,369 @@
+
+ 
+
+
+
+ 
+ 
+ 
+
+
+
+ 
+ 
+ <!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link rel="icon" type="image/vnd.microsoft.icon" href="https://ssl.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <link rel="canonical" href="go13heapdump.html" />
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"loggedInUserEmail": null, "relativeBaseUrl": "", "projectHomeUrl": "/p/go-wiki", "assetVersionPath": "https://ssl.gstatic.com/codesite/ph/1729405847801014513", "assetHostPath": "https://ssl.gstatic.com/codesite/ph", "domainName": null, "projectName": "go-wiki", "token": null, "profileUrl": null};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+ 
+ </script>
+ 
+ 
+ <title>heapdump13 - 
+ go-wiki -
+ 
+ Specification for the heap dump format for Go 1.3. - 
+ Go Language Community Wiki - Google Project Hosting
+ </title>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/ph_detail.css" >
+ 
+ 
+ 
+ <link type="application/atom+xml" rel="alternate" href="https://code.google.com/feeds/p/go-wiki/hgchanges/basic?path=/heapdump13.wiki&amp;repo=wiki">
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ #maincol {
+ padding-top: 0;
+ padding-bottom: 0;
+ }
+
+ 
+ </style>
+</head>
+<body class="t6">
+<script type="text/javascript">
+ window.___gcfg = {lang: 'en'};
+ (function() 
+ {var po = document.createElement("script");
+ po.type = "text/javascript"; po.async = true;po.src = "https://apis.google.com/js/plusone.js";
+ var s = document.getElementsByTagName("script")[0];
+ s.parentNode.insertBefore(po, s);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ 
+ <a href="go13heapdump.html#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>&#9660;</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo-wiki%2Fwiki%2Fheapdump13&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo-wiki%2Fwiki%2Fheapdump13" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+ <table style="padding:0px; margin: 0px 0px 10px 0px; width:100%" cellpadding="0" cellspacing="0"
+ itemscope itemtype="http://schema.org/CreativeWork">
+ <tr style="height: 58px;">
+ 
+ 
+ 
+ <td id="plogo">
+ <link itemprop="url" href="https://code.google.com/p/go-wiki">
+ <a href="https://code.google.com/p/go-wiki/">
+ 
+ <img src="https://ssl.gstatic.com/codesite/ph/images/defaultlogo.png" alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em">
+ 
+ <div id="pname">
+ <a href="https://code.google.com/p/go-wiki/"><span itemprop="name">go-wiki</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link"
+ href="https://code.google.com/p/go-wiki/"><span itemprop="description">Go Language Community Wiki</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space:nowrap;text-align:right; vertical-align:bottom;">
+ 
+ <form action="https://code.google.com/hosting/search">
+ <input size="30" name="q" value="" type="text">
+ 
+ <input type="submit" name="projectsearch" value="Search projects" >
+ </form>
+ 
+ </tr>
+ </table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="https://code.google.com/p/go-wiki/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ 
+ 
+ <a href="../wiki.1.html" class="tab active">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <div class=gtbc></div>
+</div>
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" class="st">
+ <tr>
+ 
+ 
+ 
+ <td class="subt">
+ <div class="issueDetail">
+<div class="isf">
+ 
+ <span class="inIssueList"> 
+ <span>Search</span>
+ <form action="../wiki.1.html" method="GET" style="display:inline">
+ <select id="can" name="can" >
+ <option disabled="disabled">Search within:</option>
+ 
+ <option value="1" >&nbsp;All wiki pages</option>
+ <option value="3" >&nbsp;Featured pages</option>
+ <option value="2" selected="selected">&nbsp;Current pages</option>
+ 
+ 
+ <option value="4" >&nbsp;Deprecated pages</option>
+ 
+ </select>
+ <span>for</span>
+ <span id="qq"><input type="text" size="38" id="searchq" name="q" value=""
+ autocomplete="off" ></span>
+ 
+ 
+ 
+ <input type="submit" value="Search" >
+ </form>
+ </span>
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+</div>
+</div>
+
+ </td>
+ 
+ 
+ 
+ 
+ 
+ 
+ <td align="right" valign="top" class="bevel-right"></td>
+ </tr>
+</table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol"
+ 
+>
+
+ 
+
+
+
+
+
+
+
+ <style type="text/css">
+ .delcom { background: #e8e8e8 }
+ .commentcontent {
+ margin: 2em;
+ padding: 0px 10px;
+ width: 66em;
+ }
+ .artifactcomment {
+ border-top: 3px solid #c3d9ff;
+ }
+ #commentform {
+ border-top: 3px solid #c3d9ff;
+ }
+ </style>
+
+<div id="wikipage">
+<table>
+ <tr>
+ 
+ 
+ <td style="vertical-align:top; padding-left:5px">
+ 
+ <div id="wikiheader">
+ 
+ <span style="font-size:120%;font-weight:bold">heapdump13</span>
+ &nbsp;
+ <div> 
+ 
+ <i>Specification for the heap dump format for Go 1.3.</i>
+ 
+ 
+ 
+ <div id="wikiauthor" style="float:right">
+ Updated <span title="Mon Oct  6 16:33:03 2014">
+ Oct 6, 2014</span>
+ 
+ by 
+
+ <a class="userlink"
+ href="https://code.google.com/u/khr@golang.org/">khr@golang.org</a
+>
+ 
+ </div>
+ </div>
+ </div>
+ 
+ <div id="wikicontent">
+ <div class="vt" id="wikimaincol">
+ <p>Heap dump format for other versions: </p><ul><li><a href="https://code.google.com/p/go-wiki/wiki/heapdump14">heapdump14</a> </li></ul><h1><a name="Introduction"></a>Introduction<a href="go13heapdump.html#Introduction" class="section_anchor"></a></h1><p>Go 1.3 added a runtime/debug.WriteHeapDump function that writes all objects in the heap plus additional info (roots, goroutines, finalizers, etc.) to a file.  The format of this file is specified here. </p><h1><a name="Details"></a>Details<a href="go13heapdump.html#Details" class="section_anchor"></a></h1><p>The file starts with the bytes of the string &quot;go1.3 heap dump\n&quot;. </p><p>The rest of the file is a sequence of records.  Records can be of several different kinds.  Records will contain the following primitives: <ul><li>uvarint - a 64-bit unsigned integer encoded as in encoding/binary.{Put,Read}Uvarint </li><li>string - a uvarint-encoded length followed by that many bytes of data </li><li>bool - a uvarint-encoded 0 for false or 1 for true </li><li>fieldlist - a description of the pointer-bearing portions of a memory region.  It consists of repeated pairs of uvarints encoding a field kind and a field offset, followed by and end-of-list marker.  The possible kinds are 1=Ptr, 2=String, 3=Slice, 4=Iface, and 5=Eface.  0=Eol is the end of list marker.  The end of list marker does not have a corresponding offset. </li></ul></p><p>Each record starts with a uvarint-encoded integer describing the type of the record: <ul><li>0 = EOF </li><li>1 = object </li><li>2 = otherroot </li><li>3 = type </li><li>4 = goroutine </li><li>5 = stack frame </li><li>6 = dump params </li><li>7 = registered finalizer </li><li>8 = itab </li><li>9 = OS thread </li><li>10 = mem stats </li><li>11 = queued finalizer </li><li>12 = data segment </li><li>13 = bss segment </li><li>14 = defer record </li><li>15 = panic record </li><li>16 = alloc/free profile record </li><li>17 = alloc stack trace sample </li></ul></p><p>The remaining fields of each record are type-dependent and are described below. </p><h1><a name="EOF"></a>EOF<a href="go13heapdump.html#EOF" class="section_anchor"></a></h1><p>An EOF record has no fields and must appear last. </p><h1><a name="object"></a>object<a href="go13heapdump.html#object" class="section_anchor"></a></h1><ul><li>uvarint: address of object </li><li>uvarint: address of type descriptor (or 0 if unknown) </li><li>uvarint: kind of object (0=regular 1=array 2=channel 127=conservatively scanned) </li><li>string: contents of object </li></ul><p>For array or channel kinds, the type must be nonzero. </p><p>The size of the contents string is the size of the containing sizeclass, not the size of the type itself.  As such, contents size may be somewhat bigger than the type size.  It may be a lot bigger for array and channel types.  For instance, an array with n elements will have a content size bigger than or equal to n times the type size. </p><h1><a name="otherroot"></a>otherroot<a href="go13heapdump.html#otherroot" class="section_anchor"></a></h1><ul><li>string: textual description of where this root came from </li><li>uvarint: root pointer </li></ul><h1><a name="type"></a>type<a href="go13heapdump.html#type" class="section_anchor"></a></h1><ul><li>uvarint: address of type descriptor </li><li>uvarint: size of an object of this type </li><li>string: name of type </li><li>bool: whether the data field of an interface containing a value of this type is a pointer </li><li>fieldlist: a list of the kinds and locations of pointer-containing fields in objects of this type </li></ul><h1><a name="goroutine_(G)"></a>goroutine (G)<a href="go13heapdump.html#goroutine_(G)" class="section_anchor"></a></h1><ul><li>uvarint: address of descriptor </li><li>uvarint: pointer to the top of stack (the currently running frame, a.k.a. depth 0) </li><li>uvarint: go routine ID </li><li>uvarint: the location of the go statement that created this goroutine </li><li>uvarint: status </li><li>bool: is a Go routine started by the system </li><li>bool: is a background Go routine </li><li>uvarint: approximate time the go routine last started waiting (nanoseconds since the Epoch) </li><li>string: textual reason why it is waiting </li><li>uvarint: context pointer of currently running frame </li><li>uvarint: address of os thread descriptor (M) </li><li>uvarint: top defer record </li><li>uvarint: top panic record </li></ul><p>Possible statuses: <ul><li>0 = idle </li><li>1 = runnable </li><li>3 = syscall </li><li>4 = waiting </li></ul></p><p>The wait fields must be present in all cases, but they only mean something if the status is &quot;waiting&quot;. </p><h1><a name="stack_frame"></a>stack frame<a href="go13heapdump.html#stack_frame" class="section_anchor"></a></h1><ul><li>uvarint: stack pointer (lowest address in frame) </li><li>uvarint: depth in stack (0 = top of stack) </li><li>uvarint: stack pointer of child frame (or 0 if none) </li><li>string: contents of stack frame </li><li>uvarint: entry pc for function </li><li>uvarint: current pc for function </li><li>uvarint: continuation pc for function (where function may resume, if anywhere) </li><li>string: function name </li><li>fieldlist: list of kind and offset of pointer-containing fields in this frame </li></ul><h1><a name="dump_params"></a>dump params<a href="go13heapdump.html#dump_params" class="section_anchor"></a></h1><ul><li>bool: big endian </li><li>uvarint: pointer size in bytes </li><li>uvarint: channel header size in bytes </li><li>uvarint: starting address of heap </li><li>uvarint: ending address of heap </li><li>uvarint: thechar = architecture specifier </li><li>string: GOEXPERIMENT environment variable value </li><li>uvarint: runtime.ncpu </li></ul><h1><a name="finalizer"></a>finalizer<a href="go13heapdump.html#finalizer" class="section_anchor"></a></h1><ul><li>uvarint: address of object that has a finalizer </li><li>uvarint: pointer to FuncVal describing the finalizer </li><li>uvarint: PC of finalizer entry point </li><li>uvarint: type of finalizer argument </li><li>uvarint: type of object </li></ul><p>This finalizer has been registered with the runtime system, but the object to which it refers was either reachable as of the most recent GC or allocated since the most recent GC. </p><h1><a name="itab"></a>itab<a href="go13heapdump.html#itab" class="section_anchor"></a></h1><ul><li>uvarint: Itab address </li><li>bool: whether the data field of an Iface with this itab is a pointer </li></ul><h1><a name="osthread_(M)"></a>osthread (M)<a href="go13heapdump.html#osthread_(M)" class="section_anchor"></a></h1><ul><li>uvarint: address of this os thread descriptor </li><li>uvarint: Go internal id of thread </li><li>uvarint: os&#x27;s id for thread </li></ul><h1><a name="memstats"></a>memstats<a href="go13heapdump.html#memstats" class="section_anchor"></a></h1><p>Dumps the first 26 fields of <a href="http://golang.org/pkg/runtime/#MemStats" rel="nofollow">MemStats</a>.  All fields are dumped with a uvarint except the 25th which is dumped with 256 uvarints. </p><h1><a name="queuedfinalizer"></a>queuedfinalizer<a href="go13heapdump.html#queuedfinalizer" class="section_anchor"></a></h1><ul><li>uvarint: address of object that has a finalizer </li><li>uvarint: pointer to FuncVal describing the finalizer </li><li>uvarint: PC of finalizer entry point </li><li>uvarint: type of finalizer argument </li><li>uvarint: type of object </li></ul><p>This finalizer is ready to run - the object to which it refers is unreachable.  The runtime system just hasn&#x27;t gotten around to running it yet. </p><h1><a name="data"></a>data<a href="go13heapdump.html#data" class="section_anchor"></a></h1><ul><li>uvarint: address of the start of the data segment </li><li>string: contents of the data segment </li><li>fieldlist: kind and offset of pointer-containing fields in the data segment. </li></ul><h1><a name="bss"></a>bss<a href="go13heapdump.html#bss" class="section_anchor"></a></h1><p>Same format as data, but for the bss segment. </p><h1><a name="defer"></a>defer<a href="go13heapdump.html#defer" class="section_anchor"></a></h1><ul><li>uvarint: defer record address </li><li>uvarint: containing goroutine </li><li>uvarint: argp </li><li>uvarint: pc </li><li>uvarint: FuncVal of defer </li><li>uvarint: PC of defer entry point </li><li>uvarint: link to next defer record </li></ul><h1><a name="panic"></a>panic<a href="go13heapdump.html#panic" class="section_anchor"></a></h1><ul><li>uvarint: panic record address </li><li>uvarint: containing goroutine </li><li>uvarint: type ptr of panic arg eface </li><li>uvarint: data field of panic arg eface </li><li>uvarint: ptr to defer record that&#x27;s currently running </li><li>uvarint: link to next panic record </li></ul><h1><a name="alloc/free_profile_record"></a>alloc/free profile record<a href="go13heapdump.html#alloc/free_profile_record" class="section_anchor"></a></h1><ul><li>uvarint: record identifier </li><li>uvarint: size of allocated object </li><li>uvarint: number of stack frames.  For each frame: </li><li>- string: function name </li><li>- string: file name </li><li>- uvarint: line number </li><li>uvarint: number of allocations </li><li>uvarint: number of frees </li></ul><h1><a name="alloc_sample_record"></a>alloc sample record<a href="go13heapdump.html#alloc_sample_record" class="section_anchor"></a></h1><ul><li>uvarint: address of object </li><li>uvarint: alloc/free profile record identifier </li></ul>
+ </div>
+ </div>
+ </td><tr>
+</table>
+ </div>
+
+
+ 
+ 
+ 
+ <form name="delcom" action="https://code.google.com/p/go-wiki/w/delComment.do" method="POST">
+ <input type="hidden" name="sequence_num" value="" >
+ <input type="hidden" name="create_time" value="" >
+ <input type="hidden" name="mode" value="" >
+ <input type="hidden" name="pagename" value="heapdump13" >
+ <input type="hidden" name="token" value="" >
+ </form>
+
+
+ <script src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/prettify/prettify.js"></script>
+ <script type="text/javascript">
+ prettyPrint();
+ </script>
+
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/dit_scripts.js"></script>
+
+
+
+  
+ 
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_core.js"></script>
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_dwiki.js"></script>
+ 
+ 
+ 
+ 
+</div> 
+
+<div id="footer" dir="ltr">
+ <div class="text">
+ <a href="https://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="https://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+
+ 
+ 
+
+
+ 
+ </body>
+</html>
+
+

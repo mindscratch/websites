@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/hash/adler32/adler32.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/hash/adler32/adler32.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package adler32 implements the Adler-32 checksum.</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">//</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// It is defined in RFC 1950:</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">//	Adler-32 is composed of two sums accumulated per byte: s1 is</span>
+<span id="L9" class="ln">     9</span>	<span class="comment">//	the sum of all bytes, s2 is the sum of all s1 values. Both sums</span>
+<span id="L10" class="ln">    10</span>	<span class="comment">//	are done modulo 65521. s1 is initialized to 1, s2 to zero.  The</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">//	Adler-32 checksum is stored as s2*65536 + s1 in most-</span>
+<span id="L12" class="ln">    12</span>	<span class="comment">//	significant-byte first (network) order.</span>
+<span id="L13" class="ln">    13</span>	package adler32
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	import &#34;hash&#34;
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	const (
+<span id="L18" class="ln">    18</span>		<span class="comment">// mod is the largest prime that is less than 65536.</span>
+<span id="L19" class="ln">    19</span>		mod = 65521
+<span id="L20" class="ln">    20</span>		<span class="comment">// nmax is the largest n such that</span>
+<span id="L21" class="ln">    21</span>		<span class="comment">// 255 * n * (n+1) / 2 + (n+1) * (mod-1) &lt;= 2^32-1.</span>
+<span id="L22" class="ln">    22</span>		<span class="comment">// It is mentioned in RFC 1950 (search for &#34;5552&#34;).</span>
+<span id="L23" class="ln">    23</span>		nmax = 5552
+<span id="L24" class="ln">    24</span>	)
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	<span class="comment">// The size of an Adler-32 checksum in bytes.</span>
+<span id="L27" class="ln">    27</span>	const Size = 4
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	<span class="comment">// digest represents the partial evaluation of a checksum.</span>
+<span id="L30" class="ln">    30</span>	<span class="comment">// The low 16 bits are s1, the high 16 bits are s2.</span>
+<span id="L31" class="ln">    31</span>	type digest uint32
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>	func (d *digest) Reset() { *d = 1 }
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>	<span class="comment">// New returns a new hash.Hash32 computing the Adler-32 checksum.</span>
+<span id="L36" class="ln">    36</span>	func New() hash.Hash32 {
+<span id="L37" class="ln">    37</span>		d := new(digest)
+<span id="L38" class="ln">    38</span>		d.Reset()
+<span id="L39" class="ln">    39</span>		return d
+<span id="L40" class="ln">    40</span>	}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	func (d *digest) Size() int { return Size }
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>	func (d *digest) BlockSize() int { return 1 }
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	<span class="comment">// Add p to the running checksum d.</span>
+<span id="L47" class="ln">    47</span>	func update(d digest, p []byte) digest {
+<span id="L48" class="ln">    48</span>		s1, s2 := uint32(d&amp;0xffff), uint32(d&gt;&gt;16)
+<span id="L49" class="ln">    49</span>		for len(p) &gt; 0 {
+<span id="L50" class="ln">    50</span>			var q []byte
+<span id="L51" class="ln">    51</span>			if len(p) &gt; nmax {
+<span id="L52" class="ln">    52</span>				p, q = p[:nmax], p[nmax:]
+<span id="L53" class="ln">    53</span>			}
+<span id="L54" class="ln">    54</span>			for _, x := range p {
+<span id="L55" class="ln">    55</span>				s1 += uint32(x)
+<span id="L56" class="ln">    56</span>				s2 += s1
+<span id="L57" class="ln">    57</span>			}
+<span id="L58" class="ln">    58</span>			s1 %= mod
+<span id="L59" class="ln">    59</span>			s2 %= mod
+<span id="L60" class="ln">    60</span>			p = q
+<span id="L61" class="ln">    61</span>		}
+<span id="L62" class="ln">    62</span>		return digest(s2&lt;&lt;16 | s1)
+<span id="L63" class="ln">    63</span>	}
+<span id="L64" class="ln">    64</span>	
+<span id="L65" class="ln">    65</span>	func (d *digest) Write(p []byte) (nn int, err error) {
+<span id="L66" class="ln">    66</span>		*d = update(*d, p)
+<span id="L67" class="ln">    67</span>		return len(p), nil
+<span id="L68" class="ln">    68</span>	}
+<span id="L69" class="ln">    69</span>	
+<span id="L70" class="ln">    70</span>	func (d *digest) Sum32() uint32 { return uint32(*d) }
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	func (d *digest) Sum(in []byte) []byte {
+<span id="L73" class="ln">    73</span>		s := uint32(*d)
+<span id="L74" class="ln">    74</span>		return append(in, byte(s&gt;&gt;24), byte(s&gt;&gt;16), byte(s&gt;&gt;8), byte(s))
+<span id="L75" class="ln">    75</span>	}
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	<span class="comment">// Checksum returns the Adler-32 checksum of data.</span>
+<span id="L78" class="ln">    78</span>	func Checksum(data []byte) uint32 { return uint32(update(1, data)) }
+<span id="L79" class="ln">    79</span>	
+</pre><p><a href="adler32.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

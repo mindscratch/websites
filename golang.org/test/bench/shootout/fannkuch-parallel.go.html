@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>test/bench/shootout/fannkuch-parallel.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file test/bench/shootout/fannkuch-parallel.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">/*
+<span id="L2" class="ln">     2</span>	Redistribution and use in source and binary forms, with or without
+<span id="L3" class="ln">     3</span>	modification, are permitted provided that the following conditions are met:
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	    * Redistributions of source code must retain the above copyright
+<span id="L6" class="ln">     6</span>	    notice, this list of conditions and the following disclaimer.
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	    * Redistributions in binary form must reproduce the above copyright
+<span id="L9" class="ln">     9</span>	    notice, this list of conditions and the following disclaimer in the
+<span id="L10" class="ln">    10</span>	    documentation and/or other materials provided with the distribution.
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	    * Neither the name of &#34;The Computer Language Benchmarks Game&#34; nor the
+<span id="L13" class="ln">    13</span>	    name of &#34;The Computer Language Shootout Benchmarks&#34; nor the names of
+<span id="L14" class="ln">    14</span>	    its contributors may be used to endorse or promote products derived
+<span id="L15" class="ln">    15</span>	    from this software without specific prior written permission.
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &#34;AS IS&#34;
+<span id="L18" class="ln">    18</span>	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+<span id="L19" class="ln">    19</span>	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+<span id="L20" class="ln">    20</span>	ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+<span id="L21" class="ln">    21</span>	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+<span id="L22" class="ln">    22</span>	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+<span id="L23" class="ln">    23</span>	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+<span id="L24" class="ln">    24</span>	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+<span id="L25" class="ln">    25</span>	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+<span id="L26" class="ln">    26</span>	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+<span id="L27" class="ln">    27</span>	POSSIBILITY OF SUCH DAMAGE.
+<span id="L28" class="ln">    28</span>	*/</span>
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	<span class="comment">/*
+<span id="L31" class="ln">    31</span>	 * The Computer Language Benchmarks Game
+<span id="L32" class="ln">    32</span>	 * http://shootout.alioth.debian.org/
+<span id="L33" class="ln">    33</span>	 *
+<span id="L34" class="ln">    34</span>	 * contributed by The Go Authors.
+<span id="L35" class="ln">    35</span>	 * Based on fannkuch.scala by Rex Kerr
+<span id="L36" class="ln">    36</span>	 */</span>
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	package main
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>	import (
+<span id="L41" class="ln">    41</span>		&#34;flag&#34;
+<span id="L42" class="ln">    42</span>		&#34;fmt&#34;
+<span id="L43" class="ln">    43</span>		&#34;runtime&#34;
+<span id="L44" class="ln">    44</span>	)
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	var n = flag.Int(&#34;n&#34;, 7, &#34;count&#34;)
+<span id="L47" class="ln">    47</span>	var nCPU = flag.Int(&#34;ncpu&#34;, 4, &#34;number of cpus&#34;)
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	type Job struct {
+<span id="L50" class="ln">    50</span>		start []int
+<span id="L51" class="ln">    51</span>		n     int
+<span id="L52" class="ln">    52</span>	}
+<span id="L53" class="ln">    53</span>	
+<span id="L54" class="ln">    54</span>	type Found struct {
+<span id="L55" class="ln">    55</span>		who *Kucher
+<span id="L56" class="ln">    56</span>		k   int
+<span id="L57" class="ln">    57</span>	}
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	type Kucher struct {
+<span id="L60" class="ln">    60</span>		perm []int
+<span id="L61" class="ln">    61</span>		temp []int
+<span id="L62" class="ln">    62</span>		flip []int
+<span id="L63" class="ln">    63</span>		in   chan Job
+<span id="L64" class="ln">    64</span>	}
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	func NewKucher(length int) *Kucher {
+<span id="L67" class="ln">    67</span>		return &amp;Kucher{
+<span id="L68" class="ln">    68</span>			perm: make([]int, length),
+<span id="L69" class="ln">    69</span>			temp: make([]int, length),
+<span id="L70" class="ln">    70</span>			flip: make([]int, length),
+<span id="L71" class="ln">    71</span>			in:   make(chan Job),
+<span id="L72" class="ln">    72</span>		}
+<span id="L73" class="ln">    73</span>	}
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>	func (k *Kucher) permute(n int) bool {
+<span id="L76" class="ln">    76</span>		i := 0
+<span id="L77" class="ln">    77</span>		for ; i &lt; n-1 &amp;&amp; k.flip[i] == 0; i++ {
+<span id="L78" class="ln">    78</span>			t := k.perm[0]
+<span id="L79" class="ln">    79</span>			j := 0
+<span id="L80" class="ln">    80</span>			for ; j &lt;= i; j++ {
+<span id="L81" class="ln">    81</span>				k.perm[j] = k.perm[j+1]
+<span id="L82" class="ln">    82</span>			}
+<span id="L83" class="ln">    83</span>			k.perm[j] = t
+<span id="L84" class="ln">    84</span>		}
+<span id="L85" class="ln">    85</span>		k.flip[i]--
+<span id="L86" class="ln">    86</span>		for i &gt; 0 {
+<span id="L87" class="ln">    87</span>			i--
+<span id="L88" class="ln">    88</span>			k.flip[i] = i
+<span id="L89" class="ln">    89</span>		}
+<span id="L90" class="ln">    90</span>		return k.flip[n-1] &gt;= 0
+<span id="L91" class="ln">    91</span>	}
+<span id="L92" class="ln">    92</span>	
+<span id="L93" class="ln">    93</span>	func (k *Kucher) count() int {
+<span id="L94" class="ln">    94</span>		K := 0
+<span id="L95" class="ln">    95</span>		copy(k.temp, k.perm)
+<span id="L96" class="ln">    96</span>		for k.temp[0] != 0 {
+<span id="L97" class="ln">    97</span>			m := k.temp[0]
+<span id="L98" class="ln">    98</span>			for i := 0; i &lt; m; i++ {
+<span id="L99" class="ln">    99</span>				k.temp[i], k.temp[m] = k.temp[m], k.temp[i]
+<span id="L100" class="ln">   100</span>				m--
+<span id="L101" class="ln">   101</span>			}
+<span id="L102" class="ln">   102</span>			K++
+<span id="L103" class="ln">   103</span>		}
+<span id="L104" class="ln">   104</span>		return K
+<span id="L105" class="ln">   105</span>	}
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>	func (k *Kucher) Run(foreman chan&lt;- Found) {
+<span id="L108" class="ln">   108</span>		for job := range k.in {
+<span id="L109" class="ln">   109</span>			verbose := 30
+<span id="L110" class="ln">   110</span>			copy(k.perm, job.start)
+<span id="L111" class="ln">   111</span>			for i, v := range k.perm {
+<span id="L112" class="ln">   112</span>				if v != i {
+<span id="L113" class="ln">   113</span>					verbose = 0
+<span id="L114" class="ln">   114</span>				}
+<span id="L115" class="ln">   115</span>				k.flip[i] = i
+<span id="L116" class="ln">   116</span>			}
+<span id="L117" class="ln">   117</span>			K := 0
+<span id="L118" class="ln">   118</span>			for {
+<span id="L119" class="ln">   119</span>				if verbose &gt; 0 {
+<span id="L120" class="ln">   120</span>					for _, p := range k.perm {
+<span id="L121" class="ln">   121</span>						fmt.Print(p + 1)
+<span id="L122" class="ln">   122</span>					}
+<span id="L123" class="ln">   123</span>					fmt.Println()
+<span id="L124" class="ln">   124</span>					verbose--
+<span id="L125" class="ln">   125</span>				}
+<span id="L126" class="ln">   126</span>				count := k.count()
+<span id="L127" class="ln">   127</span>				if count &gt; K {
+<span id="L128" class="ln">   128</span>					K = count
+<span id="L129" class="ln">   129</span>				}
+<span id="L130" class="ln">   130</span>				if !k.permute(job.n) {
+<span id="L131" class="ln">   131</span>					break
+<span id="L132" class="ln">   132</span>				}
+<span id="L133" class="ln">   133</span>			}
+<span id="L134" class="ln">   134</span>			foreman &lt;- Found{k, K}
+<span id="L135" class="ln">   135</span>		}
+<span id="L136" class="ln">   136</span>	}
+<span id="L137" class="ln">   137</span>	
+<span id="L138" class="ln">   138</span>	type Fanner struct {
+<span id="L139" class="ln">   139</span>		jobind   int
+<span id="L140" class="ln">   140</span>		jobsdone int
+<span id="L141" class="ln">   141</span>		k        int
+<span id="L142" class="ln">   142</span>		jobs     []Job
+<span id="L143" class="ln">   143</span>		workers  []*Kucher
+<span id="L144" class="ln">   144</span>		in       chan Found
+<span id="L145" class="ln">   145</span>		result   chan int
+<span id="L146" class="ln">   146</span>	}
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	func NewFanner(jobs []Job, workers []*Kucher) *Fanner {
+<span id="L149" class="ln">   149</span>		return &amp;Fanner{
+<span id="L150" class="ln">   150</span>			jobs: jobs, workers: workers,
+<span id="L151" class="ln">   151</span>			in:     make(chan Found),
+<span id="L152" class="ln">   152</span>			result: make(chan int),
+<span id="L153" class="ln">   153</span>		}
+<span id="L154" class="ln">   154</span>	}
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>	func (f *Fanner) Run(N int) {
+<span id="L157" class="ln">   157</span>		for msg := range f.in {
+<span id="L158" class="ln">   158</span>			if msg.k &gt; f.k {
+<span id="L159" class="ln">   159</span>				f.k = msg.k
+<span id="L160" class="ln">   160</span>			}
+<span id="L161" class="ln">   161</span>			if msg.k &gt;= 0 {
+<span id="L162" class="ln">   162</span>				f.jobsdone++
+<span id="L163" class="ln">   163</span>			}
+<span id="L164" class="ln">   164</span>			if f.jobind &lt; len(f.jobs) {
+<span id="L165" class="ln">   165</span>				msg.who.in &lt;- f.jobs[f.jobind]
+<span id="L166" class="ln">   166</span>				f.jobind++
+<span id="L167" class="ln">   167</span>			} else if f.jobsdone == len(f.jobs) {
+<span id="L168" class="ln">   168</span>				f.result &lt;- f.k
+<span id="L169" class="ln">   169</span>				return
+<span id="L170" class="ln">   170</span>			}
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>	}
+<span id="L173" class="ln">   173</span>	
+<span id="L174" class="ln">   174</span>	func swapped(a []int, i, j int) []int {
+<span id="L175" class="ln">   175</span>		b := make([]int, len(a))
+<span id="L176" class="ln">   176</span>		copy(b, a)
+<span id="L177" class="ln">   177</span>		b[i], b[j] = a[j], a[i]
+<span id="L178" class="ln">   178</span>		return b
+<span id="L179" class="ln">   179</span>	}
+<span id="L180" class="ln">   180</span>	
+<span id="L181" class="ln">   181</span>	func main() {
+<span id="L182" class="ln">   182</span>		flag.Parse()
+<span id="L183" class="ln">   183</span>		runtime.GOMAXPROCS(*nCPU)
+<span id="L184" class="ln">   184</span>		N := *n
+<span id="L185" class="ln">   185</span>		base := make([]int, N)
+<span id="L186" class="ln">   186</span>		for i := range base {
+<span id="L187" class="ln">   187</span>			base[i] = i
+<span id="L188" class="ln">   188</span>		}
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>		njobs := 1
+<span id="L191" class="ln">   191</span>		if N &gt; 8 {
+<span id="L192" class="ln">   192</span>			njobs += (N*(N-1))/2 - 28 <span class="comment">// njobs = 1 + sum(8..N-1) = 1 + sum(1..N-1) - sum(1..7)</span>
+<span id="L193" class="ln">   193</span>		}
+<span id="L194" class="ln">   194</span>		jobs := make([]Job, njobs)
+<span id="L195" class="ln">   195</span>		jobsind := 0
+<span id="L196" class="ln">   196</span>	
+<span id="L197" class="ln">   197</span>		firstN := N
+<span id="L198" class="ln">   198</span>		if firstN &gt; 8 {
+<span id="L199" class="ln">   199</span>			firstN = 8
+<span id="L200" class="ln">   200</span>		}
+<span id="L201" class="ln">   201</span>		jobs[jobsind] = Job{base, firstN}
+<span id="L202" class="ln">   202</span>		jobsind++
+<span id="L203" class="ln">   203</span>		for i := N - 1; i &gt;= 8; i-- {
+<span id="L204" class="ln">   204</span>			for j := 0; j &lt; i; j++ {
+<span id="L205" class="ln">   205</span>				jobs[jobsind] = Job{swapped(base, i, j), i}
+<span id="L206" class="ln">   206</span>				jobsind++
+<span id="L207" class="ln">   207</span>			}
+<span id="L208" class="ln">   208</span>		}
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>		nworkers := *nCPU
+<span id="L211" class="ln">   211</span>		if njobs &lt; nworkers {
+<span id="L212" class="ln">   212</span>			nworkers = njobs
+<span id="L213" class="ln">   213</span>		}
+<span id="L214" class="ln">   214</span>		workers := make([]*Kucher, nworkers)
+<span id="L215" class="ln">   215</span>		foreman := NewFanner(jobs, workers)
+<span id="L216" class="ln">   216</span>		go foreman.Run(N)
+<span id="L217" class="ln">   217</span>		for i := range workers {
+<span id="L218" class="ln">   218</span>			k := NewKucher(N)
+<span id="L219" class="ln">   219</span>			workers[i] = k
+<span id="L220" class="ln">   220</span>			go k.Run(foreman.in)
+<span id="L221" class="ln">   221</span>			foreman.in &lt;- Found{k, -1}
+<span id="L222" class="ln">   222</span>		}
+<span id="L223" class="ln">   223</span>		fmt.Printf(&#34;Pfannkuchen(%d) = %d\n&#34;, N, &lt;-foreman.result)
+<span id="L224" class="ln">   224</span>	}
+<span id="L225" class="ln">   225</span>	
+</pre><p><a href="fannkuch-parallel.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

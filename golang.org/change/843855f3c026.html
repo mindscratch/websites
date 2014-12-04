@@ -1,0 +1,738 @@
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link rel="icon" type="image/vnd.microsoft.icon" href="https://ssl.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"loggedInUserEmail": null, "projectName": "go", "domainName": null, "assetHostPath": "https://ssl.gstatic.com/codesite/ph", "relativeBaseUrl": "", "projectHomeUrl": "/p/go", "token": null, "assetVersionPath": "https://ssl.gstatic.com/codesite/ph/1729405847801014513", "profileUrl": null};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ _gaq.push(
+ ['projectTracker._setAccount', 'UA-11222381-1'],
+ ['projectTracker._trackPageview']);
+ 
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+ 
+ </script>
+ 
+ 
+ <title>843855f3c026 - 
+ go -
+ 
+ 
+ The Go Programming Language - Google Project Hosting
+ </title>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/ph_detail.css" >
+ 
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_sb.css" >
+ 
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ .wrap {
+ white-space: pre-wrap;
+ white-space: -moz-pre-wrap;
+ white-space: -pre-wrap;
+ white-space: -o-pre-wrap;
+ }
+ .issuecomment { padding:.5em}
+ .list {
+ background-color:#e5ecf9;
+ }
+ .cursor_on {
+ background-color: #c3d9ff;
+ }
+ .cursor_off {
+ background-color: none;
+ }
+ .af td img {
+ cursor: pointer;
+ }
+
+ 
+ </style>
+</head>
+<body class="t4">
+<script type="text/javascript">
+ window.___gcfg = {lang: 'en'};
+ (function() 
+ {var po = document.createElement("script");
+ po.type = "text/javascript"; po.async = true;po.src = "https://apis.google.com/js/plusone.js";
+ var s = document.getElementsByTagName("script")[0];
+ s.parentNode.insertBefore(po, s);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ 
+ <a href="843855f3c026.html#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>&#9660;</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fsource%2Fdetail%3Fr%3D843855f3c026&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fsource%2Fdetail%3Fr%3D843855f3c026" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+ <table style="padding:0px; margin: 0px 0px 10px 0px; width:100%" cellpadding="0" cellspacing="0"
+ itemscope itemtype="http://schema.org/CreativeWork">
+ <tr style="height: 58px;">
+ 
+ 
+ 
+ <td id="plogo">
+ <link itemprop="url" href="https://code.google.com/p/go">
+ <a href="https://code.google.com/p/go/">
+ 
+ 
+ <img src="https://code.google.com/p/go/logo?cct=1413989036"
+ alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em">
+ 
+ <div id="pname">
+ <a href="https://code.google.com/p/go/"><span itemprop="name">go</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link"
+ href="https://code.google.com/p/go/"><span itemprop="description">The Go Programming Language</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space:nowrap;text-align:right; vertical-align:bottom;">
+ 
+ <form action="https://code.google.com/hosting/search">
+ <input size="30" name="q" value="" type="text">
+ 
+ <input type="submit" name="projectsearch" value="Search projects" >
+ </form>
+ 
+ </tr>
+ </table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="https://code.google.com/p/go/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Downloads?tm=2" class="tab ">Downloads</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/WikiIndex?tm=6" class="tab ">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="../issue.1.html"
+ class="tab ">Issues</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Source?tm=4"
+ class="tab active">Source</a>
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/codesearch" class="tab">Code Search</a>
+ 
+ 
+ 
+ 
+ 
+ <div class=gtbc></div>
+</div>
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" class="st">
+ <tr>
+ 
+ 
+ 
+ 
+ 
+ 
+ <td class="subt">
+ <div class="st3">
+ <div class="isf">
+ 
+ <form action="https://code.google.com/p/go/source/list" style="display: inline">
+ 
+ Repository:
+ <select name="repo" id="repo" style="font-size: 92%" onchange="submit()">
+ <option value="default">default</option><option value="wiki">wiki</option><option value="example">example</option><option value="empty">empty</option><option value="crypto">crypto</option><option value="net">net</option><option value="codereview">codereview</option><option value="image">image</option><option value="talks">talks</option><option value="blog">blog</option><option value="exp">exp</option><option value="text">text</option><option value="tools">tools</option><option value="benchmarks">benchmarks</option><option value="mobile">mobile</option><option value="sys">sys</option>
+ </select>
+ </form>
+ 
+ 
+
+
+ <span class="inst1"><a href="https://code.google.com/p/go/source/checkout">Checkout</a></span> &nbsp;
+ <span class="inst2"><a href="https://code.google.com/p/go/source/browse/">Browse</a></span> &nbsp;
+ <span class="inst3"><a href="https://code.google.com/p/go/source/list">Changes</a></span> &nbsp;
+ <span class="inst4"><a href="https://code.google.com/p/go/source/clones">Clones</a></span> &nbsp; 
+ 
+ 
+ </form>
+ <script type="text/javascript">
+ 
+ function codesearchQuery(form) {
+ var query = document.getElementById('q').value;
+ if (query) { form.action += '%20' + query; }
+ }
+ </script>
+ </div>
+</div>
+
+ </td>
+ 
+ 
+ 
+ <td align="right" valign="top" class="bevel-right"></td>
+ </tr>
+</table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol"
+ 
+>
+
+ 
+
+
+
+
+</style>
+<div id="colcontrol">
+<div class="list" style="border: 1px solid white; margin-bottom:0">
+ <div class="pagination">
+ <table cellpadding="0" cellspacing="0" class="flipper">
+ <tbody>
+ <tr>
+ 
+ <td>
+ <ul>
+ 
+ <li><a href="https://code.google.com/p/go/source/detail?name=843855f3c026&amp;r=ce9962e29e4b3f5f8b08fec9a2dc8b1bfbdef1f0" title="Previous">&lsaquo;ce9962e29e4b</a></li>
+ 
+ </ul>
+ </td>
+ 
+ <td><b>843855f3c026</b></td>
+ 
+ <td>
+ <ul>
+ 
+ <li><a href="https://code.google.com/p/go/source/detail?name=843855f3c026&amp;r=b124a0dd4408f2567973495c2ab3d9b5d6bfd64c" title="Next">b124a0dd4408&rsaquo;</a></li>
+ 
+ </ul>
+ </td>
+ 
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ <div style="float:left;">
+ 
+ <span style="vertical-align: top"><b>Revision:</b>
+ <b style="font-family: monospace; font-size: 120%">843855f3c026</b>
+ </span>
+ </div>
+ <div style="clear:both"></div>
+</div>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0; padding:0 5px 0 5px" id="meta-container">
+ <tr>
+ <td id="issuemeta" rowspan="1000" style="padding:.5em"> 
+ <div id="meta-float">
+ <table cellpadding="0" cellspacing="0">
+ <tr><th align="left">Author:&nbsp;</th><td width="100%">
+ Russ Cox &lt;r...@golang.org&gt;
+ </td></tr>
+ <tr><th align="left">Date:&nbsp;</th><td>
+ <span class="date" style="white-space:nowrap" title="Fri Apr  8 09:26:51 2011">Apr 8, 2011</span>
+ </td></tr>
+ 
+ 
+ 
+ <tr><th align="left">Branch:&nbsp;</th><td width="100%">
+ <a href="https://code.google.com/p/go/source/list?name=default">default</a>
+ </td></tr>
+ 
+ 
+ 
+ </table>
+ </div>
+ </div>&nbsp;
+ </td>
+ <td class="vt" width="100%" style="padding:.5em">
+
+
+ 
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+ 
+
+
+<h4 style="margin-top:0">Log message</h4>
+<pre class="wrap" style="margin-left:1em">reflect: new Type and Value definitions
+
+Type is now an interface that implements all the possible type methods.
+Instead of a type switch on a reflect.Type t, switch on t.Kind().
+If a method is invoked on the wrong kind of type (for example,
+calling t.Field(0) when t.Kind() != Struct), the call panics.
+
+There is one method renaming: t.(*ChanType).Dir() is now t.ChanDir().
+
+Value is now a struct value that implements all the possible value methods.
+Instead of a type switch on a reflect.Value v, switch on v.Kind().
+If a method is invoked on the wrong kind of value (for example,
+calling t.Recv() when t.Kind() != Chan), the call panics.
+
+Since Value is now a struct, not an interface, its zero value
+cannot be compared to nil.  Instead of v != nil, use v.IsValid().
+Instead of other uses of nil as a Value, use Value{}, the zero value.
+
+Many methods have been renamed, most due to signature conflicts:
+
+           OLD                          NEW
+
+    v.(*ArrayValue).Elem             v.Index
+    v.(*BoolValue).Get               v.Bool
+    v.(*BoolValue).Set               v.SetBool
+    v.(*ChanType).Dir                v.ChanDir
+    v.(*ChanValue).Get               v.Pointer
+    v.(*ComplexValue).Get            v.Complex
+    v.(*ComplexValue).Overflow       v.OverflowComplex
+    v.(*ComplexValue).Set            v.SetComplex
+    v.(*FloatValue).Get              v.Float
+    v.(*FloatValue).Overflow         v.OverflowFloat
+    v.(*FloatValue).Set              v.SetFloat
+    v.(*FuncValue).Get               v.Pointer
+    v.(*InterfaceValue).Get          v.InterfaceData
+    v.(*IntValue).Get                v.Int
+    v.(*IntValue).Overflow           v.OverflowInt
+    v.(*IntValue).Set                v.SetInt
+    v.(*MapValue).Elem               v.MapIndex
+    v.(*MapValue).Get                v.Pointer
+    v.(*MapValue).Keys               v.MapKeys
+    v.(*MapValue).SetElem            v.SetMapIndex
+    v.(*PtrValue).Get                v.Pointer
+    v.(*SliceValue).Elem             v.Index
+    v.(*SliceValue).Get              v.Pointer
+    v.(*StringValue).Get             v.String
+    v.(*StringValue).Set             v.SetString
+    v.(*UintValue).Get               v.Uint
+    v.(*UintValue).Overflow          v.OverflowUint
+    v.(*UintValue).Set               v.SetUint
+    v.(*UnsafePointerValue).Get      v.Pointer
+    v.(*UnsafePointerValue).Set      v.SetPointer
+
+Part of the motivation for this change is to enable a more
+efficient implementation of Value, one that does not allocate
+memory during most operations.  To reduce the size of the CL,
+this CL's implementation is a wrapper around the old API.
+Later CLs will make the implementation more efficient without
+changing the API.
+
+Other CLs to be submitted at the same time as this one
+add support for this change to gofix (4343047) and update
+the Go source tree (4353043).
+
+R=gri, iant, niemeyer, r, rog, gustavo, <a href="https://code.google.com/p/go/source/detail?r=2">r2</a>
+CC=golang-dev
+<a href="http://codereview.appspot.com/4281055" rel="nofollow">http://codereview.appspot.com/4281055</a></pre>
+
+ 
+ <div style="margin:2em 0 1em 0">
+ <h4 style="display:inline">Affected files</h4> &nbsp; &nbsp;
+ <a href="843855f3c026.html#" onclick="toggleAll(true)"><small>expand all</small></a> &nbsp;
+ <a href="843855f3c026.html#" onclick="toggleAll(false)"><small>collapse all</small></a>
+ </div>
+ 
+ <table cellspacing="0" style="padding:0 0 0 1em; margin:0; width:100%;"><tbody id="files">
+ 
+ <tr class="cursor_off af"><td onclick="toggleInlineDiff(this)"><img src="https://ssl.gstatic.com/codesite/ph/images/plus.gif" ></td
+ ><td>Modify</td
+ ><td style="white-space:nowrap"><a href="https://code.google.com/p/go/source/browse/src/pkg/reflect/all_test.go?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06">/src/pkg/reflect/all_test.go</a></td
+ ><td style="padding-left:2em; width:100%"><a
+ href="https://code.google.com/p/go/source/diff?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06&amp;format=side&amp;path=/src/pkg/reflect/all_test.go"
+ >diff</a></td
+ ></tr
+ ><tr style="display:none; color:#333"><td></td><td colspan="3"></td></tr
+ ><tr style="height: .25em;"><td></td><td colspan="3"></td></tr>
+ 
+ <tr class="cursor_off af"><td onclick="toggleInlineDiff(this)"><img src="https://ssl.gstatic.com/codesite/ph/images/plus.gif" ></td
+ ><td>Modify</td
+ ><td style="white-space:nowrap"><a href="https://code.google.com/p/go/source/browse/src/pkg/reflect/deepequal.go?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06">/src/pkg/reflect/deepequal.go</a></td
+ ><td style="padding-left:2em; width:100%"><a
+ href="https://code.google.com/p/go/source/diff?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06&amp;format=side&amp;path=/src/pkg/reflect/deepequal.go"
+ >diff</a></td
+ ></tr
+ ><tr style="display:none; color:#333"><td></td><td colspan="3"></td></tr
+ ><tr style="height: .25em;"><td></td><td colspan="3"></td></tr>
+ 
+ <tr class="cursor_off af"><td onclick="toggleInlineDiff(this)"><img src="https://ssl.gstatic.com/codesite/ph/images/plus.gif" ></td
+ ><td>Modify</td
+ ><td style="white-space:nowrap"><a href="https://code.google.com/p/go/source/browse/src/pkg/reflect/tostring_test.go?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06">/src/pkg/reflect/tostring_test.go</a></td
+ ><td style="padding-left:2em; width:100%"><a
+ href="https://code.google.com/p/go/source/diff?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06&amp;format=side&amp;path=/src/pkg/reflect/tostring_test.go"
+ >diff</a></td
+ ></tr
+ ><tr style="display:none; color:#333"><td></td><td colspan="3"></td></tr
+ ><tr style="height: .25em;"><td></td><td colspan="3"></td></tr>
+ 
+ <tr class="cursor_off af"><td onclick="toggleInlineDiff(this)"><img src="https://ssl.gstatic.com/codesite/ph/images/plus.gif" ></td
+ ><td>Modify</td
+ ><td style="white-space:nowrap"><a href="https://code.google.com/p/go/source/browse/src/pkg/reflect/type.go?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06">/src/pkg/reflect/type.go</a></td
+ ><td style="padding-left:2em; width:100%"><a
+ href="https://code.google.com/p/go/source/diff?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06&amp;format=side&amp;path=/src/pkg/reflect/type.go"
+ >diff</a></td
+ ></tr
+ ><tr style="display:none; color:#333"><td></td><td colspan="3"></td></tr
+ ><tr style="height: .25em;"><td></td><td colspan="3"></td></tr>
+ 
+ <tr class="cursor_off af"><td onclick="toggleInlineDiff(this)"><img src="https://ssl.gstatic.com/codesite/ph/images/plus.gif" ></td
+ ><td>Modify</td
+ ><td style="white-space:nowrap"><a href="https://code.google.com/p/go/source/browse/src/pkg/reflect/value.go?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06">/src/pkg/reflect/value.go</a></td
+ ><td style="padding-left:2em; width:100%"><a
+ href="https://code.google.com/p/go/source/diff?spec=svn843855f3c026483e940301fb88441046f12b8a06&amp;name=843855f3c026&amp;r=843855f3c026483e940301fb88441046f12b8a06&amp;format=side&amp;path=/src/pkg/reflect/value.go"
+ >diff</a></td
+ ></tr
+ ><tr style="display:none; color:#333"><td></td><td colspan="3"></td></tr
+ ><tr style="height: .25em;"><td></td><td colspan="3"></td></tr>
+ 
+ </tbody></table>
+ 
+
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/kibbles.js"></script>
+<script type="text/javascript">
+ var rows;
+ var selected;
+ function openSelectedFile(view) {
+ var cell_index = (view == 'browse') ? 2 : 3; // else diff
+ if (selected >= 0 && selected < rows.length) {
+ var cell = rows[selected].childNodes[cell_index];
+ var anchor = cell.childNodes[0];
+ if (anchor) {
+ window.location = anchor.getAttribute('href');
+ }
+ }
+ }
+ // updates the style on the stop and clears the style on the previous stop
+ function updateCursor(next, prev) {
+ selected = undefined;
+ if (prev) {
+ prev.element.className = 'cursor_off af';
+ }
+ if (next && next.element) {
+ next.element.className = 'cursor_on af';
+ selected = next.index;
+ }
+ }
+ function findCursorRows() {
+ var rows = [];
+ var table = document.getElementById('files'); 
+ for (var i = 0; i < table.childNodes.length; i++) {
+ var elem = table.childNodes[i]; 
+ var name = elem.tagName;
+ if (name && name == 'TR') {
+ if (elem.className.indexOf("cursor") >= 0) {
+ rows.push(elem);
+ }
+ }
+ }
+ return rows;
+ }
+ function onLoad() {
+ // setup skipper
+ kibbles.skipper.addStopListener(
+ kibbles.skipper.LISTENER_TYPE.PRE, updateCursor);
+ // Set the 'offset' option to return the middle of the client area
+ // an option can be a static value, or a callback
+ kibbles.skipper.setOption('padding_top', 50);
+ // Set the 'offset' option to return the middle of the client area
+ // an option can be a static value, or a callback
+ kibbles.skipper.setOption('padding_bottom', 50);
+ // register our stops with skipper
+ rows = findCursorRows();
+ for (var i = 0; i < rows.length; i++) {
+ var element = rows[i]; 
+ kibbles.skipper.append(element);
+ }
+ // Register our keys
+ kibbles.skipper.addFwdKey("j");
+ kibbles.skipper.addRevKey("k");
+ kibbles.keys.addKeyPressListener(
+ 'o', function() { openSelectedFile('diff'); });
+ }
+ onLoad();
+</script>
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/source_browse_jquery_v1_3_2.pack.js"></script>
+<script type="text/javascript">
+function _showUnidiff(pathname, el) {
+ var unidiffURL = '/p/go/source/diff' +
+ '?r=843855f3c026483e940301fb88441046f12b8a06&mode=frag&path=' + encodeURIComponent(pathname);
+ 
+ jQuery.get(unidiffURL, {},
+ function(html) {
+ el.innerHTML = html;
+ });
+}
+function expandOrCollapseDiff(el, expand) {
+ var pathCell = el.nextSibling.nextSibling.firstChild;
+ var pathname = pathCell.innerHTML;
+ var zippie = el.firstChild;
+ var detailRow = el.parentNode.nextSibling;
+ var unidiffCell = detailRow.firstChild.nextSibling;
+ if (expand) {
+ zippie.src = 'https://ssl.gstatic.com/codesite/ph/images/minus.gif';
+ detailRow.style.display = '';
+ if (unidiffCell.innerHTML == '') {
+ unidiffCell.innerHTML = '<i>Loading...</i>';
+ _showUnidiff(pathname, unidiffCell);
+ }
+ }
+ else {
+ zippie.src = 'https://ssl.gstatic.com/codesite/ph/images/plus.gif';
+ detailRow.style.display = 'none';
+ }
+}
+function toggleInlineDiff(el) {
+ var zippie = el.firstChild;
+ var expand = (zippie.src.indexOf('plus.gif') != -1);
+ expandOrCollapseDiff(el, expand);
+}
+function toggleAll(expand) {
+ var all_rows = document.getElementsByTagName('TR');
+ for (var i = 0; i < all_rows.length; ++i) {
+ var row = all_rows[i];
+ 
+ if (row.className.indexOf(' af') >= 0) {
+ expandOrCollapseDiff(row.firstChild, expand);
+ }
+ }
+}
+</script>
+</td>
+</tr>
+
+ <style type="text/css">
+ .deleted {
+ background-color: #eee;
+ }
+ .deleted .header {}
+ .cg_edit {
+ color: black;
+ float: right;
+ margin-right: .3em;
+ text-align: right;
+ font-size: 90%;
+ }
+ </style>
+ <script type="text/javascript">
+ var groupdel_url = '/p/go/source/comments/groupdel';
+ function elem(id) {
+ return document.getElementById(id);
+ }
+ function setStar(review_spec, starred) {
+ setStarImage('star_img', starred);
+ showAutoStarCheck(starred);
+ _CS_setStar(null,
+ {'item': 'go:' + review_spec,
+ 'starred': Number(starred), // Convert bool to 0 or 1
+ 'scope': 'reviews'});
+ return false;
+ }
+ function setStarImage(id, starred) {
+ elem(id).src = starred
+ ? 'https://ssl.gstatic.com/codesite/ph/images/star_on.gif'
+ : 'https://ssl.gstatic.com/codesite/ph/images/star_off.gif';
+ }
+ function showAutoStarCheck(starred) {
+ 
+ var auto_star_check = elem('auto_star_check');
+ if (auto_star_check) {
+ elem('auto_star_check').style.display = starred ? 'none' : 'block';
+ }
+ 
+ var star_check = elem('star_check');
+ if (star_check) {
+ star_check.checked = ! starred;
+ }
+ }
+ function setCommentDeleted(id, deleted) {
+ var data = {
+ 'r': 'svn843855f3c026483e940301fb88441046f12b8a06', // review spec
+ 'gr': id, // group id
+ 'b': deleted, // is the comment deleted.
+ 'token': ''
+ };
+ 
+ jQuery.post(groupdel_url, data, handleDeleted, 'json');
+ return false;
+ }
+ function handleDeleted(data) {
+ var base_id = 'cg_' + data.gr;
+ var delete_id = base_id + '_delete';
+ var undelete_id = base_id + '_undelete';
+ var is_deleted = (data.b == 1 || data.b == '1');
+ elem(delete_id).style.display = is_deleted ? 'none' : 'block';
+ elem(undelete_id).style.display = is_deleted ? 'block' : 'none';
+ if (is_deleted) {
+ addClass(base_id, 'deleted');
+ } else {
+ removeClass(base_id, 'deleted');
+ }
+ 
+ }
+ function addClass(id, classname) {
+ var classes = elem(id).className.split(' ');
+ for (var i = 0; i < classes.length; i++) {
+ if (classes[i] == classname) {
+ return;
+ }
+ }
+ elem(id).className = elem(id).className + ' ' + classname;
+ }
+ function removeClass(id, classname) {
+ var classes = elem(id).className.split(' ');
+ for (var i = 0; i < classes.length; i++) {
+ if (classes[i] == classname) {
+ classes.splice(i, 1);
+ }
+ }
+ elem(id).className = classes.join(' ');
+ }
+ </script>
+
+
+</table>
+
+
+
+
+
+<br>
+
+
+
+
+
+
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/dit_scripts.js"></script>
+
+<script type="text/javascript">
+ _floatMetadata();
+</script>
+ 
+ 
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_core.js"></script>
+ 
+ 
+ 
+ 
+</div> 
+
+<div id="footer" dir="ltr">
+ <div class="text">
+ <a href="https://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="https://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+
+ 
+ 
+
+
+ 
+ </body>
+</html>
+

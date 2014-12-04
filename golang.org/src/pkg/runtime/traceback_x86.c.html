@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/traceback_x86.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/traceback_x86.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// +build amd64 amd64p32 386
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	#include &#34;runtime.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;malloc.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;funcdata.h&#34;
+<span id="L11" class="ln">    11</span>	#ifdef GOOS_windows
+<span id="L12" class="ln">    12</span>	#include &#34;defs_GOOS_GOARCH.h&#34;
+<span id="L13" class="ln">    13</span>	#endif
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	void runtime·sigpanic(void);
+<span id="L16" class="ln">    16</span>	void runtime·newproc(void);
+<span id="L17" class="ln">    17</span>	void runtime·deferproc(void);
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	#ifdef GOOS_windows
+<span id="L20" class="ln">    20</span>	void runtime·sigtramp(void);
+<span id="L21" class="ln">    21</span>	#endif
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	// This code is also used for the 386 tracebacks.
+<span id="L24" class="ln">    24</span>	// Use uintptr for an appropriate word-sized integer.
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	// Generic traceback.  Handles runtime stack prints (pcbuf == nil),
+<span id="L27" class="ln">    27</span>	// the runtime.Callers function (pcbuf != nil), as well as the garbage
+<span id="L28" class="ln">    28</span>	// collector (callback != nil).  A little clunky to merge these, but avoids
+<span id="L29" class="ln">    29</span>	// duplicating the code and all its subtlety.
+<span id="L30" class="ln">    30</span>	int32
+<span id="L31" class="ln">    31</span>	runtime·gentraceback(uintptr pc0, uintptr sp0, uintptr lr0, G *gp, int32 skip, uintptr *pcbuf, int32 max, bool (*callback)(Stkframe*, void*), void *v, bool printall)
+<span id="L32" class="ln">    32</span>	{
+<span id="L33" class="ln">    33</span>		int32 i, n, nprint, line, gotraceback;
+<span id="L34" class="ln">    34</span>		uintptr tracepc, sparg;
+<span id="L35" class="ln">    35</span>		bool waspanic, wasnewproc, printing;
+<span id="L36" class="ln">    36</span>		Func *f, *flr;
+<span id="L37" class="ln">    37</span>		Stkframe frame;
+<span id="L38" class="ln">    38</span>		Stktop *stk;
+<span id="L39" class="ln">    39</span>		String file;
+<span id="L40" class="ln">    40</span>		Panic *panic;
+<span id="L41" class="ln">    41</span>		Defer *defer;
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>		USED(lr0);
+<span id="L44" class="ln">    44</span>		
+<span id="L45" class="ln">    45</span>		gotraceback = runtime·gotraceback(nil);
+<span id="L46" class="ln">    46</span>		
+<span id="L47" class="ln">    47</span>		if(pc0 == ~(uintptr)0 &amp;&amp; sp0 == ~(uintptr)0) { // Signal to fetch saved values from gp.
+<span id="L48" class="ln">    48</span>			if(gp-&gt;syscallstack != (uintptr)nil) {
+<span id="L49" class="ln">    49</span>				pc0 = gp-&gt;syscallpc;
+<span id="L50" class="ln">    50</span>				sp0 = gp-&gt;syscallsp;
+<span id="L51" class="ln">    51</span>			} else {
+<span id="L52" class="ln">    52</span>				pc0 = gp-&gt;sched.pc;
+<span id="L53" class="ln">    53</span>				sp0 = gp-&gt;sched.sp;
+<span id="L54" class="ln">    54</span>			}
+<span id="L55" class="ln">    55</span>		}
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>		nprint = 0;
+<span id="L58" class="ln">    58</span>		runtime·memclr((byte*)&amp;frame, sizeof frame);
+<span id="L59" class="ln">    59</span>		frame.pc = pc0;
+<span id="L60" class="ln">    60</span>		frame.sp = sp0;
+<span id="L61" class="ln">    61</span>		waspanic = false;
+<span id="L62" class="ln">    62</span>		wasnewproc = false;
+<span id="L63" class="ln">    63</span>		printing = pcbuf==nil &amp;&amp; callback==nil;
+<span id="L64" class="ln">    64</span>		panic = gp-&gt;panic;
+<span id="L65" class="ln">    65</span>		defer = gp-&gt;defer;
+<span id="L66" class="ln">    66</span>	
+<span id="L67" class="ln">    67</span>		while(defer != nil &amp;&amp; defer-&gt;argp == NoArgs)
+<span id="L68" class="ln">    68</span>			defer = defer-&gt;link;	
+<span id="L69" class="ln">    69</span>		while(panic != nil &amp;&amp; panic-&gt;defer == nil)
+<span id="L70" class="ln">    70</span>			panic = panic-&gt;link;
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>		// If the PC is zero, it&#39;s likely a nil function call.
+<span id="L73" class="ln">    73</span>		// Start in the caller&#39;s frame.
+<span id="L74" class="ln">    74</span>		if(frame.pc == 0) {
+<span id="L75" class="ln">    75</span>			frame.pc = *(uintptr*)frame.sp;
+<span id="L76" class="ln">    76</span>			frame.sp += sizeof(uintreg);
+<span id="L77" class="ln">    77</span>		}
+<span id="L78" class="ln">    78</span>		
+<span id="L79" class="ln">    79</span>		f = runtime·findfunc(frame.pc);
+<span id="L80" class="ln">    80</span>		if(f == nil) {
+<span id="L81" class="ln">    81</span>			if(callback != nil) {
+<span id="L82" class="ln">    82</span>				runtime·printf(&#34;runtime: unknown pc %p\n&#34;, frame.pc);
+<span id="L83" class="ln">    83</span>				runtime·throw(&#34;unknown pc&#34;);
+<span id="L84" class="ln">    84</span>			}
+<span id="L85" class="ln">    85</span>			return 0;
+<span id="L86" class="ln">    86</span>		}
+<span id="L87" class="ln">    87</span>		frame.fn = f;
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		n = 0;
+<span id="L90" class="ln">    90</span>		stk = (Stktop*)gp-&gt;stackbase;
+<span id="L91" class="ln">    91</span>		while(n &lt; max) {
+<span id="L92" class="ln">    92</span>			// Typically:
+<span id="L93" class="ln">    93</span>			//	pc is the PC of the running function.
+<span id="L94" class="ln">    94</span>			//	sp is the stack pointer at that program counter.
+<span id="L95" class="ln">    95</span>			//	fp is the frame pointer (caller&#39;s stack pointer) at that program counter, or nil if unknown.
+<span id="L96" class="ln">    96</span>			//	stk is the stack containing sp.
+<span id="L97" class="ln">    97</span>			//	The caller&#39;s program counter is lr, unless lr is zero, in which case it is *(uintptr*)sp.
+<span id="L98" class="ln">    98</span>		
+<span id="L99" class="ln">    99</span>			if(frame.pc == (uintptr)runtime·lessstack) {
+<span id="L100" class="ln">   100</span>				// Hit top of stack segment.  Unwind to next segment.
+<span id="L101" class="ln">   101</span>				frame.pc = stk-&gt;gobuf.pc;
+<span id="L102" class="ln">   102</span>				frame.sp = stk-&gt;gobuf.sp;
+<span id="L103" class="ln">   103</span>				frame.lr = 0;
+<span id="L104" class="ln">   104</span>				frame.fp = 0;
+<span id="L105" class="ln">   105</span>				frame.fn = nil;
+<span id="L106" class="ln">   106</span>				if(printing &amp;&amp; runtime·showframe(nil, gp))
+<span id="L107" class="ln">   107</span>					runtime·printf(&#34;----- stack segment boundary -----\n&#34;);
+<span id="L108" class="ln">   108</span>				stk = (Stktop*)stk-&gt;stackbase;
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>				f = runtime·findfunc(frame.pc);
+<span id="L111" class="ln">   111</span>				if(f == nil) {
+<span id="L112" class="ln">   112</span>					runtime·printf(&#34;runtime: unknown pc %p after stack split\n&#34;, frame.pc);
+<span id="L113" class="ln">   113</span>					if(callback != nil)
+<span id="L114" class="ln">   114</span>						runtime·throw(&#34;unknown pc&#34;);
+<span id="L115" class="ln">   115</span>				}
+<span id="L116" class="ln">   116</span>				frame.fn = f;
+<span id="L117" class="ln">   117</span>				continue;
+<span id="L118" class="ln">   118</span>			}
+<span id="L119" class="ln">   119</span>			
+<span id="L120" class="ln">   120</span>			f = frame.fn;
+<span id="L121" class="ln">   121</span>	
+<span id="L122" class="ln">   122</span>	#ifdef GOOS_windows
+<span id="L123" class="ln">   123</span>			// Windows exception handlers run on the actual g stack (there is room
+<span id="L124" class="ln">   124</span>			// dedicated to this below the usual &#34;bottom of stack&#34;), not on a separate
+<span id="L125" class="ln">   125</span>			// stack. As a result, we have to be able to unwind past the exception
+<span id="L126" class="ln">   126</span>			// handler when called to unwind during stack growth inside the handler.
+<span id="L127" class="ln">   127</span>			// Recognize the frame at the call to sighandler in sigtramp and unwind
+<span id="L128" class="ln">   128</span>			// using the context argument passed to the call. This is awful.
+<span id="L129" class="ln">   129</span>			if(f != nil &amp;&amp; f-&gt;entry == (uintptr)runtime·sigtramp &amp;&amp; frame.pc &gt; f-&gt;entry) {
+<span id="L130" class="ln">   130</span>				Context *r;
+<span id="L131" class="ln">   131</span>				
+<span id="L132" class="ln">   132</span>				// Invoke callback so that stack copier sees an uncopyable frame.
+<span id="L133" class="ln">   133</span>				if(callback != nil) {
+<span id="L134" class="ln">   134</span>					frame.continpc = frame.pc;
+<span id="L135" class="ln">   135</span>					frame.argp = nil;
+<span id="L136" class="ln">   136</span>					frame.arglen = 0;
+<span id="L137" class="ln">   137</span>					if(!callback(&amp;frame, v))
+<span id="L138" class="ln">   138</span>						return n;
+<span id="L139" class="ln">   139</span>				}
+<span id="L140" class="ln">   140</span>				r = (Context*)((uintptr*)frame.sp)[1];
+<span id="L141" class="ln">   141</span>	#ifdef GOARCH_amd64
+<span id="L142" class="ln">   142</span>				frame.pc = r-&gt;Rip;
+<span id="L143" class="ln">   143</span>				frame.sp = r-&gt;Rsp;
+<span id="L144" class="ln">   144</span>	#else
+<span id="L145" class="ln">   145</span>				frame.pc = r-&gt;Eip;
+<span id="L146" class="ln">   146</span>				frame.sp = r-&gt;Esp;
+<span id="L147" class="ln">   147</span>	#endif
+<span id="L148" class="ln">   148</span>				frame.lr = 0;
+<span id="L149" class="ln">   149</span>				frame.fp = 0;
+<span id="L150" class="ln">   150</span>				frame.fn = nil;
+<span id="L151" class="ln">   151</span>				if(printing &amp;&amp; runtime·showframe(nil, gp))
+<span id="L152" class="ln">   152</span>					runtime·printf(&#34;----- exception handler -----\n&#34;);
+<span id="L153" class="ln">   153</span>				f = runtime·findfunc(frame.pc);
+<span id="L154" class="ln">   154</span>				if(f == nil) {
+<span id="L155" class="ln">   155</span>					runtime·printf(&#34;runtime: unknown pc %p after exception handler\n&#34;, frame.pc);
+<span id="L156" class="ln">   156</span>					if(callback != nil)
+<span id="L157" class="ln">   157</span>						runtime·throw(&#34;unknown pc&#34;);
+<span id="L158" class="ln">   158</span>				}
+<span id="L159" class="ln">   159</span>				frame.fn = f;
+<span id="L160" class="ln">   160</span>				continue;
+<span id="L161" class="ln">   161</span>			}
+<span id="L162" class="ln">   162</span>	#endif
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>			// Found an actual function.
+<span id="L165" class="ln">   165</span>			// Derive frame pointer and link register.
+<span id="L166" class="ln">   166</span>			if(frame.fp == 0) {
+<span id="L167" class="ln">   167</span>				frame.fp = frame.sp + runtime·funcspdelta(f, frame.pc);
+<span id="L168" class="ln">   168</span>				frame.fp += sizeof(uintreg); // caller PC
+<span id="L169" class="ln">   169</span>			}
+<span id="L170" class="ln">   170</span>			if(runtime·topofstack(f)) {
+<span id="L171" class="ln">   171</span>				frame.lr = 0;
+<span id="L172" class="ln">   172</span>				flr = nil;
+<span id="L173" class="ln">   173</span>			} else {
+<span id="L174" class="ln">   174</span>				if(frame.lr == 0)
+<span id="L175" class="ln">   175</span>					frame.lr = ((uintreg*)frame.fp)[-1];
+<span id="L176" class="ln">   176</span>				flr = runtime·findfunc(frame.lr);
+<span id="L177" class="ln">   177</span>				if(flr == nil) {
+<span id="L178" class="ln">   178</span>					runtime·printf(&#34;runtime: unexpected return pc for %s called from %p\n&#34;, runtime·funcname(f), frame.lr);
+<span id="L179" class="ln">   179</span>					if(callback != nil)
+<span id="L180" class="ln">   180</span>						runtime·throw(&#34;unknown caller pc&#34;);
+<span id="L181" class="ln">   181</span>				}
+<span id="L182" class="ln">   182</span>			}
+<span id="L183" class="ln">   183</span>			
+<span id="L184" class="ln">   184</span>			frame.varp = (byte*)frame.fp - sizeof(uintreg);
+<span id="L185" class="ln">   185</span>	
+<span id="L186" class="ln">   186</span>			// Derive size of arguments.
+<span id="L187" class="ln">   187</span>			// Most functions have a fixed-size argument block,
+<span id="L188" class="ln">   188</span>			// so we can use metadata about the function f.
+<span id="L189" class="ln">   189</span>			// Not all, though: there are some variadic functions
+<span id="L190" class="ln">   190</span>			// in package runtime and reflect, and for those we use call-specific
+<span id="L191" class="ln">   191</span>			// metadata recorded by f&#39;s caller.
+<span id="L192" class="ln">   192</span>			if(callback != nil || printing) {
+<span id="L193" class="ln">   193</span>				frame.argp = (byte*)frame.fp;
+<span id="L194" class="ln">   194</span>				if(f-&gt;args != ArgsSizeUnknown)
+<span id="L195" class="ln">   195</span>					frame.arglen = f-&gt;args;
+<span id="L196" class="ln">   196</span>				else if(flr == nil)
+<span id="L197" class="ln">   197</span>					frame.arglen = 0;
+<span id="L198" class="ln">   198</span>				else if(frame.lr == (uintptr)runtime·lessstack)
+<span id="L199" class="ln">   199</span>					frame.arglen = stk-&gt;argsize;
+<span id="L200" class="ln">   200</span>				else if((i = runtime·funcarglen(flr, frame.lr)) &gt;= 0)
+<span id="L201" class="ln">   201</span>					frame.arglen = i;
+<span id="L202" class="ln">   202</span>				else {
+<span id="L203" class="ln">   203</span>					runtime·printf(&#34;runtime: unknown argument frame size for %s called from %p [%s]\n&#34;,
+<span id="L204" class="ln">   204</span>						runtime·funcname(f), frame.lr, flr ? runtime·funcname(flr) : &#34;?&#34;);
+<span id="L205" class="ln">   205</span>					if(callback != nil)
+<span id="L206" class="ln">   206</span>						runtime·throw(&#34;invalid stack&#34;);
+<span id="L207" class="ln">   207</span>					frame.arglen = 0;
+<span id="L208" class="ln">   208</span>				}
+<span id="L209" class="ln">   209</span>			}
+<span id="L210" class="ln">   210</span>			
+<span id="L211" class="ln">   211</span>			// Determine function SP where deferproc would find its arguments.
+<span id="L212" class="ln">   212</span>			// On x86 that&#39;s just the standard bottom-of-stack, so SP exactly.
+<span id="L213" class="ln">   213</span>			// If the previous frame was a direct call to newproc/deferproc, however,
+<span id="L214" class="ln">   214</span>			// the SP is two words lower than normal.
+<span id="L215" class="ln">   215</span>			sparg = frame.sp;
+<span id="L216" class="ln">   216</span>			if(wasnewproc)
+<span id="L217" class="ln">   217</span>				sparg += 2*sizeof(uintptr);
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>			// Determine frame&#39;s &#39;continuation PC&#39;, where it can continue.
+<span id="L220" class="ln">   220</span>			// Normally this is the return address on the stack, but if sigpanic
+<span id="L221" class="ln">   221</span>			// is immediately below this function on the stack, then the frame
+<span id="L222" class="ln">   222</span>			// stopped executing due to a trap, and frame.pc is probably not
+<span id="L223" class="ln">   223</span>			// a safe point for looking up liveness information. In this panicking case,
+<span id="L224" class="ln">   224</span>			// the function either doesn&#39;t return at all (if it has no defers or if the
+<span id="L225" class="ln">   225</span>			// defers do not recover) or it returns from one of the calls to 
+<span id="L226" class="ln">   226</span>			// deferproc a second time (if the corresponding deferred func recovers).
+<span id="L227" class="ln">   227</span>			// It suffices to assume that the most recent deferproc is the one that
+<span id="L228" class="ln">   228</span>			// returns; everything live at earlier deferprocs is still live at that one.
+<span id="L229" class="ln">   229</span>			frame.continpc = frame.pc;
+<span id="L230" class="ln">   230</span>			if(waspanic) {
+<span id="L231" class="ln">   231</span>				if(panic != nil &amp;&amp; panic-&gt;defer-&gt;argp == (byte*)sparg)
+<span id="L232" class="ln">   232</span>					frame.continpc = (uintptr)panic-&gt;defer-&gt;pc;
+<span id="L233" class="ln">   233</span>				else if(defer != nil &amp;&amp; defer-&gt;argp == (byte*)sparg)
+<span id="L234" class="ln">   234</span>					frame.continpc = (uintptr)defer-&gt;pc;
+<span id="L235" class="ln">   235</span>				else
+<span id="L236" class="ln">   236</span>					frame.continpc = 0;
+<span id="L237" class="ln">   237</span>			}
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>			// Unwind our local panic &amp; defer stacks past this frame.
+<span id="L240" class="ln">   240</span>			while(panic != nil &amp;&amp; (panic-&gt;defer == nil || panic-&gt;defer-&gt;argp == (byte*)sparg || panic-&gt;defer-&gt;argp == NoArgs))
+<span id="L241" class="ln">   241</span>				panic = panic-&gt;link;
+<span id="L242" class="ln">   242</span>			while(defer != nil &amp;&amp; (defer-&gt;argp == (byte*)sparg || defer-&gt;argp == NoArgs))
+<span id="L243" class="ln">   243</span>				defer = defer-&gt;link;	
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>			if(skip &gt; 0) {
+<span id="L246" class="ln">   246</span>				skip--;
+<span id="L247" class="ln">   247</span>				goto skipped;
+<span id="L248" class="ln">   248</span>			}
+<span id="L249" class="ln">   249</span>	
+<span id="L250" class="ln">   250</span>			if(pcbuf != nil)
+<span id="L251" class="ln">   251</span>				pcbuf[n] = frame.pc;
+<span id="L252" class="ln">   252</span>			if(callback != nil) {
+<span id="L253" class="ln">   253</span>				if(!callback(&amp;frame, v))
+<span id="L254" class="ln">   254</span>					return n;
+<span id="L255" class="ln">   255</span>			}
+<span id="L256" class="ln">   256</span>			if(printing) {
+<span id="L257" class="ln">   257</span>				if(printall || runtime·showframe(f, gp)) {
+<span id="L258" class="ln">   258</span>					// Print during crash.
+<span id="L259" class="ln">   259</span>					//	main(0x1, 0x2, 0x3)
+<span id="L260" class="ln">   260</span>					//		/home/rsc/go/src/runtime/x.go:23 +0xf
+<span id="L261" class="ln">   261</span>					//		
+<span id="L262" class="ln">   262</span>					tracepc = frame.pc;	// back up to CALL instruction for funcline.
+<span id="L263" class="ln">   263</span>					if(n &gt; 0 &amp;&amp; frame.pc &gt; f-&gt;entry &amp;&amp; !waspanic)
+<span id="L264" class="ln">   264</span>						tracepc--;
+<span id="L265" class="ln">   265</span>					runtime·printf(&#34;%s(&#34;, runtime·funcname(f));
+<span id="L266" class="ln">   266</span>					for(i = 0; i &lt; frame.arglen/sizeof(uintptr); i++) {
+<span id="L267" class="ln">   267</span>						if(i &gt;= 10) {
+<span id="L268" class="ln">   268</span>							runtime·prints(&#34;, ...&#34;);
+<span id="L269" class="ln">   269</span>							break;
+<span id="L270" class="ln">   270</span>						}
+<span id="L271" class="ln">   271</span>						if(i != 0)
+<span id="L272" class="ln">   272</span>							runtime·prints(&#34;, &#34;);
+<span id="L273" class="ln">   273</span>						runtime·printhex(((uintptr*)frame.argp)[i]);
+<span id="L274" class="ln">   274</span>					}
+<span id="L275" class="ln">   275</span>					runtime·prints(&#34;)\n&#34;);
+<span id="L276" class="ln">   276</span>					line = runtime·funcline(f, tracepc, &amp;file);
+<span id="L277" class="ln">   277</span>					runtime·printf(&#34;\t%S:%d&#34;, file, line);
+<span id="L278" class="ln">   278</span>					if(frame.pc &gt; f-&gt;entry)
+<span id="L279" class="ln">   279</span>						runtime·printf(&#34; +%p&#34;, (uintptr)(frame.pc - f-&gt;entry));
+<span id="L280" class="ln">   280</span>					if(m-&gt;throwing &gt; 0 &amp;&amp; gp == m-&gt;curg || gotraceback &gt;= 2)
+<span id="L281" class="ln">   281</span>						runtime·printf(&#34; fp=%p sp=%p&#34;, frame.fp, frame.sp);
+<span id="L282" class="ln">   282</span>					runtime·printf(&#34;\n&#34;);
+<span id="L283" class="ln">   283</span>					nprint++;
+<span id="L284" class="ln">   284</span>				}
+<span id="L285" class="ln">   285</span>			}
+<span id="L286" class="ln">   286</span>			n++;
+<span id="L287" class="ln">   287</span>		
+<span id="L288" class="ln">   288</span>		skipped:
+<span id="L289" class="ln">   289</span>			waspanic = f-&gt;entry == (uintptr)runtime·sigpanic;
+<span id="L290" class="ln">   290</span>			wasnewproc = f-&gt;entry == (uintptr)runtime·newproc || f-&gt;entry == (uintptr)runtime·deferproc;
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>			// Do not unwind past the bottom of the stack.
+<span id="L293" class="ln">   293</span>			if(flr == nil)
+<span id="L294" class="ln">   294</span>				break;
+<span id="L295" class="ln">   295</span>	
+<span id="L296" class="ln">   296</span>			// Unwind to next frame.
+<span id="L297" class="ln">   297</span>			frame.fn = flr;
+<span id="L298" class="ln">   298</span>			frame.pc = frame.lr;
+<span id="L299" class="ln">   299</span>			frame.lr = 0;
+<span id="L300" class="ln">   300</span>			frame.sp = frame.fp;
+<span id="L301" class="ln">   301</span>			frame.fp = 0;
+<span id="L302" class="ln">   302</span>		}
+<span id="L303" class="ln">   303</span>		
+<span id="L304" class="ln">   304</span>		if(pcbuf == nil &amp;&amp; callback == nil)
+<span id="L305" class="ln">   305</span>			n = nprint;
+<span id="L306" class="ln">   306</span>	
+<span id="L307" class="ln">   307</span>		// If callback != nil, we&#39;re being called to gather stack information during
+<span id="L308" class="ln">   308</span>		// garbage collection or stack growth. In that context, require that we used
+<span id="L309" class="ln">   309</span>		// up the entire defer stack. If not, then there is a bug somewhere and the
+<span id="L310" class="ln">   310</span>		// garbage collection or stack growth may not have seen the correct picture
+<span id="L311" class="ln">   311</span>		// of the stack. Crash now instead of silently executing the garbage collection
+<span id="L312" class="ln">   312</span>		// or stack copy incorrectly and setting up for a mysterious crash later.
+<span id="L313" class="ln">   313</span>		//
+<span id="L314" class="ln">   314</span>		// Note that panic != nil is okay here: there can be leftover panics,
+<span id="L315" class="ln">   315</span>		// because the defers on the panic stack do not nest in frame order as
+<span id="L316" class="ln">   316</span>		// they do on the defer stack. If you have:
+<span id="L317" class="ln">   317</span>		//
+<span id="L318" class="ln">   318</span>		//	frame 1 defers d1
+<span id="L319" class="ln">   319</span>		//	frame 2 defers d2
+<span id="L320" class="ln">   320</span>		//	frame 3 defers d3
+<span id="L321" class="ln">   321</span>		//	frame 4 panics
+<span id="L322" class="ln">   322</span>		//	frame 4&#39;s panic starts running defers
+<span id="L323" class="ln">   323</span>		//	frame 5, running d3, defers d4
+<span id="L324" class="ln">   324</span>		//	frame 5 panics
+<span id="L325" class="ln">   325</span>		//	frame 5&#39;s panic starts running defers
+<span id="L326" class="ln">   326</span>		//	frame 6, running d4, garbage collects
+<span id="L327" class="ln">   327</span>		//	frame 6, running d2, garbage collects
+<span id="L328" class="ln">   328</span>		//
+<span id="L329" class="ln">   329</span>		// During the execution of d4, the panic stack is d4 -&gt; d3, which
+<span id="L330" class="ln">   330</span>		// is nested properly, and we&#39;ll treat frame 3 as resumable, because we
+<span id="L331" class="ln">   331</span>		// can find d3. (And in fact frame 3 is resumable. If d4 recovers
+<span id="L332" class="ln">   332</span>		// and frame 5 continues running, d3, d3 can recover and we&#39;ll
+<span id="L333" class="ln">   333</span>		// resume execution in (returning from) frame 3.)
+<span id="L334" class="ln">   334</span>		//
+<span id="L335" class="ln">   335</span>		// During the execution of d2, however, the panic stack is d2 -&gt; d3,
+<span id="L336" class="ln">   336</span>		// which is inverted. The scan will match d2 to frame 2 but having
+<span id="L337" class="ln">   337</span>		// d2 on the stack until then means it will not match d3 to frame 3.
+<span id="L338" class="ln">   338</span>		// This is okay: if we&#39;re running d2, then all the defers after d2 have
+<span id="L339" class="ln">   339</span>		// completed and their corresponding frames are dead. Not finding d3
+<span id="L340" class="ln">   340</span>		// for frame 3 means we&#39;ll set frame 3&#39;s continpc == 0, which is correct
+<span id="L341" class="ln">   341</span>		// (frame 3 is dead). At the end of the walk the panic stack can thus
+<span id="L342" class="ln">   342</span>		// contain defers (d3 in this case) for dead frames. The inversion here
+<span id="L343" class="ln">   343</span>		// always indicates a dead frame, and the effect of the inversion on the
+<span id="L344" class="ln">   344</span>		// scan is to hide those dead frames, so the scan is still okay:
+<span id="L345" class="ln">   345</span>		// what&#39;s left on the panic stack are exactly (and only) the dead frames.
+<span id="L346" class="ln">   346</span>		//
+<span id="L347" class="ln">   347</span>		// We require callback != nil here because only when callback != nil
+<span id="L348" class="ln">   348</span>		// do we know that gentraceback is being called in a &#34;must be correct&#34;
+<span id="L349" class="ln">   349</span>		// context as opposed to a &#34;best effort&#34; context. The tracebacks with
+<span id="L350" class="ln">   350</span>		// callbacks only happen when everything is stopped nicely.
+<span id="L351" class="ln">   351</span>		// At other times, such as when gathering a stack for a profiling signal
+<span id="L352" class="ln">   352</span>		// or when printing a traceback during a crash, everything may not be
+<span id="L353" class="ln">   353</span>		// stopped nicely, and the stack walk may not be able to complete.
+<span id="L354" class="ln">   354</span>		// It&#39;s okay in those situations not to use up the entire defer stack:
+<span id="L355" class="ln">   355</span>		// incomplete information then is still better than nothing.
+<span id="L356" class="ln">   356</span>		if(callback != nil &amp;&amp; n &lt; max &amp;&amp; defer != nil) {
+<span id="L357" class="ln">   357</span>			if(defer != nil)
+<span id="L358" class="ln">   358</span>				runtime·printf(&#34;runtime: g%D: leftover defer argp=%p pc=%p\n&#34;, gp-&gt;goid, defer-&gt;argp, defer-&gt;pc);
+<span id="L359" class="ln">   359</span>			if(panic != nil)
+<span id="L360" class="ln">   360</span>				runtime·printf(&#34;runtime: g%D: leftover panic argp=%p pc=%p\n&#34;, gp-&gt;goid, panic-&gt;defer-&gt;argp, panic-&gt;defer-&gt;pc);
+<span id="L361" class="ln">   361</span>			for(defer = gp-&gt;defer; defer != nil; defer = defer-&gt;link)
+<span id="L362" class="ln">   362</span>				runtime·printf(&#34;\tdefer %p argp=%p pc=%p\n&#34;, defer, defer-&gt;argp, defer-&gt;pc);
+<span id="L363" class="ln">   363</span>			for(panic = gp-&gt;panic; panic != nil; panic = panic-&gt;link) {
+<span id="L364" class="ln">   364</span>				runtime·printf(&#34;\tpanic %p defer %p&#34;, panic, panic-&gt;defer);
+<span id="L365" class="ln">   365</span>				if(panic-&gt;defer != nil)
+<span id="L366" class="ln">   366</span>					runtime·printf(&#34; argp=%p pc=%p&#34;, panic-&gt;defer-&gt;argp, panic-&gt;defer-&gt;pc);
+<span id="L367" class="ln">   367</span>				runtime·printf(&#34;\n&#34;);
+<span id="L368" class="ln">   368</span>			}
+<span id="L369" class="ln">   369</span>			runtime·throw(&#34;traceback has leftover defers or panics&#34;);
+<span id="L370" class="ln">   370</span>		}
+<span id="L371" class="ln">   371</span>	
+<span id="L372" class="ln">   372</span>		return n;
+<span id="L373" class="ln">   373</span>	}
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>	void
+<span id="L376" class="ln">   376</span>	runtime·printcreatedby(G *gp)
+<span id="L377" class="ln">   377</span>	{
+<span id="L378" class="ln">   378</span>		int32 line;
+<span id="L379" class="ln">   379</span>		uintptr pc, tracepc;
+<span id="L380" class="ln">   380</span>		Func *f;
+<span id="L381" class="ln">   381</span>		String file;
+<span id="L382" class="ln">   382</span>	
+<span id="L383" class="ln">   383</span>		// Show what created goroutine, except main goroutine (goid 1).
+<span id="L384" class="ln">   384</span>		if((pc = gp-&gt;gopc) != 0 &amp;&amp; (f = runtime·findfunc(pc)) != nil &amp;&amp;
+<span id="L385" class="ln">   385</span>			runtime·showframe(f, gp) &amp;&amp; gp-&gt;goid != 1) {
+<span id="L386" class="ln">   386</span>			runtime·printf(&#34;created by %s\n&#34;, runtime·funcname(f));
+<span id="L387" class="ln">   387</span>			tracepc = pc;	// back up to CALL instruction for funcline.
+<span id="L388" class="ln">   388</span>			if(pc &gt; f-&gt;entry)
+<span id="L389" class="ln">   389</span>				tracepc -= PCQuantum;
+<span id="L390" class="ln">   390</span>			line = runtime·funcline(f, tracepc, &amp;file);
+<span id="L391" class="ln">   391</span>			runtime·printf(&#34;\t%S:%d&#34;, file, line);
+<span id="L392" class="ln">   392</span>			if(pc &gt; f-&gt;entry)
+<span id="L393" class="ln">   393</span>				runtime·printf(&#34; +%p&#34;, (uintptr)(pc - f-&gt;entry));
+<span id="L394" class="ln">   394</span>			runtime·printf(&#34;\n&#34;);
+<span id="L395" class="ln">   395</span>		}
+<span id="L396" class="ln">   396</span>	}
+<span id="L397" class="ln">   397</span>	
+<span id="L398" class="ln">   398</span>	void
+<span id="L399" class="ln">   399</span>	runtime·traceback(uintptr pc, uintptr sp, uintptr lr, G *gp)
+<span id="L400" class="ln">   400</span>	{
+<span id="L401" class="ln">   401</span>		int32 n;
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>		USED(lr);
+<span id="L404" class="ln">   404</span>	
+<span id="L405" class="ln">   405</span>		if(gp-&gt;status == Gsyscall) {
+<span id="L406" class="ln">   406</span>			// Override signal registers if blocked in system call.
+<span id="L407" class="ln">   407</span>			pc = gp-&gt;syscallpc;
+<span id="L408" class="ln">   408</span>			sp = gp-&gt;syscallsp;
+<span id="L409" class="ln">   409</span>		}
+<span id="L410" class="ln">   410</span>		
+<span id="L411" class="ln">   411</span>		// Print traceback. By default, omits runtime frames.
+<span id="L412" class="ln">   412</span>		// If that means we print nothing at all, repeat forcing all frames printed.
+<span id="L413" class="ln">   413</span>		n = runtime·gentraceback(pc, sp, 0, gp, 0, nil, TracebackMaxFrames, nil, nil, false);
+<span id="L414" class="ln">   414</span>		if(n == 0)
+<span id="L415" class="ln">   415</span>			n = runtime·gentraceback(pc, sp, 0, gp, 0, nil, TracebackMaxFrames, nil, nil, true);
+<span id="L416" class="ln">   416</span>		if(n == TracebackMaxFrames)
+<span id="L417" class="ln">   417</span>			runtime·printf(&#34;...additional frames elided...\n&#34;);
+<span id="L418" class="ln">   418</span>		runtime·printcreatedby(gp);
+<span id="L419" class="ln">   419</span>	}
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>	int32
+<span id="L422" class="ln">   422</span>	runtime·callers(int32 skip, uintptr *pcbuf, int32 m)
+<span id="L423" class="ln">   423</span>	{
+<span id="L424" class="ln">   424</span>		uintptr pc, sp;
+<span id="L425" class="ln">   425</span>	
+<span id="L426" class="ln">   426</span>		sp = runtime·getcallersp(&amp;skip);
+<span id="L427" class="ln">   427</span>		pc = (uintptr)runtime·getcallerpc(&amp;skip);
+<span id="L428" class="ln">   428</span>	
+<span id="L429" class="ln">   429</span>		return runtime·gentraceback(pc, sp, 0, g, skip, pcbuf, m, nil, nil, false);
+<span id="L430" class="ln">   430</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/traceback_x86.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

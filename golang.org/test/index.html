@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>test/ - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Directory test/</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+<p>
+<table class="layout">
+<tr>
+	<th align="left">File</th>
+	<td width="25">&nbsp;</td>
+	<th align="right">Bytes</th>
+	<td width="25">&nbsp;</td>
+	<th align="left">Modified</th>
+</tr>
+<tr>
+	<td><a href="http://golang.org/">..</a></td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/235.go">235.go</a></td>
+	<td></td>
+	<td align="right">1596</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/64bit.go">64bit.go</a></td>
+	<td></td>
+	<td align="right">25425</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/alias.go">alias.go</a></td>
+	<td></td>
+	<td align="right">589</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/alias1.go">alias1.go</a></td>
+	<td></td>
+	<td align="right">804</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/append.go">append.go</a></td>
+	<td></td>
+	<td align="right">8666</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/args.go">args.go</a></td>
+	<td></td>
+	<td align="right">374</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/assign.go">assign.go</a></td>
+	<td></td>
+	<td align="right">805</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/assign1.go">assign1.go</a></td>
+	<td></td>
+	<td align="right">5686</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="bench/index.html">bench/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bigalg.go">bigalg.go</a></td>
+	<td></td>
+	<td align="right">2169</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bigmap.go">bigmap.go</a></td>
+	<td></td>
+	<td align="right">2516</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/blank.go">blank.go</a></td>
+	<td></td>
+	<td align="right">2148</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/blank1.go">blank1.go</a></td>
+	<td></td>
+	<td align="right">614</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bom.go">bom.go</a></td>
+	<td></td>
+	<td align="right">406</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bombad.go">bombad.go</a></td>
+	<td></td>
+	<td align="right">481</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bounds.go">bounds.go</a></td>
+	<td></td>
+	<td align="right">5775</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/bugs/">bugs/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/chan/">chan/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/chancap.go">chancap.go</a></td>
+	<td></td>
+	<td align="right">670</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/char_lit.go">char_lit.go</a></td>
+	<td></td>
+	<td align="right">657</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/char_lit1.go">char_lit1.go</a></td>
+	<td></td>
+	<td align="right">813</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/closedchan.go">closedchan.go</a></td>
+	<td></td>
+	<td align="right">5933</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/closure.go">closure.go</a></td>
+	<td></td>
+	<td align="right">1728</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmp.go">cmp.go</a></td>
+	<td></td>
+	<td align="right">7808</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmp6.go">cmp6.go</a></td>
+	<td></td>
+	<td align="right">2138</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmplx.go">cmplx.go</a></td>
+	<td></td>
+	<td align="right">1201</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmplxdivide.c">cmplxdivide.c</a></td>
+	<td></td>
+	<td align="right">1783</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmplxdivide.go">cmplxdivide.go</a></td>
+	<td></td>
+	<td align="right">894</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/cmplxdivide1.go">cmplxdivide1.go</a></td>
+	<td></td>
+	<td align="right">150644</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/complit.go">complit.go</a></td>
+	<td></td>
+	<td align="right">1750</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/complit1.go">complit1.go</a></td>
+	<td></td>
+	<td align="right">1024</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/compos.go">compos.go</a></td>
+	<td></td>
+	<td align="right">404</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const.go">const.go</a></td>
+	<td></td>
+	<td align="right">2604</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const1.go">const1.go</a></td>
+	<td></td>
+	<td align="right">3440</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const2.go">const2.go</a></td>
+	<td></td>
+	<td align="right">605</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const3.go">const3.go</a></td>
+	<td></td>
+	<td align="right">659</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const4.go">const4.go</a></td>
+	<td></td>
+	<td align="right">1306</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const5.go">const5.go</a></td>
+	<td></td>
+	<td align="right">834</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/const6.go">const6.go</a></td>
+	<td></td>
+	<td align="right">835</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convT2X.go">convT2X.go</a></td>
+	<td></td>
+	<td align="right">3409</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convert.go">convert.go</a></td>
+	<td></td>
+	<td align="right">833</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convert1.go">convert1.go</a></td>
+	<td></td>
+	<td align="right">3492</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convert3.go">convert3.go</a></td>
+	<td></td>
+	<td align="right">544</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convlit.go">convlit.go</a></td>
+	<td></td>
+	<td align="right">2026</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/convlit1.go">convlit1.go</a></td>
+	<td></td>
+	<td align="right">458</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/copy.go">copy.go</a></td>
+	<td></td>
+	<td align="right">6759</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/crlf.go">crlf.go</a></td>
+	<td></td>
+	<td align="right">782</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/ddd.go">ddd.go</a></td>
+	<td></td>
+	<td align="right">4331</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/ddd1.go">ddd1.go</a></td>
+	<td></td>
+	<td align="right">1588</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/ddd2.dir/">ddd2.dir/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/ddd2.go">ddd2.go</a></td>
+	<td></td>
+	<td align="right">253</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/decl.go">decl.go</a></td>
+	<td></td>
+	<td align="right">926</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/declbad.go">declbad.go</a></td>
+	<td></td>
+	<td align="right">1438</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/defer.go">defer.go</a></td>
+	<td></td>
+	<td align="right">875</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/deferfin.go">deferfin.go</a></td>
+	<td></td>
+	<td align="right">1148</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/deferprint.go">deferprint.go</a></td>
+	<td></td>
+	<td align="right">590</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/deferprint.out">deferprint.out</a></td>
+	<td></td>
+	<td align="right">126</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/divide.go">divide.go</a></td>
+	<td></td>
+	<td align="right">1250</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/divmod.go">divmod.go</a></td>
+	<td></td>
+	<td align="right">9502</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/dwarf/">dwarf/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/empty.go">empty.go</a></td>
+	<td></td>
+	<td align="right">316</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/env.go">env.go</a></td>
+	<td></td>
+	<td align="right">585</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/eof.go">eof.go</a></td>
+	<td></td>
+	<td align="right">309</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/eof1.go">eof1.go</a></td>
+	<td></td>
+	<td align="right">334</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/errchk">errchk</a></td>
+	<td></td>
+	<td align="right">3709</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/escape.go">escape.go</a></td>
+	<td></td>
+	<td align="right">3880</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/escape2.go">escape2.go</a></td>
+	<td></td>
+	<td align="right">29039</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/escape3.go">escape3.go</a></td>
+	<td></td>
+	<td align="right">525</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/escape4.go">escape4.go</a></td>
+	<td></td>
+	<td align="right">1363</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/escape5.go">escape5.go</a></td>
+	<td></td>
+	<td align="right">3437</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/fixedbugs/">fixedbugs/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/float_lit.go">float_lit.go</a></td>
+	<td></td>
+	<td align="right">4046</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/float_lit2.go">float_lit2.go</a></td>
+	<td></td>
+	<td align="right">8067</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/float_lit3.go">float_lit3.go</a></td>
+	<td></td>
+	<td align="right">1823</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/floatcmp.go">floatcmp.go</a></td>
+	<td></td>
+	<td align="right">3104</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/for.go">for.go</a></td>
+	<td></td>
+	<td align="right">844</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func.go">func.go</a></td>
+	<td></td>
+	<td align="right">1326</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func1.go">func1.go</a></td>
+	<td></td>
+	<td align="right">434</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func2.go">func2.go</a></td>
+	<td></td>
+	<td align="right">578</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func3.go">func3.go</a></td>
+	<td></td>
+	<td align="right">505</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func4.go">func4.go</a></td>
+	<td></td>
+	<td align="right">409</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func5.go">func5.go</a></td>
+	<td></td>
+	<td align="right">1521</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func6.go">func6.go</a></td>
+	<td></td>
+	<td align="right">394</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func7.go">func7.go</a></td>
+	<td></td>
+	<td align="right">490</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/func8.go">func8.go</a></td>
+	<td></td>
+	<td align="right">634</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/funcdup.go">funcdup.go</a></td>
+	<td></td>
+	<td align="right">1215</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/funcdup2.go">funcdup2.go</a></td>
+	<td></td>
+	<td align="right">656</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/gc.go">gc.go</a></td>
+	<td></td>
+	<td align="right">411</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/gc1.go">gc1.go</a></td>
+	<td></td>
+	<td align="right">303</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/gc2.go">gc2.go</a></td>
+	<td></td>
+	<td align="right">970</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/gcstring.go">gcstring.go</a></td>
+	<td></td>
+	<td align="right">873</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/golden.out">golden.out</a></td>
+	<td></td>
+	<td align="right">228</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/goprint.go">goprint.go</a></td>
+	<td></td>
+	<td align="right">437</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/goprint.out">goprint.out</a></td>
+	<td></td>
+	<td align="right">65</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/goto.go">goto.go</a></td>
+	<td></td>
+	<td align="right">8580</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/helloworld.go">helloworld.go</a></td>
+	<td></td>
+	<td align="right">272</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/helloworld.out">helloworld.out</a></td>
+	<td></td>
+	<td align="right">13</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/if.go">if.go</a></td>
+	<td></td>
+	<td align="right">1394</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import.go">import.go</a></td>
+	<td></td>
+	<td align="right">425</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import1.go">import1.go</a></td>
+	<td></td>
+	<td align="right">633</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import2.dir/">import2.dir/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import2.go">import2.go</a></td>
+	<td></td>
+	<td align="right">248</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import4.dir/">import4.dir/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import4.go">import4.go</a></td>
+	<td></td>
+	<td align="right">310</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/import5.go">import5.go</a></td>
+	<td></td>
+	<td align="right">1811</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/index.go">index.go</a></td>
+	<td></td>
+	<td align="right">6578</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/index0.go">index0.go</a></td>
+	<td></td>
+	<td align="right">302</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/index1.go">index1.go</a></td>
+	<td></td>
+	<td align="right">306</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/index2.go">index2.go</a></td>
+	<td></td>
+	<td align="right">306</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/indirect.go">indirect.go</a></td>
+	<td></td>
+	<td align="right">1424</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/indirect1.go">indirect1.go</a></td>
+	<td></td>
+	<td align="right">1563</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/init.go">init.go</a></td>
+	<td></td>
+	<td align="right">451</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/init1.go">init1.go</a></td>
+	<td></td>
+	<td align="right">815</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/initcomma.go">initcomma.go</a></td>
+	<td></td>
+	<td align="right">1253</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/initialize.go">initialize.go</a></td>
+	<td></td>
+	<td align="right">1270</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/initializerr.go">initializerr.go</a></td>
+	<td></td>
+	<td align="right">1009</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/int_lit.go">int_lit.go</a></td>
+	<td></td>
+	<td align="right">387</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/intcvt.go">intcvt.go</a></td>
+	<td></td>
+	<td align="right">4359</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/interface/">interface/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/iota.go">iota.go</a></td>
+	<td></td>
+	<td align="right">1629</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/ken/">ken/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/label.go">label.go</a></td>
+	<td></td>
+	<td align="right">955</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/label1.go">label1.go</a></td>
+	<td></td>
+	<td align="right">1279</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/linkx.go">linkx.go</a></td>
+	<td></td>
+	<td align="right">514</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/literal.go">literal.go</a></td>
+	<td></td>
+	<td align="right">5111</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/live.go">live.go</a></td>
+	<td></td>
+	<td align="right">16047</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/live1.go">live1.go</a></td>
+	<td></td>
+	<td align="right">1317</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/live2.go">live2.go</a></td>
+	<td></td>
+	<td align="right">840</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/mallocfin.go">mallocfin.go</a></td>
+	<td></td>
+	<td align="right">1204</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/map.go">map.go</a></td>
+	<td></td>
+	<td align="right">15259</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/map1.go">map1.go</a></td>
+	<td></td>
+	<td align="right">1185</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/mapnan.go">mapnan.go</a></td>
+	<td></td>
+	<td align="right">1155</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method.go">method.go</a></td>
+	<td></td>
+	<td align="right">5365</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method1.go">method1.go</a></td>
+	<td></td>
+	<td align="right">636</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method2.go">method2.go</a></td>
+	<td></td>
+	<td align="right">956</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method3.go">method3.go</a></td>
+	<td></td>
+	<td align="right">570</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method4.dir/">method4.dir/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method4.go">method4.go</a></td>
+	<td></td>
+	<td align="right">230</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/method5.go">method5.go</a></td>
+	<td></td>
+	<td align="right">6894</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/named.go">named.go</a></td>
+	<td></td>
+	<td align="right">4722</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/named1.go">named1.go</a></td>
+	<td></td>
+	<td align="right">1079</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nil.go">nil.go</a></td>
+	<td></td>
+	<td align="right">2280</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nilcheck.go">nilcheck.go</a></td>
+	<td></td>
+	<td align="right">3484</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nilptr.go">nilptr.go</a></td>
+	<td></td>
+	<td align="right">3060</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nilptr2.go">nilptr2.go</a></td>
+	<td></td>
+	<td align="right">3659</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nilptr3.go">nilptr3.go</a></td>
+	<td></td>
+	<td align="right">4518</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nilptr4.go">nilptr4.go</a></td>
+	<td></td>
+	<td align="right">429</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nosplit.go">nosplit.go</a></td>
+	<td></td>
+	<td align="right">7680</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/nul1.go">nul1.go</a></td>
+	<td></td>
+	<td align="right">1344</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/parentype.go">parentype.go</a></td>
+	<td></td>
+	<td align="right">424</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/peano.go">peano.go</a></td>
+	<td></td>
+	<td align="right">2170</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/printbig.go">printbig.go</a></td>
+	<td></td>
+	<td align="right">318</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/printbig.out">printbig.out</a></td>
+	<td></td>
+	<td align="right">41</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/range.go">range.go</a></td>
+	<td></td>
+	<td align="right">5283</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/recover.go">recover.go</a></td>
+	<td></td>
+	<td align="right">8891</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/recover1.go">recover1.go</a></td>
+	<td></td>
+	<td align="right">2556</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/recover2.go">recover2.go</a></td>
+	<td></td>
+	<td align="right">1240</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/recover3.go">recover3.go</a></td>
+	<td></td>
+	<td align="right">1680</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rename.go">rename.go</a></td>
+	<td></td>
+	<td align="right">1559</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rename1.go">rename1.go</a></td>
+	<td></td>
+	<td align="right">1142</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/reorder.go">reorder.go</a></td>
+	<td></td>
+	<td align="right">1505</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/reorder2.go">reorder2.go</a></td>
+	<td></td>
+	<td align="right">7430</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/return.go">return.go</a></td>
+	<td></td>
+	<td align="right">33473</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rotate.go">rotate.go</a></td>
+	<td></td>
+	<td align="right">3351</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rotate0.go">rotate0.go</a></td>
+	<td></td>
+	<td align="right">287</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rotate1.go">rotate1.go</a></td>
+	<td></td>
+	<td align="right">287</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rotate2.go">rotate2.go</a></td>
+	<td></td>
+	<td align="right">287</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rotate3.go">rotate3.go</a></td>
+	<td></td>
+	<td align="right">287</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/run">run</a></td>
+	<td></td>
+	<td align="right">3204</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/run.go">run.go</a></td>
+	<td></td>
+	<td align="right">23407</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/rune.go">rune.go</a></td>
+	<td></td>
+	<td align="right">604</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/runtime.go">runtime.go</a></td>
+	<td></td>
+	<td align="right">591</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/safe/">safe/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/shift1.go">shift1.go</a></td>
+	<td></td>
+	<td align="right">9085</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/shift2.go">shift2.go</a></td>
+	<td></td>
+	<td align="right">1343</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/sieve.go">sieve.go</a></td>
+	<td></td>
+	<td align="right">1024</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/sigchld.go">sigchld.go</a></td>
+	<td></td>
+	<td align="right">368</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/sigchld.out">sigchld.out</a></td>
+	<td></td>
+	<td align="right">17</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/simassign.go">simassign.go</a></td>
+	<td></td>
+	<td align="right">1151</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/sinit.go">sinit.go</a></td>
+	<td></td>
+	<td align="right">5554</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/sizeof.go">sizeof.go</a></td>
+	<td></td>
+	<td align="right">3019</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/slice3.go">slice3.go</a></td>
+	<td></td>
+	<td align="right">2887</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/slice3err.go">slice3err.go</a></td>
+	<td></td>
+	<td align="right">4585</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/solitaire.go">solitaire.go</a></td>
+	<td></td>
+	<td align="right">2970</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/stack.go">stack.go</a></td>
+	<td></td>
+	<td align="right">1735</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/stress/">stress/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/string_lit.go">string_lit.go</a></td>
+	<td></td>
+	<td align="right">3663</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/stringrange.go">stringrange.go</a></td>
+	<td></td>
+	<td align="right">1489</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/struct0.go">struct0.go</a></td>
+	<td></td>
+	<td align="right">566</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/switch.go">switch.go</a></td>
+	<td></td>
+	<td align="right">6250</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/switch3.go">switch3.go</a></td>
+	<td></td>
+	<td align="right">1220</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/switch4.go">switch4.go</a></td>
+	<td></td>
+	<td align="right">526</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/syntax/">syntax/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/testlib">testlib</a></td>
+	<td></td>
+	<td align="right">2857</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/tinyfin.go">tinyfin.go</a></td>
+	<td></td>
+	<td align="right">1585</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/torture.go">torture.go</a></td>
+	<td></td>
+	<td align="right">7724</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/turing.go">turing.go</a></td>
+	<td></td>
+	<td align="right">893</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/typecheck.go">typecheck.go</a></td>
+	<td></td>
+	<td align="right">386</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/typeswitch.go">typeswitch.go</a></td>
+	<td></td>
+	<td align="right">1871</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/typeswitch1.go">typeswitch1.go</a></td>
+	<td></td>
+	<td align="right">1634</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/typeswitch2.go">typeswitch2.go</a></td>
+	<td></td>
+	<td align="right">998</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/typeswitch3.go">typeswitch3.go</a></td>
+	<td></td>
+	<td align="right">716</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/undef.go">undef.go</a></td>
+	<td></td>
+	<td align="right">759</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/utf.go">utf.go</a></td>
+	<td></td>
+	<td align="right">1219</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/varerr.go">varerr.go</a></td>
+	<td></td>
+	<td align="right">435</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/varinit.go">varinit.go</a></td>
+	<td></td>
+	<td align="right">509</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http://golang.org/test/zerodivide.go">zerodivide.go</a></td>
+	<td></td>
+	<td align="right">5676</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+
+</table>
+</p>
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

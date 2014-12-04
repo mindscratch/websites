@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/ - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Directory src/pkg/</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+<p>
+<table class="layout">
+<tr>
+	<th align="left">File</th>
+	<td width="25">&nbsp;</td>
+	<th align="right">Bytes</th>
+	<td width="25">&nbsp;</td>
+	<th align="left">Modified</th>
+</tr>
+<tr>
+	<td><a href="../index.html">..</a></td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="archive/index.html">archive/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="bufio/index.html">bufio/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="builtin/index.html">builtin/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="bytes/index.html">bytes/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="compress/index.html">compress/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="container/index.html">container/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="crypto/index.html">crypto/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="database/index.html">database/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="debug/index.html">debug/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="encoding/index.html">encoding/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="errors/index.html">errors/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="expvar/index.html">expvar/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="flag/index.html">flag/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fmt/index.html">fmt/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="go/index.html">go/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="hash/index.html">hash/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="html/index.html">html/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="image/index.html">image/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="index/index.html">index/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="io/index.html">io/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="log/index.html">log/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="math/index.html">math/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mime/index.html">mime/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="net/index.html">net/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="os/index.html">os/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="path/index.html">path/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="reflect/index.html">reflect/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regexp/index.html">regexp/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="runtime/index.html">runtime/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sort/index.html">sort/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="strconv/index.html">strconv/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="strings/index.html">strings/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sync/index.html">sync/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="syscall/index.html">syscall/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="testing/index.html">testing/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="text/index.html">text/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="time/index.html">time/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unicode/index.html">unicode/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unsafe/index.html">unsafe/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+
+</table>
+</p>
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

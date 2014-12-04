@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>gc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Command gc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+        document.ANALYSIS_DATA = null;
+        document.CALLGRAPH = null;
+        </script>
+
+	
+		
+		<p>
+Gc is the generic label for the family of Go compilers
+that function as part of the (modified) Plan 9 tool chain.  The C compiler
+documentation at
+</p>
+<pre><a href="http://plan9.bell-labs.com/sys/doc/comp.pdf">http://plan9.bell-labs.com/sys/doc/comp.pdf</a>     (Tools overview)
+<a href="http://plan9.bell-labs.com/sys/doc/compiler.pdf">http://plan9.bell-labs.com/sys/doc/compiler.pdf</a> (C compiler architecture)
+</pre>
+<p>
+gives the overall design of the tool chain.  Aside from a few adapted pieces,
+such as the optimizer, the Go compilers are wholly new programs.
+</p>
+<p>
+The compiler reads in a set of Go files, typically suffixed &#34;.go&#34;.  They
+must all be part of one package.  The output is a single intermediate file
+representing the &#34;binary assembly&#34; of the compiled package, ready as input
+for the linker (6l, etc.).
+</p>
+<p>
+The generated files contain type information about the symbols exported by
+the package and about types used by symbols imported by the package from
+other packages. It is therefore not necessary when compiling client C of
+package P to read the files of P&#39;s dependencies, only the compiled output
+of P.
+</p>
+<h3 id="hdr-Command_Line">Command Line</h3>
+<p>
+Usage:
+</p>
+<pre>go tool 6g [flags] file...
+</pre>
+<p>
+The specified files must be Go source files and all part of the same package.
+Substitute 6g with 8g or 5g where appropriate.
+</p>
+<p>
+Flags:
+</p>
+<pre>-o file
+	output file, default file.6 for 6g, etc.
+-pack
+	write an archive file rather than an object file
+-e
+	normally the compiler quits after 10 errors; -e prints all errors
+-p path
+	assume that path is the eventual import path for this code,
+	and diagnose any attempt to import a package that depends on it.
+-D path
+	treat a relative import as relative to path
+-L
+	show entire file path when printing line numbers in errors
+-I dir1 -I dir2
+	add dir1 and dir2 to the list of paths to check for imported packages
+-N
+	disable optimizations
+-nolocalimports
+	disallow local (relative) imports
+-S
+	write assembly language text to standard output (code only)
+-S -S
+	write assembly language text to standard output (code and data)
+-u
+	disallow importing packages not marked as safe; implies -nolocalimports
+-V
+	print the compiler version
+-race
+	compile with race detection enabled
+</pre>
+<p>
+There are also a number of debugging flags; run the command with no arguments
+to get a usage message.
+</p>
+<h3 id="hdr-Compiler_Directives">Compiler Directives</h3>
+<p>
+The compiler accepts two compiler directives in the form of // comments at the
+beginning of a line. To distinguish them from non-directive comments, the directives
+require no space between the slashes and the name of the directive. However, since
+they are comments, tools unaware of the directive convention or of a particular
+directive can skip over a directive like any other comment.
+</p>
+<pre>//line path/to/file:linenumber
+</pre>
+<p>
+The //line directive specifies that the source line that follows should be recorded
+as having come from the given file path and line number. Successive lines are
+recorded using increasing line numbers, until the next directive. This directive
+typically appears in machine-generated code, so that compilers and debuggers
+will show lines in the original input to the generator.
+</p>
+<pre>//go:noescape
+</pre>
+<p>
+The //go:noescape directive specifies that the next declaration in the file, which
+must be a func without a body (meaning that it has an implementation not written
+in Go) does not allow any of the pointers passed as arguments to escape into the
+heap or into the values returned from the function. This information can be used as
+during the compiler&#39;s escape analysis of Go code calling the function.
+</p>
+
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,1088 @@
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link rel="icon" type="image/vnd.microsoft.icon" href="https://ssl.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"projectHomeUrl": "/p/go", "loggedInUserEmail": null, "token": null, "domainName": null, "profileUrl": null, "projectName": "go", "assetVersionPath": "https://ssl.gstatic.com/codesite/ph/1729405847801014513", "relativeBaseUrl": "", "assetHostPath": "https://ssl.gstatic.com/codesite/ph"};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ _gaq.push(
+ ['projectTracker._setAccount', 'UA-11222381-1'],
+ ['projectTracker._trackPageview']);
+ 
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+ 
+ </script>
+ 
+ 
+ <title>Issue 3573 - 
+ go -
+ 
+ runtime: use of large map key causes crash - 
+ The Go Programming Language - Google Project Hosting
+ </title>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/ph_detail.css" >
+ 
+ 
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ .attachments { width:33%; border-top:2px solid #999; padding-top: 3px; margin-left: .7em;}
+ .attachments table { margin-bottom: 0.75em; }
+ .attachments table tr td { padding: 0; margin: 0; font-size: 95%; }
+ .preview { border: 2px solid #c3d9ff; padding: 1px; }
+ .preview:hover { border: 2px solid blue; }
+ .label { white-space: nowrap; }
+ .derived { font-style:italic }
+ .cursor_on .author {
+ background: url(https://ssl.gstatic.com/codesite/ph/images/show-arrow.gif) no-repeat 2px;
+ }
+ .hiddenform {
+ display: none;
+ }
+
+ 
+ </style>
+</head>
+<body class="t3">
+<script type="text/javascript">
+ window.___gcfg = {lang: 'en'};
+ (function() 
+ {var po = document.createElement("script");
+ po.type = "text/javascript"; po.async = true;po.src = "https://apis.google.com/js/plusone.js";
+ var s = document.getElementsByTagName("script")[0];
+ s.parentNode.insertBefore(po, s);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ 
+ <a href="3573.html#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>&#9660;</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+ <table style="padding:0px; margin: 0px 0px 10px 0px; width:100%" cellpadding="0" cellspacing="0"
+ itemscope itemtype="http://schema.org/CreativeWork">
+ <tr style="height: 58px;">
+ 
+ 
+ 
+ <td id="plogo">
+ <link itemprop="url" href="https://code.google.com/p/go">
+ <a href="https://code.google.com/p/go/">
+ 
+ 
+ <img src="https://code.google.com/p/go/logo?cct=1413989036"
+ alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em">
+ 
+ <div id="pname">
+ <a href="https://code.google.com/p/go/"><span itemprop="name">go</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link"
+ href="https://code.google.com/p/go/"><span itemprop="description">The Go Programming Language</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space:nowrap;text-align:right; vertical-align:bottom;">
+ 
+ <form action="https://code.google.com/hosting/search">
+ <input size="30" name="q" value="" type="text">
+ 
+ <input type="submit" name="projectsearch" value="Search projects" >
+ </form>
+ 
+ </tr>
+ </table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="https://code.google.com/p/go/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Downloads?tm=2" class="tab ">Downloads</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/WikiIndex?tm=6" class="tab ">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="../issue.1.html"
+ class="tab active">Issues</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Source?tm=4"
+ class="tab ">Source</a>
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/codesearch" class="tab">Code Search</a>
+ 
+ 
+ 
+ 
+ 
+ <div class=gtbc></div>
+</div>
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" class="st">
+ <tr>
+ 
+ 
+ 
+ 
+ 
+ <td class="subt">
+ <div class="issueDetail">
+<div class="isf">
+ 
+ 
+ <span class="inIssueEntry">
+ <a class="buttonify" href="https://code.google.com/p/go/issues/entry" onclick="return _newIssuePrompt();">New issue</a>
+ </span> &nbsp;
+ 
+ <span class="inIssueList">
+ <span>Search</span>
+ <form action="../issue.1.html" method="GET" style="display:inline">
+ <select id="can" name="can">
+ 
+<option disabled="disabled">Search within:</option>
+<option value="1" >&nbsp;All issues</option>
+<option value="2" selected=selected>&nbsp;Open issues</option>
+
+<option value="6" >&nbsp;New issues</option>
+<option value="7" >&nbsp;Issues to verify</option>
+
+ </select>
+ <span>for</span>
+ <span id="qq"><input type="text" size="38" id="searchq" name="q"
+ value="" autocomplete="off"
+ 
+ onkeydown="_blurOnEsc(event)"></span>
+ 
+ 
+ <span id="search_colspec"><input type="hidden" name="colspec" value="ID Status Stars Release Owner Repo Summary" ></span>
+ 
+ 
+ 
+ <input type="hidden" name="cells" value="tiles" >
+ <input type="submit" value="Search">
+ </form>
+ </span> &nbsp;
+ <span class="inIssueAdvSearch">
+ <a href="https://code.google.com/p/go/issues/advsearch">Advanced search</a>
+ </span> &nbsp;
+ <span class="inIssueSearchTips">
+ <a href="https://code.google.com/p/go/issues/searchtips">Search tips</a>
+ </span> &nbsp;
+ <span class="inIssueSubscriptions">
+ <a href="https://code.google.com/p/go/issues/subscriptions">Subscriptions</a>
+ </span>
+</div>
+</div>
+ </td>
+ 
+ 
+ 
+ 
+ <td align="right" valign="top" class="bevel-right"></td>
+ </tr>
+</table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol"
+ 
+>
+
+ 
+
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ 
+
+<div id="color_control" class="closed_colors">
+<div id="issueheader">
+<table cellpadding="0" cellspacing="0" width="100%"><tbody>
+ <tr>
+ <td class="vt h3" nowrap="nowrap" style="padding:0 5px">
+ 
+ 
+ Issue <a href="3573.html">3573</a>:
+ </td>
+ <td width="90%" class="vt">
+ <span class="h3" >runtime: use of large map key causes crash</span>
+ </td>
+ <td>
+ 
+ </td>
+ </tr>
+ <tr>
+ <td></td>
+ <td nowrap="nowrap">
+ 
+ 
+ 8 people starred this issue and may be notified of changes.
+ 
+ 
+ 
+ </td>
+ <td align="center" nowrap="nowrap">
+ 
+ <a href="https://code.google.com/p/go/issues/list?cursor=go%3A3573">Back to list</a>
+ 
+ </td>
+ </tr>
+ 
+</tbody></table>
+</div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" class="issuepage" id="meta-container">
+<tbody class="collapse"> 
+ <tr>
+ <td id="issuemeta">
+ <div id="meta-float">
+ 
+<table cellspacing="0" cellpadding="0">
+ <tr><th align="left">Status:&nbsp;</th>
+ <td width="100%">
+ 
+ <span title="Developer made source code changes">Fixed</span>
+ 
+ </td>
+ </tr>
+ 
+ 
+ 
+ 
+ <tr><th align="left">Owner:&nbsp;</th><td>
+ 
+ 
+ ----
+ 
+ 
+ </td>
+ </tr>
+ 
+ 
+ <tr><th align="left" valign="top">Closed:&nbsp;</th>
+ <td align="left" valign="top" width="100%">
+ May 2012
+ </td>
+ </tr>
+ 
+ 
+ 
+ <tr><th class="vt" align="left">Cc:&nbsp;</th><td>
+ 
+ 
+ 
+  <i title="Derived">
+
+ <a class="userlink"
+ href="https://code.google.com/u/109539344873567177682/">i...@golang.org</a
+></i> 
+ </td></tr>
+ 
+ 
+ <tr><td colspan="2">
+ 
+ 
+ 
+ <div style="padding-top:2px">
+ 
+ <a href="https://code.google.com/p/go/issues/list?q=label:Priority-ASAP"
+ title=""
+ class="label"><b>Priority-</b>ASAP</a>
+ 
+ </div>
+ 
+ 
+ 
+ 
+ <div style="padding-top:2px">
+ 
+ <a href="https://code.google.com/p/go/issues/list?q=label:Go1.0.2"
+ title=""
+ class="label">Go1.0.2</a>
+ 
+ </div>
+ 
+ 
+ </td></tr>
+ 
+</table>
+<div class="rel_issues">
+ 
+ 
+ 
+</div>
+
+
+ <br><br>
+ 
+ 
+ <div style="white-space:nowrap"><a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573">Sign in</a> to add a comment</div>
+ 
+ 
+
+
+ 
+ </div>&nbsp;
+ </td>
+ <td class="vt issuedescription" width="100%" id="cursorarea" >
+ 
+<div class="cursor_off vt issuedescription" id="hc0">
+ 
+ 
+ <div class="author">
+ <span class="role_label">Project Member</span>
+ Reported by
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/113053151639176654587/">remyoudo...@gmail.com</a
+>,
+ <span class="date" title="Sat Apr 28 07:38:37 2012">Apr 28, 2012</span>
+ 
+ </div>
+<pre>
+<b>What steps will reproduce the problem?</b>
+1. go run this program:
+
+package main
+
+type Big [50]int64
+
+func main() {
+	seen := make(map[Big]bool)
+	pow := Big{0: 2}
+	for b := 0; b &lt; 100; b++ {
+		seen[pow] = true
+	}
+}
+
+<b>What is the expected output? What do you see instead?</b>
+
+Expected: nothing.
+Got:
+$ go run crash.go
+panic: invalid memory address or nil pointer dereference
+throw: panic during gc
+[signal 0xb code=0x1 addr=0x0 pc=0x404ada]
+
+goroutine 1 [running]:
+main.main()
+	/tmp/crash.go:9 +0xa6
+
+goroutine 2 [syscall]:
+created by runtime.main
+	/build/src/release-build/src/pkg/runtime/proc.c:221
+exit status 2
+
+GDB trace:
+(gdb) run
+Starting program: /tmp/crash 
+[New LWP 15165]
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to LWP 15165]
+ReleaseN (c=void, l=void, n=void, sizeclass=void) at /opt/remy/go/src/pkg/runtime/mcache.c:63
+63			lp = &amp;(*lp)-&gt;next;
+(gdb) bt
+#0  ReleaseN (c=void, l=void, n=void, sizeclass=void) at /opt/remy/go/src/pkg/runtime/mcache.c:63
+#1  0x0000000000404cdb in runtime.MCache_ReleaseAll (c=void) at /opt/remy/go/src/pkg/runtime/mcache.c:126
+#2  0x0000000000407465 in stealcache () at /opt/remy/go/src/pkg/runtime/mgc0.c:882
+#3  0x0000000000407869 in runtime.gc (force=void) at /opt/remy/go/src/pkg/runtime/mgc0.c:998
+#4  0x000000000040fea3 in runtime.mallocgc (size=void, flag=void, dogc=void, zeroed=void) at /opt/remy/go/src/pkg/runtime/malloc.goc:97
+#5  0x0000000000410aa5 in runtime.mal (n=void) at /opt/remy/go/src/pkg/runtime/malloc.goc:432
+#6  0x000000000040244f in hash_subtable_new (h=void, power=void, used=void) at /opt/remy/go/src/pkg/runtime/hashmap.c:73
+#7  0x0000000000402dad in hash_grow (t=void, h=void, pst=void, flags=void) at /opt/remy/go/src/pkg/runtime/hashmap.c:240
+
+I use linux/amd64.
+Happens with go1 as well as tip (go version weekly.2012-03-27 +d9a1980f5814)
+
+</pre>
+
+</div>
+
+ 
+
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc1">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Sat Apr 28 12:24:56 2012">
+ Apr 28, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c1" href="3573.html#c1">#1</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/113053151639176654587/">remyoudo...@gmail.com</a
+></span>
+ 
+<pre>
+<i>(No comment was entered for this change.)</i>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Owner:</b>
+ ---
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc2">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Sat Apr 28 15:07:07 2012">
+ Apr 28, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c2" href="3573.html#c2">#2</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/r@golang.org/">r@golang.org</a
+></span>
+ 
+<pre>
+Fails on Mac too.
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Status:</b>
+ Accepted
+ 
+ <br>
+ 
+ <b>Owner:</b>
+ dvyu...@google.com
+ 
+ <br>
+ 
+ <b>Labels:</b>
+ -Priority-Triage Priority-ASAP
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc3">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Sat Apr 28 22:02:45 2012">
+ Apr 28, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c3" href="3573.html#c3">#3</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/109539344873567177682/">i...@golang.org</a
+></span>
+ 
+<pre>
+It's a straighforward but very serious bug.  The hashmap code uses a uint8 to store the size of a data element.  That means that the hashmap code fails if the total of the key size plus the data size, with appropriate rounding, is &gt;= 256.  That was fine before Go 1, but it failed once we started to permit struct and array values to be used as hash keys.
+
+But strangely there is already an assertion to check for this type of error in hash_init:
+	assert (h-&gt;datasize == datasize);
+Ah, but it doesn't work because the caller uses h-&gt;valoff, which is itself a uint8 field.
+
+Here is a possible fix but I'm not sure it's ideal or complete:
+
+<a href="http://codereview.appspot.com/6137051" rel="nofollow">http://codereview.appspot.com/6137051</a>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Owner:</b>
+ ---
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc4">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Mon Apr 30 15:09:53 2012">
+ Apr 30, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c4" href="3573.html#c4">#4</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/109539344873567177682/">i...@golang.org</a
+></span>
+ 
+<pre>
+<i>(No comment was entered for this change.)</i>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Labels:</b>
+ Go1.0.2
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc5">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Thu May 24 19:41:15 2012">
+ May 24, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c5" href="3573.html#c5">#5</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/rsc@golang.org/">rsc@golang.org</a
+></span>
+ 
+<pre>
+This issue was closed by <a href="https://code.google.com/p/go/source/detail?r=98488e2e38ee">revision 98488e2e38ee</a>.
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Status:</b>
+ Fixed
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc6">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Fri Jun  1 21:33:04 2012">
+ Jun 1, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ 
+ <a name="c6" href="3573.html#c6">#6</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/104450695812666484805/">dan.kort...@adelaide.edu.au</a
+></span>
+ 
+<pre>
+This appears not to be fixed at tip.
+
+$ go tool 6g -V
+6g version weekly.2012-03-27 +d8e47164f8dd
+
+The following code demonstrates a variety of errors:
+
+package main
+
+import &quot;fmt&quot;
+
+const id = &quot;scaf&quot; // or var id = &quot;scaf&quot; or other values - see comments below
+
+
+type sf struct {
+    id string
+    i  int
+
+}
+
+type sp struct {
+    a, b sf
+}
+
+func main() {
+    seen := map[sp]struct{}{}
+    for i := 0; i &lt; 500; i++ {
+        fmt.Println(i)
+        a := sf{id, i}
+        aa := sp{a, a}
+        seen[aa] = struct{}{}
+    }
+}
+
+The results depend on the value of and 'type' of id:
+if it's const &quot;&quot; then the result is always a `throw: hashmap assert`, if it's a var &quot;&quot; then it's either that or `invalid memory address or nil pointer dereference`
+if it's const or var &quot;a&quot; then mainly `unexpected fault address`, but sometime `hashmap assert'
+if it's const or var &quot;scaf&quot;, sometimes it hangs and sometimes it throws `hashmap assert` - other '4-words' behave differently (id ~&lt; &quot;naaa&quot; behaves like &quot;a&quot;, id ~&gt; &quot;naaa&quot; behaves like &quot;scaf&quot; - not exhaustively confirmed for all values)
+
+The common thing is that the throw or hang always happens as i == 81.
+
+Removing the integer or the string field results in normal behaviour.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc7">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jun 13 18:31:09 2012">
+ Jun 13, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c7" href="3573.html#c7">#7</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/rsc@golang.org/">rsc@golang.org</a
+></span>
+ 
+<pre>
+<i>(No comment was entered for this change.)</i>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Summary:</b>
+ runtime: use of large map key causes crash
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc8">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jun 13 18:33:11 2012">
+ Jun 13, 2012
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c8" href="3573.html#c8">#8</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/rsc@golang.org/">rsc@golang.org</a
+></span>
+ 
+<pre>
+Note that the problem reported in comment 6 became <a title="runtime: computed hash value for struct map key ignores some fields" class=closed_ref href="3695.html"> issue 3695 </a>, now fixed.
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+
+ 
+
+
+ </td>
+ </tr>
+
+ 
+ <tr>
+ <td></td>
+ <td class="vt issuecomment">
+ <span class="indicator">&#9658;</span> <a href="https://www.google.com/accounts/ServiceLogin?service=code&ltmpl=phosting&continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D3573"
+ >Sign in</a> to add a comment
+ </td>
+ </tr>
+ 
+
+</tbody>
+</table>
+<br>
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/dit_scripts.js"></script>
+
+
+
+ 
+
+</div> 
+<form name="delcom" action="https://code.google.com/p/go/issues/delComment.do?q=&amp;can=2&amp;groupby=&amp;sort=&amp;colspec=ID+Status+Stars+Release+Owner+Repo+Summary" method="POST">
+ <input type="hidden" name="sequence_num" value="">
+ <input type="hidden" name="mode" value="">
+ <input type="hidden" name="id" value="3573">
+ <input type="hidden" name="token" value="">
+</form>
+
+<div id="helparea"></div>
+<script type="text/javascript">
+ _onload();
+ function delComment(sequence_num, delete_mode) {
+ var f = document.forms["delcom"];
+ f.sequence_num.value = sequence_num;
+ f.mode.value = delete_mode;
+ 
+ f.submit();
+ return false;
+ }
+ 
+ _floatMetadata();
+</script>
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/kibbles.js"></script>
+<script type="text/javascript">
+ _setupKibblesOnDetailPage(
+ 'https://code.google.com/p/go/issues/list?cursor\x3dgo%3A3573',
+ '/p/go/issues/entry',
+ '',
+ '',
+ '', 'go', 3573,
+ false, false, codesite_token);
+</script>
+ 
+ 
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_core.js"></script>
+ 
+ 
+ 
+ 
+</div> 
+
+<div id="footer" dir="ltr">
+ <div class="text">
+ <a href="https://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="https://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+
+ 
+ 
+
+
+ 
+ </body>
+</html>
+

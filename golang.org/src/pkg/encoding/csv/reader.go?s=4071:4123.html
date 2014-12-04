@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/encoding/csv/reader.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/encoding/csv/reader.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package csv reads and writes comma-separated values (CSV) files.</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">//</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// A csv file contains zero or more records of one or more fields per record.</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">// Each record is separated by the newline character. The final record may</span>
+<span id="L9" class="ln">     9</span>	<span class="comment">// optionally be followed by a newline character.</span>
+<span id="L10" class="ln">    10</span>	<span class="comment">//</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">//	field1,field2,field3</span>
+<span id="L12" class="ln">    12</span>	<span class="comment">//</span>
+<span id="L13" class="ln">    13</span>	<span class="comment">// White space is considered part of a field.</span>
+<span id="L14" class="ln">    14</span>	<span class="comment">//</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// Carriage returns before newline characters are silently removed.</span>
+<span id="L16" class="ln">    16</span>	<span class="comment">//</span>
+<span id="L17" class="ln">    17</span>	<span class="comment">// Blank lines are ignored.  A line with only whitespace characters (excluding</span>
+<span id="L18" class="ln">    18</span>	<span class="comment">// the ending newline character) is not considered a blank line.</span>
+<span id="L19" class="ln">    19</span>	<span class="comment">//</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">// Fields which start and stop with the quote character &#34; are called</span>
+<span id="L21" class="ln">    21</span>	<span class="comment">// quoted-fields.  The beginning and ending quote are not part of the</span>
+<span id="L22" class="ln">    22</span>	<span class="comment">// field.</span>
+<span id="L23" class="ln">    23</span>	<span class="comment">//</span>
+<span id="L24" class="ln">    24</span>	<span class="comment">// The source:</span>
+<span id="L25" class="ln">    25</span>	<span class="comment">//</span>
+<span id="L26" class="ln">    26</span>	<span class="comment">//	normal string,&#34;quoted-field&#34;</span>
+<span id="L27" class="ln">    27</span>	<span class="comment">//</span>
+<span id="L28" class="ln">    28</span>	<span class="comment">// results in the fields</span>
+<span id="L29" class="ln">    29</span>	<span class="comment">//</span>
+<span id="L30" class="ln">    30</span>	<span class="comment">//	{`normal string`, `quoted-field`}</span>
+<span id="L31" class="ln">    31</span>	<span class="comment">//</span>
+<span id="L32" class="ln">    32</span>	<span class="comment">// Within a quoted-field a quote character followed by a second quote</span>
+<span id="L33" class="ln">    33</span>	<span class="comment">// character is considered a single quote.</span>
+<span id="L34" class="ln">    34</span>	<span class="comment">//</span>
+<span id="L35" class="ln">    35</span>	<span class="comment">//	&#34;the &#34;&#34;word&#34;&#34; is true&#34;,&#34;a &#34;&#34;quoted-field&#34;&#34;&#34;</span>
+<span id="L36" class="ln">    36</span>	<span class="comment">//</span>
+<span id="L37" class="ln">    37</span>	<span class="comment">// results in</span>
+<span id="L38" class="ln">    38</span>	<span class="comment">//</span>
+<span id="L39" class="ln">    39</span>	<span class="comment">//	{`the &#34;word&#34; is true`, `a &#34;quoted-field&#34;`}</span>
+<span id="L40" class="ln">    40</span>	<span class="comment">//</span>
+<span id="L41" class="ln">    41</span>	<span class="comment">// Newlines and commas may be included in a quoted-field</span>
+<span id="L42" class="ln">    42</span>	<span class="comment">//</span>
+<span id="L43" class="ln">    43</span>	<span class="comment">//	&#34;Multi-line</span>
+<span id="L44" class="ln">    44</span>	<span class="comment">//	field&#34;,&#34;comma is ,&#34;</span>
+<span id="L45" class="ln">    45</span>	<span class="comment">//</span>
+<span id="L46" class="ln">    46</span>	<span class="comment">// results in</span>
+<span id="L47" class="ln">    47</span>	<span class="comment">//</span>
+<span id="L48" class="ln">    48</span>	<span class="comment">//	{`Multi-line</span>
+<span id="L49" class="ln">    49</span>	<span class="comment">//	field`, `comma is ,`}</span>
+<span id="L50" class="ln">    50</span>	package csv
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>	import (
+<span id="L53" class="ln">    53</span>		&#34;bufio&#34;
+<span id="L54" class="ln">    54</span>		&#34;bytes&#34;
+<span id="L55" class="ln">    55</span>		&#34;errors&#34;
+<span id="L56" class="ln">    56</span>		&#34;fmt&#34;
+<span id="L57" class="ln">    57</span>		&#34;io&#34;
+<span id="L58" class="ln">    58</span>		&#34;unicode&#34;
+<span id="L59" class="ln">    59</span>	)
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>	<span class="comment">// A ParseError is returned for parsing errors.</span>
+<span id="L62" class="ln">    62</span>	<span class="comment">// The first line is 1.  The first column is 0.</span>
+<span id="L63" class="ln">    63</span>	type ParseError struct {
+<span id="L64" class="ln">    64</span>		Line   int   <span class="comment">// Line where the error occurred</span>
+<span id="L65" class="ln">    65</span>		Column int   <span class="comment">// Column (rune index) where the error occurred</span>
+<span id="L66" class="ln">    66</span>		Err    error <span class="comment">// The actual error</span>
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	func (e *ParseError) Error() string {
+<span id="L70" class="ln">    70</span>		return fmt.Sprintf(&#34;line %d, column %d: %s&#34;, e.Line, e.Column, e.Err)
+<span id="L71" class="ln">    71</span>	}
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>	<span class="comment">// These are the errors that can be returned in ParseError.Error</span>
+<span id="L74" class="ln">    74</span>	var (
+<span id="L75" class="ln">    75</span>		ErrTrailingComma = errors.New(&#34;extra delimiter at end of line&#34;) <span class="comment">// no longer used</span>
+<span id="L76" class="ln">    76</span>		ErrBareQuote     = errors.New(&#34;bare \&#34; in non-quoted-field&#34;)
+<span id="L77" class="ln">    77</span>		ErrQuote         = errors.New(&#34;extraneous \&#34; in field&#34;)
+<span id="L78" class="ln">    78</span>		ErrFieldCount    = errors.New(&#34;wrong number of fields in line&#34;)
+<span id="L79" class="ln">    79</span>	)
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>	<span class="comment">// A Reader reads records from a CSV-encoded file.</span>
+<span id="L82" class="ln">    82</span>	<span class="comment">//</span>
+<span id="L83" class="ln">    83</span>	<span class="comment">// As returned by NewReader, a Reader expects input conforming to RFC 4180.</span>
+<span id="L84" class="ln">    84</span>	<span class="comment">// The exported fields can be changed to customize the details before the</span>
+<span id="L85" class="ln">    85</span>	<span class="comment">// first call to Read or ReadAll.</span>
+<span id="L86" class="ln">    86</span>	<span class="comment">//</span>
+<span id="L87" class="ln">    87</span>	<span class="comment">// Comma is the field delimiter.  It defaults to &#39;,&#39;.</span>
+<span id="L88" class="ln">    88</span>	<span class="comment">//</span>
+<span id="L89" class="ln">    89</span>	<span class="comment">// Comment, if not 0, is the comment character. Lines beginning with the</span>
+<span id="L90" class="ln">    90</span>	<span class="comment">// Comment character are ignored.</span>
+<span id="L91" class="ln">    91</span>	<span class="comment">//</span>
+<span id="L92" class="ln">    92</span>	<span class="comment">// If FieldsPerRecord is positive, Read requires each record to</span>
+<span id="L93" class="ln">    93</span>	<span class="comment">// have the given number of fields.  If FieldsPerRecord is 0, Read sets it to</span>
+<span id="L94" class="ln">    94</span>	<span class="comment">// the number of fields in the first record, so that future records must</span>
+<span id="L95" class="ln">    95</span>	<span class="comment">// have the same field count.  If FieldsPerRecord is negative, no check is</span>
+<span id="L96" class="ln">    96</span>	<span class="comment">// made and records may have a variable number of fields.</span>
+<span id="L97" class="ln">    97</span>	<span class="comment">//</span>
+<span id="L98" class="ln">    98</span>	<span class="comment">// If LazyQuotes is true, a quote may appear in an unquoted field and a</span>
+<span id="L99" class="ln">    99</span>	<span class="comment">// non-doubled quote may appear in a quoted field.</span>
+<span id="L100" class="ln">   100</span>	<span class="comment">//</span>
+<span id="L101" class="ln">   101</span>	<span class="comment">// If TrimLeadingSpace is true, leading white space in a field is ignored.</span>
+<span id="L102" class="ln">   102</span>	type Reader struct {
+<span id="L103" class="ln">   103</span>		Comma            rune <span class="comment">// field delimiter (set to &#39;,&#39; by NewReader)</span>
+<span id="L104" class="ln">   104</span>		Comment          rune <span class="comment">// comment character for start of line</span>
+<span id="L105" class="ln">   105</span>		FieldsPerRecord  int  <span class="comment">// number of expected fields per record</span>
+<span id="L106" class="ln">   106</span>		LazyQuotes       bool <span class="comment">// allow lazy quotes</span>
+<span id="L107" class="ln">   107</span>		TrailingComma    bool <span class="comment">// ignored; here for backwards compatibility</span>
+<span id="L108" class="ln">   108</span>		TrimLeadingSpace bool <span class="comment">// trim leading space</span>
+<span id="L109" class="ln">   109</span>		line             int
+<span id="L110" class="ln">   110</span>		column           int
+<span id="L111" class="ln">   111</span>		r                *bufio.Reader
+<span id="L112" class="ln">   112</span>		field            bytes.Buffer
+<span id="L113" class="ln">   113</span>	}
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>	<span class="comment">// NewReader returns a new Reader that reads from r.</span>
+<span id="L116" class="ln">   116</span>	func NewReader(r io.Reader) *Reader {
+<span id="L117" class="ln">   117</span>		return &amp;Reader{
+<span id="L118" class="ln">   118</span>			Comma: &#39;,&#39;,
+<span id="L119" class="ln">   119</span>			r:     bufio.NewReader(r),
+<span id="L120" class="ln">   120</span>		}
+<span id="L121" class="ln">   121</span>	}
+<span id="L122" class="ln">   122</span>	
+<span id="L123" class="ln">   123</span>	<span class="comment">// error creates a new ParseError based on err.</span>
+<span id="L124" class="ln">   124</span>	func (r *Reader) error(err error) error {
+<span id="L125" class="ln">   125</span>		return &amp;ParseError{
+<span id="L126" class="ln">   126</span>			Line:   r.line,
+<span id="L127" class="ln">   127</span>			Column: r.column,
+<span id="L128" class="ln">   128</span>			Err:    err,
+<span id="L129" class="ln">   129</span>		}
+<span id="L130" class="ln">   130</span>	}
+<span id="L131" class="ln">   131</span>	
+<span id="L132" class="ln">   132</span>	<span class="comment">// Read reads one record from r.  The record is a slice of strings with each</span>
+<span id="L133" class="ln">   133</span>	<span class="comment">// string representing one field.</span>
+<span id="L134" class="ln">   134</span>	<span class="selection">func (r *Reader) Read() (record []string, err error)</span> {
+<span id="L135" class="ln">   135</span>		for {
+<span id="L136" class="ln">   136</span>			record, err = r.parseRecord()
+<span id="L137" class="ln">   137</span>			if record != nil {
+<span id="L138" class="ln">   138</span>				break
+<span id="L139" class="ln">   139</span>			}
+<span id="L140" class="ln">   140</span>			if err != nil {
+<span id="L141" class="ln">   141</span>				return nil, err
+<span id="L142" class="ln">   142</span>			}
+<span id="L143" class="ln">   143</span>		}
+<span id="L144" class="ln">   144</span>	
+<span id="L145" class="ln">   145</span>		if r.FieldsPerRecord &gt; 0 {
+<span id="L146" class="ln">   146</span>			if len(record) != r.FieldsPerRecord {
+<span id="L147" class="ln">   147</span>				r.column = 0 <span class="comment">// report at start of record</span>
+<span id="L148" class="ln">   148</span>				return record, r.error(ErrFieldCount)
+<span id="L149" class="ln">   149</span>			}
+<span id="L150" class="ln">   150</span>		} else if r.FieldsPerRecord == 0 {
+<span id="L151" class="ln">   151</span>			r.FieldsPerRecord = len(record)
+<span id="L152" class="ln">   152</span>		}
+<span id="L153" class="ln">   153</span>		return record, nil
+<span id="L154" class="ln">   154</span>	}
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>	<span class="comment">// ReadAll reads all the remaining records from r.</span>
+<span id="L157" class="ln">   157</span>	<span class="comment">// Each record is a slice of fields.</span>
+<span id="L158" class="ln">   158</span>	<span class="comment">// A successful call returns err == nil, not err == EOF. Because ReadAll is</span>
+<span id="L159" class="ln">   159</span>	<span class="comment">// defined to read until EOF, it does not treat end of file as an error to be</span>
+<span id="L160" class="ln">   160</span>	<span class="comment">// reported.</span>
+<span id="L161" class="ln">   161</span>	func (r *Reader) ReadAll() (records [][]string, err error) {
+<span id="L162" class="ln">   162</span>		for {
+<span id="L163" class="ln">   163</span>			record, err := r.Read()
+<span id="L164" class="ln">   164</span>			if err == io.EOF {
+<span id="L165" class="ln">   165</span>				return records, nil
+<span id="L166" class="ln">   166</span>			}
+<span id="L167" class="ln">   167</span>			if err != nil {
+<span id="L168" class="ln">   168</span>				return nil, err
+<span id="L169" class="ln">   169</span>			}
+<span id="L170" class="ln">   170</span>			records = append(records, record)
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>	}
+<span id="L173" class="ln">   173</span>	
+<span id="L174" class="ln">   174</span>	<span class="comment">// readRune reads one rune from r, folding \r\n to \n and keeping track</span>
+<span id="L175" class="ln">   175</span>	<span class="comment">// of how far into the line we have read.  r.column will point to the start</span>
+<span id="L176" class="ln">   176</span>	<span class="comment">// of this rune, not the end of this rune.</span>
+<span id="L177" class="ln">   177</span>	func (r *Reader) readRune() (rune, error) {
+<span id="L178" class="ln">   178</span>		r1, _, err := r.r.ReadRune()
+<span id="L179" class="ln">   179</span>	
+<span id="L180" class="ln">   180</span>		<span class="comment">// Handle \r\n here.  We make the simplifying assumption that</span>
+<span id="L181" class="ln">   181</span>		<span class="comment">// anytime \r is followed by \n that it can be folded to \n.</span>
+<span id="L182" class="ln">   182</span>		<span class="comment">// We will not detect files which contain both \r\n and bare \n.</span>
+<span id="L183" class="ln">   183</span>		if r1 == &#39;\r&#39; {
+<span id="L184" class="ln">   184</span>			r1, _, err = r.r.ReadRune()
+<span id="L185" class="ln">   185</span>			if err == nil {
+<span id="L186" class="ln">   186</span>				if r1 != &#39;\n&#39; {
+<span id="L187" class="ln">   187</span>					r.r.UnreadRune()
+<span id="L188" class="ln">   188</span>					r1 = &#39;\r&#39;
+<span id="L189" class="ln">   189</span>				}
+<span id="L190" class="ln">   190</span>			}
+<span id="L191" class="ln">   191</span>		}
+<span id="L192" class="ln">   192</span>		r.column++
+<span id="L193" class="ln">   193</span>		return r1, err
+<span id="L194" class="ln">   194</span>	}
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>	<span class="comment">// skip reads runes up to and including the rune delim or until error.</span>
+<span id="L197" class="ln">   197</span>	func (r *Reader) skip(delim rune) error {
+<span id="L198" class="ln">   198</span>		for {
+<span id="L199" class="ln">   199</span>			r1, err := r.readRune()
+<span id="L200" class="ln">   200</span>			if err != nil {
+<span id="L201" class="ln">   201</span>				return err
+<span id="L202" class="ln">   202</span>			}
+<span id="L203" class="ln">   203</span>			if r1 == delim {
+<span id="L204" class="ln">   204</span>				return nil
+<span id="L205" class="ln">   205</span>			}
+<span id="L206" class="ln">   206</span>		}
+<span id="L207" class="ln">   207</span>	}
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	<span class="comment">// parseRecord reads and parses a single csv record from r.</span>
+<span id="L210" class="ln">   210</span>	func (r *Reader) parseRecord() (fields []string, err error) {
+<span id="L211" class="ln">   211</span>		<span class="comment">// Each record starts on a new line.  We increment our line</span>
+<span id="L212" class="ln">   212</span>		<span class="comment">// number (lines start at 1, not 0) and set column to -1</span>
+<span id="L213" class="ln">   213</span>		<span class="comment">// so as we increment in readRune it points to the character we read.</span>
+<span id="L214" class="ln">   214</span>		r.line++
+<span id="L215" class="ln">   215</span>		r.column = -1
+<span id="L216" class="ln">   216</span>	
+<span id="L217" class="ln">   217</span>		<span class="comment">// Peek at the first rune.  If it is an error we are done.</span>
+<span id="L218" class="ln">   218</span>		<span class="comment">// If we are support comments and it is the comment character</span>
+<span id="L219" class="ln">   219</span>		<span class="comment">// then skip to the end of line.</span>
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>		r1, _, err := r.r.ReadRune()
+<span id="L222" class="ln">   222</span>		if err != nil {
+<span id="L223" class="ln">   223</span>			return nil, err
+<span id="L224" class="ln">   224</span>		}
+<span id="L225" class="ln">   225</span>	
+<span id="L226" class="ln">   226</span>		if r.Comment != 0 &amp;&amp; r1 == r.Comment {
+<span id="L227" class="ln">   227</span>			return nil, r.skip(&#39;\n&#39;)
+<span id="L228" class="ln">   228</span>		}
+<span id="L229" class="ln">   229</span>		r.r.UnreadRune()
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>		<span class="comment">// At this point we have at least one field.</span>
+<span id="L232" class="ln">   232</span>		for {
+<span id="L233" class="ln">   233</span>			haveField, delim, err := r.parseField()
+<span id="L234" class="ln">   234</span>			if haveField {
+<span id="L235" class="ln">   235</span>				fields = append(fields, r.field.String())
+<span id="L236" class="ln">   236</span>			}
+<span id="L237" class="ln">   237</span>			if delim == &#39;\n&#39; || err == io.EOF {
+<span id="L238" class="ln">   238</span>				return fields, err
+<span id="L239" class="ln">   239</span>			} else if err != nil {
+<span id="L240" class="ln">   240</span>				return nil, err
+<span id="L241" class="ln">   241</span>			}
+<span id="L242" class="ln">   242</span>		}
+<span id="L243" class="ln">   243</span>	}
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>	<span class="comment">// parseField parses the next field in the record.  The read field is</span>
+<span id="L246" class="ln">   246</span>	<span class="comment">// located in r.field.  Delim is the first character not part of the field</span>
+<span id="L247" class="ln">   247</span>	<span class="comment">// (r.Comma or &#39;\n&#39;).</span>
+<span id="L248" class="ln">   248</span>	func (r *Reader) parseField() (haveField bool, delim rune, err error) {
+<span id="L249" class="ln">   249</span>		r.field.Reset()
+<span id="L250" class="ln">   250</span>	
+<span id="L251" class="ln">   251</span>		r1, err := r.readRune()
+<span id="L252" class="ln">   252</span>		for err == nil &amp;&amp; r.TrimLeadingSpace &amp;&amp; r1 != &#39;\n&#39; &amp;&amp; unicode.IsSpace(r1) {
+<span id="L253" class="ln">   253</span>			r1, err = r.readRune()
+<span id="L254" class="ln">   254</span>		}
+<span id="L255" class="ln">   255</span>	
+<span id="L256" class="ln">   256</span>		if err == io.EOF &amp;&amp; r.column != 0 {
+<span id="L257" class="ln">   257</span>			return true, 0, err
+<span id="L258" class="ln">   258</span>		}
+<span id="L259" class="ln">   259</span>		if err != nil {
+<span id="L260" class="ln">   260</span>			return false, 0, err
+<span id="L261" class="ln">   261</span>		}
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>		switch r1 {
+<span id="L264" class="ln">   264</span>		case r.Comma:
+<span id="L265" class="ln">   265</span>			<span class="comment">// will check below</span>
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		case &#39;\n&#39;:
+<span id="L268" class="ln">   268</span>			<span class="comment">// We are a trailing empty field or a blank line</span>
+<span id="L269" class="ln">   269</span>			if r.column == 0 {
+<span id="L270" class="ln">   270</span>				return false, r1, nil
+<span id="L271" class="ln">   271</span>			}
+<span id="L272" class="ln">   272</span>			return true, r1, nil
+<span id="L273" class="ln">   273</span>	
+<span id="L274" class="ln">   274</span>		case &#39;&#34;&#39;:
+<span id="L275" class="ln">   275</span>			<span class="comment">// quoted field</span>
+<span id="L276" class="ln">   276</span>		Quoted:
+<span id="L277" class="ln">   277</span>			for {
+<span id="L278" class="ln">   278</span>				r1, err = r.readRune()
+<span id="L279" class="ln">   279</span>				if err != nil {
+<span id="L280" class="ln">   280</span>					if err == io.EOF {
+<span id="L281" class="ln">   281</span>						if r.LazyQuotes {
+<span id="L282" class="ln">   282</span>							return true, 0, err
+<span id="L283" class="ln">   283</span>						}
+<span id="L284" class="ln">   284</span>						return false, 0, r.error(ErrQuote)
+<span id="L285" class="ln">   285</span>					}
+<span id="L286" class="ln">   286</span>					return false, 0, err
+<span id="L287" class="ln">   287</span>				}
+<span id="L288" class="ln">   288</span>				switch r1 {
+<span id="L289" class="ln">   289</span>				case &#39;&#34;&#39;:
+<span id="L290" class="ln">   290</span>					r1, err = r.readRune()
+<span id="L291" class="ln">   291</span>					if err != nil || r1 == r.Comma {
+<span id="L292" class="ln">   292</span>						break Quoted
+<span id="L293" class="ln">   293</span>					}
+<span id="L294" class="ln">   294</span>					if r1 == &#39;\n&#39; {
+<span id="L295" class="ln">   295</span>						return true, r1, nil
+<span id="L296" class="ln">   296</span>					}
+<span id="L297" class="ln">   297</span>					if r1 != &#39;&#34;&#39; {
+<span id="L298" class="ln">   298</span>						if !r.LazyQuotes {
+<span id="L299" class="ln">   299</span>							r.column--
+<span id="L300" class="ln">   300</span>							return false, 0, r.error(ErrQuote)
+<span id="L301" class="ln">   301</span>						}
+<span id="L302" class="ln">   302</span>						<span class="comment">// accept the bare quote</span>
+<span id="L303" class="ln">   303</span>						r.field.WriteRune(&#39;&#34;&#39;)
+<span id="L304" class="ln">   304</span>					}
+<span id="L305" class="ln">   305</span>				case &#39;\n&#39;:
+<span id="L306" class="ln">   306</span>					r.line++
+<span id="L307" class="ln">   307</span>					r.column = -1
+<span id="L308" class="ln">   308</span>				}
+<span id="L309" class="ln">   309</span>				r.field.WriteRune(r1)
+<span id="L310" class="ln">   310</span>			}
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>		default:
+<span id="L313" class="ln">   313</span>			<span class="comment">// unquoted field</span>
+<span id="L314" class="ln">   314</span>			for {
+<span id="L315" class="ln">   315</span>				r.field.WriteRune(r1)
+<span id="L316" class="ln">   316</span>				r1, err = r.readRune()
+<span id="L317" class="ln">   317</span>				if err != nil || r1 == r.Comma {
+<span id="L318" class="ln">   318</span>					break
+<span id="L319" class="ln">   319</span>				}
+<span id="L320" class="ln">   320</span>				if r1 == &#39;\n&#39; {
+<span id="L321" class="ln">   321</span>					return true, r1, nil
+<span id="L322" class="ln">   322</span>				}
+<span id="L323" class="ln">   323</span>				if !r.LazyQuotes &amp;&amp; r1 == &#39;&#34;&#39; {
+<span id="L324" class="ln">   324</span>					return false, 0, r.error(ErrBareQuote)
+<span id="L325" class="ln">   325</span>				}
+<span id="L326" class="ln">   326</span>			}
+<span id="L327" class="ln">   327</span>		}
+<span id="L328" class="ln">   328</span>	
+<span id="L329" class="ln">   329</span>		if err != nil {
+<span id="L330" class="ln">   330</span>			if err == io.EOF {
+<span id="L331" class="ln">   331</span>				return true, 0, err
+<span id="L332" class="ln">   332</span>			}
+<span id="L333" class="ln">   333</span>			return false, 0, err
+<span id="L334" class="ln">   334</span>		}
+<span id="L335" class="ln">   335</span>	
+<span id="L336" class="ln">   336</span>		return true, r1, nil
+<span id="L337" class="ln">   337</span>	}
+<span id="L338" class="ln">   338</span>	
+</pre><p><a href="reader.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

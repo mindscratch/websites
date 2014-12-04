@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/vlrt_arm.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/vlrt_arm.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Inferno&#39;s libkern/vlrt-arm.c
+<span id="L2" class="ln">     2</span>	// http://code.google.com/p/inferno-os/source/browse/libkern/vlrt-arm.c
+<span id="L3" class="ln">     3</span>	//
+<span id="L4" class="ln">     4</span>	//         Copyright © 1994-1999 Lucent Technologies Inc.  All rights reserved.
+<span id="L5" class="ln">     5</span>	//         Revisions Copyright © 2000-2007 Vita Nuova Holdings Limited (www.vitanuova.com).  All rights reserved.
+<span id="L6" class="ln">     6</span>	//         Portions Copyright 2009 The Go Authors. All rights reserved.
+<span id="L7" class="ln">     7</span>	//
+<span id="L8" class="ln">     8</span>	// Permission is hereby granted, free of charge, to any person obtaining a copy
+<span id="L9" class="ln">     9</span>	// of this software and associated documentation files (the &#34;Software&#34;), to deal
+<span id="L10" class="ln">    10</span>	// in the Software without restriction, including without limitation the rights
+<span id="L11" class="ln">    11</span>	// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+<span id="L12" class="ln">    12</span>	// copies of the Software, and to permit persons to whom the Software is
+<span id="L13" class="ln">    13</span>	// furnished to do so, subject to the following conditions:
+<span id="L14" class="ln">    14</span>	//
+<span id="L15" class="ln">    15</span>	// The above copyright notice and this permission notice shall be included in
+<span id="L16" class="ln">    16</span>	// all copies or substantial portions of the Software.
+<span id="L17" class="ln">    17</span>	//
+<span id="L18" class="ln">    18</span>	// THE SOFTWARE IS PROVIDED &#34;AS IS&#34;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+<span id="L19" class="ln">    19</span>	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+<span id="L20" class="ln">    20</span>	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+<span id="L21" class="ln">    21</span>	// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+<span id="L22" class="ln">    22</span>	// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+<span id="L23" class="ln">    23</span>	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+<span id="L24" class="ln">    24</span>	// THE SOFTWARE.
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>	// declared here to avoid include of runtime.h
+<span id="L29" class="ln">    29</span>	void	runtime·panicstring(char*);
+<span id="L30" class="ln">    30</span>	void	runtime·panicdivide(void);
+<span id="L31" class="ln">    31</span>	
+<span id="L32" class="ln">    32</span>	typedef unsigned long   ulong;
+<span id="L33" class="ln">    33</span>	typedef unsigned int    uint;
+<span id="L34" class="ln">    34</span>	typedef unsigned short  ushort;
+<span id="L35" class="ln">    35</span>	typedef unsigned char   uchar;
+<span id="L36" class="ln">    36</span>	typedef signed char     schar;
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	#define SIGN(n) (1UL&lt;&lt;(n-1))
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>	typedef struct  Vlong   Vlong;
+<span id="L41" class="ln">    41</span>	struct  Vlong
+<span id="L42" class="ln">    42</span>	{
+<span id="L43" class="ln">    43</span>		union
+<span id="L44" class="ln">    44</span>		{
+<span id="L45" class="ln">    45</span>			struct
+<span id="L46" class="ln">    46</span>			{
+<span id="L47" class="ln">    47</span>				ulong   lo;
+<span id="L48" class="ln">    48</span>				ulong   hi;
+<span id="L49" class="ln">    49</span>			};
+<span id="L50" class="ln">    50</span>			struct
+<span id="L51" class="ln">    51</span>			{
+<span id="L52" class="ln">    52</span>				ushort lols;
+<span id="L53" class="ln">    53</span>				ushort loms;
+<span id="L54" class="ln">    54</span>				ushort hils;
+<span id="L55" class="ln">    55</span>				ushort hims;
+<span id="L56" class="ln">    56</span>			};
+<span id="L57" class="ln">    57</span>		};
+<span id="L58" class="ln">    58</span>	};
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>	void    runtime·abort(void);
+<span id="L61" class="ln">    61</span>	
+<span id="L62" class="ln">    62</span>	#pragma textflag NOSPLIT
+<span id="L63" class="ln">    63</span>	void
+<span id="L64" class="ln">    64</span>	_addv(Vlong *r, Vlong a, Vlong b)
+<span id="L65" class="ln">    65</span>	{
+<span id="L66" class="ln">    66</span>		r-&gt;lo = a.lo + b.lo;
+<span id="L67" class="ln">    67</span>		r-&gt;hi = a.hi + b.hi;
+<span id="L68" class="ln">    68</span>		if(r-&gt;lo &lt; a.lo)
+<span id="L69" class="ln">    69</span>			r-&gt;hi++;
+<span id="L70" class="ln">    70</span>	}
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	#pragma textflag NOSPLIT
+<span id="L73" class="ln">    73</span>	void
+<span id="L74" class="ln">    74</span>	_subv(Vlong *r, Vlong a, Vlong b)
+<span id="L75" class="ln">    75</span>	{
+<span id="L76" class="ln">    76</span>		r-&gt;lo = a.lo - b.lo;
+<span id="L77" class="ln">    77</span>		r-&gt;hi = a.hi - b.hi;
+<span id="L78" class="ln">    78</span>		if(r-&gt;lo &gt; a.lo)
+<span id="L79" class="ln">    79</span>			r-&gt;hi--;
+<span id="L80" class="ln">    80</span>	}
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	void
+<span id="L83" class="ln">    83</span>	_d2v(Vlong *y, double d)
+<span id="L84" class="ln">    84</span>	{
+<span id="L85" class="ln">    85</span>		union { double d; struct Vlong; } x;
+<span id="L86" class="ln">    86</span>		ulong xhi, xlo, ylo, yhi;
+<span id="L87" class="ln">    87</span>		int sh;
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		x.d = d;
+<span id="L90" class="ln">    90</span>	
+<span id="L91" class="ln">    91</span>		xhi = (x.hi &amp; 0xfffff) | 0x100000;
+<span id="L92" class="ln">    92</span>		xlo = x.lo;
+<span id="L93" class="ln">    93</span>		sh = 1075 - ((x.hi &gt;&gt; 20) &amp; 0x7ff);
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>		ylo = 0;
+<span id="L96" class="ln">    96</span>		yhi = 0;
+<span id="L97" class="ln">    97</span>		if(sh &gt;= 0) {
+<span id="L98" class="ln">    98</span>			/* v = (hi||lo) &gt;&gt; sh */
+<span id="L99" class="ln">    99</span>			if(sh &lt; 32) {
+<span id="L100" class="ln">   100</span>				if(sh == 0) {
+<span id="L101" class="ln">   101</span>					ylo = xlo;
+<span id="L102" class="ln">   102</span>					yhi = xhi;
+<span id="L103" class="ln">   103</span>				} else {
+<span id="L104" class="ln">   104</span>					ylo = (xlo &gt;&gt; sh) | (xhi &lt;&lt; (32-sh));
+<span id="L105" class="ln">   105</span>					yhi = xhi &gt;&gt; sh;
+<span id="L106" class="ln">   106</span>				}
+<span id="L107" class="ln">   107</span>			} else {
+<span id="L108" class="ln">   108</span>				if(sh == 32) {
+<span id="L109" class="ln">   109</span>					ylo = xhi;
+<span id="L110" class="ln">   110</span>				} else
+<span id="L111" class="ln">   111</span>				if(sh &lt; 64) {
+<span id="L112" class="ln">   112</span>					ylo = xhi &gt;&gt; (sh-32);
+<span id="L113" class="ln">   113</span>				}
+<span id="L114" class="ln">   114</span>			}
+<span id="L115" class="ln">   115</span>		} else {
+<span id="L116" class="ln">   116</span>			/* v = (hi||lo) &lt;&lt; -sh */
+<span id="L117" class="ln">   117</span>			sh = -sh;
+<span id="L118" class="ln">   118</span>			if(sh &lt;= 11) {
+<span id="L119" class="ln">   119</span>				ylo = xlo &lt;&lt; sh;
+<span id="L120" class="ln">   120</span>				yhi = (xhi &lt;&lt; sh) | (xlo &gt;&gt; (32-sh));
+<span id="L121" class="ln">   121</span>			} else {
+<span id="L122" class="ln">   122</span>				/* overflow */
+<span id="L123" class="ln">   123</span>				yhi = d;        /* causes something awful */
+<span id="L124" class="ln">   124</span>			}
+<span id="L125" class="ln">   125</span>		}
+<span id="L126" class="ln">   126</span>		if(x.hi &amp; SIGN(32)) {
+<span id="L127" class="ln">   127</span>			if(ylo != 0) {
+<span id="L128" class="ln">   128</span>				ylo = -ylo;
+<span id="L129" class="ln">   129</span>				yhi = ~yhi;
+<span id="L130" class="ln">   130</span>			} else
+<span id="L131" class="ln">   131</span>				yhi = -yhi;
+<span id="L132" class="ln">   132</span>		}
+<span id="L133" class="ln">   133</span>	
+<span id="L134" class="ln">   134</span>		y-&gt;hi = yhi;
+<span id="L135" class="ln">   135</span>		y-&gt;lo = ylo;
+<span id="L136" class="ln">   136</span>	}
+<span id="L137" class="ln">   137</span>	
+<span id="L138" class="ln">   138</span>	void
+<span id="L139" class="ln">   139</span>	_f2v(Vlong *y, float f)
+<span id="L140" class="ln">   140</span>	{
+<span id="L141" class="ln">   141</span>		_d2v(y, f);
+<span id="L142" class="ln">   142</span>	}
+<span id="L143" class="ln">   143</span>	
+<span id="L144" class="ln">   144</span>	void
+<span id="L145" class="ln">   145</span>	runtime·float64toint64(double d, Vlong y)
+<span id="L146" class="ln">   146</span>	{
+<span id="L147" class="ln">   147</span>		_d2v(&amp;y, d);
+<span id="L148" class="ln">   148</span>	}
+<span id="L149" class="ln">   149</span>	
+<span id="L150" class="ln">   150</span>	void
+<span id="L151" class="ln">   151</span>	runtime·float64touint64(double d, Vlong y)
+<span id="L152" class="ln">   152</span>	{
+<span id="L153" class="ln">   153</span>		_d2v(&amp;y, d);
+<span id="L154" class="ln">   154</span>	}
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>	double
+<span id="L157" class="ln">   157</span>	_ul2d(ulong u)
+<span id="L158" class="ln">   158</span>	{
+<span id="L159" class="ln">   159</span>		// compensate for bug in c
+<span id="L160" class="ln">   160</span>		if(u &amp; SIGN(32)) {
+<span id="L161" class="ln">   161</span>			u ^= SIGN(32);
+<span id="L162" class="ln">   162</span>			return 2147483648. + u;
+<span id="L163" class="ln">   163</span>		}
+<span id="L164" class="ln">   164</span>		return u;
+<span id="L165" class="ln">   165</span>	}
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>	double
+<span id="L168" class="ln">   168</span>	_v2d(Vlong x)
+<span id="L169" class="ln">   169</span>	{
+<span id="L170" class="ln">   170</span>		if(x.hi &amp; SIGN(32)) {
+<span id="L171" class="ln">   171</span>			if(x.lo) {
+<span id="L172" class="ln">   172</span>				x.lo = -x.lo;
+<span id="L173" class="ln">   173</span>				x.hi = ~x.hi;
+<span id="L174" class="ln">   174</span>			} else
+<span id="L175" class="ln">   175</span>				x.hi = -x.hi;
+<span id="L176" class="ln">   176</span>			return -(_ul2d(x.hi)*4294967296. + _ul2d(x.lo));
+<span id="L177" class="ln">   177</span>		}
+<span id="L178" class="ln">   178</span>		return x.hi*4294967296. + _ul2d(x.lo);
+<span id="L179" class="ln">   179</span>	}
+<span id="L180" class="ln">   180</span>	
+<span id="L181" class="ln">   181</span>	float
+<span id="L182" class="ln">   182</span>	_v2f(Vlong x)
+<span id="L183" class="ln">   183</span>	{
+<span id="L184" class="ln">   184</span>		return _v2d(x);
+<span id="L185" class="ln">   185</span>	}
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>	void
+<span id="L188" class="ln">   188</span>	runtime·int64tofloat64(Vlong y, double d)
+<span id="L189" class="ln">   189</span>	{
+<span id="L190" class="ln">   190</span>		d = _v2d(y);
+<span id="L191" class="ln">   191</span>		USED(&amp;d); // FLUSH
+<span id="L192" class="ln">   192</span>	}
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>	void
+<span id="L195" class="ln">   195</span>	runtime·uint64tofloat64(Vlong y, double d)
+<span id="L196" class="ln">   196</span>	{
+<span id="L197" class="ln">   197</span>		d = _ul2d(y.hi)*4294967296. + _ul2d(y.lo);
+<span id="L198" class="ln">   198</span>		USED(&amp;d); // FLUSH
+<span id="L199" class="ln">   199</span>	}
+<span id="L200" class="ln">   200</span>	
+<span id="L201" class="ln">   201</span>	static void
+<span id="L202" class="ln">   202</span>	dodiv(Vlong num, Vlong den, Vlong *q, Vlong *r)
+<span id="L203" class="ln">   203</span>	{
+<span id="L204" class="ln">   204</span>		ulong numlo, numhi, denhi, denlo, quohi, quolo, t;
+<span id="L205" class="ln">   205</span>		int i;
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>		numhi = num.hi;
+<span id="L208" class="ln">   208</span>		numlo = num.lo;
+<span id="L209" class="ln">   209</span>		denhi = den.hi;
+<span id="L210" class="ln">   210</span>		denlo = den.lo;
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>		/*
+<span id="L213" class="ln">   213</span>		 * get a divide by zero
+<span id="L214" class="ln">   214</span>		 */
+<span id="L215" class="ln">   215</span>		if(denlo==0 &amp;&amp; denhi==0) {
+<span id="L216" class="ln">   216</span>			runtime·panicdivide();
+<span id="L217" class="ln">   217</span>		}
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>		/*
+<span id="L220" class="ln">   220</span>		 * set up the divisor and find the number of iterations needed
+<span id="L221" class="ln">   221</span>		 */
+<span id="L222" class="ln">   222</span>		if(numhi &gt;= SIGN(32)) {
+<span id="L223" class="ln">   223</span>			quohi = SIGN(32);
+<span id="L224" class="ln">   224</span>			quolo = 0;
+<span id="L225" class="ln">   225</span>		} else {
+<span id="L226" class="ln">   226</span>			quohi = numhi;
+<span id="L227" class="ln">   227</span>			quolo = numlo;
+<span id="L228" class="ln">   228</span>		}
+<span id="L229" class="ln">   229</span>		i = 0;
+<span id="L230" class="ln">   230</span>		while(denhi &lt; quohi || (denhi == quohi &amp;&amp; denlo &lt; quolo)) {
+<span id="L231" class="ln">   231</span>			denhi = (denhi&lt;&lt;1) | (denlo&gt;&gt;31);
+<span id="L232" class="ln">   232</span>			denlo &lt;&lt;= 1;
+<span id="L233" class="ln">   233</span>			i++;
+<span id="L234" class="ln">   234</span>		}
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>		quohi = 0;
+<span id="L237" class="ln">   237</span>		quolo = 0;
+<span id="L238" class="ln">   238</span>		for(; i &gt;= 0; i--) {
+<span id="L239" class="ln">   239</span>			quohi = (quohi&lt;&lt;1) | (quolo&gt;&gt;31);
+<span id="L240" class="ln">   240</span>			quolo &lt;&lt;= 1;
+<span id="L241" class="ln">   241</span>			if(numhi &gt; denhi || (numhi == denhi &amp;&amp; numlo &gt;= denlo)) {
+<span id="L242" class="ln">   242</span>				t = numlo;
+<span id="L243" class="ln">   243</span>				numlo -= denlo;
+<span id="L244" class="ln">   244</span>				if(numlo &gt; t)
+<span id="L245" class="ln">   245</span>					numhi--;
+<span id="L246" class="ln">   246</span>				numhi -= denhi;
+<span id="L247" class="ln">   247</span>				quolo |= 1;
+<span id="L248" class="ln">   248</span>			}
+<span id="L249" class="ln">   249</span>			denlo = (denlo&gt;&gt;1) | (denhi&lt;&lt;31);
+<span id="L250" class="ln">   250</span>			denhi &gt;&gt;= 1;
+<span id="L251" class="ln">   251</span>		}
+<span id="L252" class="ln">   252</span>	
+<span id="L253" class="ln">   253</span>		if(q) {
+<span id="L254" class="ln">   254</span>			q-&gt;lo = quolo;
+<span id="L255" class="ln">   255</span>			q-&gt;hi = quohi;
+<span id="L256" class="ln">   256</span>		}
+<span id="L257" class="ln">   257</span>		if(r) {
+<span id="L258" class="ln">   258</span>			r-&gt;lo = numlo;
+<span id="L259" class="ln">   259</span>			r-&gt;hi = numhi;
+<span id="L260" class="ln">   260</span>		}
+<span id="L261" class="ln">   261</span>	}
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>	void
+<span id="L264" class="ln">   264</span>	_divvu(Vlong *q, Vlong n, Vlong d)
+<span id="L265" class="ln">   265</span>	{
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		if(n.hi == 0 &amp;&amp; d.hi == 0) {
+<span id="L268" class="ln">   268</span>			q-&gt;hi = 0;
+<span id="L269" class="ln">   269</span>			q-&gt;lo = n.lo / d.lo;
+<span id="L270" class="ln">   270</span>			return;
+<span id="L271" class="ln">   271</span>		}
+<span id="L272" class="ln">   272</span>		dodiv(n, d, q, 0);
+<span id="L273" class="ln">   273</span>	}
+<span id="L274" class="ln">   274</span>	
+<span id="L275" class="ln">   275</span>	void
+<span id="L276" class="ln">   276</span>	runtime·uint64div(Vlong n, Vlong d, Vlong q)
+<span id="L277" class="ln">   277</span>	{
+<span id="L278" class="ln">   278</span>		_divvu(&amp;q, n, d);
+<span id="L279" class="ln">   279</span>	}
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>	void
+<span id="L282" class="ln">   282</span>	_modvu(Vlong *r, Vlong n, Vlong d)
+<span id="L283" class="ln">   283</span>	{
+<span id="L284" class="ln">   284</span>	
+<span id="L285" class="ln">   285</span>		if(n.hi == 0 &amp;&amp; d.hi == 0) {
+<span id="L286" class="ln">   286</span>			r-&gt;hi = 0;
+<span id="L287" class="ln">   287</span>			r-&gt;lo = n.lo % d.lo;
+<span id="L288" class="ln">   288</span>			return;
+<span id="L289" class="ln">   289</span>		}
+<span id="L290" class="ln">   290</span>		dodiv(n, d, 0, r);
+<span id="L291" class="ln">   291</span>	}
+<span id="L292" class="ln">   292</span>	
+<span id="L293" class="ln">   293</span>	void
+<span id="L294" class="ln">   294</span>	runtime·uint64mod(Vlong n, Vlong d, Vlong q)
+<span id="L295" class="ln">   295</span>	{
+<span id="L296" class="ln">   296</span>		_modvu(&amp;q, n, d);
+<span id="L297" class="ln">   297</span>	}
+<span id="L298" class="ln">   298</span>	
+<span id="L299" class="ln">   299</span>	static void
+<span id="L300" class="ln">   300</span>	vneg(Vlong *v)
+<span id="L301" class="ln">   301</span>	{
+<span id="L302" class="ln">   302</span>	
+<span id="L303" class="ln">   303</span>		if(v-&gt;lo == 0) {
+<span id="L304" class="ln">   304</span>			v-&gt;hi = -v-&gt;hi;
+<span id="L305" class="ln">   305</span>			return;
+<span id="L306" class="ln">   306</span>		}
+<span id="L307" class="ln">   307</span>		v-&gt;lo = -v-&gt;lo;
+<span id="L308" class="ln">   308</span>		v-&gt;hi = ~v-&gt;hi;
+<span id="L309" class="ln">   309</span>	}
+<span id="L310" class="ln">   310</span>	
+<span id="L311" class="ln">   311</span>	void
+<span id="L312" class="ln">   312</span>	_divv(Vlong *q, Vlong n, Vlong d)
+<span id="L313" class="ln">   313</span>	{
+<span id="L314" class="ln">   314</span>		long nneg, dneg;
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		if(n.hi == (((long)n.lo)&gt;&gt;31) &amp;&amp; d.hi == (((long)d.lo)&gt;&gt;31)) {
+<span id="L317" class="ln">   317</span>			if((long)n.lo == -0x80000000 &amp;&amp; (long)d.lo == -1) {
+<span id="L318" class="ln">   318</span>				// special case: 32-bit -0x80000000 / -1 causes wrong sign
+<span id="L319" class="ln">   319</span>				q-&gt;lo = 0x80000000;
+<span id="L320" class="ln">   320</span>				q-&gt;hi = 0;
+<span id="L321" class="ln">   321</span>				return;
+<span id="L322" class="ln">   322</span>			}
+<span id="L323" class="ln">   323</span>			q-&gt;lo = (long)n.lo / (long)d.lo;
+<span id="L324" class="ln">   324</span>			q-&gt;hi = ((long)q-&gt;lo) &gt;&gt; 31;
+<span id="L325" class="ln">   325</span>			return;
+<span id="L326" class="ln">   326</span>		}
+<span id="L327" class="ln">   327</span>		nneg = n.hi &gt;&gt; 31;
+<span id="L328" class="ln">   328</span>		if(nneg)
+<span id="L329" class="ln">   329</span>			vneg(&amp;n);
+<span id="L330" class="ln">   330</span>		dneg = d.hi &gt;&gt; 31;
+<span id="L331" class="ln">   331</span>		if(dneg)
+<span id="L332" class="ln">   332</span>			vneg(&amp;d);
+<span id="L333" class="ln">   333</span>		dodiv(n, d, q, 0);
+<span id="L334" class="ln">   334</span>		if(nneg != dneg)
+<span id="L335" class="ln">   335</span>			vneg(q);
+<span id="L336" class="ln">   336</span>	}
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>	void
+<span id="L339" class="ln">   339</span>	runtime·int64div(Vlong n, Vlong d, Vlong q)
+<span id="L340" class="ln">   340</span>	{
+<span id="L341" class="ln">   341</span>		_divv(&amp;q, n, d);
+<span id="L342" class="ln">   342</span>	}
+<span id="L343" class="ln">   343</span>	
+<span id="L344" class="ln">   344</span>	void
+<span id="L345" class="ln">   345</span>	_modv(Vlong *r, Vlong n, Vlong d)
+<span id="L346" class="ln">   346</span>	{
+<span id="L347" class="ln">   347</span>		long nneg, dneg;
+<span id="L348" class="ln">   348</span>	
+<span id="L349" class="ln">   349</span>		if(n.hi == (((long)n.lo)&gt;&gt;31) &amp;&amp; d.hi == (((long)d.lo)&gt;&gt;31)) {
+<span id="L350" class="ln">   350</span>			r-&gt;lo = (long)n.lo % (long)d.lo;
+<span id="L351" class="ln">   351</span>			r-&gt;hi = ((long)r-&gt;lo) &gt;&gt; 31;
+<span id="L352" class="ln">   352</span>			return;
+<span id="L353" class="ln">   353</span>		}
+<span id="L354" class="ln">   354</span>		nneg = n.hi &gt;&gt; 31;
+<span id="L355" class="ln">   355</span>		if(nneg)
+<span id="L356" class="ln">   356</span>			vneg(&amp;n);
+<span id="L357" class="ln">   357</span>		dneg = d.hi &gt;&gt; 31;
+<span id="L358" class="ln">   358</span>		if(dneg)
+<span id="L359" class="ln">   359</span>			vneg(&amp;d);
+<span id="L360" class="ln">   360</span>		dodiv(n, d, 0, r);
+<span id="L361" class="ln">   361</span>		if(nneg)
+<span id="L362" class="ln">   362</span>			vneg(r);
+<span id="L363" class="ln">   363</span>	}
+<span id="L364" class="ln">   364</span>	
+<span id="L365" class="ln">   365</span>	void
+<span id="L366" class="ln">   366</span>	runtime·int64mod(Vlong n, Vlong d, Vlong q)
+<span id="L367" class="ln">   367</span>	{
+<span id="L368" class="ln">   368</span>		_modv(&amp;q, n, d);
+<span id="L369" class="ln">   369</span>	}
+<span id="L370" class="ln">   370</span>	
+<span id="L371" class="ln">   371</span>	void
+<span id="L372" class="ln">   372</span>	_rshav(Vlong *r, Vlong a, int b)
+<span id="L373" class="ln">   373</span>	{
+<span id="L374" class="ln">   374</span>		long t;
+<span id="L375" class="ln">   375</span>	
+<span id="L376" class="ln">   376</span>		t = a.hi;
+<span id="L377" class="ln">   377</span>		if(b &gt;= 32) {
+<span id="L378" class="ln">   378</span>			r-&gt;hi = t&gt;&gt;31;
+<span id="L379" class="ln">   379</span>			if(b &gt;= 64) {
+<span id="L380" class="ln">   380</span>				/* this is illegal re C standard */
+<span id="L381" class="ln">   381</span>				r-&gt;lo = t&gt;&gt;31;
+<span id="L382" class="ln">   382</span>				return;
+<span id="L383" class="ln">   383</span>			}
+<span id="L384" class="ln">   384</span>			r-&gt;lo = t &gt;&gt; (b-32);
+<span id="L385" class="ln">   385</span>			return;
+<span id="L386" class="ln">   386</span>		}
+<span id="L387" class="ln">   387</span>		if(b &lt;= 0) {
+<span id="L388" class="ln">   388</span>			r-&gt;hi = t;
+<span id="L389" class="ln">   389</span>			r-&gt;lo = a.lo;
+<span id="L390" class="ln">   390</span>			return;
+<span id="L391" class="ln">   391</span>		}
+<span id="L392" class="ln">   392</span>		r-&gt;hi = t &gt;&gt; b;
+<span id="L393" class="ln">   393</span>		r-&gt;lo = (t &lt;&lt; (32-b)) | (a.lo &gt;&gt; b);
+<span id="L394" class="ln">   394</span>	}
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>	void
+<span id="L397" class="ln">   397</span>	_rshlv(Vlong *r, Vlong a, int b)
+<span id="L398" class="ln">   398</span>	{
+<span id="L399" class="ln">   399</span>		ulong t;
+<span id="L400" class="ln">   400</span>	
+<span id="L401" class="ln">   401</span>		t = a.hi;
+<span id="L402" class="ln">   402</span>		if(b &gt;= 32) {
+<span id="L403" class="ln">   403</span>			r-&gt;hi = 0;
+<span id="L404" class="ln">   404</span>			if(b &gt;= 64) {
+<span id="L405" class="ln">   405</span>				/* this is illegal re C standard */
+<span id="L406" class="ln">   406</span>				r-&gt;lo = 0;
+<span id="L407" class="ln">   407</span>				return;
+<span id="L408" class="ln">   408</span>			}
+<span id="L409" class="ln">   409</span>			r-&gt;lo = t &gt;&gt; (b-32);
+<span id="L410" class="ln">   410</span>			return;
+<span id="L411" class="ln">   411</span>		}
+<span id="L412" class="ln">   412</span>		if(b &lt;= 0) {
+<span id="L413" class="ln">   413</span>			r-&gt;hi = t;
+<span id="L414" class="ln">   414</span>			r-&gt;lo = a.lo;
+<span id="L415" class="ln">   415</span>			return;
+<span id="L416" class="ln">   416</span>		}
+<span id="L417" class="ln">   417</span>		r-&gt;hi = t &gt;&gt; b;
+<span id="L418" class="ln">   418</span>		r-&gt;lo = (t &lt;&lt; (32-b)) | (a.lo &gt;&gt; b);
+<span id="L419" class="ln">   419</span>	}
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>	#pragma textflag NOSPLIT
+<span id="L422" class="ln">   422</span>	void
+<span id="L423" class="ln">   423</span>	_lshv(Vlong *r, Vlong a, int b)
+<span id="L424" class="ln">   424</span>	{
+<span id="L425" class="ln">   425</span>		if(b &gt;= 32) {
+<span id="L426" class="ln">   426</span>			r-&gt;lo = 0;
+<span id="L427" class="ln">   427</span>			if(b &gt;= 64) {
+<span id="L428" class="ln">   428</span>				/* this is illegal re C standard */
+<span id="L429" class="ln">   429</span>				r-&gt;hi = 0;
+<span id="L430" class="ln">   430</span>				return;
+<span id="L431" class="ln">   431</span>			}
+<span id="L432" class="ln">   432</span>			r-&gt;hi = a.lo &lt;&lt; (b-32);
+<span id="L433" class="ln">   433</span>			return;
+<span id="L434" class="ln">   434</span>		}
+<span id="L435" class="ln">   435</span>		if(b &lt;= 0) {
+<span id="L436" class="ln">   436</span>			r-&gt;lo = a.lo;
+<span id="L437" class="ln">   437</span>			r-&gt;hi = a.hi;
+<span id="L438" class="ln">   438</span>			return;
+<span id="L439" class="ln">   439</span>		}
+<span id="L440" class="ln">   440</span>		r-&gt;lo = a.lo &lt;&lt; b;
+<span id="L441" class="ln">   441</span>		r-&gt;hi = (a.lo &gt;&gt; (32-b)) | (a.hi &lt;&lt; b);
+<span id="L442" class="ln">   442</span>	}
+<span id="L443" class="ln">   443</span>	
+<span id="L444" class="ln">   444</span>	void
+<span id="L445" class="ln">   445</span>	_andv(Vlong *r, Vlong a, Vlong b)
+<span id="L446" class="ln">   446</span>	{
+<span id="L447" class="ln">   447</span>		r-&gt;hi = a.hi &amp; b.hi;
+<span id="L448" class="ln">   448</span>		r-&gt;lo = a.lo &amp; b.lo;
+<span id="L449" class="ln">   449</span>	}
+<span id="L450" class="ln">   450</span>	
+<span id="L451" class="ln">   451</span>	void
+<span id="L452" class="ln">   452</span>	_orv(Vlong *r, Vlong a, Vlong b)
+<span id="L453" class="ln">   453</span>	{
+<span id="L454" class="ln">   454</span>		r-&gt;hi = a.hi | b.hi;
+<span id="L455" class="ln">   455</span>		r-&gt;lo = a.lo | b.lo;
+<span id="L456" class="ln">   456</span>	}
+<span id="L457" class="ln">   457</span>	
+<span id="L458" class="ln">   458</span>	void
+<span id="L459" class="ln">   459</span>	_xorv(Vlong *r, Vlong a, Vlong b)
+<span id="L460" class="ln">   460</span>	{
+<span id="L461" class="ln">   461</span>		r-&gt;hi = a.hi ^ b.hi;
+<span id="L462" class="ln">   462</span>		r-&gt;lo = a.lo ^ b.lo;
+<span id="L463" class="ln">   463</span>	}
+<span id="L464" class="ln">   464</span>	
+<span id="L465" class="ln">   465</span>	void
+<span id="L466" class="ln">   466</span>	_vpp(Vlong *l, Vlong *r)
+<span id="L467" class="ln">   467</span>	{
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>		l-&gt;hi = r-&gt;hi;
+<span id="L470" class="ln">   470</span>		l-&gt;lo = r-&gt;lo;
+<span id="L471" class="ln">   471</span>		r-&gt;lo++;
+<span id="L472" class="ln">   472</span>		if(r-&gt;lo == 0)
+<span id="L473" class="ln">   473</span>			r-&gt;hi++;
+<span id="L474" class="ln">   474</span>	}
+<span id="L475" class="ln">   475</span>	
+<span id="L476" class="ln">   476</span>	void
+<span id="L477" class="ln">   477</span>	_vmm(Vlong *l, Vlong *r)
+<span id="L478" class="ln">   478</span>	{
+<span id="L479" class="ln">   479</span>	
+<span id="L480" class="ln">   480</span>		l-&gt;hi = r-&gt;hi;
+<span id="L481" class="ln">   481</span>		l-&gt;lo = r-&gt;lo;
+<span id="L482" class="ln">   482</span>		if(r-&gt;lo == 0)
+<span id="L483" class="ln">   483</span>			r-&gt;hi--;
+<span id="L484" class="ln">   484</span>		r-&gt;lo--;
+<span id="L485" class="ln">   485</span>	}
+<span id="L486" class="ln">   486</span>	
+<span id="L487" class="ln">   487</span>	void
+<span id="L488" class="ln">   488</span>	_ppv(Vlong *l, Vlong *r)
+<span id="L489" class="ln">   489</span>	{
+<span id="L490" class="ln">   490</span>	
+<span id="L491" class="ln">   491</span>		r-&gt;lo++;
+<span id="L492" class="ln">   492</span>		if(r-&gt;lo == 0)
+<span id="L493" class="ln">   493</span>			r-&gt;hi++;
+<span id="L494" class="ln">   494</span>		l-&gt;hi = r-&gt;hi;
+<span id="L495" class="ln">   495</span>		l-&gt;lo = r-&gt;lo;
+<span id="L496" class="ln">   496</span>	}
+<span id="L497" class="ln">   497</span>	
+<span id="L498" class="ln">   498</span>	void
+<span id="L499" class="ln">   499</span>	_mmv(Vlong *l, Vlong *r)
+<span id="L500" class="ln">   500</span>	{
+<span id="L501" class="ln">   501</span>	
+<span id="L502" class="ln">   502</span>		if(r-&gt;lo == 0)
+<span id="L503" class="ln">   503</span>			r-&gt;hi--;
+<span id="L504" class="ln">   504</span>		r-&gt;lo--;
+<span id="L505" class="ln">   505</span>		l-&gt;hi = r-&gt;hi;
+<span id="L506" class="ln">   506</span>		l-&gt;lo = r-&gt;lo;
+<span id="L507" class="ln">   507</span>	}
+<span id="L508" class="ln">   508</span>	
+<span id="L509" class="ln">   509</span>	void
+<span id="L510" class="ln">   510</span>	_vasop(Vlong *ret, void *lv, void fn(Vlong*, Vlong, Vlong), int type, Vlong rv)
+<span id="L511" class="ln">   511</span>	{
+<span id="L512" class="ln">   512</span>		Vlong t, u;
+<span id="L513" class="ln">   513</span>	
+<span id="L514" class="ln">   514</span>		u = *ret;
+<span id="L515" class="ln">   515</span>		switch(type) {
+<span id="L516" class="ln">   516</span>		default:
+<span id="L517" class="ln">   517</span>			runtime·abort();
+<span id="L518" class="ln">   518</span>			break;
+<span id="L519" class="ln">   519</span>	
+<span id="L520" class="ln">   520</span>		case 1: /* schar */
+<span id="L521" class="ln">   521</span>			t.lo = *(schar*)lv;
+<span id="L522" class="ln">   522</span>			t.hi = t.lo &gt;&gt; 31;
+<span id="L523" class="ln">   523</span>			fn(&amp;u, t, rv);
+<span id="L524" class="ln">   524</span>			*(schar*)lv = u.lo;
+<span id="L525" class="ln">   525</span>			break;
+<span id="L526" class="ln">   526</span>	
+<span id="L527" class="ln">   527</span>		case 2: /* uchar */
+<span id="L528" class="ln">   528</span>			t.lo = *(uchar*)lv;
+<span id="L529" class="ln">   529</span>			t.hi = 0;
+<span id="L530" class="ln">   530</span>			fn(&amp;u, t, rv);
+<span id="L531" class="ln">   531</span>			*(uchar*)lv = u.lo;
+<span id="L532" class="ln">   532</span>			break;
+<span id="L533" class="ln">   533</span>	
+<span id="L534" class="ln">   534</span>		case 3: /* short */
+<span id="L535" class="ln">   535</span>			t.lo = *(short*)lv;
+<span id="L536" class="ln">   536</span>			t.hi = t.lo &gt;&gt; 31;
+<span id="L537" class="ln">   537</span>			fn(&amp;u, t, rv);
+<span id="L538" class="ln">   538</span>			*(short*)lv = u.lo;
+<span id="L539" class="ln">   539</span>			break;
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>		case 4: /* ushort */
+<span id="L542" class="ln">   542</span>			t.lo = *(ushort*)lv;
+<span id="L543" class="ln">   543</span>			t.hi = 0;
+<span id="L544" class="ln">   544</span>			fn(&amp;u, t, rv);
+<span id="L545" class="ln">   545</span>			*(ushort*)lv = u.lo;
+<span id="L546" class="ln">   546</span>			break;
+<span id="L547" class="ln">   547</span>	
+<span id="L548" class="ln">   548</span>		case 9: /* int */
+<span id="L549" class="ln">   549</span>			t.lo = *(int*)lv;
+<span id="L550" class="ln">   550</span>			t.hi = t.lo &gt;&gt; 31;
+<span id="L551" class="ln">   551</span>			fn(&amp;u, t, rv);
+<span id="L552" class="ln">   552</span>			*(int*)lv = u.lo;
+<span id="L553" class="ln">   553</span>			break;
+<span id="L554" class="ln">   554</span>	
+<span id="L555" class="ln">   555</span>		case 10:        /* uint */
+<span id="L556" class="ln">   556</span>			t.lo = *(uint*)lv;
+<span id="L557" class="ln">   557</span>			t.hi = 0;
+<span id="L558" class="ln">   558</span>			fn(&amp;u, t, rv);
+<span id="L559" class="ln">   559</span>			*(uint*)lv = u.lo;
+<span id="L560" class="ln">   560</span>			break;
+<span id="L561" class="ln">   561</span>	
+<span id="L562" class="ln">   562</span>		case 5: /* long */
+<span id="L563" class="ln">   563</span>			t.lo = *(long*)lv;
+<span id="L564" class="ln">   564</span>			t.hi = t.lo &gt;&gt; 31;
+<span id="L565" class="ln">   565</span>			fn(&amp;u, t, rv);
+<span id="L566" class="ln">   566</span>			*(long*)lv = u.lo;
+<span id="L567" class="ln">   567</span>			break;
+<span id="L568" class="ln">   568</span>	
+<span id="L569" class="ln">   569</span>		case 6: /* ulong */
+<span id="L570" class="ln">   570</span>			t.lo = *(ulong*)lv;
+<span id="L571" class="ln">   571</span>			t.hi = 0;
+<span id="L572" class="ln">   572</span>			fn(&amp;u, t, rv);
+<span id="L573" class="ln">   573</span>			*(ulong*)lv = u.lo;
+<span id="L574" class="ln">   574</span>			break;
+<span id="L575" class="ln">   575</span>	
+<span id="L576" class="ln">   576</span>		case 7: /* vlong */
+<span id="L577" class="ln">   577</span>		case 8: /* uvlong */
+<span id="L578" class="ln">   578</span>			fn(&amp;u, *(Vlong*)lv, rv);
+<span id="L579" class="ln">   579</span>			*(Vlong*)lv = u;
+<span id="L580" class="ln">   580</span>			break;
+<span id="L581" class="ln">   581</span>		}
+<span id="L582" class="ln">   582</span>		*ret = u;
+<span id="L583" class="ln">   583</span>	}
+<span id="L584" class="ln">   584</span>	
+<span id="L585" class="ln">   585</span>	void
+<span id="L586" class="ln">   586</span>	_p2v(Vlong *ret, void *p)
+<span id="L587" class="ln">   587</span>	{
+<span id="L588" class="ln">   588</span>		long t;
+<span id="L589" class="ln">   589</span>	
+<span id="L590" class="ln">   590</span>		t = (ulong)p;
+<span id="L591" class="ln">   591</span>		ret-&gt;lo = t;
+<span id="L592" class="ln">   592</span>		ret-&gt;hi = 0;
+<span id="L593" class="ln">   593</span>	}
+<span id="L594" class="ln">   594</span>	
+<span id="L595" class="ln">   595</span>	void
+<span id="L596" class="ln">   596</span>	_sl2v(Vlong *ret, long sl)
+<span id="L597" class="ln">   597</span>	{
+<span id="L598" class="ln">   598</span>		long t;
+<span id="L599" class="ln">   599</span>	
+<span id="L600" class="ln">   600</span>		t = sl;
+<span id="L601" class="ln">   601</span>		ret-&gt;lo = t;
+<span id="L602" class="ln">   602</span>		ret-&gt;hi = t &gt;&gt; 31;
+<span id="L603" class="ln">   603</span>	}
+<span id="L604" class="ln">   604</span>	
+<span id="L605" class="ln">   605</span>	void
+<span id="L606" class="ln">   606</span>	_ul2v(Vlong *ret, ulong ul)
+<span id="L607" class="ln">   607</span>	{
+<span id="L608" class="ln">   608</span>		long t;
+<span id="L609" class="ln">   609</span>	
+<span id="L610" class="ln">   610</span>		t = ul;
+<span id="L611" class="ln">   611</span>		ret-&gt;lo = t;
+<span id="L612" class="ln">   612</span>		ret-&gt;hi = 0;
+<span id="L613" class="ln">   613</span>	}
+<span id="L614" class="ln">   614</span>	
+<span id="L615" class="ln">   615</span>	#pragma textflag NOSPLIT
+<span id="L616" class="ln">   616</span>	void
+<span id="L617" class="ln">   617</span>	_si2v(Vlong *ret, int si)
+<span id="L618" class="ln">   618</span>	{
+<span id="L619" class="ln">   619</span>		ret-&gt;lo = (long)si;
+<span id="L620" class="ln">   620</span>		ret-&gt;hi = (long)si &gt;&gt; 31;
+<span id="L621" class="ln">   621</span>	}
+<span id="L622" class="ln">   622</span>	
+<span id="L623" class="ln">   623</span>	void
+<span id="L624" class="ln">   624</span>	_ui2v(Vlong *ret, uint ui)
+<span id="L625" class="ln">   625</span>	{
+<span id="L626" class="ln">   626</span>		long t;
+<span id="L627" class="ln">   627</span>	
+<span id="L628" class="ln">   628</span>		t = ui;
+<span id="L629" class="ln">   629</span>		ret-&gt;lo = t;
+<span id="L630" class="ln">   630</span>		ret-&gt;hi = 0;
+<span id="L631" class="ln">   631</span>	}
+<span id="L632" class="ln">   632</span>	
+<span id="L633" class="ln">   633</span>	void
+<span id="L634" class="ln">   634</span>	_sh2v(Vlong *ret, long sh)
+<span id="L635" class="ln">   635</span>	{
+<span id="L636" class="ln">   636</span>		long t;
+<span id="L637" class="ln">   637</span>	
+<span id="L638" class="ln">   638</span>		t = (sh &lt;&lt; 16) &gt;&gt; 16;
+<span id="L639" class="ln">   639</span>		ret-&gt;lo = t;
+<span id="L640" class="ln">   640</span>		ret-&gt;hi = t &gt;&gt; 31;
+<span id="L641" class="ln">   641</span>	}
+<span id="L642" class="ln">   642</span>	
+<span id="L643" class="ln">   643</span>	void
+<span id="L644" class="ln">   644</span>	_uh2v(Vlong *ret, ulong ul)
+<span id="L645" class="ln">   645</span>	{
+<span id="L646" class="ln">   646</span>		long t;
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>		t = ul &amp; 0xffff;
+<span id="L649" class="ln">   649</span>		ret-&gt;lo = t;
+<span id="L650" class="ln">   650</span>		ret-&gt;hi = 0;
+<span id="L651" class="ln">   651</span>	}
+<span id="L652" class="ln">   652</span>	
+<span id="L653" class="ln">   653</span>	void
+<span id="L654" class="ln">   654</span>	_sc2v(Vlong *ret, long uc)
+<span id="L655" class="ln">   655</span>	{
+<span id="L656" class="ln">   656</span>		long t;
+<span id="L657" class="ln">   657</span>	
+<span id="L658" class="ln">   658</span>		t = (uc &lt;&lt; 24) &gt;&gt; 24;
+<span id="L659" class="ln">   659</span>		ret-&gt;lo = t;
+<span id="L660" class="ln">   660</span>		ret-&gt;hi = t &gt;&gt; 31;
+<span id="L661" class="ln">   661</span>	}
+<span id="L662" class="ln">   662</span>	
+<span id="L663" class="ln">   663</span>	void
+<span id="L664" class="ln">   664</span>	_uc2v(Vlong *ret, ulong ul)
+<span id="L665" class="ln">   665</span>	{
+<span id="L666" class="ln">   666</span>		long t;
+<span id="L667" class="ln">   667</span>	
+<span id="L668" class="ln">   668</span>		t = ul &amp; 0xff;
+<span id="L669" class="ln">   669</span>		ret-&gt;lo = t;
+<span id="L670" class="ln">   670</span>		ret-&gt;hi = 0;
+<span id="L671" class="ln">   671</span>	}
+<span id="L672" class="ln">   672</span>	
+<span id="L673" class="ln">   673</span>	long
+<span id="L674" class="ln">   674</span>	_v2sc(Vlong rv)
+<span id="L675" class="ln">   675</span>	{
+<span id="L676" class="ln">   676</span>		long t;
+<span id="L677" class="ln">   677</span>	
+<span id="L678" class="ln">   678</span>		t = rv.lo &amp; 0xff;
+<span id="L679" class="ln">   679</span>		return (t &lt;&lt; 24) &gt;&gt; 24;
+<span id="L680" class="ln">   680</span>	}
+<span id="L681" class="ln">   681</span>	
+<span id="L682" class="ln">   682</span>	long
+<span id="L683" class="ln">   683</span>	_v2uc(Vlong rv)
+<span id="L684" class="ln">   684</span>	{
+<span id="L685" class="ln">   685</span>	
+<span id="L686" class="ln">   686</span>		return rv.lo &amp; 0xff;
+<span id="L687" class="ln">   687</span>	}
+<span id="L688" class="ln">   688</span>	
+<span id="L689" class="ln">   689</span>	long
+<span id="L690" class="ln">   690</span>	_v2sh(Vlong rv)
+<span id="L691" class="ln">   691</span>	{
+<span id="L692" class="ln">   692</span>		long t;
+<span id="L693" class="ln">   693</span>	
+<span id="L694" class="ln">   694</span>		t = rv.lo &amp; 0xffff;
+<span id="L695" class="ln">   695</span>		return (t &lt;&lt; 16) &gt;&gt; 16;
+<span id="L696" class="ln">   696</span>	}
+<span id="L697" class="ln">   697</span>	
+<span id="L698" class="ln">   698</span>	long
+<span id="L699" class="ln">   699</span>	_v2uh(Vlong rv)
+<span id="L700" class="ln">   700</span>	{
+<span id="L701" class="ln">   701</span>	
+<span id="L702" class="ln">   702</span>		return rv.lo &amp; 0xffff;
+<span id="L703" class="ln">   703</span>	}
+<span id="L704" class="ln">   704</span>	
+<span id="L705" class="ln">   705</span>	long
+<span id="L706" class="ln">   706</span>	_v2sl(Vlong rv)
+<span id="L707" class="ln">   707</span>	{
+<span id="L708" class="ln">   708</span>	
+<span id="L709" class="ln">   709</span>		return rv.lo;
+<span id="L710" class="ln">   710</span>	}
+<span id="L711" class="ln">   711</span>	
+<span id="L712" class="ln">   712</span>	long
+<span id="L713" class="ln">   713</span>	_v2ul(Vlong rv)
+<span id="L714" class="ln">   714</span>	{
+<span id="L715" class="ln">   715</span>	
+<span id="L716" class="ln">   716</span>		return rv.lo;
+<span id="L717" class="ln">   717</span>	}
+<span id="L718" class="ln">   718</span>	
+<span id="L719" class="ln">   719</span>	#pragma textflag NOSPLIT
+<span id="L720" class="ln">   720</span>	long
+<span id="L721" class="ln">   721</span>	_v2si(Vlong rv)
+<span id="L722" class="ln">   722</span>	{
+<span id="L723" class="ln">   723</span>	
+<span id="L724" class="ln">   724</span>		return rv.lo;
+<span id="L725" class="ln">   725</span>	}
+<span id="L726" class="ln">   726</span>	
+<span id="L727" class="ln">   727</span>	long
+<span id="L728" class="ln">   728</span>	_v2ui(Vlong rv)
+<span id="L729" class="ln">   729</span>	{
+<span id="L730" class="ln">   730</span>	
+<span id="L731" class="ln">   731</span>		return rv.lo;
+<span id="L732" class="ln">   732</span>	}
+<span id="L733" class="ln">   733</span>	
+<span id="L734" class="ln">   734</span>	int
+<span id="L735" class="ln">   735</span>	_testv(Vlong rv)
+<span id="L736" class="ln">   736</span>	{
+<span id="L737" class="ln">   737</span>		return rv.lo || rv.hi;
+<span id="L738" class="ln">   738</span>	}
+<span id="L739" class="ln">   739</span>	
+<span id="L740" class="ln">   740</span>	int
+<span id="L741" class="ln">   741</span>	_eqv(Vlong lv, Vlong rv)
+<span id="L742" class="ln">   742</span>	{
+<span id="L743" class="ln">   743</span>		return lv.lo == rv.lo &amp;&amp; lv.hi == rv.hi;
+<span id="L744" class="ln">   744</span>	}
+<span id="L745" class="ln">   745</span>	
+<span id="L746" class="ln">   746</span>	int
+<span id="L747" class="ln">   747</span>	_nev(Vlong lv, Vlong rv)
+<span id="L748" class="ln">   748</span>	{
+<span id="L749" class="ln">   749</span>		return lv.lo != rv.lo || lv.hi != rv.hi;
+<span id="L750" class="ln">   750</span>	}
+<span id="L751" class="ln">   751</span>	
+<span id="L752" class="ln">   752</span>	int
+<span id="L753" class="ln">   753</span>	_ltv(Vlong lv, Vlong rv)
+<span id="L754" class="ln">   754</span>	{
+<span id="L755" class="ln">   755</span>		return (long)lv.hi &lt; (long)rv.hi ||
+<span id="L756" class="ln">   756</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &lt; rv.lo);
+<span id="L757" class="ln">   757</span>	}
+<span id="L758" class="ln">   758</span>	
+<span id="L759" class="ln">   759</span>	int
+<span id="L760" class="ln">   760</span>	_lev(Vlong lv, Vlong rv)
+<span id="L761" class="ln">   761</span>	{
+<span id="L762" class="ln">   762</span>		return (long)lv.hi &lt; (long)rv.hi ||
+<span id="L763" class="ln">   763</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &lt;= rv.lo);
+<span id="L764" class="ln">   764</span>	}
+<span id="L765" class="ln">   765</span>	
+<span id="L766" class="ln">   766</span>	int
+<span id="L767" class="ln">   767</span>	_gtv(Vlong lv, Vlong rv)
+<span id="L768" class="ln">   768</span>	{
+<span id="L769" class="ln">   769</span>		return (long)lv.hi &gt; (long)rv.hi ||
+<span id="L770" class="ln">   770</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &gt; rv.lo);
+<span id="L771" class="ln">   771</span>	}
+<span id="L772" class="ln">   772</span>	
+<span id="L773" class="ln">   773</span>	#pragma textflag NOSPLIT
+<span id="L774" class="ln">   774</span>	int
+<span id="L775" class="ln">   775</span>	_gev(Vlong lv, Vlong rv)
+<span id="L776" class="ln">   776</span>	{
+<span id="L777" class="ln">   777</span>		return (long)lv.hi &gt; (long)rv.hi ||
+<span id="L778" class="ln">   778</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &gt;= rv.lo);
+<span id="L779" class="ln">   779</span>	}
+<span id="L780" class="ln">   780</span>	
+<span id="L781" class="ln">   781</span>	int
+<span id="L782" class="ln">   782</span>	_lov(Vlong lv, Vlong rv)
+<span id="L783" class="ln">   783</span>	{
+<span id="L784" class="ln">   784</span>		return lv.hi &lt; rv.hi ||
+<span id="L785" class="ln">   785</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &lt; rv.lo);
+<span id="L786" class="ln">   786</span>	}
+<span id="L787" class="ln">   787</span>	
+<span id="L788" class="ln">   788</span>	int
+<span id="L789" class="ln">   789</span>	_lsv(Vlong lv, Vlong rv)
+<span id="L790" class="ln">   790</span>	{
+<span id="L791" class="ln">   791</span>		return lv.hi &lt; rv.hi ||
+<span id="L792" class="ln">   792</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &lt;= rv.lo);
+<span id="L793" class="ln">   793</span>	}
+<span id="L794" class="ln">   794</span>	
+<span id="L795" class="ln">   795</span>	int
+<span id="L796" class="ln">   796</span>	_hiv(Vlong lv, Vlong rv)
+<span id="L797" class="ln">   797</span>	{
+<span id="L798" class="ln">   798</span>		return lv.hi &gt; rv.hi ||
+<span id="L799" class="ln">   799</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &gt; rv.lo);
+<span id="L800" class="ln">   800</span>	}
+<span id="L801" class="ln">   801</span>	
+<span id="L802" class="ln">   802</span>	int
+<span id="L803" class="ln">   803</span>	_hsv(Vlong lv, Vlong rv)
+<span id="L804" class="ln">   804</span>	{
+<span id="L805" class="ln">   805</span>		return lv.hi &gt; rv.hi ||
+<span id="L806" class="ln">   806</span>			(lv.hi == rv.hi &amp;&amp; lv.lo &gt;= rv.lo);
+<span id="L807" class="ln">   807</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/vlrt_arm.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

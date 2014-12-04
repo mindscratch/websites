@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/sema.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/sema.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// Semaphore implementation exposed to Go.
+<span id="L6" class="ln">     6</span>	// Intended use is provide a sleep and wakeup
+<span id="L7" class="ln">     7</span>	// primitive that can be used in the contended case
+<span id="L8" class="ln">     8</span>	// of other synchronization primitives.
+<span id="L9" class="ln">     9</span>	// Thus it targets the same goal as Linux&#39;s futex,
+<span id="L10" class="ln">    10</span>	// but it has much simpler semantics.
+<span id="L11" class="ln">    11</span>	//
+<span id="L12" class="ln">    12</span>	// That is, don&#39;t think of these as semaphores.
+<span id="L13" class="ln">    13</span>	// Think of them as a way to implement sleep and wakeup
+<span id="L14" class="ln">    14</span>	// such that every sleep is paired with a single wakeup,
+<span id="L15" class="ln">    15</span>	// even if, due to races, the wakeup happens before the sleep.
+<span id="L16" class="ln">    16</span>	//
+<span id="L17" class="ln">    17</span>	// See Mullender and Cox, ``Semaphores in Plan 9,&#39;&#39;
+<span id="L18" class="ln">    18</span>	// http://swtch.com/semaphore.pdf
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	package sync
+<span id="L21" class="ln">    21</span>	#include &#34;runtime.h&#34;
+<span id="L22" class="ln">    22</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L23" class="ln">    23</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	typedef struct SemaWaiter SemaWaiter;
+<span id="L26" class="ln">    26</span>	struct SemaWaiter
+<span id="L27" class="ln">    27</span>	{
+<span id="L28" class="ln">    28</span>		uint32 volatile*	addr;
+<span id="L29" class="ln">    29</span>		G*	g;
+<span id="L30" class="ln">    30</span>		int64	releasetime;
+<span id="L31" class="ln">    31</span>		int32	nrelease;	// -1 for acquire
+<span id="L32" class="ln">    32</span>		SemaWaiter*	prev;
+<span id="L33" class="ln">    33</span>		SemaWaiter*	next;
+<span id="L34" class="ln">    34</span>	};
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>	typedef struct SemaRoot SemaRoot;
+<span id="L37" class="ln">    37</span>	struct SemaRoot
+<span id="L38" class="ln">    38</span>	{
+<span id="L39" class="ln">    39</span>		Lock;
+<span id="L40" class="ln">    40</span>		SemaWaiter*	head;
+<span id="L41" class="ln">    41</span>		SemaWaiter*	tail;
+<span id="L42" class="ln">    42</span>		// Number of waiters. Read w/o the lock.
+<span id="L43" class="ln">    43</span>		uint32 volatile	nwait;
+<span id="L44" class="ln">    44</span>	};
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	// Prime to not correlate with any user patterns.
+<span id="L47" class="ln">    47</span>	#define SEMTABLESZ 251
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	struct semtable
+<span id="L50" class="ln">    50</span>	{
+<span id="L51" class="ln">    51</span>		SemaRoot;
+<span id="L52" class="ln">    52</span>		uint8 pad[CacheLineSize-sizeof(SemaRoot)];
+<span id="L53" class="ln">    53</span>	};
+<span id="L54" class="ln">    54</span>	#pragma dataflag NOPTR /* mark semtable as &#39;no pointers&#39;, hiding from garbage collector */
+<span id="L55" class="ln">    55</span>	static struct semtable semtable[SEMTABLESZ];
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>	static SemaRoot*
+<span id="L58" class="ln">    58</span>	semroot(uint32 *addr)
+<span id="L59" class="ln">    59</span>	{
+<span id="L60" class="ln">    60</span>		return &amp;semtable[((uintptr)addr &gt;&gt; 3) % SEMTABLESZ];
+<span id="L61" class="ln">    61</span>	}
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>	static void
+<span id="L64" class="ln">    64</span>	semqueue(SemaRoot *root, uint32 volatile *addr, SemaWaiter *s)
+<span id="L65" class="ln">    65</span>	{
+<span id="L66" class="ln">    66</span>		s-&gt;g = g;
+<span id="L67" class="ln">    67</span>		s-&gt;addr = addr;
+<span id="L68" class="ln">    68</span>		s-&gt;next = nil;
+<span id="L69" class="ln">    69</span>		s-&gt;prev = root-&gt;tail;
+<span id="L70" class="ln">    70</span>		if(root-&gt;tail)
+<span id="L71" class="ln">    71</span>			root-&gt;tail-&gt;next = s;
+<span id="L72" class="ln">    72</span>		else
+<span id="L73" class="ln">    73</span>			root-&gt;head = s;
+<span id="L74" class="ln">    74</span>		root-&gt;tail = s;
+<span id="L75" class="ln">    75</span>	}
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	static void
+<span id="L78" class="ln">    78</span>	semdequeue(SemaRoot *root, SemaWaiter *s)
+<span id="L79" class="ln">    79</span>	{
+<span id="L80" class="ln">    80</span>		if(s-&gt;next)
+<span id="L81" class="ln">    81</span>			s-&gt;next-&gt;prev = s-&gt;prev;
+<span id="L82" class="ln">    82</span>		else
+<span id="L83" class="ln">    83</span>			root-&gt;tail = s-&gt;prev;
+<span id="L84" class="ln">    84</span>		if(s-&gt;prev)
+<span id="L85" class="ln">    85</span>			s-&gt;prev-&gt;next = s-&gt;next;
+<span id="L86" class="ln">    86</span>		else
+<span id="L87" class="ln">    87</span>			root-&gt;head = s-&gt;next;
+<span id="L88" class="ln">    88</span>		s-&gt;prev = nil;
+<span id="L89" class="ln">    89</span>		s-&gt;next = nil;
+<span id="L90" class="ln">    90</span>	}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	static int32
+<span id="L93" class="ln">    93</span>	cansemacquire(uint32 *addr)
+<span id="L94" class="ln">    94</span>	{
+<span id="L95" class="ln">    95</span>		uint32 v;
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>		while((v = runtime·atomicload(addr)) &gt; 0)
+<span id="L98" class="ln">    98</span>			if(runtime·cas(addr, v, v-1))
+<span id="L99" class="ln">    99</span>				return 1;
+<span id="L100" class="ln">   100</span>		return 0;
+<span id="L101" class="ln">   101</span>	}
+<span id="L102" class="ln">   102</span>	
+<span id="L103" class="ln">   103</span>	void
+<span id="L104" class="ln">   104</span>	runtime·semacquire(uint32 volatile *addr, bool profile)
+<span id="L105" class="ln">   105</span>	{
+<span id="L106" class="ln">   106</span>		SemaWaiter s;	// Needs to be allocated on stack, otherwise garbage collector could deallocate it
+<span id="L107" class="ln">   107</span>		SemaRoot *root;
+<span id="L108" class="ln">   108</span>		int64 t0;
+<span id="L109" class="ln">   109</span>		
+<span id="L110" class="ln">   110</span>		// Easy case.
+<span id="L111" class="ln">   111</span>		if(cansemacquire(addr))
+<span id="L112" class="ln">   112</span>			return;
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>		// Harder case:
+<span id="L115" class="ln">   115</span>		//	increment waiter count
+<span id="L116" class="ln">   116</span>		//	try cansemacquire one more time, return if succeeded
+<span id="L117" class="ln">   117</span>		//	enqueue itself as a waiter
+<span id="L118" class="ln">   118</span>		//	sleep
+<span id="L119" class="ln">   119</span>		//	(waiter descriptor is dequeued by signaler)
+<span id="L120" class="ln">   120</span>		root = semroot(addr);
+<span id="L121" class="ln">   121</span>		t0 = 0;
+<span id="L122" class="ln">   122</span>		s.releasetime = 0;
+<span id="L123" class="ln">   123</span>		if(profile &amp;&amp; runtime·blockprofilerate &gt; 0) {
+<span id="L124" class="ln">   124</span>			t0 = runtime·cputicks();
+<span id="L125" class="ln">   125</span>			s.releasetime = -1;
+<span id="L126" class="ln">   126</span>		}
+<span id="L127" class="ln">   127</span>		for(;;) {
+<span id="L128" class="ln">   128</span>			runtime·lock(root);
+<span id="L129" class="ln">   129</span>			// Add ourselves to nwait to disable &#34;easy case&#34; in semrelease.
+<span id="L130" class="ln">   130</span>			runtime·xadd(&amp;root-&gt;nwait, 1);
+<span id="L131" class="ln">   131</span>			// Check cansemacquire to avoid missed wakeup.
+<span id="L132" class="ln">   132</span>			if(cansemacquire(addr)) {
+<span id="L133" class="ln">   133</span>				runtime·xadd(&amp;root-&gt;nwait, -1);
+<span id="L134" class="ln">   134</span>				runtime·unlock(root);
+<span id="L135" class="ln">   135</span>				return;
+<span id="L136" class="ln">   136</span>			}
+<span id="L137" class="ln">   137</span>			// Any semrelease after the cansemacquire knows we&#39;re waiting
+<span id="L138" class="ln">   138</span>			// (we set nwait above), so go to sleep.
+<span id="L139" class="ln">   139</span>			semqueue(root, addr, &amp;s);
+<span id="L140" class="ln">   140</span>			runtime·parkunlock(root, &#34;semacquire&#34;);
+<span id="L141" class="ln">   141</span>			if(cansemacquire(addr)) {
+<span id="L142" class="ln">   142</span>				if(t0)
+<span id="L143" class="ln">   143</span>					runtime·blockevent(s.releasetime - t0, 3);
+<span id="L144" class="ln">   144</span>				return;
+<span id="L145" class="ln">   145</span>			}
+<span id="L146" class="ln">   146</span>		}
+<span id="L147" class="ln">   147</span>	}
+<span id="L148" class="ln">   148</span>	
+<span id="L149" class="ln">   149</span>	void
+<span id="L150" class="ln">   150</span>	runtime·semrelease(uint32 volatile *addr)
+<span id="L151" class="ln">   151</span>	{
+<span id="L152" class="ln">   152</span>		SemaWaiter *s;
+<span id="L153" class="ln">   153</span>		SemaRoot *root;
+<span id="L154" class="ln">   154</span>	
+<span id="L155" class="ln">   155</span>		root = semroot(addr);
+<span id="L156" class="ln">   156</span>		runtime·xadd(addr, 1);
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>		// Easy case: no waiters?
+<span id="L159" class="ln">   159</span>		// This check must happen after the xadd, to avoid a missed wakeup
+<span id="L160" class="ln">   160</span>		// (see loop in semacquire).
+<span id="L161" class="ln">   161</span>		if(runtime·atomicload(&amp;root-&gt;nwait) == 0)
+<span id="L162" class="ln">   162</span>			return;
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>		// Harder case: search for a waiter and wake it.
+<span id="L165" class="ln">   165</span>		runtime·lock(root);
+<span id="L166" class="ln">   166</span>		if(runtime·atomicload(&amp;root-&gt;nwait) == 0) {
+<span id="L167" class="ln">   167</span>			// The count is already consumed by another goroutine,
+<span id="L168" class="ln">   168</span>			// so no need to wake up another goroutine.
+<span id="L169" class="ln">   169</span>			runtime·unlock(root);
+<span id="L170" class="ln">   170</span>			return;
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>		for(s = root-&gt;head; s; s = s-&gt;next) {
+<span id="L173" class="ln">   173</span>			if(s-&gt;addr == addr) {
+<span id="L174" class="ln">   174</span>				runtime·xadd(&amp;root-&gt;nwait, -1);
+<span id="L175" class="ln">   175</span>				semdequeue(root, s);
+<span id="L176" class="ln">   176</span>				break;
+<span id="L177" class="ln">   177</span>			}
+<span id="L178" class="ln">   178</span>		}
+<span id="L179" class="ln">   179</span>		runtime·unlock(root);
+<span id="L180" class="ln">   180</span>		if(s) {
+<span id="L181" class="ln">   181</span>			if(s-&gt;releasetime)
+<span id="L182" class="ln">   182</span>				s-&gt;releasetime = runtime·cputicks();
+<span id="L183" class="ln">   183</span>			runtime·ready(s-&gt;g);
+<span id="L184" class="ln">   184</span>		}
+<span id="L185" class="ln">   185</span>	}
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>	// TODO(dvyukov): move to netpoll.goc once it&#39;s used by all OSes.
+<span id="L188" class="ln">   188</span>	void net·runtime_Semacquire(uint32 *addr)
+<span id="L189" class="ln">   189</span>	{
+<span id="L190" class="ln">   190</span>		runtime·semacquire(addr, true);
+<span id="L191" class="ln">   191</span>	}
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>	void net·runtime_Semrelease(uint32 *addr)
+<span id="L194" class="ln">   194</span>	{
+<span id="L195" class="ln">   195</span>		runtime·semrelease(addr);
+<span id="L196" class="ln">   196</span>	}
+<span id="L197" class="ln">   197</span>	
+<span id="L198" class="ln">   198</span>	func runtime_Semacquire(addr *uint32) {
+<span id="L199" class="ln">   199</span>		runtime·semacquire(addr, true);
+<span id="L200" class="ln">   200</span>	}
+<span id="L201" class="ln">   201</span>	
+<span id="L202" class="ln">   202</span>	func runtime_Semrelease(addr *uint32) {
+<span id="L203" class="ln">   203</span>		runtime·semrelease(addr);
+<span id="L204" class="ln">   204</span>	}
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	typedef struct SyncSema SyncSema;
+<span id="L207" class="ln">   207</span>	struct SyncSema
+<span id="L208" class="ln">   208</span>	{
+<span id="L209" class="ln">   209</span>		Lock;
+<span id="L210" class="ln">   210</span>		SemaWaiter*	head;
+<span id="L211" class="ln">   211</span>		SemaWaiter*	tail;
+<span id="L212" class="ln">   212</span>	};
+<span id="L213" class="ln">   213</span>	
+<span id="L214" class="ln">   214</span>	func runtime_Syncsemcheck(size uintptr) {
+<span id="L215" class="ln">   215</span>		if(size != sizeof(SyncSema)) {
+<span id="L216" class="ln">   216</span>			runtime·printf(&#34;bad SyncSema size: sync:%D runtime:%D\n&#34;, (int64)size, (int64)sizeof(SyncSema));
+<span id="L217" class="ln">   217</span>			runtime·throw(&#34;bad SyncSema size&#34;);
+<span id="L218" class="ln">   218</span>		}
+<span id="L219" class="ln">   219</span>	}
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	// Syncsemacquire waits for a pairing Syncsemrelease on the same semaphore s.
+<span id="L222" class="ln">   222</span>	func runtime_Syncsemacquire(s *SyncSema) {
+<span id="L223" class="ln">   223</span>		SemaWaiter w, *wake;
+<span id="L224" class="ln">   224</span>		int64 t0;
+<span id="L225" class="ln">   225</span>	
+<span id="L226" class="ln">   226</span>		w.g = g;
+<span id="L227" class="ln">   227</span>		w.nrelease = -1;
+<span id="L228" class="ln">   228</span>		w.next = nil;
+<span id="L229" class="ln">   229</span>		w.releasetime = 0;
+<span id="L230" class="ln">   230</span>		t0 = 0;
+<span id="L231" class="ln">   231</span>		if(runtime·blockprofilerate &gt; 0) {
+<span id="L232" class="ln">   232</span>			t0 = runtime·cputicks();
+<span id="L233" class="ln">   233</span>			w.releasetime = -1;
+<span id="L234" class="ln">   234</span>		}
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>		runtime·lock(s);
+<span id="L237" class="ln">   237</span>		if(s-&gt;head &amp;&amp; s-&gt;head-&gt;nrelease &gt; 0) {
+<span id="L238" class="ln">   238</span>			// have pending release, consume it
+<span id="L239" class="ln">   239</span>			wake = nil;
+<span id="L240" class="ln">   240</span>			s-&gt;head-&gt;nrelease--;
+<span id="L241" class="ln">   241</span>			if(s-&gt;head-&gt;nrelease == 0) {
+<span id="L242" class="ln">   242</span>				wake = s-&gt;head;
+<span id="L243" class="ln">   243</span>				s-&gt;head = wake-&gt;next;
+<span id="L244" class="ln">   244</span>				if(s-&gt;head == nil)
+<span id="L245" class="ln">   245</span>					s-&gt;tail = nil;
+<span id="L246" class="ln">   246</span>			}
+<span id="L247" class="ln">   247</span>			runtime·unlock(s);
+<span id="L248" class="ln">   248</span>			if(wake)
+<span id="L249" class="ln">   249</span>				runtime·ready(wake-&gt;g);
+<span id="L250" class="ln">   250</span>		} else {
+<span id="L251" class="ln">   251</span>			// enqueue itself
+<span id="L252" class="ln">   252</span>			if(s-&gt;tail == nil)
+<span id="L253" class="ln">   253</span>				s-&gt;head = &amp;w;
+<span id="L254" class="ln">   254</span>			else
+<span id="L255" class="ln">   255</span>				s-&gt;tail-&gt;next = &amp;w;
+<span id="L256" class="ln">   256</span>			s-&gt;tail = &amp;w;
+<span id="L257" class="ln">   257</span>			runtime·parkunlock(s, &#34;semacquire&#34;);
+<span id="L258" class="ln">   258</span>			if(t0)
+<span id="L259" class="ln">   259</span>				runtime·blockevent(w.releasetime - t0, 2);
+<span id="L260" class="ln">   260</span>		}
+<span id="L261" class="ln">   261</span>	}
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>	// Syncsemrelease waits for n pairing Syncsemacquire on the same semaphore s.
+<span id="L264" class="ln">   264</span>	func runtime_Syncsemrelease(s *SyncSema, n uint32) {
+<span id="L265" class="ln">   265</span>		SemaWaiter w, *wake;
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		w.g = g;
+<span id="L268" class="ln">   268</span>		w.nrelease = (int32)n;
+<span id="L269" class="ln">   269</span>		w.next = nil;
+<span id="L270" class="ln">   270</span>		w.releasetime = 0;
+<span id="L271" class="ln">   271</span>	
+<span id="L272" class="ln">   272</span>		runtime·lock(s);
+<span id="L273" class="ln">   273</span>		while(w.nrelease &gt; 0 &amp;&amp; s-&gt;head &amp;&amp; s-&gt;head-&gt;nrelease &lt; 0) {
+<span id="L274" class="ln">   274</span>			// have pending acquire, satisfy it
+<span id="L275" class="ln">   275</span>			wake = s-&gt;head;
+<span id="L276" class="ln">   276</span>			s-&gt;head = wake-&gt;next;
+<span id="L277" class="ln">   277</span>			if(s-&gt;head == nil)
+<span id="L278" class="ln">   278</span>				s-&gt;tail = nil;
+<span id="L279" class="ln">   279</span>			if(wake-&gt;releasetime)
+<span id="L280" class="ln">   280</span>				wake-&gt;releasetime = runtime·cputicks();
+<span id="L281" class="ln">   281</span>			runtime·ready(wake-&gt;g);
+<span id="L282" class="ln">   282</span>			w.nrelease--;
+<span id="L283" class="ln">   283</span>		}
+<span id="L284" class="ln">   284</span>		if(w.nrelease &gt; 0) {
+<span id="L285" class="ln">   285</span>			// enqueue itself
+<span id="L286" class="ln">   286</span>			if(s-&gt;tail == nil)
+<span id="L287" class="ln">   287</span>				s-&gt;head = &amp;w;
+<span id="L288" class="ln">   288</span>			else
+<span id="L289" class="ln">   289</span>				s-&gt;tail-&gt;next = &amp;w;
+<span id="L290" class="ln">   290</span>			s-&gt;tail = &amp;w;
+<span id="L291" class="ln">   291</span>			runtime·parkunlock(s, &#34;semarelease&#34;);
+<span id="L292" class="ln">   292</span>		} else
+<span id="L293" class="ln">   293</span>			runtime·unlock(s);
+<span id="L294" class="ln">   294</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/sema.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

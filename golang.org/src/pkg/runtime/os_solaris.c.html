@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/os_solaris.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/os_solaris.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2011 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;runtime.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;defs_GOOS_GOARCH.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;os_GOOS.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;signal_unix.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;stack.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	#pragma dynexport end _end
+<span id="L13" class="ln">    13</span>	#pragma dynexport etext _etext
+<span id="L14" class="ln">    14</span>	#pragma dynexport edata _edata
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	#pragma dynimport libc·___errno ___errno &#34;libc.so&#34;
+<span id="L17" class="ln">    17</span>	#pragma dynimport libc·clock_gettime clock_gettime &#34;libc.so&#34;
+<span id="L18" class="ln">    18</span>	#pragma dynimport libc·close close &#34;libc.so&#34;
+<span id="L19" class="ln">    19</span>	#pragma dynimport libc·exit exit &#34;libc.so&#34;
+<span id="L20" class="ln">    20</span>	#pragma dynimport libc·fstat fstat &#34;libc.so&#34;
+<span id="L21" class="ln">    21</span>	#pragma dynimport libc·getcontext getcontext &#34;libc.so&#34;
+<span id="L22" class="ln">    22</span>	#pragma dynimport libc·getrlimit getrlimit &#34;libc.so&#34;
+<span id="L23" class="ln">    23</span>	#pragma dynimport libc·malloc malloc &#34;libc.so&#34;
+<span id="L24" class="ln">    24</span>	#pragma dynimport libc·mmap mmap &#34;libc.so&#34;
+<span id="L25" class="ln">    25</span>	#pragma dynimport libc·munmap munmap &#34;libc.so&#34;
+<span id="L26" class="ln">    26</span>	#pragma dynimport libc·open open &#34;libc.so&#34;
+<span id="L27" class="ln">    27</span>	#pragma dynimport libc·pthread_attr_destroy pthread_attr_destroy &#34;libc.so&#34;
+<span id="L28" class="ln">    28</span>	#pragma dynimport libc·pthread_attr_getstack pthread_attr_getstack &#34;libc.so&#34;
+<span id="L29" class="ln">    29</span>	#pragma dynimport libc·pthread_attr_init pthread_attr_init &#34;libc.so&#34;
+<span id="L30" class="ln">    30</span>	#pragma dynimport libc·pthread_attr_setdetachstate pthread_attr_setdetachstate &#34;libc.so&#34;
+<span id="L31" class="ln">    31</span>	#pragma dynimport libc·pthread_attr_setstack pthread_attr_setstack &#34;libc.so&#34;
+<span id="L32" class="ln">    32</span>	#pragma dynimport libc·pthread_create pthread_create &#34;libc.so&#34;
+<span id="L33" class="ln">    33</span>	#pragma dynimport libc·raise raise &#34;libc.so&#34;
+<span id="L34" class="ln">    34</span>	#pragma dynimport libc·read read &#34;libc.so&#34;
+<span id="L35" class="ln">    35</span>	#pragma dynimport libc·select select &#34;libc.so&#34;
+<span id="L36" class="ln">    36</span>	#pragma dynimport libc·sched_yield sched_yield &#34;libc.so&#34;
+<span id="L37" class="ln">    37</span>	#pragma dynimport libc·sem_init sem_init &#34;libc.so&#34;
+<span id="L38" class="ln">    38</span>	#pragma dynimport libc·sem_post sem_post &#34;libc.so&#34;
+<span id="L39" class="ln">    39</span>	#pragma dynimport libc·sem_reltimedwait_np sem_reltimedwait_np &#34;libc.so&#34;
+<span id="L40" class="ln">    40</span>	#pragma dynimport libc·sem_wait sem_wait &#34;libc.so&#34;
+<span id="L41" class="ln">    41</span>	#pragma dynimport libc·setitimer setitimer &#34;libc.so&#34;
+<span id="L42" class="ln">    42</span>	#pragma dynimport libc·sigaction sigaction &#34;libc.so&#34;
+<span id="L43" class="ln">    43</span>	#pragma dynimport libc·sigaltstack sigaltstack &#34;libc.so&#34;
+<span id="L44" class="ln">    44</span>	#pragma dynimport libc·sigprocmask sigprocmask &#34;libc.so&#34;
+<span id="L45" class="ln">    45</span>	#pragma dynimport libc·sysconf sysconf &#34;libc.so&#34;
+<span id="L46" class="ln">    46</span>	#pragma dynimport libc·usleep usleep &#34;libc.so&#34;
+<span id="L47" class="ln">    47</span>	#pragma dynimport libc·write write &#34;libc.so&#34;
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	extern uintptr libc·___errno;
+<span id="L50" class="ln">    50</span>	extern uintptr libc·clock_gettime;
+<span id="L51" class="ln">    51</span>	extern uintptr libc·close;
+<span id="L52" class="ln">    52</span>	extern uintptr libc·exit;
+<span id="L53" class="ln">    53</span>	extern uintptr libc·fstat;
+<span id="L54" class="ln">    54</span>	extern uintptr libc·getcontext;
+<span id="L55" class="ln">    55</span>	extern uintptr libc·getrlimit;
+<span id="L56" class="ln">    56</span>	extern uintptr libc·malloc;
+<span id="L57" class="ln">    57</span>	extern uintptr libc·mmap;
+<span id="L58" class="ln">    58</span>	extern uintptr libc·munmap;
+<span id="L59" class="ln">    59</span>	extern uintptr libc·open;
+<span id="L60" class="ln">    60</span>	extern uintptr libc·pthread_attr_destroy;
+<span id="L61" class="ln">    61</span>	extern uintptr libc·pthread_attr_getstack;
+<span id="L62" class="ln">    62</span>	extern uintptr libc·pthread_attr_init;
+<span id="L63" class="ln">    63</span>	extern uintptr libc·pthread_attr_setdetachstate;
+<span id="L64" class="ln">    64</span>	extern uintptr libc·pthread_attr_setstack;
+<span id="L65" class="ln">    65</span>	extern uintptr libc·pthread_create;
+<span id="L66" class="ln">    66</span>	extern uintptr libc·raise;
+<span id="L67" class="ln">    67</span>	extern uintptr libc·read;
+<span id="L68" class="ln">    68</span>	extern uintptr libc·sched_yield;
+<span id="L69" class="ln">    69</span>	extern uintptr libc·select;
+<span id="L70" class="ln">    70</span>	extern uintptr libc·sem_init;
+<span id="L71" class="ln">    71</span>	extern uintptr libc·sem_post;
+<span id="L72" class="ln">    72</span>	extern uintptr libc·sem_reltimedwait_np;
+<span id="L73" class="ln">    73</span>	extern uintptr libc·sem_wait;
+<span id="L74" class="ln">    74</span>	extern uintptr libc·setitimer;
+<span id="L75" class="ln">    75</span>	extern uintptr libc·sigaction;
+<span id="L76" class="ln">    76</span>	extern uintptr libc·sigaltstack;
+<span id="L77" class="ln">    77</span>	extern uintptr libc·sigprocmask;
+<span id="L78" class="ln">    78</span>	extern uintptr libc·sysconf;
+<span id="L79" class="ln">    79</span>	extern uintptr libc·usleep;
+<span id="L80" class="ln">    80</span>	extern uintptr libc·write;
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	void	runtime·getcontext(Ucontext *context);
+<span id="L83" class="ln">    83</span>	int32	runtime·pthread_attr_destroy(PthreadAttr* attr);
+<span id="L84" class="ln">    84</span>	int32	runtime·pthread_attr_init(PthreadAttr* attr);
+<span id="L85" class="ln">    85</span>	int32	runtime·pthread_attr_getstack(PthreadAttr* attr, void** addr, uint64* size);
+<span id="L86" class="ln">    86</span>	int32	runtime·pthread_attr_setdetachstate(PthreadAttr* attr, int32 state);
+<span id="L87" class="ln">    87</span>	int32	runtime·pthread_attr_setstack(PthreadAttr* attr, void* addr, uint64 size);
+<span id="L88" class="ln">    88</span>	int32	runtime·pthread_create(Pthread* thread, PthreadAttr* attr, void(*fn)(void), void *arg);
+<span id="L89" class="ln">    89</span>	uint32	runtime·tstart_sysvicall(M *newm);
+<span id="L90" class="ln">    90</span>	int32	runtime·sem_init(SemT* sem, int32 pshared, uint32 value);
+<span id="L91" class="ln">    91</span>	int32	runtime·sem_post(SemT* sem);
+<span id="L92" class="ln">    92</span>	int32	runtime·sem_reltimedwait_np(SemT* sem, Timespec* timeout);
+<span id="L93" class="ln">    93</span>	int32	runtime·sem_wait(SemT* sem);
+<span id="L94" class="ln">    94</span>	int64	runtime·sysconf(int32 name);
+<span id="L95" class="ln">    95</span>	
+<span id="L96" class="ln">    96</span>	extern SigTab runtime·sigtab[];
+<span id="L97" class="ln">    97</span>	static Sigset sigset_none;
+<span id="L98" class="ln">    98</span>	static Sigset sigset_all = { ~(uint32)0, ~(uint32)0, ~(uint32)0, ~(uint32)0, };
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>	// Calling sysvcall on os stack.
+<span id="L101" class="ln">   101</span>	#pragma textflag NOSPLIT
+<span id="L102" class="ln">   102</span>	uintptr
+<span id="L103" class="ln">   103</span>	runtime·sysvicall6(uintptr fn, int32 count, ...)
+<span id="L104" class="ln">   104</span>	{
+<span id="L105" class="ln">   105</span>		runtime·memclr((byte*)&amp;m-&gt;scratch, sizeof(m-&gt;scratch));
+<span id="L106" class="ln">   106</span>		m-&gt;libcall.fn = (void*)fn;
+<span id="L107" class="ln">   107</span>		m-&gt;libcall.n = (uintptr)count;
+<span id="L108" class="ln">   108</span>		for(;count; count--)
+<span id="L109" class="ln">   109</span>			m-&gt;scratch.v[count - 1] = *((uintptr*)&amp;count + count);
+<span id="L110" class="ln">   110</span>		m-&gt;libcall.args = (uintptr*)&amp;m-&gt;scratch.v[0];
+<span id="L111" class="ln">   111</span>		runtime·asmcgocall(runtime·asmsysvicall6, &amp;m-&gt;libcall);
+<span id="L112" class="ln">   112</span>		return m-&gt;libcall.r1;
+<span id="L113" class="ln">   113</span>	}
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>	static int32
+<span id="L116" class="ln">   116</span>	getncpu(void) 
+<span id="L117" class="ln">   117</span>	{
+<span id="L118" class="ln">   118</span>		int32 n;
+<span id="L119" class="ln">   119</span>		
+<span id="L120" class="ln">   120</span>		n = (int32)runtime·sysconf(_SC_NPROCESSORS_ONLN);
+<span id="L121" class="ln">   121</span>		if(n &lt; 1)
+<span id="L122" class="ln">   122</span>			return 1;
+<span id="L123" class="ln">   123</span>		return n;
+<span id="L124" class="ln">   124</span>	}
+<span id="L125" class="ln">   125</span>	
+<span id="L126" class="ln">   126</span>	void
+<span id="L127" class="ln">   127</span>	runtime·osinit(void)
+<span id="L128" class="ln">   128</span>	{
+<span id="L129" class="ln">   129</span>		runtime·ncpu = getncpu(); 
+<span id="L130" class="ln">   130</span>	}
+<span id="L131" class="ln">   131</span>	
+<span id="L132" class="ln">   132</span>	void
+<span id="L133" class="ln">   133</span>	runtime·newosproc(M *mp, void *stk)
+<span id="L134" class="ln">   134</span>	{
+<span id="L135" class="ln">   135</span>		PthreadAttr attr;
+<span id="L136" class="ln">   136</span>		Sigset oset;
+<span id="L137" class="ln">   137</span>		Pthread tid;
+<span id="L138" class="ln">   138</span>		int32 ret;
+<span id="L139" class="ln">   139</span>	
+<span id="L140" class="ln">   140</span>		USED(stk);
+<span id="L141" class="ln">   141</span>		if(runtime·pthread_attr_init(&amp;attr) != 0)
+<span id="L142" class="ln">   142</span>			runtime·throw(&#34;pthread_attr_init&#34;);
+<span id="L143" class="ln">   143</span>		if(runtime·pthread_attr_setstack(&amp;attr, 0, 0x200000) != 0)
+<span id="L144" class="ln">   144</span>			runtime·throw(&#34;pthread_attr_setstack&#34;);
+<span id="L145" class="ln">   145</span>		if(runtime·pthread_attr_getstack(&amp;attr, (void**)&amp;mp-&gt;g0-&gt;stackbase, &amp;mp-&gt;g0-&gt;stacksize) != 0)
+<span id="L146" class="ln">   146</span>			runtime·throw(&#34;pthread_attr_getstack&#34;);	
+<span id="L147" class="ln">   147</span>		if(runtime·pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED) != 0)
+<span id="L148" class="ln">   148</span>			runtime·throw(&#34;pthread_attr_setdetachstate&#34;);
+<span id="L149" class="ln">   149</span>	
+<span id="L150" class="ln">   150</span>		// Disable signals during create, so that the new thread starts
+<span id="L151" class="ln">   151</span>		// with signals disabled.  It will enable them in minit.
+<span id="L152" class="ln">   152</span>		runtime·sigprocmask(SIG_SETMASK, &amp;sigset_all, &amp;oset);
+<span id="L153" class="ln">   153</span>		ret = runtime·pthread_create(&amp;tid, &amp;attr, (void (*)(void))runtime·tstart_sysvicall, mp);
+<span id="L154" class="ln">   154</span>		runtime·sigprocmask(SIG_SETMASK, &amp;oset, nil);
+<span id="L155" class="ln">   155</span>		if(ret != 0) {
+<span id="L156" class="ln">   156</span>			runtime·printf(&#34;runtime: failed to create new OS thread (have %d already; errno=%d)\n&#34;, runtime·mcount(), ret);
+<span id="L157" class="ln">   157</span>			runtime·throw(&#34;runtime.newosproc&#34;);
+<span id="L158" class="ln">   158</span>		}
+<span id="L159" class="ln">   159</span>	}
+<span id="L160" class="ln">   160</span>	
+<span id="L161" class="ln">   161</span>	void
+<span id="L162" class="ln">   162</span>	runtime·get_random_data(byte **rnd, int32 *rnd_len)
+<span id="L163" class="ln">   163</span>	{
+<span id="L164" class="ln">   164</span>		#pragma dataflag NOPTR
+<span id="L165" class="ln">   165</span>		static byte urandom_data[HashRandomBytes];
+<span id="L166" class="ln">   166</span>		int32 fd;
+<span id="L167" class="ln">   167</span>		fd = runtime·open(&#34;/dev/urandom&#34;, 0 /* O_RDONLY */, 0);
+<span id="L168" class="ln">   168</span>		if(runtime·read(fd, urandom_data, HashRandomBytes) == HashRandomBytes) {
+<span id="L169" class="ln">   169</span>			*rnd = urandom_data;
+<span id="L170" class="ln">   170</span>			*rnd_len = HashRandomBytes;
+<span id="L171" class="ln">   171</span>		} else {
+<span id="L172" class="ln">   172</span>			*rnd = nil;
+<span id="L173" class="ln">   173</span>			*rnd_len = 0;
+<span id="L174" class="ln">   174</span>		}
+<span id="L175" class="ln">   175</span>		runtime·close(fd);
+<span id="L176" class="ln">   176</span>	}
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>	void
+<span id="L179" class="ln">   179</span>	runtime·goenvs(void)
+<span id="L180" class="ln">   180</span>	{
+<span id="L181" class="ln">   181</span>		runtime·goenvs_unix();
+<span id="L182" class="ln">   182</span>	}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	// Called to initialize a new m (including the bootstrap m).
+<span id="L185" class="ln">   185</span>	// Called on the parent thread (main thread in case of bootstrap), can allocate memory.
+<span id="L186" class="ln">   186</span>	void
+<span id="L187" class="ln">   187</span>	runtime·mpreinit(M *mp)
+<span id="L188" class="ln">   188</span>	{
+<span id="L189" class="ln">   189</span>		mp-&gt;gsignal = runtime·malg(32*1024);
+<span id="L190" class="ln">   190</span>	}
+<span id="L191" class="ln">   191</span>	
+<span id="L192" class="ln">   192</span>	// Called to initialize a new m (including the bootstrap m).
+<span id="L193" class="ln">   193</span>	// Called on the new thread, can not allocate memory.
+<span id="L194" class="ln">   194</span>	void
+<span id="L195" class="ln">   195</span>	runtime·minit(void)
+<span id="L196" class="ln">   196</span>	{
+<span id="L197" class="ln">   197</span>		runtime·asmcgocall(runtime·miniterrno, (void *)libc·___errno);
+<span id="L198" class="ln">   198</span>		// Initialize signal handling
+<span id="L199" class="ln">   199</span>		runtime·signalstack((byte*)m-&gt;gsignal-&gt;stackguard - StackGuard, 32*1024);
+<span id="L200" class="ln">   200</span>		runtime·sigprocmask(SIG_SETMASK, &amp;sigset_none, nil);
+<span id="L201" class="ln">   201</span>	}
+<span id="L202" class="ln">   202</span>	
+<span id="L203" class="ln">   203</span>	// Called from dropm to undo the effect of an minit.
+<span id="L204" class="ln">   204</span>	void
+<span id="L205" class="ln">   205</span>	runtime·unminit(void)
+<span id="L206" class="ln">   206</span>	{
+<span id="L207" class="ln">   207</span>		runtime·signalstack(nil, 0);
+<span id="L208" class="ln">   208</span>	}
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>	void
+<span id="L211" class="ln">   211</span>	runtime·sigpanic(void)
+<span id="L212" class="ln">   212</span>	{
+<span id="L213" class="ln">   213</span>		if(!runtime·canpanic(g))
+<span id="L214" class="ln">   214</span>			runtime·throw(&#34;unexpected signal during runtime execution&#34;);
+<span id="L215" class="ln">   215</span>	
+<span id="L216" class="ln">   216</span>		switch(g-&gt;sig) {
+<span id="L217" class="ln">   217</span>		case SIGBUS:
+<span id="L218" class="ln">   218</span>			if(g-&gt;sigcode0 == BUS_ADRERR &amp;&amp; g-&gt;sigcode1 &lt; 0x1000 || g-&gt;paniconfault) {
+<span id="L219" class="ln">   219</span>				if(g-&gt;sigpc == 0)
+<span id="L220" class="ln">   220</span>					runtime·panicstring(&#34;call of nil func value&#34;);
+<span id="L221" class="ln">   221</span>				runtime·panicstring(&#34;invalid memory address or nil pointer dereference&#34;);
+<span id="L222" class="ln">   222</span>			}
+<span id="L223" class="ln">   223</span>			runtime·printf(&#34;unexpected fault address %p\n&#34;, g-&gt;sigcode1);
+<span id="L224" class="ln">   224</span>			runtime·throw(&#34;fault&#34;);
+<span id="L225" class="ln">   225</span>		case SIGSEGV:
+<span id="L226" class="ln">   226</span>			if((g-&gt;sigcode0 == 0 || g-&gt;sigcode0 == SEGV_MAPERR || g-&gt;sigcode0 == SEGV_ACCERR) &amp;&amp; g-&gt;sigcode1 &lt; 0x1000 || g-&gt;paniconfault) {
+<span id="L227" class="ln">   227</span>				if(g-&gt;sigpc == 0)
+<span id="L228" class="ln">   228</span>					runtime·panicstring(&#34;call of nil func value&#34;);
+<span id="L229" class="ln">   229</span>				runtime·panicstring(&#34;invalid memory address or nil pointer dereference&#34;);
+<span id="L230" class="ln">   230</span>			}
+<span id="L231" class="ln">   231</span>			runtime·printf(&#34;unexpected fault address %p\n&#34;, g-&gt;sigcode1);
+<span id="L232" class="ln">   232</span>			runtime·throw(&#34;fault&#34;);
+<span id="L233" class="ln">   233</span>		case SIGFPE:
+<span id="L234" class="ln">   234</span>			switch(g-&gt;sigcode0) {
+<span id="L235" class="ln">   235</span>			case FPE_INTDIV:
+<span id="L236" class="ln">   236</span>				runtime·panicstring(&#34;integer divide by zero&#34;);
+<span id="L237" class="ln">   237</span>			case FPE_INTOVF:
+<span id="L238" class="ln">   238</span>				runtime·panicstring(&#34;integer overflow&#34;);
+<span id="L239" class="ln">   239</span>			}
+<span id="L240" class="ln">   240</span>			runtime·panicstring(&#34;floating point error&#34;);
+<span id="L241" class="ln">   241</span>		}
+<span id="L242" class="ln">   242</span>		runtime·panicstring(runtime·sigtab[g-&gt;sig].name);
+<span id="L243" class="ln">   243</span>	}
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>	uintptr
+<span id="L246" class="ln">   246</span>	runtime·memlimit(void)
+<span id="L247" class="ln">   247</span>	{
+<span id="L248" class="ln">   248</span>		Rlimit rl;
+<span id="L249" class="ln">   249</span>		extern byte text[], end[];
+<span id="L250" class="ln">   250</span>		uintptr used;
+<span id="L251" class="ln">   251</span>		
+<span id="L252" class="ln">   252</span>		if(runtime·getrlimit(RLIMIT_AS, &amp;rl) != 0)
+<span id="L253" class="ln">   253</span>			return 0;
+<span id="L254" class="ln">   254</span>		if(rl.rlim_cur &gt;= 0x7fffffff)
+<span id="L255" class="ln">   255</span>			return 0;
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>		// Estimate our VM footprint excluding the heap.
+<span id="L258" class="ln">   258</span>		// Not an exact science: use size of binary plus
+<span id="L259" class="ln">   259</span>		// some room for thread stacks.
+<span id="L260" class="ln">   260</span>		used = end - text + (64&lt;&lt;20);
+<span id="L261" class="ln">   261</span>		if(used &gt;= rl.rlim_cur)
+<span id="L262" class="ln">   262</span>			return 0;
+<span id="L263" class="ln">   263</span>	
+<span id="L264" class="ln">   264</span>		// If there&#39;s not at least 16 MB left, we&#39;re probably
+<span id="L265" class="ln">   265</span>		// not going to be able to do much.  Treat as no limit.
+<span id="L266" class="ln">   266</span>		rl.rlim_cur -= used;
+<span id="L267" class="ln">   267</span>		if(rl.rlim_cur &lt; (16&lt;&lt;20))
+<span id="L268" class="ln">   268</span>			return 0;
+<span id="L269" class="ln">   269</span>	
+<span id="L270" class="ln">   270</span>		return rl.rlim_cur - used;
+<span id="L271" class="ln">   271</span>	}
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>	void
+<span id="L274" class="ln">   274</span>	runtime·setprof(bool on)
+<span id="L275" class="ln">   275</span>	{
+<span id="L276" class="ln">   276</span>		USED(on);
+<span id="L277" class="ln">   277</span>	}
+<span id="L278" class="ln">   278</span>	
+<span id="L279" class="ln">   279</span>	extern void runtime·sigtramp(void);
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>	void
+<span id="L282" class="ln">   282</span>	runtime·setsig(int32 i, GoSighandler *fn, bool restart)
+<span id="L283" class="ln">   283</span>	{
+<span id="L284" class="ln">   284</span>		Sigaction sa;
+<span id="L285" class="ln">   285</span>	
+<span id="L286" class="ln">   286</span>		runtime·memclr((byte*)&amp;sa, sizeof sa);
+<span id="L287" class="ln">   287</span>		sa.sa_flags = SA_SIGINFO|SA_ONSTACK;
+<span id="L288" class="ln">   288</span>		if(restart)
+<span id="L289" class="ln">   289</span>			sa.sa_flags |= SA_RESTART;
+<span id="L290" class="ln">   290</span>		sa.sa_mask.__sigbits[0] = ~(uint32)0;
+<span id="L291" class="ln">   291</span>		sa.sa_mask.__sigbits[1] = ~(uint32)0;
+<span id="L292" class="ln">   292</span>		sa.sa_mask.__sigbits[2] = ~(uint32)0;
+<span id="L293" class="ln">   293</span>		sa.sa_mask.__sigbits[3] = ~(uint32)0;
+<span id="L294" class="ln">   294</span>		if(fn == runtime·sighandler)
+<span id="L295" class="ln">   295</span>			fn = (void*)runtime·sigtramp;
+<span id="L296" class="ln">   296</span>		*((void**)&amp;sa._funcptr[0]) = (void*)fn;
+<span id="L297" class="ln">   297</span>		runtime·sigaction(i, &amp;sa, nil);
+<span id="L298" class="ln">   298</span>	}
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>	GoSighandler*
+<span id="L301" class="ln">   301</span>	runtime·getsig(int32 i)
+<span id="L302" class="ln">   302</span>	{
+<span id="L303" class="ln">   303</span>		Sigaction sa;
+<span id="L304" class="ln">   304</span>	
+<span id="L305" class="ln">   305</span>		runtime·memclr((byte*)&amp;sa, sizeof sa);
+<span id="L306" class="ln">   306</span>		runtime·sigaction(i, nil, &amp;sa);
+<span id="L307" class="ln">   307</span>		if(*((void**)&amp;sa._funcptr[0]) == runtime·sigtramp)
+<span id="L308" class="ln">   308</span>			return runtime·sighandler;
+<span id="L309" class="ln">   309</span>		return *((void**)&amp;sa._funcptr[0]);
+<span id="L310" class="ln">   310</span>	}
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>	void
+<span id="L313" class="ln">   313</span>	runtime·signalstack(byte *p, int32 n)
+<span id="L314" class="ln">   314</span>	{
+<span id="L315" class="ln">   315</span>		StackT st;
+<span id="L316" class="ln">   316</span>	
+<span id="L317" class="ln">   317</span>		st.ss_sp = (void*)p;
+<span id="L318" class="ln">   318</span>		st.ss_size = n;
+<span id="L319" class="ln">   319</span>		st.ss_flags = 0;
+<span id="L320" class="ln">   320</span>		if(p == nil)
+<span id="L321" class="ln">   321</span>			st.ss_flags = SS_DISABLE;
+<span id="L322" class="ln">   322</span>		runtime·sigaltstack(&amp;st, nil);
+<span id="L323" class="ln">   323</span>	}
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>	void
+<span id="L326" class="ln">   326</span>	runtime·unblocksignals(void)
+<span id="L327" class="ln">   327</span>	{
+<span id="L328" class="ln">   328</span>		runtime·sigprocmask(SIG_SETMASK, &amp;sigset_none, nil);
+<span id="L329" class="ln">   329</span>	}
+<span id="L330" class="ln">   330</span>	
+<span id="L331" class="ln">   331</span>	#pragma textflag NOSPLIT
+<span id="L332" class="ln">   332</span>	uintptr
+<span id="L333" class="ln">   333</span>	runtime·semacreate(void)
+<span id="L334" class="ln">   334</span>	{
+<span id="L335" class="ln">   335</span>		SemT* sem;
+<span id="L336" class="ln">   336</span>	
+<span id="L337" class="ln">   337</span>		// Call libc&#39;s malloc rather than runtime·malloc.  This will
+<span id="L338" class="ln">   338</span>		// allocate space on the C heap.  We can&#39;t call runtime·malloc
+<span id="L339" class="ln">   339</span>		// here because it could cause a deadlock.
+<span id="L340" class="ln">   340</span>		m-&gt;libcall.fn = (void*)libc·malloc;
+<span id="L341" class="ln">   341</span>		m-&gt;libcall.n = 1;
+<span id="L342" class="ln">   342</span>		runtime·memclr((byte*)&amp;m-&gt;scratch, sizeof(m-&gt;scratch));
+<span id="L343" class="ln">   343</span>		m-&gt;scratch.v[0] = (uintptr)sizeof(*sem);
+<span id="L344" class="ln">   344</span>		m-&gt;libcall.args = (uintptr*)&amp;m-&gt;scratch;
+<span id="L345" class="ln">   345</span>		runtime·asmcgocall(runtime·asmsysvicall6, &amp;m-&gt;libcall);
+<span id="L346" class="ln">   346</span>		sem = (void*)m-&gt;libcall.r1;
+<span id="L347" class="ln">   347</span>		if(runtime·sem_init(sem, 0, 0) != 0)
+<span id="L348" class="ln">   348</span>			runtime·throw(&#34;sem_init&#34;);
+<span id="L349" class="ln">   349</span>		return (uintptr)sem;
+<span id="L350" class="ln">   350</span>	}
+<span id="L351" class="ln">   351</span>	
+<span id="L352" class="ln">   352</span>	#pragma textflag NOSPLIT
+<span id="L353" class="ln">   353</span>	int32
+<span id="L354" class="ln">   354</span>	runtime·semasleep(int64 ns)
+<span id="L355" class="ln">   355</span>	{
+<span id="L356" class="ln">   356</span>		if(ns &gt;= 0) {
+<span id="L357" class="ln">   357</span>			m-&gt;ts.tv_sec = ns / 1000000000LL;
+<span id="L358" class="ln">   358</span>			m-&gt;ts.tv_nsec = ns % 1000000000LL;
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>			m-&gt;libcall.fn = (void*)libc·sem_reltimedwait_np;
+<span id="L361" class="ln">   361</span>			m-&gt;libcall.n = 2;
+<span id="L362" class="ln">   362</span>			runtime·memclr((byte*)&amp;m-&gt;scratch, sizeof(m-&gt;scratch));
+<span id="L363" class="ln">   363</span>			m-&gt;scratch.v[0] = m-&gt;waitsema;
+<span id="L364" class="ln">   364</span>			m-&gt;scratch.v[1] = (uintptr)&amp;m-&gt;ts;
+<span id="L365" class="ln">   365</span>			m-&gt;libcall.args = (uintptr*)&amp;m-&gt;scratch;
+<span id="L366" class="ln">   366</span>			runtime·asmcgocall(runtime·asmsysvicall6, &amp;m-&gt;libcall);
+<span id="L367" class="ln">   367</span>			if(*m-&gt;perrno != 0) {
+<span id="L368" class="ln">   368</span>				if(*m-&gt;perrno == ETIMEDOUT || *m-&gt;perrno == EAGAIN || *m-&gt;perrno == EINTR)
+<span id="L369" class="ln">   369</span>					return -1;
+<span id="L370" class="ln">   370</span>				runtime·throw(&#34;sem_reltimedwait_np&#34;);
+<span id="L371" class="ln">   371</span>			}
+<span id="L372" class="ln">   372</span>			return 0;
+<span id="L373" class="ln">   373</span>		}
+<span id="L374" class="ln">   374</span>		for(;;) {
+<span id="L375" class="ln">   375</span>			m-&gt;libcall.fn = (void*)libc·sem_wait;
+<span id="L376" class="ln">   376</span>			m-&gt;libcall.n = 1;
+<span id="L377" class="ln">   377</span>			runtime·memclr((byte*)&amp;m-&gt;scratch, sizeof(m-&gt;scratch));
+<span id="L378" class="ln">   378</span>			m-&gt;scratch.v[0] = m-&gt;waitsema;
+<span id="L379" class="ln">   379</span>			m-&gt;libcall.args = (uintptr*)&amp;m-&gt;scratch;
+<span id="L380" class="ln">   380</span>			runtime·asmcgocall(runtime·asmsysvicall6, &amp;m-&gt;libcall);
+<span id="L381" class="ln">   381</span>			if(m-&gt;libcall.r1 == 0)
+<span id="L382" class="ln">   382</span>				break;
+<span id="L383" class="ln">   383</span>			if(*m-&gt;perrno == EINTR) 
+<span id="L384" class="ln">   384</span>				continue;
+<span id="L385" class="ln">   385</span>			runtime·throw(&#34;sem_wait&#34;);
+<span id="L386" class="ln">   386</span>		}
+<span id="L387" class="ln">   387</span>		return 0;
+<span id="L388" class="ln">   388</span>	}
+<span id="L389" class="ln">   389</span>	
+<span id="L390" class="ln">   390</span>	#pragma textflag NOSPLIT
+<span id="L391" class="ln">   391</span>	void
+<span id="L392" class="ln">   392</span>	runtime·semawakeup(M *mp)
+<span id="L393" class="ln">   393</span>	{
+<span id="L394" class="ln">   394</span>		SemT* sem = (SemT*)mp-&gt;waitsema;
+<span id="L395" class="ln">   395</span>		if(runtime·sem_post(sem) != 0)
+<span id="L396" class="ln">   396</span>			runtime·throw(&#34;sem_post&#34;);
+<span id="L397" class="ln">   397</span>	}
+<span id="L398" class="ln">   398</span>	
+<span id="L399" class="ln">   399</span>	int32
+<span id="L400" class="ln">   400</span>	runtime·close(int32 fd)
+<span id="L401" class="ln">   401</span>	{
+<span id="L402" class="ln">   402</span>		return runtime·sysvicall6(libc·close, 1, (uintptr)fd);
+<span id="L403" class="ln">   403</span>	}
+<span id="L404" class="ln">   404</span>	
+<span id="L405" class="ln">   405</span>	void
+<span id="L406" class="ln">   406</span>	runtime·exit(int32 r)
+<span id="L407" class="ln">   407</span>	{
+<span id="L408" class="ln">   408</span>		runtime·sysvicall6(libc·exit, 1, (uintptr)r);
+<span id="L409" class="ln">   409</span>	}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	/* int32 */ void
+<span id="L412" class="ln">   412</span>	runtime·getcontext(Ucontext* context)
+<span id="L413" class="ln">   413</span>	{
+<span id="L414" class="ln">   414</span>		runtime·sysvicall6(libc·getcontext, 1, (uintptr)context);
+<span id="L415" class="ln">   415</span>	}
+<span id="L416" class="ln">   416</span>	
+<span id="L417" class="ln">   417</span>	int32
+<span id="L418" class="ln">   418</span>	runtime·getrlimit(int32 res, Rlimit* rlp)
+<span id="L419" class="ln">   419</span>	{
+<span id="L420" class="ln">   420</span>		return runtime·sysvicall6(libc·getrlimit, 2, (uintptr)res, (uintptr)rlp);
+<span id="L421" class="ln">   421</span>	}
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>	uint8*
+<span id="L424" class="ln">   424</span>	runtime·mmap(byte* addr, uintptr len, int32 prot, int32 flags, int32 fildes, uint32 off)
+<span id="L425" class="ln">   425</span>	{
+<span id="L426" class="ln">   426</span>		return (uint8*)runtime·sysvicall6(libc·mmap, 6, (uintptr)addr, (uintptr)len, (uintptr)prot, (uintptr)flags, (uintptr)fildes, (uintptr)off);
+<span id="L427" class="ln">   427</span>	}
+<span id="L428" class="ln">   428</span>	
+<span id="L429" class="ln">   429</span>	void
+<span id="L430" class="ln">   430</span>	runtime·munmap(byte* addr, uintptr len)
+<span id="L431" class="ln">   431</span>	{
+<span id="L432" class="ln">   432</span>		runtime·sysvicall6(libc·munmap, 2, (uintptr)addr, (uintptr)len);
+<span id="L433" class="ln">   433</span>	}
+<span id="L434" class="ln">   434</span>	
+<span id="L435" class="ln">   435</span>	extern int64 runtime·nanotime1(void);
+<span id="L436" class="ln">   436</span>	#pragma textflag NOSPLIT
+<span id="L437" class="ln">   437</span>	int64
+<span id="L438" class="ln">   438</span>	runtime·nanotime(void)
+<span id="L439" class="ln">   439</span>	{
+<span id="L440" class="ln">   440</span>		return runtime·sysvicall6((uintptr)runtime·nanotime1, 0);
+<span id="L441" class="ln">   441</span>	}
+<span id="L442" class="ln">   442</span>	
+<span id="L443" class="ln">   443</span>	void
+<span id="L444" class="ln">   444</span>	time·now(int64 sec, int32 usec)
+<span id="L445" class="ln">   445</span>	{
+<span id="L446" class="ln">   446</span>		int64 ns;
+<span id="L447" class="ln">   447</span>	
+<span id="L448" class="ln">   448</span>		ns = runtime·nanotime();
+<span id="L449" class="ln">   449</span>		sec = ns / 1000000000LL;
+<span id="L450" class="ln">   450</span>		usec = ns - sec * 1000000000LL;
+<span id="L451" class="ln">   451</span>		FLUSH(&amp;sec);
+<span id="L452" class="ln">   452</span>		FLUSH(&amp;usec);
+<span id="L453" class="ln">   453</span>	}
+<span id="L454" class="ln">   454</span>	
+<span id="L455" class="ln">   455</span>	int32
+<span id="L456" class="ln">   456</span>	runtime·open(int8* path, int32 oflag, int32 mode)
+<span id="L457" class="ln">   457</span>	{
+<span id="L458" class="ln">   458</span>		return runtime·sysvicall6(libc·open, 3, (uintptr)path, (uintptr)oflag, (uintptr)mode);
+<span id="L459" class="ln">   459</span>	}
+<span id="L460" class="ln">   460</span>	
+<span id="L461" class="ln">   461</span>	int32
+<span id="L462" class="ln">   462</span>	runtime·pthread_attr_destroy(PthreadAttr* attr)
+<span id="L463" class="ln">   463</span>	{
+<span id="L464" class="ln">   464</span>		return runtime·sysvicall6(libc·pthread_attr_destroy, 1, (uintptr)attr);
+<span id="L465" class="ln">   465</span>	}
+<span id="L466" class="ln">   466</span>	
+<span id="L467" class="ln">   467</span>	int32
+<span id="L468" class="ln">   468</span>	runtime·pthread_attr_getstack(PthreadAttr* attr, void** addr, uint64* size)
+<span id="L469" class="ln">   469</span>	{
+<span id="L470" class="ln">   470</span>		return runtime·sysvicall6(libc·pthread_attr_getstack, 3, (uintptr)attr, (uintptr)addr, (uintptr)size);
+<span id="L471" class="ln">   471</span>	}
+<span id="L472" class="ln">   472</span>	
+<span id="L473" class="ln">   473</span>	int32
+<span id="L474" class="ln">   474</span>	runtime·pthread_attr_init(PthreadAttr* attr)
+<span id="L475" class="ln">   475</span>	{
+<span id="L476" class="ln">   476</span>		return runtime·sysvicall6(libc·pthread_attr_init, 1, (uintptr)attr);
+<span id="L477" class="ln">   477</span>	}
+<span id="L478" class="ln">   478</span>	
+<span id="L479" class="ln">   479</span>	int32
+<span id="L480" class="ln">   480</span>	runtime·pthread_attr_setdetachstate(PthreadAttr* attr, int32 state)
+<span id="L481" class="ln">   481</span>	{
+<span id="L482" class="ln">   482</span>		return runtime·sysvicall6(libc·pthread_attr_setdetachstate, 2, (uintptr)attr, (uintptr)state);
+<span id="L483" class="ln">   483</span>	}
+<span id="L484" class="ln">   484</span>	
+<span id="L485" class="ln">   485</span>	int32
+<span id="L486" class="ln">   486</span>	runtime·pthread_attr_setstack(PthreadAttr* attr, void* addr, uint64 size)
+<span id="L487" class="ln">   487</span>	{
+<span id="L488" class="ln">   488</span>		return runtime·sysvicall6(libc·pthread_attr_setstack, 3, (uintptr)attr, (uintptr)addr, (uintptr)size);
+<span id="L489" class="ln">   489</span>	}
+<span id="L490" class="ln">   490</span>	
+<span id="L491" class="ln">   491</span>	int32
+<span id="L492" class="ln">   492</span>	runtime·pthread_create(Pthread* thread, PthreadAttr* attr, void(*fn)(void), void *arg)
+<span id="L493" class="ln">   493</span>	{
+<span id="L494" class="ln">   494</span>		return runtime·sysvicall6(libc·pthread_create, 4, (uintptr)thread, (uintptr)attr, (uintptr)fn, (uintptr)arg);
+<span id="L495" class="ln">   495</span>	}
+<span id="L496" class="ln">   496</span>	
+<span id="L497" class="ln">   497</span>	/* int32 */ void
+<span id="L498" class="ln">   498</span>	runtime·raise(int32 sig)
+<span id="L499" class="ln">   499</span>	{
+<span id="L500" class="ln">   500</span>		runtime·sysvicall6(libc·raise, 1, (uintptr)sig);
+<span id="L501" class="ln">   501</span>	}
+<span id="L502" class="ln">   502</span>	
+<span id="L503" class="ln">   503</span>	int32
+<span id="L504" class="ln">   504</span>	runtime·read(int32 fd, void* buf, int32 nbyte)
+<span id="L505" class="ln">   505</span>	{
+<span id="L506" class="ln">   506</span>		return runtime·sysvicall6(libc·read, 3, (uintptr)fd, (uintptr)buf, (uintptr)nbyte);
+<span id="L507" class="ln">   507</span>	}
+<span id="L508" class="ln">   508</span>	
+<span id="L509" class="ln">   509</span>	#pragma textflag NOSPLIT
+<span id="L510" class="ln">   510</span>	int32
+<span id="L511" class="ln">   511</span>	runtime·sem_init(SemT* sem, int32 pshared, uint32 value)
+<span id="L512" class="ln">   512</span>	{
+<span id="L513" class="ln">   513</span>		return runtime·sysvicall6(libc·sem_init, 3, (uintptr)sem, (uintptr)pshared, (uintptr)value);
+<span id="L514" class="ln">   514</span>	}
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>	#pragma textflag NOSPLIT
+<span id="L517" class="ln">   517</span>	int32
+<span id="L518" class="ln">   518</span>	runtime·sem_post(SemT* sem)
+<span id="L519" class="ln">   519</span>	{
+<span id="L520" class="ln">   520</span>		return runtime·sysvicall6(libc·sem_post, 1, (uintptr)sem);
+<span id="L521" class="ln">   521</span>	}
+<span id="L522" class="ln">   522</span>	
+<span id="L523" class="ln">   523</span>	#pragma textflag NOSPLIT
+<span id="L524" class="ln">   524</span>	int32
+<span id="L525" class="ln">   525</span>	runtime·sem_reltimedwait_np(SemT* sem, Timespec* timeout)
+<span id="L526" class="ln">   526</span>	{
+<span id="L527" class="ln">   527</span>		return runtime·sysvicall6(libc·sem_reltimedwait_np, 2, (uintptr)sem, (uintptr)timeout);
+<span id="L528" class="ln">   528</span>	}
+<span id="L529" class="ln">   529</span>	
+<span id="L530" class="ln">   530</span>	#pragma textflag NOSPLIT
+<span id="L531" class="ln">   531</span>	int32
+<span id="L532" class="ln">   532</span>	runtime·sem_wait(SemT* sem)
+<span id="L533" class="ln">   533</span>	{
+<span id="L534" class="ln">   534</span>		return runtime·sysvicall6(libc·sem_wait, 1, (uintptr)sem);
+<span id="L535" class="ln">   535</span>	}
+<span id="L536" class="ln">   536</span>	
+<span id="L537" class="ln">   537</span>	/* int32 */ void
+<span id="L538" class="ln">   538</span>	runtime·setitimer(int32 which, Itimerval* value, Itimerval* ovalue)
+<span id="L539" class="ln">   539</span>	{
+<span id="L540" class="ln">   540</span>		runtime·sysvicall6(libc·setitimer, 3, (uintptr)which, (uintptr)value, (uintptr)ovalue);
+<span id="L541" class="ln">   541</span>	}
+<span id="L542" class="ln">   542</span>	
+<span id="L543" class="ln">   543</span>	/* int32 */ void
+<span id="L544" class="ln">   544</span>	runtime·sigaction(int32 sig, struct Sigaction* act, struct Sigaction* oact)
+<span id="L545" class="ln">   545</span>	{
+<span id="L546" class="ln">   546</span>		runtime·sysvicall6(libc·sigaction, 3, (uintptr)sig, (uintptr)act, (uintptr)oact);
+<span id="L547" class="ln">   547</span>	}
+<span id="L548" class="ln">   548</span>	
+<span id="L549" class="ln">   549</span>	/* int32 */ void
+<span id="L550" class="ln">   550</span>	runtime·sigaltstack(Sigaltstack* ss, Sigaltstack* oss)
+<span id="L551" class="ln">   551</span>	{
+<span id="L552" class="ln">   552</span>		runtime·sysvicall6(libc·sigaltstack, 2, (uintptr)ss, (uintptr)oss);
+<span id="L553" class="ln">   553</span>	}
+<span id="L554" class="ln">   554</span>	
+<span id="L555" class="ln">   555</span>	/* int32 */ void
+<span id="L556" class="ln">   556</span>	runtime·sigprocmask(int32 how, Sigset* set, Sigset* oset)
+<span id="L557" class="ln">   557</span>	{
+<span id="L558" class="ln">   558</span>		runtime·sysvicall6(libc·sigprocmask, 3, (uintptr)how, (uintptr)set, (uintptr)oset);
+<span id="L559" class="ln">   559</span>	}
+<span id="L560" class="ln">   560</span>	
+<span id="L561" class="ln">   561</span>	int64
+<span id="L562" class="ln">   562</span>	runtime·sysconf(int32 name)
+<span id="L563" class="ln">   563</span>	{
+<span id="L564" class="ln">   564</span>		return runtime·sysvicall6(libc·sysconf, 1, (uintptr)name);
+<span id="L565" class="ln">   565</span>	}
+<span id="L566" class="ln">   566</span>	
+<span id="L567" class="ln">   567</span>	void
+<span id="L568" class="ln">   568</span>	runtime·usleep(uint32 us)
+<span id="L569" class="ln">   569</span>	{
+<span id="L570" class="ln">   570</span>		runtime·sysvicall6(libc·usleep, 1, (uintptr)us);
+<span id="L571" class="ln">   571</span>	}
+<span id="L572" class="ln">   572</span>	
+<span id="L573" class="ln">   573</span>	int32
+<span id="L574" class="ln">   574</span>	runtime·write(uintptr fd, void* buf, int32 nbyte)
+<span id="L575" class="ln">   575</span>	{
+<span id="L576" class="ln">   576</span>		return runtime·sysvicall6(libc·write, 3, (uintptr)fd, (uintptr)buf, (uintptr)nbyte);
+<span id="L577" class="ln">   577</span>	}
+<span id="L578" class="ln">   578</span>	
+<span id="L579" class="ln">   579</span>	void
+<span id="L580" class="ln">   580</span>	runtime·osyield(void)
+<span id="L581" class="ln">   581</span>	{
+<span id="L582" class="ln">   582</span>		runtime·sysvicall6(libc·sched_yield, 0);
+<span id="L583" class="ln">   583</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/os_solaris.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

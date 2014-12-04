@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/parfor.c - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/parfor.c</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2012 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// Parallel for algorithm.
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	#include &#34;runtime.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	struct ParForThread
+<span id="L11" class="ln">    11</span>	{
+<span id="L12" class="ln">    12</span>		// the thread&#39;s iteration space [32lsb, 32msb)
+<span id="L13" class="ln">    13</span>		uint64 pos;
+<span id="L14" class="ln">    14</span>		// stats
+<span id="L15" class="ln">    15</span>		uint64 nsteal;
+<span id="L16" class="ln">    16</span>		uint64 nstealcnt;
+<span id="L17" class="ln">    17</span>		uint64 nprocyield;
+<span id="L18" class="ln">    18</span>		uint64 nosyield;
+<span id="L19" class="ln">    19</span>		uint64 nsleep;
+<span id="L20" class="ln">    20</span>		byte pad[CacheLineSize];
+<span id="L21" class="ln">    21</span>	};
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	ParFor*
+<span id="L24" class="ln">    24</span>	runtime·parforalloc(uint32 nthrmax)
+<span id="L25" class="ln">    25</span>	{
+<span id="L26" class="ln">    26</span>		ParFor *desc;
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>		// The ParFor object is followed by CacheLineSize padding
+<span id="L29" class="ln">    29</span>		// and then nthrmax ParForThread.
+<span id="L30" class="ln">    30</span>		desc = (ParFor*)runtime·malloc(sizeof(ParFor) + CacheLineSize + nthrmax * sizeof(ParForThread));
+<span id="L31" class="ln">    31</span>		desc-&gt;thr = (ParForThread*)((byte*)(desc+1) + CacheLineSize);
+<span id="L32" class="ln">    32</span>		desc-&gt;nthrmax = nthrmax;
+<span id="L33" class="ln">    33</span>		return desc;
+<span id="L34" class="ln">    34</span>	}
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>	void
+<span id="L37" class="ln">    37</span>	runtime·parforsetup(ParFor *desc, uint32 nthr, uint32 n, void *ctx, bool wait, void (*body)(ParFor*, uint32))
+<span id="L38" class="ln">    38</span>	{
+<span id="L39" class="ln">    39</span>		uint32 i, begin, end;
+<span id="L40" class="ln">    40</span>		uint64 *pos;
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>		if(desc == nil || nthr == 0 || nthr &gt; desc-&gt;nthrmax || body == nil) {
+<span id="L43" class="ln">    43</span>			runtime·printf(&#34;desc=%p nthr=%d count=%d body=%p\n&#34;, desc, nthr, n, body);
+<span id="L44" class="ln">    44</span>			runtime·throw(&#34;parfor: invalid args&#34;);
+<span id="L45" class="ln">    45</span>		}
+<span id="L46" class="ln">    46</span>	
+<span id="L47" class="ln">    47</span>		desc-&gt;body = body;
+<span id="L48" class="ln">    48</span>		desc-&gt;done = 0;
+<span id="L49" class="ln">    49</span>		desc-&gt;nthr = nthr;
+<span id="L50" class="ln">    50</span>		desc-&gt;thrseq = 0;
+<span id="L51" class="ln">    51</span>		desc-&gt;cnt = n;
+<span id="L52" class="ln">    52</span>		desc-&gt;ctx = ctx;
+<span id="L53" class="ln">    53</span>		desc-&gt;wait = wait;
+<span id="L54" class="ln">    54</span>		desc-&gt;nsteal = 0;
+<span id="L55" class="ln">    55</span>		desc-&gt;nstealcnt = 0;
+<span id="L56" class="ln">    56</span>		desc-&gt;nprocyield = 0;
+<span id="L57" class="ln">    57</span>		desc-&gt;nosyield = 0;
+<span id="L58" class="ln">    58</span>		desc-&gt;nsleep = 0;
+<span id="L59" class="ln">    59</span>		for(i=0; i&lt;nthr; i++) {
+<span id="L60" class="ln">    60</span>			begin = (uint64)n*i / nthr;
+<span id="L61" class="ln">    61</span>			end = (uint64)n*(i+1) / nthr;
+<span id="L62" class="ln">    62</span>			pos = &amp;desc-&gt;thr[i].pos;
+<span id="L63" class="ln">    63</span>			if(((uintptr)pos &amp; 7) != 0)
+<span id="L64" class="ln">    64</span>				runtime·throw(&#34;parforsetup: pos is not aligned&#34;);
+<span id="L65" class="ln">    65</span>			*pos = (uint64)begin | (((uint64)end)&lt;&lt;32);
+<span id="L66" class="ln">    66</span>		}
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	void
+<span id="L70" class="ln">    70</span>	runtime·parfordo(ParFor *desc)
+<span id="L71" class="ln">    71</span>	{
+<span id="L72" class="ln">    72</span>		ParForThread *me;
+<span id="L73" class="ln">    73</span>		uint32 tid, begin, end, begin2, try, victim, i;
+<span id="L74" class="ln">    74</span>		uint64 *mypos, *victimpos, pos, newpos;
+<span id="L75" class="ln">    75</span>		void (*body)(ParFor*, uint32);
+<span id="L76" class="ln">    76</span>		bool idle;
+<span id="L77" class="ln">    77</span>	
+<span id="L78" class="ln">    78</span>		// Obtain 0-based thread index.
+<span id="L79" class="ln">    79</span>		tid = runtime·xadd(&amp;desc-&gt;thrseq, 1) - 1;
+<span id="L80" class="ln">    80</span>		if(tid &gt;= desc-&gt;nthr) {
+<span id="L81" class="ln">    81</span>			runtime·printf(&#34;tid=%d nthr=%d\n&#34;, tid, desc-&gt;nthr);
+<span id="L82" class="ln">    82</span>			runtime·throw(&#34;parfor: invalid tid&#34;);
+<span id="L83" class="ln">    83</span>		}
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>		// If single-threaded, just execute the for serially.
+<span id="L86" class="ln">    86</span>		if(desc-&gt;nthr==1) {
+<span id="L87" class="ln">    87</span>			for(i=0; i&lt;desc-&gt;cnt; i++)
+<span id="L88" class="ln">    88</span>				desc-&gt;body(desc, i);
+<span id="L89" class="ln">    89</span>			return;
+<span id="L90" class="ln">    90</span>		}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>		body = desc-&gt;body;
+<span id="L93" class="ln">    93</span>		me = &amp;desc-&gt;thr[tid];
+<span id="L94" class="ln">    94</span>		mypos = &amp;me-&gt;pos;
+<span id="L95" class="ln">    95</span>		for(;;) {
+<span id="L96" class="ln">    96</span>			for(;;) {
+<span id="L97" class="ln">    97</span>				// While there is local work,
+<span id="L98" class="ln">    98</span>				// bump low index and execute the iteration.
+<span id="L99" class="ln">    99</span>				pos = runtime·xadd64(mypos, 1);
+<span id="L100" class="ln">   100</span>				begin = (uint32)pos-1;
+<span id="L101" class="ln">   101</span>				end = (uint32)(pos&gt;&gt;32);
+<span id="L102" class="ln">   102</span>				if(begin &lt; end) {
+<span id="L103" class="ln">   103</span>					body(desc, begin);
+<span id="L104" class="ln">   104</span>					continue;
+<span id="L105" class="ln">   105</span>				}
+<span id="L106" class="ln">   106</span>				break;
+<span id="L107" class="ln">   107</span>			}
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>			// Out of work, need to steal something.
+<span id="L110" class="ln">   110</span>			idle = false;
+<span id="L111" class="ln">   111</span>			for(try=0;; try++) {
+<span id="L112" class="ln">   112</span>				// If we don&#39;t see any work for long enough,
+<span id="L113" class="ln">   113</span>				// increment the done counter...
+<span id="L114" class="ln">   114</span>				if(try &gt; desc-&gt;nthr*4 &amp;&amp; !idle) {
+<span id="L115" class="ln">   115</span>					idle = true;
+<span id="L116" class="ln">   116</span>					runtime·xadd(&amp;desc-&gt;done, 1);
+<span id="L117" class="ln">   117</span>				}
+<span id="L118" class="ln">   118</span>				// ...if all threads have incremented the counter,
+<span id="L119" class="ln">   119</span>				// we are done.
+<span id="L120" class="ln">   120</span>				if(desc-&gt;done + !idle == desc-&gt;nthr) {
+<span id="L121" class="ln">   121</span>					if(!idle)
+<span id="L122" class="ln">   122</span>						runtime·xadd(&amp;desc-&gt;done, 1);
+<span id="L123" class="ln">   123</span>					goto exit;
+<span id="L124" class="ln">   124</span>				}
+<span id="L125" class="ln">   125</span>				// Choose a random victim for stealing.
+<span id="L126" class="ln">   126</span>				victim = runtime·fastrand1() % (desc-&gt;nthr-1);
+<span id="L127" class="ln">   127</span>				if(victim &gt;= tid)
+<span id="L128" class="ln">   128</span>					victim++;
+<span id="L129" class="ln">   129</span>				victimpos = &amp;desc-&gt;thr[victim].pos;
+<span id="L130" class="ln">   130</span>				for(;;) {
+<span id="L131" class="ln">   131</span>					// See if it has any work.
+<span id="L132" class="ln">   132</span>					pos = runtime·atomicload64(victimpos);
+<span id="L133" class="ln">   133</span>					begin = (uint32)pos;
+<span id="L134" class="ln">   134</span>					end = (uint32)(pos&gt;&gt;32);
+<span id="L135" class="ln">   135</span>					if(begin+1 &gt;= end) {
+<span id="L136" class="ln">   136</span>						begin = end = 0;
+<span id="L137" class="ln">   137</span>						break;
+<span id="L138" class="ln">   138</span>					}
+<span id="L139" class="ln">   139</span>					if(idle) {
+<span id="L140" class="ln">   140</span>						runtime·xadd(&amp;desc-&gt;done, -1);
+<span id="L141" class="ln">   141</span>						idle = false;
+<span id="L142" class="ln">   142</span>					}
+<span id="L143" class="ln">   143</span>					begin2 = begin + (end-begin)/2;
+<span id="L144" class="ln">   144</span>					newpos = (uint64)begin | (uint64)begin2&lt;&lt;32;
+<span id="L145" class="ln">   145</span>					if(runtime·cas64(victimpos, pos, newpos)) {
+<span id="L146" class="ln">   146</span>						begin = begin2;
+<span id="L147" class="ln">   147</span>						break;
+<span id="L148" class="ln">   148</span>					}
+<span id="L149" class="ln">   149</span>				}
+<span id="L150" class="ln">   150</span>				if(begin &lt; end) {
+<span id="L151" class="ln">   151</span>					// Has successfully stolen some work.
+<span id="L152" class="ln">   152</span>					if(idle)
+<span id="L153" class="ln">   153</span>						runtime·throw(&#34;parfor: should not be idle&#34;);
+<span id="L154" class="ln">   154</span>					runtime·atomicstore64(mypos, (uint64)begin | (uint64)end&lt;&lt;32);
+<span id="L155" class="ln">   155</span>					me-&gt;nsteal++;
+<span id="L156" class="ln">   156</span>					me-&gt;nstealcnt += end-begin;
+<span id="L157" class="ln">   157</span>					break;
+<span id="L158" class="ln">   158</span>				}
+<span id="L159" class="ln">   159</span>				// Backoff.
+<span id="L160" class="ln">   160</span>				if(try &lt; desc-&gt;nthr) {
+<span id="L161" class="ln">   161</span>					// nothing
+<span id="L162" class="ln">   162</span>				} else if (try &lt; 4*desc-&gt;nthr) {
+<span id="L163" class="ln">   163</span>					me-&gt;nprocyield++;
+<span id="L164" class="ln">   164</span>					runtime·procyield(20);
+<span id="L165" class="ln">   165</span>				// If a caller asked not to wait for the others, exit now
+<span id="L166" class="ln">   166</span>				// (assume that most work is already done at this point).
+<span id="L167" class="ln">   167</span>				} else if (!desc-&gt;wait) {
+<span id="L168" class="ln">   168</span>					if(!idle)
+<span id="L169" class="ln">   169</span>						runtime·xadd(&amp;desc-&gt;done, 1);
+<span id="L170" class="ln">   170</span>					goto exit;
+<span id="L171" class="ln">   171</span>				} else if (try &lt; 6*desc-&gt;nthr) {
+<span id="L172" class="ln">   172</span>					me-&gt;nosyield++;
+<span id="L173" class="ln">   173</span>					runtime·osyield();
+<span id="L174" class="ln">   174</span>				} else {
+<span id="L175" class="ln">   175</span>					me-&gt;nsleep++;
+<span id="L176" class="ln">   176</span>					runtime·usleep(1);
+<span id="L177" class="ln">   177</span>				}
+<span id="L178" class="ln">   178</span>			}
+<span id="L179" class="ln">   179</span>		}
+<span id="L180" class="ln">   180</span>	exit:
+<span id="L181" class="ln">   181</span>		runtime·xadd64(&amp;desc-&gt;nsteal, me-&gt;nsteal);
+<span id="L182" class="ln">   182</span>		runtime·xadd64(&amp;desc-&gt;nstealcnt, me-&gt;nstealcnt);
+<span id="L183" class="ln">   183</span>		runtime·xadd64(&amp;desc-&gt;nprocyield, me-&gt;nprocyield);
+<span id="L184" class="ln">   184</span>		runtime·xadd64(&amp;desc-&gt;nosyield, me-&gt;nosyield);
+<span id="L185" class="ln">   185</span>		runtime·xadd64(&amp;desc-&gt;nsleep, me-&gt;nsleep);
+<span id="L186" class="ln">   186</span>		me-&gt;nsteal = 0;
+<span id="L187" class="ln">   187</span>		me-&gt;nstealcnt = 0;
+<span id="L188" class="ln">   188</span>		me-&gt;nprocyield = 0;
+<span id="L189" class="ln">   189</span>		me-&gt;nosyield = 0;
+<span id="L190" class="ln">   190</span>		me-&gt;nsleep = 0;
+<span id="L191" class="ln">   191</span>	}
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>	// For testing from Go.
+<span id="L194" class="ln">   194</span>	void
+<span id="L195" class="ln">   195</span>	runtime·parforiters(ParFor *desc, uintptr tid, uintptr *start, uintptr *end)
+<span id="L196" class="ln">   196</span>	{
+<span id="L197" class="ln">   197</span>		*start = (uint32)desc-&gt;thr[tid].pos;
+<span id="L198" class="ln">   198</span>		*end = (uint32)(desc-&gt;thr[tid].pos&gt;&gt;32);
+<span id="L199" class="ln">   199</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/parfor.c?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

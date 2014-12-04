@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/fmt/scan_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/fmt/scan_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package fmt_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;bufio&#34;
+<span id="L9" class="ln">     9</span>		&#34;bytes&#34;
+<span id="L10" class="ln">    10</span>		&#34;errors&#34;
+<span id="L11" class="ln">    11</span>		. &#34;fmt&#34;
+<span id="L12" class="ln">    12</span>		&#34;io&#34;
+<span id="L13" class="ln">    13</span>		&#34;math&#34;
+<span id="L14" class="ln">    14</span>		&#34;reflect&#34;
+<span id="L15" class="ln">    15</span>		&#34;regexp&#34;
+<span id="L16" class="ln">    16</span>		&#34;strings&#34;
+<span id="L17" class="ln">    17</span>		&#34;testing&#34;
+<span id="L18" class="ln">    18</span>		&#34;unicode/utf8&#34;
+<span id="L19" class="ln">    19</span>	)
+<span id="L20" class="ln">    20</span>	
+<span id="L21" class="ln">    21</span>	type ScanTest struct {
+<span id="L22" class="ln">    22</span>		text string
+<span id="L23" class="ln">    23</span>		in   interface{}
+<span id="L24" class="ln">    24</span>		out  interface{}
+<span id="L25" class="ln">    25</span>	}
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	type ScanfTest struct {
+<span id="L28" class="ln">    28</span>		format string
+<span id="L29" class="ln">    29</span>		text   string
+<span id="L30" class="ln">    30</span>		in     interface{}
+<span id="L31" class="ln">    31</span>		out    interface{}
+<span id="L32" class="ln">    32</span>	}
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	type ScanfMultiTest struct {
+<span id="L35" class="ln">    35</span>		format string
+<span id="L36" class="ln">    36</span>		text   string
+<span id="L37" class="ln">    37</span>		in     []interface{}
+<span id="L38" class="ln">    38</span>		out    []interface{}
+<span id="L39" class="ln">    39</span>		err    string
+<span id="L40" class="ln">    40</span>	}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	var (
+<span id="L43" class="ln">    43</span>		boolVal              bool
+<span id="L44" class="ln">    44</span>		intVal               int
+<span id="L45" class="ln">    45</span>		int8Val              int8
+<span id="L46" class="ln">    46</span>		int16Val             int16
+<span id="L47" class="ln">    47</span>		int32Val             int32
+<span id="L48" class="ln">    48</span>		int64Val             int64
+<span id="L49" class="ln">    49</span>		uintVal              uint
+<span id="L50" class="ln">    50</span>		uint8Val             uint8
+<span id="L51" class="ln">    51</span>		uint16Val            uint16
+<span id="L52" class="ln">    52</span>		uint32Val            uint32
+<span id="L53" class="ln">    53</span>		uint64Val            uint64
+<span id="L54" class="ln">    54</span>		float32Val           float32
+<span id="L55" class="ln">    55</span>		float64Val           float64
+<span id="L56" class="ln">    56</span>		stringVal            string
+<span id="L57" class="ln">    57</span>		bytesVal             []byte
+<span id="L58" class="ln">    58</span>		runeVal              rune
+<span id="L59" class="ln">    59</span>		complex64Val         complex64
+<span id="L60" class="ln">    60</span>		complex128Val        complex128
+<span id="L61" class="ln">    61</span>		renamedBoolVal       renamedBool
+<span id="L62" class="ln">    62</span>		renamedIntVal        renamedInt
+<span id="L63" class="ln">    63</span>		renamedInt8Val       renamedInt8
+<span id="L64" class="ln">    64</span>		renamedInt16Val      renamedInt16
+<span id="L65" class="ln">    65</span>		renamedInt32Val      renamedInt32
+<span id="L66" class="ln">    66</span>		renamedInt64Val      renamedInt64
+<span id="L67" class="ln">    67</span>		renamedUintVal       renamedUint
+<span id="L68" class="ln">    68</span>		renamedUint8Val      renamedUint8
+<span id="L69" class="ln">    69</span>		renamedUint16Val     renamedUint16
+<span id="L70" class="ln">    70</span>		renamedUint32Val     renamedUint32
+<span id="L71" class="ln">    71</span>		renamedUint64Val     renamedUint64
+<span id="L72" class="ln">    72</span>		renamedUintptrVal    renamedUintptr
+<span id="L73" class="ln">    73</span>		renamedStringVal     renamedString
+<span id="L74" class="ln">    74</span>		renamedBytesVal      renamedBytes
+<span id="L75" class="ln">    75</span>		renamedFloat32Val    renamedFloat32
+<span id="L76" class="ln">    76</span>		renamedFloat64Val    renamedFloat64
+<span id="L77" class="ln">    77</span>		renamedComplex64Val  renamedComplex64
+<span id="L78" class="ln">    78</span>		renamedComplex128Val renamedComplex128
+<span id="L79" class="ln">    79</span>	)
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>	type FloatTest struct {
+<span id="L82" class="ln">    82</span>		text string
+<span id="L83" class="ln">    83</span>		in   float64
+<span id="L84" class="ln">    84</span>		out  float64
+<span id="L85" class="ln">    85</span>	}
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>	<span class="comment">// Xs accepts any non-empty run of the verb character</span>
+<span id="L88" class="ln">    88</span>	type Xs string
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	func (x *Xs) Scan(state ScanState, verb rune) error {
+<span id="L91" class="ln">    91</span>		tok, err := state.Token(true, func(r rune) bool { return r == verb })
+<span id="L92" class="ln">    92</span>		if err != nil {
+<span id="L93" class="ln">    93</span>			return err
+<span id="L94" class="ln">    94</span>		}
+<span id="L95" class="ln">    95</span>		s := string(tok)
+<span id="L96" class="ln">    96</span>		if !regexp.MustCompile(&#34;^&#34; + string(verb) + &#34;+$&#34;).MatchString(s) {
+<span id="L97" class="ln">    97</span>			return errors.New(&#34;syntax error for xs&#34;)
+<span id="L98" class="ln">    98</span>		}
+<span id="L99" class="ln">    99</span>		*x = Xs(s)
+<span id="L100" class="ln">   100</span>		return nil
+<span id="L101" class="ln">   101</span>	}
+<span id="L102" class="ln">   102</span>	
+<span id="L103" class="ln">   103</span>	var xVal Xs
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>	<span class="comment">// IntString accepts an integer followed immediately by a string.</span>
+<span id="L106" class="ln">   106</span>	<span class="comment">// It tests the embedding of a scan within a scan.</span>
+<span id="L107" class="ln">   107</span>	type IntString struct {
+<span id="L108" class="ln">   108</span>		i int
+<span id="L109" class="ln">   109</span>		s string
+<span id="L110" class="ln">   110</span>	}
+<span id="L111" class="ln">   111</span>	
+<span id="L112" class="ln">   112</span>	func (s *IntString) Scan(state ScanState, verb rune) error {
+<span id="L113" class="ln">   113</span>		if _, err := Fscan(state, &amp;s.i); err != nil {
+<span id="L114" class="ln">   114</span>			return err
+<span id="L115" class="ln">   115</span>		}
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>		tok, err := state.Token(true, nil)
+<span id="L118" class="ln">   118</span>		if err != nil {
+<span id="L119" class="ln">   119</span>			return err
+<span id="L120" class="ln">   120</span>		}
+<span id="L121" class="ln">   121</span>		s.s = string(tok)
+<span id="L122" class="ln">   122</span>		return nil
+<span id="L123" class="ln">   123</span>	}
+<span id="L124" class="ln">   124</span>	
+<span id="L125" class="ln">   125</span>	var intStringVal IntString
+<span id="L126" class="ln">   126</span>	
+<span id="L127" class="ln">   127</span>	<span class="comment">// myStringReader implements Read but not ReadRune, allowing us to test our readRune wrapper</span>
+<span id="L128" class="ln">   128</span>	<span class="comment">// type that creates something that can read runes given only Read().</span>
+<span id="L129" class="ln">   129</span>	type myStringReader struct {
+<span id="L130" class="ln">   130</span>		r *strings.Reader
+<span id="L131" class="ln">   131</span>	}
+<span id="L132" class="ln">   132</span>	
+<span id="L133" class="ln">   133</span>	func (s *myStringReader) Read(p []byte) (n int, err error) {
+<span id="L134" class="ln">   134</span>		return s.r.Read(p)
+<span id="L135" class="ln">   135</span>	}
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>	func newReader(s string) *myStringReader {
+<span id="L138" class="ln">   138</span>		return &amp;myStringReader{strings.NewReader(s)}
+<span id="L139" class="ln">   139</span>	}
+<span id="L140" class="ln">   140</span>	
+<span id="L141" class="ln">   141</span>	var scanTests = []ScanTest{
+<span id="L142" class="ln">   142</span>		<span class="comment">// Basic types</span>
+<span id="L143" class="ln">   143</span>		{&#34;T\n&#34;, &amp;boolVal, true},  <span class="comment">// boolean test vals toggle to be sure they are written</span>
+<span id="L144" class="ln">   144</span>		{&#34;F\n&#34;, &amp;boolVal, false}, <span class="comment">// restored to zero value</span>
+<span id="L145" class="ln">   145</span>		{&#34;21\n&#34;, &amp;intVal, 21},
+<span id="L146" class="ln">   146</span>		{&#34;0\n&#34;, &amp;intVal, 0},
+<span id="L147" class="ln">   147</span>		{&#34;000\n&#34;, &amp;intVal, 0},
+<span id="L148" class="ln">   148</span>		{&#34;0x10\n&#34;, &amp;intVal, 0x10},
+<span id="L149" class="ln">   149</span>		{&#34;-0x10\n&#34;, &amp;intVal, -0x10},
+<span id="L150" class="ln">   150</span>		{&#34;0377\n&#34;, &amp;intVal, 0377},
+<span id="L151" class="ln">   151</span>		{&#34;-0377\n&#34;, &amp;intVal, -0377},
+<span id="L152" class="ln">   152</span>		{&#34;0\n&#34;, &amp;uintVal, uint(0)},
+<span id="L153" class="ln">   153</span>		{&#34;000\n&#34;, &amp;uintVal, uint(0)},
+<span id="L154" class="ln">   154</span>		{&#34;0x10\n&#34;, &amp;uintVal, uint(0x10)},
+<span id="L155" class="ln">   155</span>		{&#34;0377\n&#34;, &amp;uintVal, uint(0377)},
+<span id="L156" class="ln">   156</span>		{&#34;22\n&#34;, &amp;int8Val, int8(22)},
+<span id="L157" class="ln">   157</span>		{&#34;23\n&#34;, &amp;int16Val, int16(23)},
+<span id="L158" class="ln">   158</span>		{&#34;24\n&#34;, &amp;int32Val, int32(24)},
+<span id="L159" class="ln">   159</span>		{&#34;25\n&#34;, &amp;int64Val, int64(25)},
+<span id="L160" class="ln">   160</span>		{&#34;127\n&#34;, &amp;int8Val, int8(127)},
+<span id="L161" class="ln">   161</span>		{&#34;-21\n&#34;, &amp;intVal, -21},
+<span id="L162" class="ln">   162</span>		{&#34;-22\n&#34;, &amp;int8Val, int8(-22)},
+<span id="L163" class="ln">   163</span>		{&#34;-23\n&#34;, &amp;int16Val, int16(-23)},
+<span id="L164" class="ln">   164</span>		{&#34;-24\n&#34;, &amp;int32Val, int32(-24)},
+<span id="L165" class="ln">   165</span>		{&#34;-25\n&#34;, &amp;int64Val, int64(-25)},
+<span id="L166" class="ln">   166</span>		{&#34;-128\n&#34;, &amp;int8Val, int8(-128)},
+<span id="L167" class="ln">   167</span>		{&#34;+21\n&#34;, &amp;intVal, +21},
+<span id="L168" class="ln">   168</span>		{&#34;+22\n&#34;, &amp;int8Val, int8(+22)},
+<span id="L169" class="ln">   169</span>		{&#34;+23\n&#34;, &amp;int16Val, int16(+23)},
+<span id="L170" class="ln">   170</span>		{&#34;+24\n&#34;, &amp;int32Val, int32(+24)},
+<span id="L171" class="ln">   171</span>		{&#34;+25\n&#34;, &amp;int64Val, int64(+25)},
+<span id="L172" class="ln">   172</span>		{&#34;+127\n&#34;, &amp;int8Val, int8(+127)},
+<span id="L173" class="ln">   173</span>		{&#34;26\n&#34;, &amp;uintVal, uint(26)},
+<span id="L174" class="ln">   174</span>		{&#34;27\n&#34;, &amp;uint8Val, uint8(27)},
+<span id="L175" class="ln">   175</span>		{&#34;28\n&#34;, &amp;uint16Val, uint16(28)},
+<span id="L176" class="ln">   176</span>		{&#34;29\n&#34;, &amp;uint32Val, uint32(29)},
+<span id="L177" class="ln">   177</span>		{&#34;30\n&#34;, &amp;uint64Val, uint64(30)},
+<span id="L178" class="ln">   178</span>		{&#34;255\n&#34;, &amp;uint8Val, uint8(255)},
+<span id="L179" class="ln">   179</span>		{&#34;32767\n&#34;, &amp;int16Val, int16(32767)},
+<span id="L180" class="ln">   180</span>		{&#34;2.3\n&#34;, &amp;float64Val, 2.3},
+<span id="L181" class="ln">   181</span>		{&#34;2.3e1\n&#34;, &amp;float32Val, float32(2.3e1)},
+<span id="L182" class="ln">   182</span>		{&#34;2.3e2\n&#34;, &amp;float64Val, 2.3e2},
+<span id="L183" class="ln">   183</span>		{&#34;2.3p2\n&#34;, &amp;float64Val, 2.3 * 4},
+<span id="L184" class="ln">   184</span>		{&#34;2.3p+2\n&#34;, &amp;float64Val, 2.3 * 4},
+<span id="L185" class="ln">   185</span>		{&#34;2.3p+66\n&#34;, &amp;float64Val, 2.3 * (1 &lt;&lt; 32) * (1 &lt;&lt; 32) * 4},
+<span id="L186" class="ln">   186</span>		{&#34;2.3p-66\n&#34;, &amp;float64Val, 2.3 / ((1 &lt;&lt; 32) * (1 &lt;&lt; 32) * 4)},
+<span id="L187" class="ln">   187</span>		{&#34;2.35\n&#34;, &amp;stringVal, &#34;2.35&#34;},
+<span id="L188" class="ln">   188</span>		{&#34;2345678\n&#34;, &amp;bytesVal, []byte(&#34;2345678&#34;)},
+<span id="L189" class="ln">   189</span>		{&#34;(3.4e1-2i)\n&#34;, &amp;complex128Val, 3.4e1 - 2i},
+<span id="L190" class="ln">   190</span>		{&#34;-3.45e1-3i\n&#34;, &amp;complex64Val, complex64(-3.45e1 - 3i)},
+<span id="L191" class="ln">   191</span>		{&#34;-.45e1-1e2i\n&#34;, &amp;complex128Val, complex128(-.45e1 - 100i)},
+<span id="L192" class="ln">   192</span>		{&#34;hello\n&#34;, &amp;stringVal, &#34;hello&#34;},
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>		<span class="comment">// Carriage-return followed by newline. (We treat \r\n as \n always.)</span>
+<span id="L195" class="ln">   195</span>		{&#34;hello\r\n&#34;, &amp;stringVal, &#34;hello&#34;},
+<span id="L196" class="ln">   196</span>		{&#34;27\r\n&#34;, &amp;uint8Val, uint8(27)},
+<span id="L197" class="ln">   197</span>	
+<span id="L198" class="ln">   198</span>		<span class="comment">// Renamed types</span>
+<span id="L199" class="ln">   199</span>		{&#34;true\n&#34;, &amp;renamedBoolVal, renamedBool(true)},
+<span id="L200" class="ln">   200</span>		{&#34;F\n&#34;, &amp;renamedBoolVal, renamedBool(false)},
+<span id="L201" class="ln">   201</span>		{&#34;101\n&#34;, &amp;renamedIntVal, renamedInt(101)},
+<span id="L202" class="ln">   202</span>		{&#34;102\n&#34;, &amp;renamedIntVal, renamedInt(102)},
+<span id="L203" class="ln">   203</span>		{&#34;103\n&#34;, &amp;renamedUintVal, renamedUint(103)},
+<span id="L204" class="ln">   204</span>		{&#34;104\n&#34;, &amp;renamedUintVal, renamedUint(104)},
+<span id="L205" class="ln">   205</span>		{&#34;105\n&#34;, &amp;renamedInt8Val, renamedInt8(105)},
+<span id="L206" class="ln">   206</span>		{&#34;106\n&#34;, &amp;renamedInt16Val, renamedInt16(106)},
+<span id="L207" class="ln">   207</span>		{&#34;107\n&#34;, &amp;renamedInt32Val, renamedInt32(107)},
+<span id="L208" class="ln">   208</span>		{&#34;108\n&#34;, &amp;renamedInt64Val, renamedInt64(108)},
+<span id="L209" class="ln">   209</span>		{&#34;109\n&#34;, &amp;renamedUint8Val, renamedUint8(109)},
+<span id="L210" class="ln">   210</span>		{&#34;110\n&#34;, &amp;renamedUint16Val, renamedUint16(110)},
+<span id="L211" class="ln">   211</span>		{&#34;111\n&#34;, &amp;renamedUint32Val, renamedUint32(111)},
+<span id="L212" class="ln">   212</span>		{&#34;112\n&#34;, &amp;renamedUint64Val, renamedUint64(112)},
+<span id="L213" class="ln">   213</span>		{&#34;113\n&#34;, &amp;renamedUintptrVal, renamedUintptr(113)},
+<span id="L214" class="ln">   214</span>		{&#34;114\n&#34;, &amp;renamedStringVal, renamedString(&#34;114&#34;)},
+<span id="L215" class="ln">   215</span>		{&#34;115\n&#34;, &amp;renamedBytesVal, renamedBytes([]byte(&#34;115&#34;))},
+<span id="L216" class="ln">   216</span>	
+<span id="L217" class="ln">   217</span>		<span class="comment">// Custom scanners.</span>
+<span id="L218" class="ln">   218</span>		{&#34;  vvv &#34;, &amp;xVal, Xs(&#34;vvv&#34;)},
+<span id="L219" class="ln">   219</span>		{&#34; 1234hello&#34;, &amp;intStringVal, IntString{1234, &#34;hello&#34;}},
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>		<span class="comment">// Fixed bugs</span>
+<span id="L222" class="ln">   222</span>		{&#34;2147483648\n&#34;, &amp;int64Val, int64(2147483648)}, <span class="comment">// was: integer overflow</span>
+<span id="L223" class="ln">   223</span>	}
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>	var scanfTests = []ScanfTest{
+<span id="L226" class="ln">   226</span>		{&#34;%v&#34;, &#34;TRUE\n&#34;, &amp;boolVal, true},
+<span id="L227" class="ln">   227</span>		{&#34;%t&#34;, &#34;false\n&#34;, &amp;boolVal, false},
+<span id="L228" class="ln">   228</span>		{&#34;%v&#34;, &#34;-71\n&#34;, &amp;intVal, -71},
+<span id="L229" class="ln">   229</span>		{&#34;%v&#34;, &#34;0377\n&#34;, &amp;intVal, 0377},
+<span id="L230" class="ln">   230</span>		{&#34;%v&#34;, &#34;0x44\n&#34;, &amp;intVal, 0x44},
+<span id="L231" class="ln">   231</span>		{&#34;%d&#34;, &#34;72\n&#34;, &amp;intVal, 72},
+<span id="L232" class="ln">   232</span>		{&#34;%c&#34;, &#34;a\n&#34;, &amp;runeVal, &#39;a&#39;},
+<span id="L233" class="ln">   233</span>		{&#34;%c&#34;, &#34;\u5072\n&#34;, &amp;runeVal, &#39;\u5072&#39;},
+<span id="L234" class="ln">   234</span>		{&#34;%c&#34;, &#34;\u1234\n&#34;, &amp;runeVal, &#39;\u1234&#39;},
+<span id="L235" class="ln">   235</span>		{&#34;%d&#34;, &#34;73\n&#34;, &amp;int8Val, int8(73)},
+<span id="L236" class="ln">   236</span>		{&#34;%d&#34;, &#34;+74\n&#34;, &amp;int16Val, int16(74)},
+<span id="L237" class="ln">   237</span>		{&#34;%d&#34;, &#34;75\n&#34;, &amp;int32Val, int32(75)},
+<span id="L238" class="ln">   238</span>		{&#34;%d&#34;, &#34;76\n&#34;, &amp;int64Val, int64(76)},
+<span id="L239" class="ln">   239</span>		{&#34;%b&#34;, &#34;1001001\n&#34;, &amp;intVal, 73},
+<span id="L240" class="ln">   240</span>		{&#34;%o&#34;, &#34;075\n&#34;, &amp;intVal, 075},
+<span id="L241" class="ln">   241</span>		{&#34;%x&#34;, &#34;a75\n&#34;, &amp;intVal, 0xa75},
+<span id="L242" class="ln">   242</span>		{&#34;%v&#34;, &#34;71\n&#34;, &amp;uintVal, uint(71)},
+<span id="L243" class="ln">   243</span>		{&#34;%d&#34;, &#34;72\n&#34;, &amp;uintVal, uint(72)},
+<span id="L244" class="ln">   244</span>		{&#34;%d&#34;, &#34;73\n&#34;, &amp;uint8Val, uint8(73)},
+<span id="L245" class="ln">   245</span>		{&#34;%d&#34;, &#34;74\n&#34;, &amp;uint16Val, uint16(74)},
+<span id="L246" class="ln">   246</span>		{&#34;%d&#34;, &#34;75\n&#34;, &amp;uint32Val, uint32(75)},
+<span id="L247" class="ln">   247</span>		{&#34;%d&#34;, &#34;76\n&#34;, &amp;uint64Val, uint64(76)},
+<span id="L248" class="ln">   248</span>		{&#34;%b&#34;, &#34;1001001\n&#34;, &amp;uintVal, uint(73)},
+<span id="L249" class="ln">   249</span>		{&#34;%o&#34;, &#34;075\n&#34;, &amp;uintVal, uint(075)},
+<span id="L250" class="ln">   250</span>		{&#34;%x&#34;, &#34;a75\n&#34;, &amp;uintVal, uint(0xa75)},
+<span id="L251" class="ln">   251</span>		{&#34;%x&#34;, &#34;A75\n&#34;, &amp;uintVal, uint(0xa75)},
+<span id="L252" class="ln">   252</span>		{&#34;%U&#34;, &#34;U+1234\n&#34;, &amp;intVal, int(0x1234)},
+<span id="L253" class="ln">   253</span>		{&#34;%U&#34;, &#34;U+4567\n&#34;, &amp;uintVal, uint(0x4567)},
+<span id="L254" class="ln">   254</span>	
+<span id="L255" class="ln">   255</span>		<span class="comment">// Strings</span>
+<span id="L256" class="ln">   256</span>		{&#34;%s&#34;, &#34;using-%s\n&#34;, &amp;stringVal, &#34;using-%s&#34;},
+<span id="L257" class="ln">   257</span>		{&#34;%x&#34;, &#34;7573696e672d2578\n&#34;, &amp;stringVal, &#34;using-%x&#34;},
+<span id="L258" class="ln">   258</span>		{&#34;%q&#34;, `&#34;quoted\twith\\do\u0075bl\x65s&#34;` + &#34;\n&#34;, &amp;stringVal, &#34;quoted\twith\\doubles&#34;},
+<span id="L259" class="ln">   259</span>		{&#34;%q&#34;, &#34;`quoted with backs`\n&#34;, &amp;stringVal, &#34;quoted with backs&#34;},
+<span id="L260" class="ln">   260</span>	
+<span id="L261" class="ln">   261</span>		<span class="comment">// Byte slices</span>
+<span id="L262" class="ln">   262</span>		{&#34;%s&#34;, &#34;bytes-%s\n&#34;, &amp;bytesVal, []byte(&#34;bytes-%s&#34;)},
+<span id="L263" class="ln">   263</span>		{&#34;%x&#34;, &#34;62797465732d2578\n&#34;, &amp;bytesVal, []byte(&#34;bytes-%x&#34;)},
+<span id="L264" class="ln">   264</span>		{&#34;%q&#34;, `&#34;bytes\rwith\vdo\u0075bl\x65s&#34;` + &#34;\n&#34;, &amp;bytesVal, []byte(&#34;bytes\rwith\vdoubles&#34;)},
+<span id="L265" class="ln">   265</span>		{&#34;%q&#34;, &#34;`bytes with backs`\n&#34;, &amp;bytesVal, []byte(&#34;bytes with backs&#34;)},
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		<span class="comment">// Renamed types</span>
+<span id="L268" class="ln">   268</span>		{&#34;%v\n&#34;, &#34;true\n&#34;, &amp;renamedBoolVal, renamedBool(true)},
+<span id="L269" class="ln">   269</span>		{&#34;%t\n&#34;, &#34;F\n&#34;, &amp;renamedBoolVal, renamedBool(false)},
+<span id="L270" class="ln">   270</span>		{&#34;%v&#34;, &#34;101\n&#34;, &amp;renamedIntVal, renamedInt(101)},
+<span id="L271" class="ln">   271</span>		{&#34;%c&#34;, &#34;\u0101\n&#34;, &amp;renamedIntVal, renamedInt(&#39;\u0101&#39;)},
+<span id="L272" class="ln">   272</span>		{&#34;%o&#34;, &#34;0146\n&#34;, &amp;renamedIntVal, renamedInt(102)},
+<span id="L273" class="ln">   273</span>		{&#34;%v&#34;, &#34;103\n&#34;, &amp;renamedUintVal, renamedUint(103)},
+<span id="L274" class="ln">   274</span>		{&#34;%d&#34;, &#34;104\n&#34;, &amp;renamedUintVal, renamedUint(104)},
+<span id="L275" class="ln">   275</span>		{&#34;%d&#34;, &#34;105\n&#34;, &amp;renamedInt8Val, renamedInt8(105)},
+<span id="L276" class="ln">   276</span>		{&#34;%d&#34;, &#34;106\n&#34;, &amp;renamedInt16Val, renamedInt16(106)},
+<span id="L277" class="ln">   277</span>		{&#34;%d&#34;, &#34;107\n&#34;, &amp;renamedInt32Val, renamedInt32(107)},
+<span id="L278" class="ln">   278</span>		{&#34;%d&#34;, &#34;108\n&#34;, &amp;renamedInt64Val, renamedInt64(108)},
+<span id="L279" class="ln">   279</span>		{&#34;%x&#34;, &#34;6D\n&#34;, &amp;renamedUint8Val, renamedUint8(109)},
+<span id="L280" class="ln">   280</span>		{&#34;%o&#34;, &#34;0156\n&#34;, &amp;renamedUint16Val, renamedUint16(110)},
+<span id="L281" class="ln">   281</span>		{&#34;%d&#34;, &#34;111\n&#34;, &amp;renamedUint32Val, renamedUint32(111)},
+<span id="L282" class="ln">   282</span>		{&#34;%d&#34;, &#34;112\n&#34;, &amp;renamedUint64Val, renamedUint64(112)},
+<span id="L283" class="ln">   283</span>		{&#34;%d&#34;, &#34;113\n&#34;, &amp;renamedUintptrVal, renamedUintptr(113)},
+<span id="L284" class="ln">   284</span>		{&#34;%s&#34;, &#34;114\n&#34;, &amp;renamedStringVal, renamedString(&#34;114&#34;)},
+<span id="L285" class="ln">   285</span>		{&#34;%q&#34;, &#34;\&#34;1155\&#34;\n&#34;, &amp;renamedBytesVal, renamedBytes([]byte(&#34;1155&#34;))},
+<span id="L286" class="ln">   286</span>		{&#34;%g&#34;, &#34;116e1\n&#34;, &amp;renamedFloat32Val, renamedFloat32(116e1)},
+<span id="L287" class="ln">   287</span>		{&#34;%g&#34;, &#34;-11.7e+1&#34;, &amp;renamedFloat64Val, renamedFloat64(-11.7e+1)},
+<span id="L288" class="ln">   288</span>		{&#34;%g&#34;, &#34;11+6e1i\n&#34;, &amp;renamedComplex64Val, renamedComplex64(11 + 6e1i)},
+<span id="L289" class="ln">   289</span>		{&#34;%g&#34;, &#34;-11.+7e+1i&#34;, &amp;renamedComplex128Val, renamedComplex128(-11. + 7e+1i)},
+<span id="L290" class="ln">   290</span>	
+<span id="L291" class="ln">   291</span>		<span class="comment">// Interesting formats</span>
+<span id="L292" class="ln">   292</span>		{&#34;here is\tthe value:%d&#34;, &#34;here is   the\tvalue:118\n&#34;, &amp;intVal, 118},
+<span id="L293" class="ln">   293</span>		{&#34;%% %%:%d&#34;, &#34;% %:119\n&#34;, &amp;intVal, 119},
+<span id="L294" class="ln">   294</span>	
+<span id="L295" class="ln">   295</span>		<span class="comment">// Corner cases</span>
+<span id="L296" class="ln">   296</span>		{&#34;%x&#34;, &#34;FFFFFFFF\n&#34;, &amp;uint32Val, uint32(0xFFFFFFFF)},
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>		<span class="comment">// Custom scanner.</span>
+<span id="L299" class="ln">   299</span>		{&#34;%s&#34;, &#34;  sss &#34;, &amp;xVal, Xs(&#34;sss&#34;)},
+<span id="L300" class="ln">   300</span>		{&#34;%2s&#34;, &#34;sssss&#34;, &amp;xVal, Xs(&#34;ss&#34;)},
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>		<span class="comment">// Fixed bugs</span>
+<span id="L303" class="ln">   303</span>		{&#34;%d\n&#34;, &#34;27\n&#34;, &amp;intVal, 27},  <span class="comment">// ok</span>
+<span id="L304" class="ln">   304</span>		{&#34;%d\n&#34;, &#34;28 \n&#34;, &amp;intVal, 28}, <span class="comment">// was: &#34;unexpected newline&#34;</span>
+<span id="L305" class="ln">   305</span>		{&#34;%v&#34;, &#34;0&#34;, &amp;intVal, 0},        <span class="comment">// was: &#34;EOF&#34;; 0 was taken as base prefix and not counted.</span>
+<span id="L306" class="ln">   306</span>		{&#34;%v&#34;, &#34;0&#34;, &amp;uintVal, uint(0)}, <span class="comment">// was: &#34;EOF&#34;; 0 was taken as base prefix and not counted.</span>
+<span id="L307" class="ln">   307</span>	}
+<span id="L308" class="ln">   308</span>	
+<span id="L309" class="ln">   309</span>	var overflowTests = []ScanTest{
+<span id="L310" class="ln">   310</span>		{&#34;128&#34;, &amp;int8Val, 0},
+<span id="L311" class="ln">   311</span>		{&#34;32768&#34;, &amp;int16Val, 0},
+<span id="L312" class="ln">   312</span>		{&#34;-129&#34;, &amp;int8Val, 0},
+<span id="L313" class="ln">   313</span>		{&#34;-32769&#34;, &amp;int16Val, 0},
+<span id="L314" class="ln">   314</span>		{&#34;256&#34;, &amp;uint8Val, 0},
+<span id="L315" class="ln">   315</span>		{&#34;65536&#34;, &amp;uint16Val, 0},
+<span id="L316" class="ln">   316</span>		{&#34;1e100&#34;, &amp;float32Val, 0},
+<span id="L317" class="ln">   317</span>		{&#34;1e500&#34;, &amp;float64Val, 0},
+<span id="L318" class="ln">   318</span>		{&#34;(1e100+0i)&#34;, &amp;complex64Val, 0},
+<span id="L319" class="ln">   319</span>		{&#34;(1+1e100i)&#34;, &amp;complex64Val, 0},
+<span id="L320" class="ln">   320</span>		{&#34;(1-1e500i)&#34;, &amp;complex128Val, 0},
+<span id="L321" class="ln">   321</span>	}
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>	var truth bool
+<span id="L324" class="ln">   324</span>	var i, j, k int
+<span id="L325" class="ln">   325</span>	var f float64
+<span id="L326" class="ln">   326</span>	var s, t string
+<span id="L327" class="ln">   327</span>	var c complex128
+<span id="L328" class="ln">   328</span>	var x, y Xs
+<span id="L329" class="ln">   329</span>	var z IntString
+<span id="L330" class="ln">   330</span>	var r1, r2, r3 rune
+<span id="L331" class="ln">   331</span>	
+<span id="L332" class="ln">   332</span>	var multiTests = []ScanfMultiTest{
+<span id="L333" class="ln">   333</span>		{&#34;&#34;, &#34;&#34;, []interface{}{}, []interface{}{}, &#34;&#34;},
+<span id="L334" class="ln">   334</span>		{&#34;%d&#34;, &#34;23&#34;, args(&amp;i), args(23), &#34;&#34;},
+<span id="L335" class="ln">   335</span>		{&#34;%2s%3s&#34;, &#34;22333&#34;, args(&amp;s, &amp;t), args(&#34;22&#34;, &#34;333&#34;), &#34;&#34;},
+<span id="L336" class="ln">   336</span>		{&#34;%2d%3d&#34;, &#34;44555&#34;, args(&amp;i, &amp;j), args(44, 555), &#34;&#34;},
+<span id="L337" class="ln">   337</span>		{&#34;%2d.%3d&#34;, &#34;66.777&#34;, args(&amp;i, &amp;j), args(66, 777), &#34;&#34;},
+<span id="L338" class="ln">   338</span>		{&#34;%d, %d&#34;, &#34;23, 18&#34;, args(&amp;i, &amp;j), args(23, 18), &#34;&#34;},
+<span id="L339" class="ln">   339</span>		{&#34;%3d22%3d&#34;, &#34;33322333&#34;, args(&amp;i, &amp;j), args(333, 333), &#34;&#34;},
+<span id="L340" class="ln">   340</span>		{&#34;%6vX=%3fY&#34;, &#34;3+2iX=2.5Y&#34;, args(&amp;c, &amp;f), args((3 + 2i), 2.5), &#34;&#34;},
+<span id="L341" class="ln">   341</span>		{&#34;%d%s&#34;, &#34;123abc&#34;, args(&amp;i, &amp;s), args(123, &#34;abc&#34;), &#34;&#34;},
+<span id="L342" class="ln">   342</span>		{&#34;%c%c%c&#34;, &#34;2\u50c2X&#34;, args(&amp;r1, &amp;r2, &amp;r3), args(&#39;2&#39;, &#39;\u50c2&#39;, &#39;X&#39;), &#34;&#34;},
+<span id="L343" class="ln">   343</span>	
+<span id="L344" class="ln">   344</span>		<span class="comment">// Custom scanners.</span>
+<span id="L345" class="ln">   345</span>		{&#34;%e%f&#34;, &#34;eefffff&#34;, args(&amp;x, &amp;y), args(Xs(&#34;ee&#34;), Xs(&#34;fffff&#34;)), &#34;&#34;},
+<span id="L346" class="ln">   346</span>		{&#34;%4v%s&#34;, &#34;12abcd&#34;, args(&amp;z, &amp;s), args(IntString{12, &#34;ab&#34;}, &#34;cd&#34;), &#34;&#34;},
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>		<span class="comment">// Errors</span>
+<span id="L349" class="ln">   349</span>		{&#34;%t&#34;, &#34;23 18&#34;, args(&amp;i), nil, &#34;bad verb&#34;},
+<span id="L350" class="ln">   350</span>		{&#34;%d %d %d&#34;, &#34;23 18&#34;, args(&amp;i, &amp;j), args(23, 18), &#34;too few operands&#34;},
+<span id="L351" class="ln">   351</span>		{&#34;%d %d&#34;, &#34;23 18 27&#34;, args(&amp;i, &amp;j, &amp;k), args(23, 18), &#34;too many operands&#34;},
+<span id="L352" class="ln">   352</span>		{&#34;%c&#34;, &#34;\u0100&#34;, args(&amp;int8Val), nil, &#34;overflow&#34;},
+<span id="L353" class="ln">   353</span>		{&#34;X%d&#34;, &#34;10X&#34;, args(&amp;intVal), nil, &#34;input does not match format&#34;},
+<span id="L354" class="ln">   354</span>	
+<span id="L355" class="ln">   355</span>		<span class="comment">// Bad UTF-8: should see every byte.</span>
+<span id="L356" class="ln">   356</span>		{&#34;%c%c%c&#34;, &#34;\xc2X\xc2&#34;, args(&amp;r1, &amp;r2, &amp;r3), args(utf8.RuneError, &#39;X&#39;, utf8.RuneError), &#34;&#34;},
+<span id="L357" class="ln">   357</span>	
+<span id="L358" class="ln">   358</span>		<span class="comment">// Fixed bugs</span>
+<span id="L359" class="ln">   359</span>		{&#34;%v%v&#34;, &#34;FALSE23&#34;, args(&amp;truth, &amp;i), args(false, 23), &#34;&#34;},
+<span id="L360" class="ln">   360</span>	}
+<span id="L361" class="ln">   361</span>	
+<span id="L362" class="ln">   362</span>	func testScan(name string, t *testing.T, scan func(r io.Reader, a ...interface{}) (int, error)) {
+<span id="L363" class="ln">   363</span>		for _, test := range scanTests {
+<span id="L364" class="ln">   364</span>			var r io.Reader
+<span id="L365" class="ln">   365</span>			if name == &#34;StringReader&#34; {
+<span id="L366" class="ln">   366</span>				r = strings.NewReader(test.text)
+<span id="L367" class="ln">   367</span>			} else {
+<span id="L368" class="ln">   368</span>				r = newReader(test.text)
+<span id="L369" class="ln">   369</span>			}
+<span id="L370" class="ln">   370</span>			n, err := scan(r, test.in)
+<span id="L371" class="ln">   371</span>			if err != nil {
+<span id="L372" class="ln">   372</span>				m := &#34;&#34;
+<span id="L373" class="ln">   373</span>				if n &gt; 0 {
+<span id="L374" class="ln">   374</span>					m = Sprintf(&#34; (%d fields ok)&#34;, n)
+<span id="L375" class="ln">   375</span>				}
+<span id="L376" class="ln">   376</span>				t.Errorf(&#34;%s got error scanning %q: %s%s&#34;, name, test.text, err, m)
+<span id="L377" class="ln">   377</span>				continue
+<span id="L378" class="ln">   378</span>			}
+<span id="L379" class="ln">   379</span>			if n != 1 {
+<span id="L380" class="ln">   380</span>				t.Errorf(&#34;%s count error on entry %q: got %d&#34;, name, test.text, n)
+<span id="L381" class="ln">   381</span>				continue
+<span id="L382" class="ln">   382</span>			}
+<span id="L383" class="ln">   383</span>			<span class="comment">// The incoming value may be a pointer</span>
+<span id="L384" class="ln">   384</span>			v := reflect.ValueOf(test.in)
+<span id="L385" class="ln">   385</span>			if p := v; p.Kind() == reflect.Ptr {
+<span id="L386" class="ln">   386</span>				v = p.Elem()
+<span id="L387" class="ln">   387</span>			}
+<span id="L388" class="ln">   388</span>			val := v.Interface()
+<span id="L389" class="ln">   389</span>			if !reflect.DeepEqual(val, test.out) {
+<span id="L390" class="ln">   390</span>				t.Errorf(&#34;%s scanning %q: expected %#v got %#v, type %T&#34;, name, test.text, test.out, val, val)
+<span id="L391" class="ln">   391</span>			}
+<span id="L392" class="ln">   392</span>		}
+<span id="L393" class="ln">   393</span>	}
+<span id="L394" class="ln">   394</span>	
+<span id="L395" class="ln">   395</span>	func TestScan(t *testing.T) {
+<span id="L396" class="ln">   396</span>		testScan(&#34;StringReader&#34;, t, Fscan)
+<span id="L397" class="ln">   397</span>	}
+<span id="L398" class="ln">   398</span>	
+<span id="L399" class="ln">   399</span>	func TestMyReaderScan(t *testing.T) {
+<span id="L400" class="ln">   400</span>		testScan(&#34;myStringReader&#34;, t, Fscan)
+<span id="L401" class="ln">   401</span>	}
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>	func TestScanln(t *testing.T) {
+<span id="L404" class="ln">   404</span>		testScan(&#34;StringReader&#34;, t, Fscanln)
+<span id="L405" class="ln">   405</span>	}
+<span id="L406" class="ln">   406</span>	
+<span id="L407" class="ln">   407</span>	func TestMyReaderScanln(t *testing.T) {
+<span id="L408" class="ln">   408</span>		testScan(&#34;myStringReader&#34;, t, Fscanln)
+<span id="L409" class="ln">   409</span>	}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	func TestScanf(t *testing.T) {
+<span id="L412" class="ln">   412</span>		for _, test := range scanfTests {
+<span id="L413" class="ln">   413</span>			n, err := Sscanf(test.text, test.format, test.in)
+<span id="L414" class="ln">   414</span>			if err != nil {
+<span id="L415" class="ln">   415</span>				t.Errorf(&#34;got error scanning (%q, %q): %s&#34;, test.format, test.text, err)
+<span id="L416" class="ln">   416</span>				continue
+<span id="L417" class="ln">   417</span>			}
+<span id="L418" class="ln">   418</span>			if n != 1 {
+<span id="L419" class="ln">   419</span>				t.Errorf(&#34;count error on entry (%q, %q): got %d&#34;, test.format, test.text, n)
+<span id="L420" class="ln">   420</span>				continue
+<span id="L421" class="ln">   421</span>			}
+<span id="L422" class="ln">   422</span>			<span class="comment">// The incoming value may be a pointer</span>
+<span id="L423" class="ln">   423</span>			v := reflect.ValueOf(test.in)
+<span id="L424" class="ln">   424</span>			if p := v; p.Kind() == reflect.Ptr {
+<span id="L425" class="ln">   425</span>				v = p.Elem()
+<span id="L426" class="ln">   426</span>			}
+<span id="L427" class="ln">   427</span>			val := v.Interface()
+<span id="L428" class="ln">   428</span>			if !reflect.DeepEqual(val, test.out) {
+<span id="L429" class="ln">   429</span>				t.Errorf(&#34;scanning (%q, %q): expected %#v got %#v, type %T&#34;, test.format, test.text, test.out, val, val)
+<span id="L430" class="ln">   430</span>			}
+<span id="L431" class="ln">   431</span>		}
+<span id="L432" class="ln">   432</span>	}
+<span id="L433" class="ln">   433</span>	
+<span id="L434" class="ln">   434</span>	func TestScanOverflow(t *testing.T) {
+<span id="L435" class="ln">   435</span>		<span class="comment">// different machines and different types report errors with different strings.</span>
+<span id="L436" class="ln">   436</span>		re := regexp.MustCompile(&#34;overflow|too large|out of range|not representable&#34;)
+<span id="L437" class="ln">   437</span>		for _, test := range overflowTests {
+<span id="L438" class="ln">   438</span>			_, err := Sscan(test.text, test.in)
+<span id="L439" class="ln">   439</span>			if err == nil {
+<span id="L440" class="ln">   440</span>				t.Errorf(&#34;expected overflow scanning %q&#34;, test.text)
+<span id="L441" class="ln">   441</span>				continue
+<span id="L442" class="ln">   442</span>			}
+<span id="L443" class="ln">   443</span>			if !re.MatchString(err.Error()) {
+<span id="L444" class="ln">   444</span>				t.Errorf(&#34;expected overflow error scanning %q: %s&#34;, test.text, err)
+<span id="L445" class="ln">   445</span>			}
+<span id="L446" class="ln">   446</span>		}
+<span id="L447" class="ln">   447</span>	}
+<span id="L448" class="ln">   448</span>	
+<span id="L449" class="ln">   449</span>	func verifyNaN(str string, t *testing.T) {
+<span id="L450" class="ln">   450</span>		var f float64
+<span id="L451" class="ln">   451</span>		var f32 float32
+<span id="L452" class="ln">   452</span>		var f64 float64
+<span id="L453" class="ln">   453</span>		text := str + &#34; &#34; + str + &#34; &#34; + str
+<span id="L454" class="ln">   454</span>		n, err := Fscan(strings.NewReader(text), &amp;f, &amp;f32, &amp;f64)
+<span id="L455" class="ln">   455</span>		if err != nil {
+<span id="L456" class="ln">   456</span>			t.Errorf(&#34;got error scanning %q: %s&#34;, text, err)
+<span id="L457" class="ln">   457</span>		}
+<span id="L458" class="ln">   458</span>		if n != 3 {
+<span id="L459" class="ln">   459</span>			t.Errorf(&#34;count error scanning %q: got %d&#34;, text, n)
+<span id="L460" class="ln">   460</span>		}
+<span id="L461" class="ln">   461</span>		if !math.IsNaN(float64(f)) || !math.IsNaN(float64(f32)) || !math.IsNaN(f64) {
+<span id="L462" class="ln">   462</span>			t.Errorf(&#34;didn&#39;t get NaNs scanning %q: got %g %g %g&#34;, text, f, f32, f64)
+<span id="L463" class="ln">   463</span>		}
+<span id="L464" class="ln">   464</span>	}
+<span id="L465" class="ln">   465</span>	
+<span id="L466" class="ln">   466</span>	func TestNaN(t *testing.T) {
+<span id="L467" class="ln">   467</span>		for _, s := range []string{&#34;nan&#34;, &#34;NAN&#34;, &#34;NaN&#34;} {
+<span id="L468" class="ln">   468</span>			verifyNaN(s, t)
+<span id="L469" class="ln">   469</span>		}
+<span id="L470" class="ln">   470</span>	}
+<span id="L471" class="ln">   471</span>	
+<span id="L472" class="ln">   472</span>	func verifyInf(str string, t *testing.T) {
+<span id="L473" class="ln">   473</span>		var f float64
+<span id="L474" class="ln">   474</span>		var f32 float32
+<span id="L475" class="ln">   475</span>		var f64 float64
+<span id="L476" class="ln">   476</span>		text := str + &#34; &#34; + str + &#34; &#34; + str
+<span id="L477" class="ln">   477</span>		n, err := Fscan(strings.NewReader(text), &amp;f, &amp;f32, &amp;f64)
+<span id="L478" class="ln">   478</span>		if err != nil {
+<span id="L479" class="ln">   479</span>			t.Errorf(&#34;got error scanning %q: %s&#34;, text, err)
+<span id="L480" class="ln">   480</span>		}
+<span id="L481" class="ln">   481</span>		if n != 3 {
+<span id="L482" class="ln">   482</span>			t.Errorf(&#34;count error scanning %q: got %d&#34;, text, n)
+<span id="L483" class="ln">   483</span>		}
+<span id="L484" class="ln">   484</span>		sign := 1
+<span id="L485" class="ln">   485</span>		if str[0] == &#39;-&#39; {
+<span id="L486" class="ln">   486</span>			sign = -1
+<span id="L487" class="ln">   487</span>		}
+<span id="L488" class="ln">   488</span>		if !math.IsInf(float64(f), sign) || !math.IsInf(float64(f32), sign) || !math.IsInf(f64, sign) {
+<span id="L489" class="ln">   489</span>			t.Errorf(&#34;didn&#39;t get right Infs scanning %q: got %g %g %g&#34;, text, f, f32, f64)
+<span id="L490" class="ln">   490</span>		}
+<span id="L491" class="ln">   491</span>	}
+<span id="L492" class="ln">   492</span>	
+<span id="L493" class="ln">   493</span>	func TestInf(t *testing.T) {
+<span id="L494" class="ln">   494</span>		for _, s := range []string{&#34;inf&#34;, &#34;+inf&#34;, &#34;-inf&#34;, &#34;INF&#34;, &#34;-INF&#34;, &#34;+INF&#34;, &#34;Inf&#34;, &#34;-Inf&#34;, &#34;+Inf&#34;} {
+<span id="L495" class="ln">   495</span>			verifyInf(s, t)
+<span id="L496" class="ln">   496</span>		}
+<span id="L497" class="ln">   497</span>	}
+<span id="L498" class="ln">   498</span>	
+<span id="L499" class="ln">   499</span>	func testScanfMulti(name string, t *testing.T) {
+<span id="L500" class="ln">   500</span>		sliceType := reflect.TypeOf(make([]interface{}, 1))
+<span id="L501" class="ln">   501</span>		for _, test := range multiTests {
+<span id="L502" class="ln">   502</span>			var r io.Reader
+<span id="L503" class="ln">   503</span>			if name == &#34;StringReader&#34; {
+<span id="L504" class="ln">   504</span>				r = strings.NewReader(test.text)
+<span id="L505" class="ln">   505</span>			} else {
+<span id="L506" class="ln">   506</span>				r = newReader(test.text)
+<span id="L507" class="ln">   507</span>			}
+<span id="L508" class="ln">   508</span>			n, err := Fscanf(r, test.format, test.in...)
+<span id="L509" class="ln">   509</span>			if err != nil {
+<span id="L510" class="ln">   510</span>				if test.err == &#34;&#34; {
+<span id="L511" class="ln">   511</span>					t.Errorf(&#34;got error scanning (%q, %q): %q&#34;, test.format, test.text, err)
+<span id="L512" class="ln">   512</span>				} else if strings.Index(err.Error(), test.err) &lt; 0 {
+<span id="L513" class="ln">   513</span>					t.Errorf(&#34;got wrong error scanning (%q, %q): %q; expected %q&#34;, test.format, test.text, err, test.err)
+<span id="L514" class="ln">   514</span>				}
+<span id="L515" class="ln">   515</span>				continue
+<span id="L516" class="ln">   516</span>			}
+<span id="L517" class="ln">   517</span>			if test.err != &#34;&#34; {
+<span id="L518" class="ln">   518</span>				t.Errorf(&#34;expected error %q error scanning (%q, %q)&#34;, test.err, test.format, test.text)
+<span id="L519" class="ln">   519</span>			}
+<span id="L520" class="ln">   520</span>			if n != len(test.out) {
+<span id="L521" class="ln">   521</span>				t.Errorf(&#34;count error on entry (%q, %q): expected %d got %d&#34;, test.format, test.text, len(test.out), n)
+<span id="L522" class="ln">   522</span>				continue
+<span id="L523" class="ln">   523</span>			}
+<span id="L524" class="ln">   524</span>			<span class="comment">// Convert the slice of pointers into a slice of values</span>
+<span id="L525" class="ln">   525</span>			resultVal := reflect.MakeSlice(sliceType, n, n)
+<span id="L526" class="ln">   526</span>			for i := 0; i &lt; n; i++ {
+<span id="L527" class="ln">   527</span>				v := reflect.ValueOf(test.in[i]).Elem()
+<span id="L528" class="ln">   528</span>				resultVal.Index(i).Set(v)
+<span id="L529" class="ln">   529</span>			}
+<span id="L530" class="ln">   530</span>			result := resultVal.Interface()
+<span id="L531" class="ln">   531</span>			if !reflect.DeepEqual(result, test.out) {
+<span id="L532" class="ln">   532</span>				t.Errorf(&#34;scanning (%q, %q): expected %#v got %#v&#34;, test.format, test.text, test.out, result)
+<span id="L533" class="ln">   533</span>			}
+<span id="L534" class="ln">   534</span>		}
+<span id="L535" class="ln">   535</span>	}
+<span id="L536" class="ln">   536</span>	
+<span id="L537" class="ln">   537</span>	func TestScanfMulti(t *testing.T) {
+<span id="L538" class="ln">   538</span>		testScanfMulti(&#34;StringReader&#34;, t)
+<span id="L539" class="ln">   539</span>	}
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>	func TestMyReaderScanfMulti(t *testing.T) {
+<span id="L542" class="ln">   542</span>		testScanfMulti(&#34;myStringReader&#34;, t)
+<span id="L543" class="ln">   543</span>	}
+<span id="L544" class="ln">   544</span>	
+<span id="L545" class="ln">   545</span>	func TestScanMultiple(t *testing.T) {
+<span id="L546" class="ln">   546</span>		var a int
+<span id="L547" class="ln">   547</span>		var s string
+<span id="L548" class="ln">   548</span>		n, err := Sscan(&#34;123abc&#34;, &amp;a, &amp;s)
+<span id="L549" class="ln">   549</span>		if n != 2 {
+<span id="L550" class="ln">   550</span>			t.Errorf(&#34;Sscan count error: expected 2: got %d&#34;, n)
+<span id="L551" class="ln">   551</span>		}
+<span id="L552" class="ln">   552</span>		if err != nil {
+<span id="L553" class="ln">   553</span>			t.Errorf(&#34;Sscan expected no error; got %s&#34;, err)
+<span id="L554" class="ln">   554</span>		}
+<span id="L555" class="ln">   555</span>		if a != 123 || s != &#34;abc&#34; {
+<span id="L556" class="ln">   556</span>			t.Errorf(&#34;Sscan wrong values: got (%d %q) expected (123 \&#34;abc\&#34;)&#34;, a, s)
+<span id="L557" class="ln">   557</span>		}
+<span id="L558" class="ln">   558</span>		n, err = Sscan(&#34;asdf&#34;, &amp;s, &amp;a)
+<span id="L559" class="ln">   559</span>		if n != 1 {
+<span id="L560" class="ln">   560</span>			t.Errorf(&#34;Sscan count error: expected 1: got %d&#34;, n)
+<span id="L561" class="ln">   561</span>		}
+<span id="L562" class="ln">   562</span>		if err == nil {
+<span id="L563" class="ln">   563</span>			t.Errorf(&#34;Sscan expected error; got none: %s&#34;, err)
+<span id="L564" class="ln">   564</span>		}
+<span id="L565" class="ln">   565</span>		if s != &#34;asdf&#34; {
+<span id="L566" class="ln">   566</span>			t.Errorf(&#34;Sscan wrong values: got %q expected \&#34;asdf\&#34;&#34;, s)
+<span id="L567" class="ln">   567</span>		}
+<span id="L568" class="ln">   568</span>	}
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>	<span class="comment">// Empty strings are not valid input when scanning a string.</span>
+<span id="L571" class="ln">   571</span>	func TestScanEmpty(t *testing.T) {
+<span id="L572" class="ln">   572</span>		var s1, s2 string
+<span id="L573" class="ln">   573</span>		n, err := Sscan(&#34;abc&#34;, &amp;s1, &amp;s2)
+<span id="L574" class="ln">   574</span>		if n != 1 {
+<span id="L575" class="ln">   575</span>			t.Errorf(&#34;Sscan count error: expected 1: got %d&#34;, n)
+<span id="L576" class="ln">   576</span>		}
+<span id="L577" class="ln">   577</span>		if err == nil {
+<span id="L578" class="ln">   578</span>			t.Error(&#34;Sscan &lt;one item&gt; expected error; got none&#34;)
+<span id="L579" class="ln">   579</span>		}
+<span id="L580" class="ln">   580</span>		if s1 != &#34;abc&#34; {
+<span id="L581" class="ln">   581</span>			t.Errorf(&#34;Sscan wrong values: got %q expected \&#34;abc\&#34;&#34;, s1)
+<span id="L582" class="ln">   582</span>		}
+<span id="L583" class="ln">   583</span>		n, err = Sscan(&#34;&#34;, &amp;s1, &amp;s2)
+<span id="L584" class="ln">   584</span>		if n != 0 {
+<span id="L585" class="ln">   585</span>			t.Errorf(&#34;Sscan count error: expected 0: got %d&#34;, n)
+<span id="L586" class="ln">   586</span>		}
+<span id="L587" class="ln">   587</span>		if err == nil {
+<span id="L588" class="ln">   588</span>			t.Error(&#34;Sscan &lt;empty&gt; expected error; got none&#34;)
+<span id="L589" class="ln">   589</span>		}
+<span id="L590" class="ln">   590</span>		<span class="comment">// Quoted empty string is OK.</span>
+<span id="L591" class="ln">   591</span>		n, err = Sscanf(`&#34;&#34;`, &#34;%q&#34;, &amp;s1)
+<span id="L592" class="ln">   592</span>		if n != 1 {
+<span id="L593" class="ln">   593</span>			t.Errorf(&#34;Sscanf count error: expected 1: got %d&#34;, n)
+<span id="L594" class="ln">   594</span>		}
+<span id="L595" class="ln">   595</span>		if err != nil {
+<span id="L596" class="ln">   596</span>			t.Errorf(&#34;Sscanf &lt;empty&gt; expected no error with quoted string; got %s&#34;, err)
+<span id="L597" class="ln">   597</span>		}
+<span id="L598" class="ln">   598</span>	}
+<span id="L599" class="ln">   599</span>	
+<span id="L600" class="ln">   600</span>	func TestScanNotPointer(t *testing.T) {
+<span id="L601" class="ln">   601</span>		r := strings.NewReader(&#34;1&#34;)
+<span id="L602" class="ln">   602</span>		var a int
+<span id="L603" class="ln">   603</span>		_, err := Fscan(r, a)
+<span id="L604" class="ln">   604</span>		if err == nil {
+<span id="L605" class="ln">   605</span>			t.Error(&#34;expected error scanning non-pointer&#34;)
+<span id="L606" class="ln">   606</span>		} else if strings.Index(err.Error(), &#34;pointer&#34;) &lt; 0 {
+<span id="L607" class="ln">   607</span>			t.Errorf(&#34;expected pointer error scanning non-pointer, got: %s&#34;, err)
+<span id="L608" class="ln">   608</span>		}
+<span id="L609" class="ln">   609</span>	}
+<span id="L610" class="ln">   610</span>	
+<span id="L611" class="ln">   611</span>	func TestScanlnNoNewline(t *testing.T) {
+<span id="L612" class="ln">   612</span>		var a int
+<span id="L613" class="ln">   613</span>		_, err := Sscanln(&#34;1 x\n&#34;, &amp;a)
+<span id="L614" class="ln">   614</span>		if err == nil {
+<span id="L615" class="ln">   615</span>			t.Error(&#34;expected error scanning string missing newline&#34;)
+<span id="L616" class="ln">   616</span>		} else if strings.Index(err.Error(), &#34;newline&#34;) &lt; 0 {
+<span id="L617" class="ln">   617</span>			t.Errorf(&#34;expected newline error scanning string missing newline, got: %s&#34;, err)
+<span id="L618" class="ln">   618</span>		}
+<span id="L619" class="ln">   619</span>	}
+<span id="L620" class="ln">   620</span>	
+<span id="L621" class="ln">   621</span>	func TestScanlnWithMiddleNewline(t *testing.T) {
+<span id="L622" class="ln">   622</span>		r := strings.NewReader(&#34;123\n456\n&#34;)
+<span id="L623" class="ln">   623</span>		var a, b int
+<span id="L624" class="ln">   624</span>		_, err := Fscanln(r, &amp;a, &amp;b)
+<span id="L625" class="ln">   625</span>		if err == nil {
+<span id="L626" class="ln">   626</span>			t.Error(&#34;expected error scanning string with extra newline&#34;)
+<span id="L627" class="ln">   627</span>		} else if strings.Index(err.Error(), &#34;newline&#34;) &lt; 0 {
+<span id="L628" class="ln">   628</span>			t.Errorf(&#34;expected newline error scanning string with extra newline, got: %s&#34;, err)
+<span id="L629" class="ln">   629</span>		}
+<span id="L630" class="ln">   630</span>	}
+<span id="L631" class="ln">   631</span>	
+<span id="L632" class="ln">   632</span>	<span class="comment">// eofCounter is a special Reader that counts reads at end of file.</span>
+<span id="L633" class="ln">   633</span>	type eofCounter struct {
+<span id="L634" class="ln">   634</span>		reader   *strings.Reader
+<span id="L635" class="ln">   635</span>		eofCount int
+<span id="L636" class="ln">   636</span>	}
+<span id="L637" class="ln">   637</span>	
+<span id="L638" class="ln">   638</span>	func (ec *eofCounter) Read(b []byte) (n int, err error) {
+<span id="L639" class="ln">   639</span>		n, err = ec.reader.Read(b)
+<span id="L640" class="ln">   640</span>		if n == 0 {
+<span id="L641" class="ln">   641</span>			ec.eofCount++
+<span id="L642" class="ln">   642</span>		}
+<span id="L643" class="ln">   643</span>		return
+<span id="L644" class="ln">   644</span>	}
+<span id="L645" class="ln">   645</span>	
+<span id="L646" class="ln">   646</span>	<span class="comment">// TestEOF verifies that when we scan, we see at most EOF once per call to a</span>
+<span id="L647" class="ln">   647</span>	<span class="comment">// Scan function, and then only when it&#39;s really an EOF.</span>
+<span id="L648" class="ln">   648</span>	func TestEOF(t *testing.T) {
+<span id="L649" class="ln">   649</span>		ec := &amp;eofCounter{strings.NewReader(&#34;123\n&#34;), 0}
+<span id="L650" class="ln">   650</span>		var a int
+<span id="L651" class="ln">   651</span>		n, err := Fscanln(ec, &amp;a)
+<span id="L652" class="ln">   652</span>		if err != nil {
+<span id="L653" class="ln">   653</span>			t.Error(&#34;unexpected error&#34;, err)
+<span id="L654" class="ln">   654</span>		}
+<span id="L655" class="ln">   655</span>		if n != 1 {
+<span id="L656" class="ln">   656</span>			t.Error(&#34;expected to scan one item, got&#34;, n)
+<span id="L657" class="ln">   657</span>		}
+<span id="L658" class="ln">   658</span>		if ec.eofCount != 0 {
+<span id="L659" class="ln">   659</span>			t.Error(&#34;expected zero EOFs&#34;, ec.eofCount)
+<span id="L660" class="ln">   660</span>			ec.eofCount = 0 <span class="comment">// reset for next test</span>
+<span id="L661" class="ln">   661</span>		}
+<span id="L662" class="ln">   662</span>		n, err = Fscanln(ec, &amp;a)
+<span id="L663" class="ln">   663</span>		if err == nil {
+<span id="L664" class="ln">   664</span>			t.Error(&#34;expected error scanning empty string&#34;)
+<span id="L665" class="ln">   665</span>		}
+<span id="L666" class="ln">   666</span>		if n != 0 {
+<span id="L667" class="ln">   667</span>			t.Error(&#34;expected to scan zero items, got&#34;, n)
+<span id="L668" class="ln">   668</span>		}
+<span id="L669" class="ln">   669</span>		if ec.eofCount != 1 {
+<span id="L670" class="ln">   670</span>			t.Error(&#34;expected one EOF, got&#34;, ec.eofCount)
+<span id="L671" class="ln">   671</span>		}
+<span id="L672" class="ln">   672</span>	}
+<span id="L673" class="ln">   673</span>	
+<span id="L674" class="ln">   674</span>	<span class="comment">// TestEOFAtEndOfInput verifies that we see an EOF error if we run out of input.</span>
+<span id="L675" class="ln">   675</span>	<span class="comment">// This was a buglet: we used to get &#34;expected integer&#34;.</span>
+<span id="L676" class="ln">   676</span>	func TestEOFAtEndOfInput(t *testing.T) {
+<span id="L677" class="ln">   677</span>		var i, j int
+<span id="L678" class="ln">   678</span>		n, err := Sscanf(&#34;23&#34;, &#34;%d %d&#34;, &amp;i, &amp;j)
+<span id="L679" class="ln">   679</span>		if n != 1 || i != 23 {
+<span id="L680" class="ln">   680</span>			t.Errorf(&#34;Sscanf expected one value of 23; got %d %d&#34;, n, i)
+<span id="L681" class="ln">   681</span>		}
+<span id="L682" class="ln">   682</span>		if err != io.EOF {
+<span id="L683" class="ln">   683</span>			t.Errorf(&#34;Sscanf expected EOF; got %q&#34;, err)
+<span id="L684" class="ln">   684</span>		}
+<span id="L685" class="ln">   685</span>		n, err = Sscan(&#34;234&#34;, &amp;i, &amp;j)
+<span id="L686" class="ln">   686</span>		if n != 1 || i != 234 {
+<span id="L687" class="ln">   687</span>			t.Errorf(&#34;Sscan expected one value of 234; got %d %d&#34;, n, i)
+<span id="L688" class="ln">   688</span>		}
+<span id="L689" class="ln">   689</span>		if err != io.EOF {
+<span id="L690" class="ln">   690</span>			t.Errorf(&#34;Sscan expected EOF; got %q&#34;, err)
+<span id="L691" class="ln">   691</span>		}
+<span id="L692" class="ln">   692</span>		<span class="comment">// Trailing space is tougher.</span>
+<span id="L693" class="ln">   693</span>		n, err = Sscan(&#34;234 &#34;, &amp;i, &amp;j)
+<span id="L694" class="ln">   694</span>		if n != 1 || i != 234 {
+<span id="L695" class="ln">   695</span>			t.Errorf(&#34;Sscan expected one value of 234; got %d %d&#34;, n, i)
+<span id="L696" class="ln">   696</span>		}
+<span id="L697" class="ln">   697</span>		if err != io.EOF {
+<span id="L698" class="ln">   698</span>			t.Errorf(&#34;Sscan expected EOF; got %q&#34;, err)
+<span id="L699" class="ln">   699</span>		}
+<span id="L700" class="ln">   700</span>	}
+<span id="L701" class="ln">   701</span>	
+<span id="L702" class="ln">   702</span>	var eofTests = []struct {
+<span id="L703" class="ln">   703</span>		format string
+<span id="L704" class="ln">   704</span>		v      interface{}
+<span id="L705" class="ln">   705</span>	}{
+<span id="L706" class="ln">   706</span>		{&#34;%s&#34;, &amp;stringVal},
+<span id="L707" class="ln">   707</span>		{&#34;%q&#34;, &amp;stringVal},
+<span id="L708" class="ln">   708</span>		{&#34;%x&#34;, &amp;stringVal},
+<span id="L709" class="ln">   709</span>		{&#34;%v&#34;, &amp;stringVal},
+<span id="L710" class="ln">   710</span>		{&#34;%v&#34;, &amp;bytesVal},
+<span id="L711" class="ln">   711</span>		{&#34;%v&#34;, &amp;intVal},
+<span id="L712" class="ln">   712</span>		{&#34;%v&#34;, &amp;uintVal},
+<span id="L713" class="ln">   713</span>		{&#34;%v&#34;, &amp;boolVal},
+<span id="L714" class="ln">   714</span>		{&#34;%v&#34;, &amp;float32Val},
+<span id="L715" class="ln">   715</span>		{&#34;%v&#34;, &amp;complex64Val},
+<span id="L716" class="ln">   716</span>		{&#34;%v&#34;, &amp;renamedStringVal},
+<span id="L717" class="ln">   717</span>		{&#34;%v&#34;, &amp;renamedBytesVal},
+<span id="L718" class="ln">   718</span>		{&#34;%v&#34;, &amp;renamedIntVal},
+<span id="L719" class="ln">   719</span>		{&#34;%v&#34;, &amp;renamedUintVal},
+<span id="L720" class="ln">   720</span>		{&#34;%v&#34;, &amp;renamedBoolVal},
+<span id="L721" class="ln">   721</span>		{&#34;%v&#34;, &amp;renamedFloat32Val},
+<span id="L722" class="ln">   722</span>		{&#34;%v&#34;, &amp;renamedComplex64Val},
+<span id="L723" class="ln">   723</span>	}
+<span id="L724" class="ln">   724</span>	
+<span id="L725" class="ln">   725</span>	func TestEOFAllTypes(t *testing.T) {
+<span id="L726" class="ln">   726</span>		for i, test := range eofTests {
+<span id="L727" class="ln">   727</span>			if _, err := Sscanf(&#34;&#34;, test.format, test.v); err != io.EOF {
+<span id="L728" class="ln">   728</span>				t.Errorf(&#34;#%d: %s %T not eof on empty string: %s&#34;, i, test.format, test.v, err)
+<span id="L729" class="ln">   729</span>			}
+<span id="L730" class="ln">   730</span>			if _, err := Sscanf(&#34;   &#34;, test.format, test.v); err != io.EOF {
+<span id="L731" class="ln">   731</span>				t.Errorf(&#34;#%d: %s %T not eof on trailing blanks: %s&#34;, i, test.format, test.v, err)
+<span id="L732" class="ln">   732</span>			}
+<span id="L733" class="ln">   733</span>		}
+<span id="L734" class="ln">   734</span>	}
+<span id="L735" class="ln">   735</span>	
+<span id="L736" class="ln">   736</span>	<span class="comment">// TestUnreadRuneWithBufio verifies that, at least when using bufio, successive</span>
+<span id="L737" class="ln">   737</span>	<span class="comment">// calls to Fscan do not lose runes.</span>
+<span id="L738" class="ln">   738</span>	func TestUnreadRuneWithBufio(t *testing.T) {
+<span id="L739" class="ln">   739</span>		r := bufio.NewReader(strings.NewReader(&#34;123αb&#34;))
+<span id="L740" class="ln">   740</span>		var i int
+<span id="L741" class="ln">   741</span>		var a string
+<span id="L742" class="ln">   742</span>		n, err := Fscanf(r, &#34;%d&#34;, &amp;i)
+<span id="L743" class="ln">   743</span>		if n != 1 || err != nil {
+<span id="L744" class="ln">   744</span>			t.Errorf(&#34;reading int expected one item, no errors; got %d %q&#34;, n, err)
+<span id="L745" class="ln">   745</span>		}
+<span id="L746" class="ln">   746</span>		if i != 123 {
+<span id="L747" class="ln">   747</span>			t.Errorf(&#34;expected 123; got %d&#34;, i)
+<span id="L748" class="ln">   748</span>		}
+<span id="L749" class="ln">   749</span>		n, err = Fscanf(r, &#34;%s&#34;, &amp;a)
+<span id="L750" class="ln">   750</span>		if n != 1 || err != nil {
+<span id="L751" class="ln">   751</span>			t.Errorf(&#34;reading string expected one item, no errors; got %d %q&#34;, n, err)
+<span id="L752" class="ln">   752</span>		}
+<span id="L753" class="ln">   753</span>		if a != &#34;αb&#34; {
+<span id="L754" class="ln">   754</span>			t.Errorf(&#34;expected αb; got %q&#34;, a)
+<span id="L755" class="ln">   755</span>		}
+<span id="L756" class="ln">   756</span>	}
+<span id="L757" class="ln">   757</span>	
+<span id="L758" class="ln">   758</span>	type TwoLines string
+<span id="L759" class="ln">   759</span>	
+<span id="L760" class="ln">   760</span>	<span class="comment">// Scan attempts to read two lines into the object.  Scanln should prevent this</span>
+<span id="L761" class="ln">   761</span>	<span class="comment">// because it stops at newline; Scan and Scanf should be fine.</span>
+<span id="L762" class="ln">   762</span>	func (t *TwoLines) Scan(state ScanState, verb rune) error {
+<span id="L763" class="ln">   763</span>		chars := make([]rune, 0, 100)
+<span id="L764" class="ln">   764</span>		for nlCount := 0; nlCount &lt; 2; {
+<span id="L765" class="ln">   765</span>			c, _, err := state.ReadRune()
+<span id="L766" class="ln">   766</span>			if err != nil {
+<span id="L767" class="ln">   767</span>				return err
+<span id="L768" class="ln">   768</span>			}
+<span id="L769" class="ln">   769</span>			chars = append(chars, c)
+<span id="L770" class="ln">   770</span>			if c == &#39;\n&#39; {
+<span id="L771" class="ln">   771</span>				nlCount++
+<span id="L772" class="ln">   772</span>			}
+<span id="L773" class="ln">   773</span>		}
+<span id="L774" class="ln">   774</span>		*t = TwoLines(string(chars))
+<span id="L775" class="ln">   775</span>		return nil
+<span id="L776" class="ln">   776</span>	}
+<span id="L777" class="ln">   777</span>	
+<span id="L778" class="ln">   778</span>	func TestMultiLine(t *testing.T) {
+<span id="L779" class="ln">   779</span>		input := &#34;abc\ndef\n&#34;
+<span id="L780" class="ln">   780</span>		<span class="comment">// Sscan should work</span>
+<span id="L781" class="ln">   781</span>		var tscan TwoLines
+<span id="L782" class="ln">   782</span>		n, err := Sscan(input, &amp;tscan)
+<span id="L783" class="ln">   783</span>		if n != 1 {
+<span id="L784" class="ln">   784</span>			t.Errorf(&#34;Sscan: expected 1 item; got %d&#34;, n)
+<span id="L785" class="ln">   785</span>		}
+<span id="L786" class="ln">   786</span>		if err != nil {
+<span id="L787" class="ln">   787</span>			t.Errorf(&#34;Sscan: expected no error; got %s&#34;, err)
+<span id="L788" class="ln">   788</span>		}
+<span id="L789" class="ln">   789</span>		if string(tscan) != input {
+<span id="L790" class="ln">   790</span>			t.Errorf(&#34;Sscan: expected %q; got %q&#34;, input, tscan)
+<span id="L791" class="ln">   791</span>		}
+<span id="L792" class="ln">   792</span>		<span class="comment">// Sscanf should work</span>
+<span id="L793" class="ln">   793</span>		var tscanf TwoLines
+<span id="L794" class="ln">   794</span>		n, err = Sscanf(input, &#34;%s&#34;, &amp;tscanf)
+<span id="L795" class="ln">   795</span>		if n != 1 {
+<span id="L796" class="ln">   796</span>			t.Errorf(&#34;Sscanf: expected 1 item; got %d&#34;, n)
+<span id="L797" class="ln">   797</span>		}
+<span id="L798" class="ln">   798</span>		if err != nil {
+<span id="L799" class="ln">   799</span>			t.Errorf(&#34;Sscanf: expected no error; got %s&#34;, err)
+<span id="L800" class="ln">   800</span>		}
+<span id="L801" class="ln">   801</span>		if string(tscanf) != input {
+<span id="L802" class="ln">   802</span>			t.Errorf(&#34;Sscanf: expected %q; got %q&#34;, input, tscanf)
+<span id="L803" class="ln">   803</span>		}
+<span id="L804" class="ln">   804</span>		<span class="comment">// Sscanln should not work</span>
+<span id="L805" class="ln">   805</span>		var tscanln TwoLines
+<span id="L806" class="ln">   806</span>		n, err = Sscanln(input, &amp;tscanln)
+<span id="L807" class="ln">   807</span>		if n != 0 {
+<span id="L808" class="ln">   808</span>			t.Errorf(&#34;Sscanln: expected 0 items; got %d: %q&#34;, n, tscanln)
+<span id="L809" class="ln">   809</span>		}
+<span id="L810" class="ln">   810</span>		if err == nil {
+<span id="L811" class="ln">   811</span>			t.Error(&#34;Sscanln: expected error; got none&#34;)
+<span id="L812" class="ln">   812</span>		} else if err != io.ErrUnexpectedEOF {
+<span id="L813" class="ln">   813</span>			t.Errorf(&#34;Sscanln: expected io.ErrUnexpectedEOF (ha!); got %s&#34;, err)
+<span id="L814" class="ln">   814</span>		}
+<span id="L815" class="ln">   815</span>	}
+<span id="L816" class="ln">   816</span>	
+<span id="L817" class="ln">   817</span>	<span class="comment">// simpleReader is a strings.Reader that implements only Read, not ReadRune.</span>
+<span id="L818" class="ln">   818</span>	<span class="comment">// Good for testing readahead.</span>
+<span id="L819" class="ln">   819</span>	type simpleReader struct {
+<span id="L820" class="ln">   820</span>		sr *strings.Reader
+<span id="L821" class="ln">   821</span>	}
+<span id="L822" class="ln">   822</span>	
+<span id="L823" class="ln">   823</span>	func (s *simpleReader) Read(b []byte) (n int, err error) {
+<span id="L824" class="ln">   824</span>		return s.sr.Read(b)
+<span id="L825" class="ln">   825</span>	}
+<span id="L826" class="ln">   826</span>	
+<span id="L827" class="ln">   827</span>	<span class="comment">// TestLineByLineFscanf tests that Fscanf does not read past newline. Issue</span>
+<span id="L828" class="ln">   828</span>	<span class="comment">// 3481.</span>
+<span id="L829" class="ln">   829</span>	func TestLineByLineFscanf(t *testing.T) {
+<span id="L830" class="ln">   830</span>		r := &amp;simpleReader{strings.NewReader(&#34;1\n2\n&#34;)}
+<span id="L831" class="ln">   831</span>		var i, j int
+<span id="L832" class="ln">   832</span>		n, err := Fscanf(r, &#34;%v\n&#34;, &amp;i)
+<span id="L833" class="ln">   833</span>		if n != 1 || err != nil {
+<span id="L834" class="ln">   834</span>			t.Fatalf(&#34;first read: %d %q&#34;, n, err)
+<span id="L835" class="ln">   835</span>		}
+<span id="L836" class="ln">   836</span>		n, err = Fscanf(r, &#34;%v\n&#34;, &amp;j)
+<span id="L837" class="ln">   837</span>		if n != 1 || err != nil {
+<span id="L838" class="ln">   838</span>			t.Fatalf(&#34;second read: %d %q&#34;, n, err)
+<span id="L839" class="ln">   839</span>		}
+<span id="L840" class="ln">   840</span>		if i != 1 || j != 2 {
+<span id="L841" class="ln">   841</span>			t.Errorf(&#34;wrong values; wanted 1 2 got %d %d&#34;, i, j)
+<span id="L842" class="ln">   842</span>		}
+<span id="L843" class="ln">   843</span>	}
+<span id="L844" class="ln">   844</span>	
+<span id="L845" class="ln">   845</span>	<span class="comment">// RecursiveInt accepts a string matching %d.%d.%d....</span>
+<span id="L846" class="ln">   846</span>	<span class="comment">// and parses it into a linked list.</span>
+<span id="L847" class="ln">   847</span>	<span class="comment">// It allows us to benchmark recursive descent style scanners.</span>
+<span id="L848" class="ln">   848</span>	type RecursiveInt struct {
+<span id="L849" class="ln">   849</span>		i    int
+<span id="L850" class="ln">   850</span>		next *RecursiveInt
+<span id="L851" class="ln">   851</span>	}
+<span id="L852" class="ln">   852</span>	
+<span id="L853" class="ln">   853</span>	func (r *RecursiveInt) Scan(state ScanState, verb rune) (err error) {
+<span id="L854" class="ln">   854</span>		_, err = Fscan(state, &amp;r.i)
+<span id="L855" class="ln">   855</span>		if err != nil {
+<span id="L856" class="ln">   856</span>			return
+<span id="L857" class="ln">   857</span>		}
+<span id="L858" class="ln">   858</span>		next := new(RecursiveInt)
+<span id="L859" class="ln">   859</span>		_, err = Fscanf(state, &#34;.%v&#34;, next)
+<span id="L860" class="ln">   860</span>		if err != nil {
+<span id="L861" class="ln">   861</span>			if err == io.ErrUnexpectedEOF {
+<span id="L862" class="ln">   862</span>				err = nil
+<span id="L863" class="ln">   863</span>			}
+<span id="L864" class="ln">   864</span>			return
+<span id="L865" class="ln">   865</span>		}
+<span id="L866" class="ln">   866</span>		r.next = next
+<span id="L867" class="ln">   867</span>		return
+<span id="L868" class="ln">   868</span>	}
+<span id="L869" class="ln">   869</span>	
+<span id="L870" class="ln">   870</span>	<span class="comment">// scanInts performs the same scanning task as RecursiveInt.Scan</span>
+<span id="L871" class="ln">   871</span>	<span class="comment">// but without recurring through scanner, so we can compare</span>
+<span id="L872" class="ln">   872</span>	<span class="comment">// performance more directly.</span>
+<span id="L873" class="ln">   873</span>	func scanInts(r *RecursiveInt, b *bytes.Buffer) (err error) {
+<span id="L874" class="ln">   874</span>		r.next = nil
+<span id="L875" class="ln">   875</span>		_, err = Fscan(b, &amp;r.i)
+<span id="L876" class="ln">   876</span>		if err != nil {
+<span id="L877" class="ln">   877</span>			return
+<span id="L878" class="ln">   878</span>		}
+<span id="L879" class="ln">   879</span>		c, _, err := b.ReadRune()
+<span id="L880" class="ln">   880</span>		if err != nil {
+<span id="L881" class="ln">   881</span>			if err == io.EOF {
+<span id="L882" class="ln">   882</span>				err = nil
+<span id="L883" class="ln">   883</span>			}
+<span id="L884" class="ln">   884</span>			return
+<span id="L885" class="ln">   885</span>		}
+<span id="L886" class="ln">   886</span>		if c != &#39;.&#39; {
+<span id="L887" class="ln">   887</span>			return
+<span id="L888" class="ln">   888</span>		}
+<span id="L889" class="ln">   889</span>		next := new(RecursiveInt)
+<span id="L890" class="ln">   890</span>		err = scanInts(next, b)
+<span id="L891" class="ln">   891</span>		if err == nil {
+<span id="L892" class="ln">   892</span>			r.next = next
+<span id="L893" class="ln">   893</span>		}
+<span id="L894" class="ln">   894</span>		return
+<span id="L895" class="ln">   895</span>	}
+<span id="L896" class="ln">   896</span>	
+<span id="L897" class="ln">   897</span>	func makeInts(n int) []byte {
+<span id="L898" class="ln">   898</span>		var buf bytes.Buffer
+<span id="L899" class="ln">   899</span>		Fprintf(&amp;buf, &#34;1&#34;)
+<span id="L900" class="ln">   900</span>		for i := 1; i &lt; n; i++ {
+<span id="L901" class="ln">   901</span>			Fprintf(&amp;buf, &#34;.%d&#34;, i+1)
+<span id="L902" class="ln">   902</span>		}
+<span id="L903" class="ln">   903</span>		return buf.Bytes()
+<span id="L904" class="ln">   904</span>	}
+<span id="L905" class="ln">   905</span>	
+<span id="L906" class="ln">   906</span>	func TestScanInts(t *testing.T) {
+<span id="L907" class="ln">   907</span>		testScanInts(t, scanInts)
+<span id="L908" class="ln">   908</span>		testScanInts(t, func(r *RecursiveInt, b *bytes.Buffer) (err error) {
+<span id="L909" class="ln">   909</span>			_, err = Fscan(b, r)
+<span id="L910" class="ln">   910</span>			return
+<span id="L911" class="ln">   911</span>		})
+<span id="L912" class="ln">   912</span>	}
+<span id="L913" class="ln">   913</span>	
+<span id="L914" class="ln">   914</span>	<span class="comment">// 800 is small enough to not overflow the stack when using gccgo on a</span>
+<span id="L915" class="ln">   915</span>	<span class="comment">// platform that does not support split stack.</span>
+<span id="L916" class="ln">   916</span>	const intCount = 800
+<span id="L917" class="ln">   917</span>	
+<span id="L918" class="ln">   918</span>	func testScanInts(t *testing.T, scan func(*RecursiveInt, *bytes.Buffer) error) {
+<span id="L919" class="ln">   919</span>		r := new(RecursiveInt)
+<span id="L920" class="ln">   920</span>		ints := makeInts(intCount)
+<span id="L921" class="ln">   921</span>		buf := bytes.NewBuffer(ints)
+<span id="L922" class="ln">   922</span>		err := scan(r, buf)
+<span id="L923" class="ln">   923</span>		if err != nil {
+<span id="L924" class="ln">   924</span>			t.Error(&#34;unexpected error&#34;, err)
+<span id="L925" class="ln">   925</span>		}
+<span id="L926" class="ln">   926</span>		i := 1
+<span id="L927" class="ln">   927</span>		for ; r != nil; r = r.next {
+<span id="L928" class="ln">   928</span>			if r.i != i {
+<span id="L929" class="ln">   929</span>				t.Fatalf(&#34;bad scan: expected %d got %d&#34;, i, r.i)
+<span id="L930" class="ln">   930</span>			}
+<span id="L931" class="ln">   931</span>			i++
+<span id="L932" class="ln">   932</span>		}
+<span id="L933" class="ln">   933</span>		if i-1 != intCount {
+<span id="L934" class="ln">   934</span>			t.Fatalf(&#34;bad scan count: expected %d got %d&#34;, intCount, i-1)
+<span id="L935" class="ln">   935</span>		}
+<span id="L936" class="ln">   936</span>	}
+<span id="L937" class="ln">   937</span>	
+<span id="L938" class="ln">   938</span>	func BenchmarkScanInts(b *testing.B) {
+<span id="L939" class="ln">   939</span>		b.ResetTimer()
+<span id="L940" class="ln">   940</span>		ints := makeInts(intCount)
+<span id="L941" class="ln">   941</span>		var r RecursiveInt
+<span id="L942" class="ln">   942</span>		for i := b.N - 1; i &gt;= 0; i-- {
+<span id="L943" class="ln">   943</span>			buf := bytes.NewBuffer(ints)
+<span id="L944" class="ln">   944</span>			b.StartTimer()
+<span id="L945" class="ln">   945</span>			scanInts(&amp;r, buf)
+<span id="L946" class="ln">   946</span>			b.StopTimer()
+<span id="L947" class="ln">   947</span>		}
+<span id="L948" class="ln">   948</span>	}
+<span id="L949" class="ln">   949</span>	
+<span id="L950" class="ln">   950</span>	func BenchmarkScanRecursiveInt(b *testing.B) {
+<span id="L951" class="ln">   951</span>		b.ResetTimer()
+<span id="L952" class="ln">   952</span>		ints := makeInts(intCount)
+<span id="L953" class="ln">   953</span>		var r RecursiveInt
+<span id="L954" class="ln">   954</span>		for i := b.N - 1; i &gt;= 0; i-- {
+<span id="L955" class="ln">   955</span>			buf := bytes.NewBuffer(ints)
+<span id="L956" class="ln">   956</span>			b.StartTimer()
+<span id="L957" class="ln">   957</span>			Fscan(buf, &amp;r)
+<span id="L958" class="ln">   958</span>			b.StopTimer()
+<span id="L959" class="ln">   959</span>		}
+<span id="L960" class="ln">   960</span>	}
+<span id="L961" class="ln">   961</span>	
+</pre><p><a href="http://golang.org/src/pkg/fmt/scan_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

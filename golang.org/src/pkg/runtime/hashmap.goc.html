@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/hashmap.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/hashmap.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package runtime
+<span id="L6" class="ln">     6</span>	#include &#34;runtime.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;malloc.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;type.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;race.h&#34;
+<span id="L11" class="ln">    11</span>	#include &#34;hashmap.h&#34;
+<span id="L12" class="ln">    12</span>	#include &#34;typekind.h&#34;
+<span id="L13" class="ln">    13</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	enum
+<span id="L16" class="ln">    16</span>	{
+<span id="L17" class="ln">    17</span>		docheck = 0,  // check invariants before and after every op.  Slow!!!
+<span id="L18" class="ln">    18</span>		debug = 0,    // print every operation
+<span id="L19" class="ln">    19</span>		checkgc = 0 || docheck,  // check interaction of mallocgc() with the garbage collector
+<span id="L20" class="ln">    20</span>	};
+<span id="L21" class="ln">    21</span>	static void
+<span id="L22" class="ln">    22</span>	check(MapType *t, Hmap *h)
+<span id="L23" class="ln">    23</span>	{
+<span id="L24" class="ln">    24</span>		uintptr bucket, oldbucket;
+<span id="L25" class="ln">    25</span>		Bucket *b;
+<span id="L26" class="ln">    26</span>		uintptr i;
+<span id="L27" class="ln">    27</span>		uintptr hash;
+<span id="L28" class="ln">    28</span>		uintgo cnt;
+<span id="L29" class="ln">    29</span>		uint8 top;
+<span id="L30" class="ln">    30</span>		bool eq;
+<span id="L31" class="ln">    31</span>		byte *k, *v;
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>		cnt = 0;
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>		// check buckets
+<span id="L36" class="ln">    36</span>		for(bucket = 0; bucket &lt; (uintptr)1 &lt;&lt; h-&gt;B; bucket++) {
+<span id="L37" class="ln">    37</span>			for(b = (Bucket*)(h-&gt;buckets + bucket * h-&gt;bucketsize); b != nil; b = b-&gt;overflow) {
+<span id="L38" class="ln">    38</span>				for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L39" class="ln">    39</span>					if(b-&gt;tophash[i] == Empty)
+<span id="L40" class="ln">    40</span>						continue;
+<span id="L41" class="ln">    41</span>					if(b-&gt;tophash[i] &gt; Empty &amp;&amp; b-&gt;tophash[i] &lt; MinTopHash)
+<span id="L42" class="ln">    42</span>						runtime·throw(&#34;evacuated cell in buckets&#34;);
+<span id="L43" class="ln">    43</span>					cnt++;
+<span id="L44" class="ln">    44</span>					t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, IK(h, k), IK(h, k));
+<span id="L45" class="ln">    45</span>					if(!eq)
+<span id="L46" class="ln">    46</span>						continue; // NaN!
+<span id="L47" class="ln">    47</span>					hash = h-&gt;hash0;
+<span id="L48" class="ln">    48</span>					t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, IK(h, k));
+<span id="L49" class="ln">    49</span>					top = hash &gt;&gt; (8*sizeof(uintptr) - 8);
+<span id="L50" class="ln">    50</span>					if(top &lt; MinTopHash)
+<span id="L51" class="ln">    51</span>						top += MinTopHash;
+<span id="L52" class="ln">    52</span>					if(top != b-&gt;tophash[i])
+<span id="L53" class="ln">    53</span>						runtime·throw(&#34;bad hash&#34;);
+<span id="L54" class="ln">    54</span>				}
+<span id="L55" class="ln">    55</span>			}
+<span id="L56" class="ln">    56</span>		}
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>		// check oldbuckets
+<span id="L59" class="ln">    59</span>		if(h-&gt;oldbuckets != nil) {
+<span id="L60" class="ln">    60</span>			for(oldbucket = 0; oldbucket &lt; (uintptr)1 &lt;&lt; (h-&gt;B - 1); oldbucket++) {
+<span id="L61" class="ln">    61</span>				b = (Bucket*)(h-&gt;oldbuckets + oldbucket * h-&gt;bucketsize);
+<span id="L62" class="ln">    62</span>				for(; b != nil; b = b-&gt;overflow) {
+<span id="L63" class="ln">    63</span>					for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L64" class="ln">    64</span>						if(b-&gt;tophash[i] &lt; MinTopHash)
+<span id="L65" class="ln">    65</span>							continue;
+<span id="L66" class="ln">    66</span>						if(oldbucket &lt; h-&gt;nevacuate)
+<span id="L67" class="ln">    67</span>							runtime·throw(&#34;unevacuated entry in an evacuated bucket&#34;);
+<span id="L68" class="ln">    68</span>						cnt++;
+<span id="L69" class="ln">    69</span>						t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, IK(h, k), IK(h, k));
+<span id="L70" class="ln">    70</span>						if(!eq)
+<span id="L71" class="ln">    71</span>							continue; // NaN!
+<span id="L72" class="ln">    72</span>						hash = h-&gt;hash0;
+<span id="L73" class="ln">    73</span>						t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, IK(h, k));
+<span id="L74" class="ln">    74</span>						top = hash &gt;&gt; (8*sizeof(uintptr) - 8);
+<span id="L75" class="ln">    75</span>						if(top &lt; MinTopHash)
+<span id="L76" class="ln">    76</span>							top += MinTopHash;
+<span id="L77" class="ln">    77</span>						if(top != b-&gt;tophash[i])
+<span id="L78" class="ln">    78</span>							runtime·throw(&#34;bad hash (old)&#34;);
+<span id="L79" class="ln">    79</span>					}
+<span id="L80" class="ln">    80</span>				}
+<span id="L81" class="ln">    81</span>			}
+<span id="L82" class="ln">    82</span>		}
+<span id="L83" class="ln">    83</span>	
+<span id="L84" class="ln">    84</span>		if(cnt != h-&gt;count) {
+<span id="L85" class="ln">    85</span>			runtime·printf(&#34;%D %D\n&#34;, (uint64)cnt, (uint64)h-&gt;count);
+<span id="L86" class="ln">    86</span>			runtime·throw(&#34;entries missing&#34;);
+<span id="L87" class="ln">    87</span>		}
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	static void
+<span id="L91" class="ln">    91</span>	hash_init(MapType *t, Hmap *h, uint32 hint)
+<span id="L92" class="ln">    92</span>	{
+<span id="L93" class="ln">    93</span>		uint8 B;
+<span id="L94" class="ln">    94</span>		byte *buckets;
+<span id="L95" class="ln">    95</span>		uintptr keysize, valuesize, bucketsize;
+<span id="L96" class="ln">    96</span>		uint8 flags;
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>		flags = 0;
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>		// figure out how big we have to make everything
+<span id="L101" class="ln">   101</span>		keysize = t-&gt;key-&gt;size;
+<span id="L102" class="ln">   102</span>		if(keysize &gt; MAXKEYSIZE) {
+<span id="L103" class="ln">   103</span>			flags |= IndirectKey;
+<span id="L104" class="ln">   104</span>			keysize = sizeof(byte*);
+<span id="L105" class="ln">   105</span>		}
+<span id="L106" class="ln">   106</span>		valuesize = t-&gt;elem-&gt;size;
+<span id="L107" class="ln">   107</span>		if(valuesize &gt; MAXVALUESIZE) {
+<span id="L108" class="ln">   108</span>			flags |= IndirectValue;
+<span id="L109" class="ln">   109</span>			valuesize = sizeof(byte*);
+<span id="L110" class="ln">   110</span>		}
+<span id="L111" class="ln">   111</span>		bucketsize = offsetof(Bucket, data[0]) + (keysize + valuesize) * BUCKETSIZE;
+<span id="L112" class="ln">   112</span>		if(bucketsize != t-&gt;bucket-&gt;size) {
+<span id="L113" class="ln">   113</span>			runtime·printf(&#34;runtime: bucketsize=%p but t-&gt;bucket-&gt;size=%p; t=%S\n&#34;, bucketsize, t-&gt;bucket-&gt;size, *t-&gt;string);
+<span id="L114" class="ln">   114</span>			runtime·throw(&#34;bucketsize wrong&#34;);
+<span id="L115" class="ln">   115</span>		}
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>		// invariants we depend on.  We should probably check these at compile time
+<span id="L118" class="ln">   118</span>		// somewhere, but for now we&#39;ll do it here.
+<span id="L119" class="ln">   119</span>		if(t-&gt;key-&gt;align &gt; BUCKETSIZE)
+<span id="L120" class="ln">   120</span>			runtime·throw(&#34;key align too big&#34;);
+<span id="L121" class="ln">   121</span>		if(t-&gt;elem-&gt;align &gt; BUCKETSIZE)
+<span id="L122" class="ln">   122</span>			runtime·throw(&#34;value align too big&#34;);
+<span id="L123" class="ln">   123</span>		if(t-&gt;key-&gt;size % t-&gt;key-&gt;align != 0)
+<span id="L124" class="ln">   124</span>			runtime·throw(&#34;key size not a multiple of key align&#34;);
+<span id="L125" class="ln">   125</span>		if(t-&gt;elem-&gt;size % t-&gt;elem-&gt;align != 0)
+<span id="L126" class="ln">   126</span>			runtime·throw(&#34;value size not a multiple of value align&#34;);
+<span id="L127" class="ln">   127</span>		if(BUCKETSIZE &lt; 8)
+<span id="L128" class="ln">   128</span>			runtime·throw(&#34;bucketsize too small for proper alignment&#34;);
+<span id="L129" class="ln">   129</span>		if((offsetof(Bucket, data[0]) &amp; (t-&gt;key-&gt;align-1)) != 0)
+<span id="L130" class="ln">   130</span>			runtime·throw(&#34;need padding in bucket (key)&#34;);
+<span id="L131" class="ln">   131</span>		if((offsetof(Bucket, data[0]) &amp; (t-&gt;elem-&gt;align-1)) != 0)
+<span id="L132" class="ln">   132</span>			runtime·throw(&#34;need padding in bucket (value)&#34;);
+<span id="L133" class="ln">   133</span>	
+<span id="L134" class="ln">   134</span>		// find size parameter which will hold the requested # of elements
+<span id="L135" class="ln">   135</span>		B = 0;
+<span id="L136" class="ln">   136</span>		while(hint &gt; BUCKETSIZE &amp;&amp; hint &gt; LOAD * ((uintptr)1 &lt;&lt; B))
+<span id="L137" class="ln">   137</span>			B++;
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>		// allocate initial hash table
+<span id="L140" class="ln">   140</span>		// If hint is large zeroing this memory could take a while.
+<span id="L141" class="ln">   141</span>		if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L142" class="ln">   142</span>		if(B == 0) {
+<span id="L143" class="ln">   143</span>			// done lazily later.
+<span id="L144" class="ln">   144</span>			buckets = nil;
+<span id="L145" class="ln">   145</span>		} else {
+<span id="L146" class="ln">   146</span>			buckets = runtime·cnewarray(t-&gt;bucket, (uintptr)1 &lt;&lt; B);
+<span id="L147" class="ln">   147</span>		}
+<span id="L148" class="ln">   148</span>	
+<span id="L149" class="ln">   149</span>		// initialize Hmap
+<span id="L150" class="ln">   150</span>		h-&gt;count = 0;
+<span id="L151" class="ln">   151</span>		h-&gt;B = B;
+<span id="L152" class="ln">   152</span>		h-&gt;flags = flags;
+<span id="L153" class="ln">   153</span>		h-&gt;keysize = keysize;
+<span id="L154" class="ln">   154</span>		h-&gt;valuesize = valuesize;
+<span id="L155" class="ln">   155</span>		h-&gt;bucketsize = bucketsize;
+<span id="L156" class="ln">   156</span>		h-&gt;hash0 = runtime·fastrand1();
+<span id="L157" class="ln">   157</span>		h-&gt;buckets = buckets;
+<span id="L158" class="ln">   158</span>		h-&gt;oldbuckets = nil;
+<span id="L159" class="ln">   159</span>		h-&gt;nevacuate = 0;
+<span id="L160" class="ln">   160</span>		if(docheck)
+<span id="L161" class="ln">   161</span>			check(t, h);
+<span id="L162" class="ln">   162</span>	}
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>	// Moves entries in oldbuckets[i] to buckets[i] and buckets[i+2^k].
+<span id="L165" class="ln">   165</span>	// We leave the original bucket intact, except for marking the topbits
+<span id="L166" class="ln">   166</span>	// entries as evacuated, so that iterators can still iterate through the old buckets.
+<span id="L167" class="ln">   167</span>	static void
+<span id="L168" class="ln">   168</span>	evacuate(MapType *t, Hmap *h, uintptr oldbucket)
+<span id="L169" class="ln">   169</span>	{
+<span id="L170" class="ln">   170</span>		Bucket *b;
+<span id="L171" class="ln">   171</span>		Bucket *x, *y;
+<span id="L172" class="ln">   172</span>		Bucket *newx, *newy;
+<span id="L173" class="ln">   173</span>		uintptr xi, yi;
+<span id="L174" class="ln">   174</span>		uintptr newbit;
+<span id="L175" class="ln">   175</span>		uintptr hash;
+<span id="L176" class="ln">   176</span>		uintptr i;
+<span id="L177" class="ln">   177</span>		byte *k, *v;
+<span id="L178" class="ln">   178</span>		byte *xk, *yk, *xv, *yv;
+<span id="L179" class="ln">   179</span>		uint8 top;
+<span id="L180" class="ln">   180</span>		bool eq;
+<span id="L181" class="ln">   181</span>	
+<span id="L182" class="ln">   182</span>		b = (Bucket*)(h-&gt;oldbuckets + oldbucket * h-&gt;bucketsize);
+<span id="L183" class="ln">   183</span>		newbit = (uintptr)1 &lt;&lt; (h-&gt;B - 1);
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>		if(!evacuated(b)) {
+<span id="L186" class="ln">   186</span>			// TODO: reuse overflow buckets instead of using new ones, if there
+<span id="L187" class="ln">   187</span>			// is no iterator using the old buckets.  (If !OldIterator.)
+<span id="L188" class="ln">   188</span>	
+<span id="L189" class="ln">   189</span>			x = (Bucket*)(h-&gt;buckets + oldbucket * h-&gt;bucketsize);
+<span id="L190" class="ln">   190</span>			y = (Bucket*)(h-&gt;buckets + (oldbucket + newbit) * h-&gt;bucketsize);
+<span id="L191" class="ln">   191</span>			xi = 0;
+<span id="L192" class="ln">   192</span>			yi = 0;
+<span id="L193" class="ln">   193</span>			xk = (byte*)x-&gt;data;
+<span id="L194" class="ln">   194</span>			yk = (byte*)y-&gt;data;
+<span id="L195" class="ln">   195</span>			xv = xk + h-&gt;keysize * BUCKETSIZE;
+<span id="L196" class="ln">   196</span>			yv = yk + h-&gt;keysize * BUCKETSIZE;
+<span id="L197" class="ln">   197</span>			for(; b != nil; b = b-&gt;overflow) {
+<span id="L198" class="ln">   198</span>				for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L199" class="ln">   199</span>					top = b-&gt;tophash[i];
+<span id="L200" class="ln">   200</span>					if(top == Empty) {
+<span id="L201" class="ln">   201</span>						b-&gt;tophash[i] = EvacuatedEmpty;
+<span id="L202" class="ln">   202</span>						continue;
+<span id="L203" class="ln">   203</span>					}
+<span id="L204" class="ln">   204</span>					if(top &lt; MinTopHash)
+<span id="L205" class="ln">   205</span>						runtime·throw(&#34;bad state&#34;);
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>					// Compute hash to make our evacuation decision (whether we need
+<span id="L208" class="ln">   208</span>					// to send this key/value to bucket x or bucket y).
+<span id="L209" class="ln">   209</span>					hash = h-&gt;hash0;
+<span id="L210" class="ln">   210</span>					t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, IK(h, k));
+<span id="L211" class="ln">   211</span>					if((h-&gt;flags &amp; Iterator) != 0) {
+<span id="L212" class="ln">   212</span>						t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, IK(h, k), IK(h, k));
+<span id="L213" class="ln">   213</span>						if(!eq) {
+<span id="L214" class="ln">   214</span>							// If key != key (NaNs), then the hash could be (and probably
+<span id="L215" class="ln">   215</span>							// will be) entirely different from the old hash.  Moreover,
+<span id="L216" class="ln">   216</span>							// it isn&#39;t reproducible.  Reproducibility is required in the
+<span id="L217" class="ln">   217</span>							// presence of iterators, as our evacuation decision must
+<span id="L218" class="ln">   218</span>							// match whatever decision the iterator made.
+<span id="L219" class="ln">   219</span>							// Fortunately, we have the freedom to send these keys either
+<span id="L220" class="ln">   220</span>							// way.  Also, tophash is meaningless for these kinds of keys.
+<span id="L221" class="ln">   221</span>							// We let the low bit of tophash drive the evacuation decision.
+<span id="L222" class="ln">   222</span>							// We recompute a new random tophash for the next level so
+<span id="L223" class="ln">   223</span>							// these keys will get evenly distributed across all buckets
+<span id="L224" class="ln">   224</span>							// after multiple grows.
+<span id="L225" class="ln">   225</span>							if((top &amp; 1) != 0)
+<span id="L226" class="ln">   226</span>								hash |= newbit;
+<span id="L227" class="ln">   227</span>							else
+<span id="L228" class="ln">   228</span>								hash &amp;= ~newbit;
+<span id="L229" class="ln">   229</span>							top = hash &gt;&gt; (8*sizeof(uintptr)-8);
+<span id="L230" class="ln">   230</span>							if(top &lt; MinTopHash)
+<span id="L231" class="ln">   231</span>								top += MinTopHash;
+<span id="L232" class="ln">   232</span>						}
+<span id="L233" class="ln">   233</span>					}
+<span id="L234" class="ln">   234</span>	
+<span id="L235" class="ln">   235</span>					if((hash &amp; newbit) == 0) {
+<span id="L236" class="ln">   236</span>						b-&gt;tophash[i] = EvacuatedX;
+<span id="L237" class="ln">   237</span>						if(xi == BUCKETSIZE) {
+<span id="L238" class="ln">   238</span>							if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L239" class="ln">   239</span>							newx = runtime·cnew(t-&gt;bucket);
+<span id="L240" class="ln">   240</span>							x-&gt;overflow = newx;
+<span id="L241" class="ln">   241</span>							x = newx;
+<span id="L242" class="ln">   242</span>							xi = 0;
+<span id="L243" class="ln">   243</span>							xk = (byte*)x-&gt;data;
+<span id="L244" class="ln">   244</span>							xv = xk + h-&gt;keysize * BUCKETSIZE;
+<span id="L245" class="ln">   245</span>						}
+<span id="L246" class="ln">   246</span>						x-&gt;tophash[xi] = top;
+<span id="L247" class="ln">   247</span>						if((h-&gt;flags &amp; IndirectKey) != 0) {
+<span id="L248" class="ln">   248</span>							*(byte**)xk = *(byte**)k;               // copy pointer
+<span id="L249" class="ln">   249</span>						} else {
+<span id="L250" class="ln">   250</span>							t-&gt;key-&gt;alg-&gt;copy(t-&gt;key-&gt;size, xk, k); // copy value
+<span id="L251" class="ln">   251</span>						}
+<span id="L252" class="ln">   252</span>						if((h-&gt;flags &amp; IndirectValue) != 0) {
+<span id="L253" class="ln">   253</span>							*(byte**)xv = *(byte**)v;
+<span id="L254" class="ln">   254</span>						} else {
+<span id="L255" class="ln">   255</span>							t-&gt;elem-&gt;alg-&gt;copy(t-&gt;elem-&gt;size, xv, v);
+<span id="L256" class="ln">   256</span>						}
+<span id="L257" class="ln">   257</span>						xi++;
+<span id="L258" class="ln">   258</span>						xk += h-&gt;keysize;
+<span id="L259" class="ln">   259</span>						xv += h-&gt;valuesize;
+<span id="L260" class="ln">   260</span>					} else {
+<span id="L261" class="ln">   261</span>						b-&gt;tophash[i] = EvacuatedY;
+<span id="L262" class="ln">   262</span>						if(yi == BUCKETSIZE) {
+<span id="L263" class="ln">   263</span>							if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L264" class="ln">   264</span>							newy = runtime·cnew(t-&gt;bucket);
+<span id="L265" class="ln">   265</span>							y-&gt;overflow = newy;
+<span id="L266" class="ln">   266</span>							y = newy;
+<span id="L267" class="ln">   267</span>							yi = 0;
+<span id="L268" class="ln">   268</span>							yk = (byte*)y-&gt;data;
+<span id="L269" class="ln">   269</span>							yv = yk + h-&gt;keysize * BUCKETSIZE;
+<span id="L270" class="ln">   270</span>						}
+<span id="L271" class="ln">   271</span>						y-&gt;tophash[yi] = top;
+<span id="L272" class="ln">   272</span>						if((h-&gt;flags &amp; IndirectKey) != 0) {
+<span id="L273" class="ln">   273</span>							*(byte**)yk = *(byte**)k;
+<span id="L274" class="ln">   274</span>						} else {
+<span id="L275" class="ln">   275</span>							t-&gt;key-&gt;alg-&gt;copy(t-&gt;key-&gt;size, yk, k);
+<span id="L276" class="ln">   276</span>						}
+<span id="L277" class="ln">   277</span>						if((h-&gt;flags &amp; IndirectValue) != 0) {
+<span id="L278" class="ln">   278</span>							*(byte**)yv = *(byte**)v;
+<span id="L279" class="ln">   279</span>						} else {
+<span id="L280" class="ln">   280</span>							t-&gt;elem-&gt;alg-&gt;copy(t-&gt;elem-&gt;size, yv, v);
+<span id="L281" class="ln">   281</span>						}
+<span id="L282" class="ln">   282</span>						yi++;
+<span id="L283" class="ln">   283</span>						yk += h-&gt;keysize;
+<span id="L284" class="ln">   284</span>						yv += h-&gt;valuesize;
+<span id="L285" class="ln">   285</span>					}
+<span id="L286" class="ln">   286</span>				}
+<span id="L287" class="ln">   287</span>			}
+<span id="L288" class="ln">   288</span>	
+<span id="L289" class="ln">   289</span>			// Unlink the overflow buckets &amp; clear key/value to help GC.
+<span id="L290" class="ln">   290</span>			if((h-&gt;flags &amp; OldIterator) == 0) {
+<span id="L291" class="ln">   291</span>				b = (Bucket*)(h-&gt;oldbuckets + oldbucket * h-&gt;bucketsize);
+<span id="L292" class="ln">   292</span>				b-&gt;overflow = nil;
+<span id="L293" class="ln">   293</span>				runtime·memclr((byte*)b-&gt;data, h-&gt;bucketsize - offsetof(Bucket, data[0]));
+<span id="L294" class="ln">   294</span>			}
+<span id="L295" class="ln">   295</span>		}
+<span id="L296" class="ln">   296</span>	
+<span id="L297" class="ln">   297</span>		// Advance evacuation mark
+<span id="L298" class="ln">   298</span>		if(oldbucket == h-&gt;nevacuate) {
+<span id="L299" class="ln">   299</span>			h-&gt;nevacuate = oldbucket + 1;
+<span id="L300" class="ln">   300</span>			if(oldbucket + 1 == newbit) // newbit == # of oldbuckets
+<span id="L301" class="ln">   301</span>				// Growing is all done.  Free old main bucket array.
+<span id="L302" class="ln">   302</span>				h-&gt;oldbuckets = nil;
+<span id="L303" class="ln">   303</span>		}
+<span id="L304" class="ln">   304</span>		if(docheck)
+<span id="L305" class="ln">   305</span>			check(t, h);
+<span id="L306" class="ln">   306</span>	}
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	static void
+<span id="L309" class="ln">   309</span>	grow_work(MapType *t, Hmap *h, uintptr bucket)
+<span id="L310" class="ln">   310</span>	{
+<span id="L311" class="ln">   311</span>		uintptr noldbuckets;
+<span id="L312" class="ln">   312</span>	
+<span id="L313" class="ln">   313</span>		noldbuckets = (uintptr)1 &lt;&lt; (h-&gt;B - 1);
+<span id="L314" class="ln">   314</span>	
+<span id="L315" class="ln">   315</span>		// make sure we evacuate the oldbucket corresponding
+<span id="L316" class="ln">   316</span>		// to the bucket we&#39;re about to use
+<span id="L317" class="ln">   317</span>		evacuate(t, h, bucket &amp; (noldbuckets - 1));
+<span id="L318" class="ln">   318</span>	
+<span id="L319" class="ln">   319</span>		// evacuate one more oldbucket to make progress on growing
+<span id="L320" class="ln">   320</span>		if(h-&gt;oldbuckets != nil)
+<span id="L321" class="ln">   321</span>			evacuate(t, h, h-&gt;nevacuate);
+<span id="L322" class="ln">   322</span>	}
+<span id="L323" class="ln">   323</span>	
+<span id="L324" class="ln">   324</span>	static void
+<span id="L325" class="ln">   325</span>	hash_grow(MapType *t, Hmap *h)
+<span id="L326" class="ln">   326</span>	{
+<span id="L327" class="ln">   327</span>		byte *old_buckets;
+<span id="L328" class="ln">   328</span>		byte *new_buckets;
+<span id="L329" class="ln">   329</span>		uint8 flags;
+<span id="L330" class="ln">   330</span>	
+<span id="L331" class="ln">   331</span>		// allocate a bigger hash table
+<span id="L332" class="ln">   332</span>		if(h-&gt;oldbuckets != nil)
+<span id="L333" class="ln">   333</span>			runtime·throw(&#34;evacuation not done in time&#34;);
+<span id="L334" class="ln">   334</span>		old_buckets = h-&gt;buckets;
+<span id="L335" class="ln">   335</span>		if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L336" class="ln">   336</span>		new_buckets = runtime·cnewarray(t-&gt;bucket, (uintptr)1 &lt;&lt; (h-&gt;B + 1));
+<span id="L337" class="ln">   337</span>		flags = (h-&gt;flags &amp; ~(Iterator | OldIterator));
+<span id="L338" class="ln">   338</span>		if((h-&gt;flags &amp; Iterator) != 0)
+<span id="L339" class="ln">   339</span>			flags |= OldIterator;
+<span id="L340" class="ln">   340</span>	
+<span id="L341" class="ln">   341</span>		// commit the grow (atomic wrt gc)
+<span id="L342" class="ln">   342</span>		h-&gt;B++;
+<span id="L343" class="ln">   343</span>		h-&gt;flags = flags;
+<span id="L344" class="ln">   344</span>		h-&gt;oldbuckets = old_buckets;
+<span id="L345" class="ln">   345</span>		h-&gt;buckets = new_buckets;
+<span id="L346" class="ln">   346</span>		h-&gt;nevacuate = 0;
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>		// the actual copying of the hash table data is done incrementally
+<span id="L349" class="ln">   349</span>		// by grow_work() and evacuate().
+<span id="L350" class="ln">   350</span>		if(docheck)
+<span id="L351" class="ln">   351</span>			check(t, h);
+<span id="L352" class="ln">   352</span>	}
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>	// returns ptr to value associated with key *keyp, or nil if none.
+<span id="L355" class="ln">   355</span>	// if it returns non-nil, updates *keyp to point to the currently stored key.
+<span id="L356" class="ln">   356</span>	static byte*
+<span id="L357" class="ln">   357</span>	hash_lookup(MapType *t, Hmap *h, byte **keyp)
+<span id="L358" class="ln">   358</span>	{
+<span id="L359" class="ln">   359</span>		void *key;
+<span id="L360" class="ln">   360</span>		uintptr hash;
+<span id="L361" class="ln">   361</span>		uintptr bucket, oldbucket;
+<span id="L362" class="ln">   362</span>		Bucket *b;
+<span id="L363" class="ln">   363</span>		uint8 top;
+<span id="L364" class="ln">   364</span>		uintptr i;
+<span id="L365" class="ln">   365</span>		bool eq;
+<span id="L366" class="ln">   366</span>		byte *k, *k2, *v;
+<span id="L367" class="ln">   367</span>	
+<span id="L368" class="ln">   368</span>		key = *keyp;
+<span id="L369" class="ln">   369</span>		if(docheck)
+<span id="L370" class="ln">   370</span>			check(t, h);
+<span id="L371" class="ln">   371</span>		if(h-&gt;count == 0)
+<span id="L372" class="ln">   372</span>			return nil;
+<span id="L373" class="ln">   373</span>		hash = h-&gt;hash0;
+<span id="L374" class="ln">   374</span>		t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, key);
+<span id="L375" class="ln">   375</span>		bucket = hash &amp; (((uintptr)1 &lt;&lt; h-&gt;B) - 1);
+<span id="L376" class="ln">   376</span>		if(h-&gt;oldbuckets != nil) {
+<span id="L377" class="ln">   377</span>			oldbucket = bucket &amp; (((uintptr)1 &lt;&lt; (h-&gt;B - 1)) - 1);
+<span id="L378" class="ln">   378</span>			b = (Bucket*)(h-&gt;oldbuckets + oldbucket * h-&gt;bucketsize);
+<span id="L379" class="ln">   379</span>			if(evacuated(b)) {
+<span id="L380" class="ln">   380</span>				b = (Bucket*)(h-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L381" class="ln">   381</span>			}
+<span id="L382" class="ln">   382</span>		} else {
+<span id="L383" class="ln">   383</span>			b = (Bucket*)(h-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L384" class="ln">   384</span>		}
+<span id="L385" class="ln">   385</span>		top = hash &gt;&gt; (sizeof(uintptr)*8 - 8);
+<span id="L386" class="ln">   386</span>		if(top &lt; MinTopHash)
+<span id="L387" class="ln">   387</span>			top += MinTopHash;
+<span id="L388" class="ln">   388</span>		do {
+<span id="L389" class="ln">   389</span>			for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L390" class="ln">   390</span>				if(b-&gt;tophash[i] == top) {
+<span id="L391" class="ln">   391</span>					k2 = IK(h, k);
+<span id="L392" class="ln">   392</span>					t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, key, k2);
+<span id="L393" class="ln">   393</span>					if(eq) {
+<span id="L394" class="ln">   394</span>						*keyp = k2;
+<span id="L395" class="ln">   395</span>						return IV(h, v);
+<span id="L396" class="ln">   396</span>					}
+<span id="L397" class="ln">   397</span>				}
+<span id="L398" class="ln">   398</span>			}
+<span id="L399" class="ln">   399</span>			b = b-&gt;overflow;
+<span id="L400" class="ln">   400</span>		} while(b != nil);
+<span id="L401" class="ln">   401</span>		return nil;
+<span id="L402" class="ln">   402</span>	}
+<span id="L403" class="ln">   403</span>	
+<span id="L404" class="ln">   404</span>	// Specialized versions of mapaccess1 for specific types.
+<span id="L405" class="ln">   405</span>	// See ./hashmap_fast.c and ../../cmd/gc/walk.c.
+<span id="L406" class="ln">   406</span>	#define HASH_LOOKUP1 runtime·mapaccess1_fast32
+<span id="L407" class="ln">   407</span>	#define HASH_LOOKUP2 runtime·mapaccess2_fast32
+<span id="L408" class="ln">   408</span>	#define KEYTYPE uint32
+<span id="L409" class="ln">   409</span>	#define HASHFUNC runtime·algarray[AMEM32].hash
+<span id="L410" class="ln">   410</span>	#define FASTKEY(x) true
+<span id="L411" class="ln">   411</span>	#define QUICK_NE(x,y) ((x) != (y))
+<span id="L412" class="ln">   412</span>	#define QUICK_EQ(x,y) true
+<span id="L413" class="ln">   413</span>	#define SLOW_EQ(x,y) true
+<span id="L414" class="ln">   414</span>	#define MAYBE_EQ(x,y) true
+<span id="L415" class="ln">   415</span>	#include &#34;hashmap_fast.c&#34;
+<span id="L416" class="ln">   416</span>	
+<span id="L417" class="ln">   417</span>	#undef HASH_LOOKUP1
+<span id="L418" class="ln">   418</span>	#undef HASH_LOOKUP2
+<span id="L419" class="ln">   419</span>	#undef KEYTYPE
+<span id="L420" class="ln">   420</span>	#undef HASHFUNC
+<span id="L421" class="ln">   421</span>	#undef FASTKEY
+<span id="L422" class="ln">   422</span>	#undef QUICK_NE
+<span id="L423" class="ln">   423</span>	#undef QUICK_EQ
+<span id="L424" class="ln">   424</span>	#undef SLOW_EQ
+<span id="L425" class="ln">   425</span>	#undef MAYBE_EQ
+<span id="L426" class="ln">   426</span>	
+<span id="L427" class="ln">   427</span>	#define HASH_LOOKUP1 runtime·mapaccess1_fast64
+<span id="L428" class="ln">   428</span>	#define HASH_LOOKUP2 runtime·mapaccess2_fast64
+<span id="L429" class="ln">   429</span>	#define KEYTYPE uint64
+<span id="L430" class="ln">   430</span>	#define HASHFUNC runtime·algarray[AMEM64].hash
+<span id="L431" class="ln">   431</span>	#define FASTKEY(x) true
+<span id="L432" class="ln">   432</span>	#define QUICK_NE(x,y) ((x) != (y))
+<span id="L433" class="ln">   433</span>	#define QUICK_EQ(x,y) true
+<span id="L434" class="ln">   434</span>	#define SLOW_EQ(x,y) true
+<span id="L435" class="ln">   435</span>	#define MAYBE_EQ(x,y) true
+<span id="L436" class="ln">   436</span>	#include &#34;hashmap_fast.c&#34;
+<span id="L437" class="ln">   437</span>	
+<span id="L438" class="ln">   438</span>	#undef HASH_LOOKUP1
+<span id="L439" class="ln">   439</span>	#undef HASH_LOOKUP2
+<span id="L440" class="ln">   440</span>	#undef KEYTYPE
+<span id="L441" class="ln">   441</span>	#undef HASHFUNC
+<span id="L442" class="ln">   442</span>	#undef FASTKEY
+<span id="L443" class="ln">   443</span>	#undef QUICK_NE
+<span id="L444" class="ln">   444</span>	#undef QUICK_EQ
+<span id="L445" class="ln">   445</span>	#undef SLOW_EQ
+<span id="L446" class="ln">   446</span>	#undef MAYBE_EQ
+<span id="L447" class="ln">   447</span>	
+<span id="L448" class="ln">   448</span>	#ifdef GOARCH_amd64
+<span id="L449" class="ln">   449</span>	#define CHECKTYPE uint64
+<span id="L450" class="ln">   450</span>	#endif
+<span id="L451" class="ln">   451</span>	#ifdef GOARCH_amd64p32
+<span id="L452" class="ln">   452</span>	#define CHECKTYPE uint32
+<span id="L453" class="ln">   453</span>	#endif
+<span id="L454" class="ln">   454</span>	#ifdef GOARCH_386
+<span id="L455" class="ln">   455</span>	#define CHECKTYPE uint32
+<span id="L456" class="ln">   456</span>	#endif
+<span id="L457" class="ln">   457</span>	#ifdef GOARCH_arm
+<span id="L458" class="ln">   458</span>	// can&#39;t use uint32 on arm because our loads aren&#39;t aligned.
+<span id="L459" class="ln">   459</span>	// TODO: use uint32 for arm v6+?
+<span id="L460" class="ln">   460</span>	#define CHECKTYPE uint8
+<span id="L461" class="ln">   461</span>	#endif
+<span id="L462" class="ln">   462</span>	
+<span id="L463" class="ln">   463</span>	#define HASH_LOOKUP1 runtime·mapaccess1_faststr
+<span id="L464" class="ln">   464</span>	#define HASH_LOOKUP2 runtime·mapaccess2_faststr
+<span id="L465" class="ln">   465</span>	#define KEYTYPE String
+<span id="L466" class="ln">   466</span>	#define HASHFUNC runtime·algarray[ASTRING].hash
+<span id="L467" class="ln">   467</span>	#define FASTKEY(x) ((x).len &lt; 32)
+<span id="L468" class="ln">   468</span>	#define QUICK_NE(x,y) ((x).len != (y).len)
+<span id="L469" class="ln">   469</span>	#define QUICK_EQ(x,y) ((x).str == (y).str)
+<span id="L470" class="ln">   470</span>	#define SLOW_EQ(x,y) runtime·memeq((x).str, (y).str, (x).len)
+<span id="L471" class="ln">   471</span>	#define MAYBE_EQ(x,y) (*(CHECKTYPE*)(x).str == *(CHECKTYPE*)(y).str &amp;&amp; *(CHECKTYPE*)((x).str + (x).len - sizeof(CHECKTYPE)) == *(CHECKTYPE*)((y).str + (x).len - sizeof(CHECKTYPE)))
+<span id="L472" class="ln">   472</span>	#include &#34;hashmap_fast.c&#34;
+<span id="L473" class="ln">   473</span>	
+<span id="L474" class="ln">   474</span>	static void
+<span id="L475" class="ln">   475</span>	hash_insert(MapType *t, Hmap *h, void *key, void *value)
+<span id="L476" class="ln">   476</span>	{
+<span id="L477" class="ln">   477</span>		uintptr hash;
+<span id="L478" class="ln">   478</span>		uintptr bucket;
+<span id="L479" class="ln">   479</span>		uintptr i;
+<span id="L480" class="ln">   480</span>		bool eq;
+<span id="L481" class="ln">   481</span>		Bucket *b;
+<span id="L482" class="ln">   482</span>		Bucket *newb;
+<span id="L483" class="ln">   483</span>		uint8 *inserti;
+<span id="L484" class="ln">   484</span>		byte *insertk, *insertv;
+<span id="L485" class="ln">   485</span>		uint8 top;
+<span id="L486" class="ln">   486</span>		byte *k, *v;
+<span id="L487" class="ln">   487</span>		byte *kmem, *vmem;
+<span id="L488" class="ln">   488</span>	
+<span id="L489" class="ln">   489</span>		if(docheck)
+<span id="L490" class="ln">   490</span>			check(t, h);
+<span id="L491" class="ln">   491</span>		hash = h-&gt;hash0;
+<span id="L492" class="ln">   492</span>		t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, key);
+<span id="L493" class="ln">   493</span>		if(h-&gt;buckets == nil)
+<span id="L494" class="ln">   494</span>			h-&gt;buckets = runtime·cnewarray(t-&gt;bucket, 1);
+<span id="L495" class="ln">   495</span>	
+<span id="L496" class="ln">   496</span>	 again:
+<span id="L497" class="ln">   497</span>		bucket = hash &amp; (((uintptr)1 &lt;&lt; h-&gt;B) - 1);
+<span id="L498" class="ln">   498</span>		if(h-&gt;oldbuckets != nil)
+<span id="L499" class="ln">   499</span>			grow_work(t, h, bucket);
+<span id="L500" class="ln">   500</span>		b = (Bucket*)(h-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L501" class="ln">   501</span>		top = hash &gt;&gt; (sizeof(uintptr)*8 - 8);
+<span id="L502" class="ln">   502</span>		if(top &lt; MinTopHash)
+<span id="L503" class="ln">   503</span>			top += MinTopHash;
+<span id="L504" class="ln">   504</span>		inserti = nil;
+<span id="L505" class="ln">   505</span>		insertk = nil;
+<span id="L506" class="ln">   506</span>		insertv = nil;
+<span id="L507" class="ln">   507</span>		while(true) {
+<span id="L508" class="ln">   508</span>			for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L509" class="ln">   509</span>				if(b-&gt;tophash[i] != top) {
+<span id="L510" class="ln">   510</span>					if(b-&gt;tophash[i] == Empty &amp;&amp; inserti == nil) {
+<span id="L511" class="ln">   511</span>						inserti = &amp;b-&gt;tophash[i];
+<span id="L512" class="ln">   512</span>						insertk = k;
+<span id="L513" class="ln">   513</span>						insertv = v;
+<span id="L514" class="ln">   514</span>					}
+<span id="L515" class="ln">   515</span>					continue;
+<span id="L516" class="ln">   516</span>				}
+<span id="L517" class="ln">   517</span>				t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, key, IK(h, k));
+<span id="L518" class="ln">   518</span>				if(!eq)
+<span id="L519" class="ln">   519</span>					continue;
+<span id="L520" class="ln">   520</span>				// already have a mapping for key.  Update it.
+<span id="L521" class="ln">   521</span>				t-&gt;key-&gt;alg-&gt;copy(t-&gt;key-&gt;size, IK(h, k), key); // Need to update key for keys which are distinct but equal (e.g. +0.0 and -0.0)
+<span id="L522" class="ln">   522</span>				t-&gt;elem-&gt;alg-&gt;copy(t-&gt;elem-&gt;size, IV(h, v), value);
+<span id="L523" class="ln">   523</span>				if(docheck)
+<span id="L524" class="ln">   524</span>					check(t, h);
+<span id="L525" class="ln">   525</span>				return;
+<span id="L526" class="ln">   526</span>			}
+<span id="L527" class="ln">   527</span>			if(b-&gt;overflow == nil)
+<span id="L528" class="ln">   528</span>				break;
+<span id="L529" class="ln">   529</span>			b = b-&gt;overflow;
+<span id="L530" class="ln">   530</span>		}
+<span id="L531" class="ln">   531</span>	
+<span id="L532" class="ln">   532</span>		// did not find mapping for key.  Allocate new cell &amp; add entry.
+<span id="L533" class="ln">   533</span>		if(h-&gt;count &gt;= LOAD * ((uintptr)1 &lt;&lt; h-&gt;B) &amp;&amp; h-&gt;count &gt;= BUCKETSIZE) {
+<span id="L534" class="ln">   534</span>			hash_grow(t, h);
+<span id="L535" class="ln">   535</span>			goto again; // Growing the table invalidates everything, so try again
+<span id="L536" class="ln">   536</span>		}
+<span id="L537" class="ln">   537</span>	
+<span id="L538" class="ln">   538</span>		if(inserti == nil) {
+<span id="L539" class="ln">   539</span>			// all current buckets are full, allocate a new one.
+<span id="L540" class="ln">   540</span>			if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L541" class="ln">   541</span>			newb = runtime·cnew(t-&gt;bucket);
+<span id="L542" class="ln">   542</span>			b-&gt;overflow = newb;
+<span id="L543" class="ln">   543</span>			inserti = newb-&gt;tophash;
+<span id="L544" class="ln">   544</span>			insertk = (byte*)newb-&gt;data;
+<span id="L545" class="ln">   545</span>			insertv = insertk + h-&gt;keysize * BUCKETSIZE;
+<span id="L546" class="ln">   546</span>		}
+<span id="L547" class="ln">   547</span>	
+<span id="L548" class="ln">   548</span>		// store new key/value at insert position
+<span id="L549" class="ln">   549</span>		if((h-&gt;flags &amp; IndirectKey) != 0) {
+<span id="L550" class="ln">   550</span>			if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L551" class="ln">   551</span>			kmem = runtime·cnew(t-&gt;key);
+<span id="L552" class="ln">   552</span>			*(byte**)insertk = kmem;
+<span id="L553" class="ln">   553</span>			insertk = kmem;
+<span id="L554" class="ln">   554</span>		}
+<span id="L555" class="ln">   555</span>		if((h-&gt;flags &amp; IndirectValue) != 0) {
+<span id="L556" class="ln">   556</span>			if(checkgc) mstats.next_gc = mstats.heap_alloc;
+<span id="L557" class="ln">   557</span>			vmem = runtime·cnew(t-&gt;elem);
+<span id="L558" class="ln">   558</span>			*(byte**)insertv = vmem;
+<span id="L559" class="ln">   559</span>			insertv = vmem;
+<span id="L560" class="ln">   560</span>		}
+<span id="L561" class="ln">   561</span>		t-&gt;key-&gt;alg-&gt;copy(t-&gt;key-&gt;size, insertk, key);
+<span id="L562" class="ln">   562</span>		t-&gt;elem-&gt;alg-&gt;copy(t-&gt;elem-&gt;size, insertv, value);
+<span id="L563" class="ln">   563</span>		*inserti = top;
+<span id="L564" class="ln">   564</span>		h-&gt;count++;
+<span id="L565" class="ln">   565</span>		if(docheck)
+<span id="L566" class="ln">   566</span>			check(t, h);
+<span id="L567" class="ln">   567</span>	}
+<span id="L568" class="ln">   568</span>	
+<span id="L569" class="ln">   569</span>	static void
+<span id="L570" class="ln">   570</span>	hash_remove(MapType *t, Hmap *h, void *key)
+<span id="L571" class="ln">   571</span>	{
+<span id="L572" class="ln">   572</span>		uintptr hash;
+<span id="L573" class="ln">   573</span>		uintptr bucket;
+<span id="L574" class="ln">   574</span>		Bucket *b;
+<span id="L575" class="ln">   575</span>		uint8 top;
+<span id="L576" class="ln">   576</span>		uintptr i;
+<span id="L577" class="ln">   577</span>		byte *k, *v;
+<span id="L578" class="ln">   578</span>		bool eq;
+<span id="L579" class="ln">   579</span>		
+<span id="L580" class="ln">   580</span>		if(docheck)
+<span id="L581" class="ln">   581</span>			check(t, h);
+<span id="L582" class="ln">   582</span>		if(h-&gt;count == 0)
+<span id="L583" class="ln">   583</span>			return;
+<span id="L584" class="ln">   584</span>		hash = h-&gt;hash0;
+<span id="L585" class="ln">   585</span>		t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, key);
+<span id="L586" class="ln">   586</span>		bucket = hash &amp; (((uintptr)1 &lt;&lt; h-&gt;B) - 1);
+<span id="L587" class="ln">   587</span>		if(h-&gt;oldbuckets != nil)
+<span id="L588" class="ln">   588</span>			grow_work(t, h, bucket);
+<span id="L589" class="ln">   589</span>		b = (Bucket*)(h-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L590" class="ln">   590</span>		top = hash &gt;&gt; (sizeof(uintptr)*8 - 8);
+<span id="L591" class="ln">   591</span>		if(top &lt; MinTopHash)
+<span id="L592" class="ln">   592</span>			top += MinTopHash;
+<span id="L593" class="ln">   593</span>		do {
+<span id="L594" class="ln">   594</span>			for(i = 0, k = (byte*)b-&gt;data, v = k + h-&gt;keysize * BUCKETSIZE; i &lt; BUCKETSIZE; i++, k += h-&gt;keysize, v += h-&gt;valuesize) {
+<span id="L595" class="ln">   595</span>				if(b-&gt;tophash[i] != top)
+<span id="L596" class="ln">   596</span>					continue;
+<span id="L597" class="ln">   597</span>				t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, key, IK(h, k));
+<span id="L598" class="ln">   598</span>				if(!eq)
+<span id="L599" class="ln">   599</span>					continue;
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>				if((h-&gt;flags &amp; IndirectKey) != 0) {
+<span id="L602" class="ln">   602</span>					*(byte**)k = nil;
+<span id="L603" class="ln">   603</span>				} else {
+<span id="L604" class="ln">   604</span>					t-&gt;key-&gt;alg-&gt;copy(t-&gt;key-&gt;size, k, nil);
+<span id="L605" class="ln">   605</span>				}
+<span id="L606" class="ln">   606</span>				if((h-&gt;flags &amp; IndirectValue) != 0) {
+<span id="L607" class="ln">   607</span>					*(byte**)v = nil;
+<span id="L608" class="ln">   608</span>				} else {
+<span id="L609" class="ln">   609</span>					t-&gt;elem-&gt;alg-&gt;copy(t-&gt;elem-&gt;size, v, nil);
+<span id="L610" class="ln">   610</span>				}
+<span id="L611" class="ln">   611</span>	
+<span id="L612" class="ln">   612</span>				b-&gt;tophash[i] = Empty;
+<span id="L613" class="ln">   613</span>				h-&gt;count--;
+<span id="L614" class="ln">   614</span>				
+<span id="L615" class="ln">   615</span>				// TODO: consolidate buckets if they are mostly empty
+<span id="L616" class="ln">   616</span>				// can only consolidate if there are no live iterators at this size.
+<span id="L617" class="ln">   617</span>				if(docheck)
+<span id="L618" class="ln">   618</span>					check(t, h);
+<span id="L619" class="ln">   619</span>				return;
+<span id="L620" class="ln">   620</span>			}
+<span id="L621" class="ln">   621</span>			b = b-&gt;overflow;
+<span id="L622" class="ln">   622</span>		} while(b != nil);
+<span id="L623" class="ln">   623</span>	}
+<span id="L624" class="ln">   624</span>	
+<span id="L625" class="ln">   625</span>	// TODO: shrink the map, the same way we grow it.
+<span id="L626" class="ln">   626</span>	
+<span id="L627" class="ln">   627</span>	// iterator state:
+<span id="L628" class="ln">   628</span>	// bucket: the current bucket ID
+<span id="L629" class="ln">   629</span>	// b: the current Bucket in the chain
+<span id="L630" class="ln">   630</span>	// i: the next offset to check in the current bucket
+<span id="L631" class="ln">   631</span>	static void
+<span id="L632" class="ln">   632</span>	hash_iter_init(MapType *t, Hmap *h, Hiter *it)
+<span id="L633" class="ln">   633</span>	{
+<span id="L634" class="ln">   634</span>		uint32 old;
+<span id="L635" class="ln">   635</span>	
+<span id="L636" class="ln">   636</span>		if(sizeof(Hiter) / sizeof(uintptr) != 10) {
+<span id="L637" class="ln">   637</span>			runtime·throw(&#34;hash_iter size incorrect&#34;); // see ../../cmd/gc/reflect.c
+<span id="L638" class="ln">   638</span>		}
+<span id="L639" class="ln">   639</span>		it-&gt;t = t;
+<span id="L640" class="ln">   640</span>		it-&gt;h = h;
+<span id="L641" class="ln">   641</span>	
+<span id="L642" class="ln">   642</span>		// grab snapshot of bucket state
+<span id="L643" class="ln">   643</span>		it-&gt;B = h-&gt;B;
+<span id="L644" class="ln">   644</span>		it-&gt;buckets = h-&gt;buckets;
+<span id="L645" class="ln">   645</span>	
+<span id="L646" class="ln">   646</span>		// iterator state
+<span id="L647" class="ln">   647</span>		it-&gt;bucket = 0;
+<span id="L648" class="ln">   648</span>		it-&gt;offset = runtime·fastrand1() &amp; (BUCKETSIZE - 1);
+<span id="L649" class="ln">   649</span>		it-&gt;done = false;
+<span id="L650" class="ln">   650</span>		it-&gt;bptr = nil;
+<span id="L651" class="ln">   651</span>	
+<span id="L652" class="ln">   652</span>		// Remember we have an iterator.
+<span id="L653" class="ln">   653</span>		// Can run concurrently with another hash_iter_init().
+<span id="L654" class="ln">   654</span>		for(;;) {
+<span id="L655" class="ln">   655</span>			old = h-&gt;flags;
+<span id="L656" class="ln">   656</span>			if((old&amp;(Iterator|OldIterator)) == (Iterator|OldIterator))
+<span id="L657" class="ln">   657</span>				break;
+<span id="L658" class="ln">   658</span>			if(runtime·cas(&amp;h-&gt;flags, old, old|Iterator|OldIterator))
+<span id="L659" class="ln">   659</span>				break;
+<span id="L660" class="ln">   660</span>		}
+<span id="L661" class="ln">   661</span>	
+<span id="L662" class="ln">   662</span>		if(h-&gt;buckets == nil) {
+<span id="L663" class="ln">   663</span>			// Empty map. Force next hash_next to exit without
+<span id="L664" class="ln">   664</span>			// evaluating h-&gt;bucket.
+<span id="L665" class="ln">   665</span>			it-&gt;done = true;
+<span id="L666" class="ln">   666</span>		}
+<span id="L667" class="ln">   667</span>	}
+<span id="L668" class="ln">   668</span>	
+<span id="L669" class="ln">   669</span>	// initializes it-&gt;key and it-&gt;value to the next key/value pair
+<span id="L670" class="ln">   670</span>	// in the iteration, or nil if we&#39;ve reached the end.
+<span id="L671" class="ln">   671</span>	static void
+<span id="L672" class="ln">   672</span>	hash_next(Hiter *it)
+<span id="L673" class="ln">   673</span>	{
+<span id="L674" class="ln">   674</span>		Hmap *h;
+<span id="L675" class="ln">   675</span>		MapType *t;
+<span id="L676" class="ln">   676</span>		uintptr bucket, oldbucket;
+<span id="L677" class="ln">   677</span>		uintptr hash;
+<span id="L678" class="ln">   678</span>		Bucket *b;
+<span id="L679" class="ln">   679</span>		uintptr i, offi;
+<span id="L680" class="ln">   680</span>		intptr check_bucket;
+<span id="L681" class="ln">   681</span>		bool eq;
+<span id="L682" class="ln">   682</span>		byte *k, *v;
+<span id="L683" class="ln">   683</span>		byte *rk, *rv;
+<span id="L684" class="ln">   684</span>	
+<span id="L685" class="ln">   685</span>		h = it-&gt;h;
+<span id="L686" class="ln">   686</span>		t = it-&gt;t;
+<span id="L687" class="ln">   687</span>		bucket = it-&gt;bucket;
+<span id="L688" class="ln">   688</span>		b = it-&gt;bptr;
+<span id="L689" class="ln">   689</span>		i = it-&gt;i;
+<span id="L690" class="ln">   690</span>		check_bucket = it-&gt;check_bucket;
+<span id="L691" class="ln">   691</span>	
+<span id="L692" class="ln">   692</span>	next:
+<span id="L693" class="ln">   693</span>		if(b == nil) {
+<span id="L694" class="ln">   694</span>			if(it-&gt;done) {
+<span id="L695" class="ln">   695</span>				// end of iteration
+<span id="L696" class="ln">   696</span>				it-&gt;key = nil;
+<span id="L697" class="ln">   697</span>				it-&gt;value = nil;
+<span id="L698" class="ln">   698</span>				return;
+<span id="L699" class="ln">   699</span>			}
+<span id="L700" class="ln">   700</span>			if(h-&gt;oldbuckets != nil &amp;&amp; it-&gt;B == h-&gt;B) {
+<span id="L701" class="ln">   701</span>				// Iterator was started in the middle of a grow, and the grow isn&#39;t done yet.
+<span id="L702" class="ln">   702</span>				// If the bucket we&#39;re looking at hasn&#39;t been filled in yet (i.e. the old
+<span id="L703" class="ln">   703</span>				// bucket hasn&#39;t been evacuated) then we need to iterate through the old
+<span id="L704" class="ln">   704</span>				// bucket and only return the ones that will be migrated to this bucket.
+<span id="L705" class="ln">   705</span>				oldbucket = bucket &amp; (((uintptr)1 &lt;&lt; (it-&gt;B - 1)) - 1);
+<span id="L706" class="ln">   706</span>				b = (Bucket*)(h-&gt;oldbuckets + oldbucket * h-&gt;bucketsize);
+<span id="L707" class="ln">   707</span>				if(!evacuated(b)) {
+<span id="L708" class="ln">   708</span>					check_bucket = bucket;
+<span id="L709" class="ln">   709</span>				} else {
+<span id="L710" class="ln">   710</span>					b = (Bucket*)(it-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L711" class="ln">   711</span>					check_bucket = -1;
+<span id="L712" class="ln">   712</span>				}
+<span id="L713" class="ln">   713</span>			} else {
+<span id="L714" class="ln">   714</span>				b = (Bucket*)(it-&gt;buckets + bucket * h-&gt;bucketsize);
+<span id="L715" class="ln">   715</span>				check_bucket = -1;
+<span id="L716" class="ln">   716</span>			}
+<span id="L717" class="ln">   717</span>			bucket++;
+<span id="L718" class="ln">   718</span>			if(bucket == ((uintptr)1 &lt;&lt; it-&gt;B)) {
+<span id="L719" class="ln">   719</span>				bucket = 0;
+<span id="L720" class="ln">   720</span>				it-&gt;done = true;
+<span id="L721" class="ln">   721</span>			}
+<span id="L722" class="ln">   722</span>			i = 0;
+<span id="L723" class="ln">   723</span>		}
+<span id="L724" class="ln">   724</span>		for(; i &lt; BUCKETSIZE; i++) {
+<span id="L725" class="ln">   725</span>			offi = (i + it-&gt;offset) &amp; (BUCKETSIZE - 1);
+<span id="L726" class="ln">   726</span>			k = (byte*)b-&gt;data + h-&gt;keysize * offi;
+<span id="L727" class="ln">   727</span>			v = (byte*)b-&gt;data + h-&gt;keysize * BUCKETSIZE + h-&gt;valuesize * offi;
+<span id="L728" class="ln">   728</span>			if(b-&gt;tophash[offi] != Empty &amp;&amp; b-&gt;tophash[offi] != EvacuatedEmpty) {
+<span id="L729" class="ln">   729</span>				if(check_bucket &gt;= 0) {
+<span id="L730" class="ln">   730</span>					// Special case: iterator was started during a grow and the
+<span id="L731" class="ln">   731</span>					// grow is not done yet.  We&#39;re working on a bucket whose
+<span id="L732" class="ln">   732</span>					// oldbucket has not been evacuated yet.  Or at least, it wasn&#39;t
+<span id="L733" class="ln">   733</span>					// evacuated when we started the bucket.  So we&#39;re iterating
+<span id="L734" class="ln">   734</span>					// through the oldbucket, skipping any keys that will go
+<span id="L735" class="ln">   735</span>					// to the other new bucket (each oldbucket expands to two
+<span id="L736" class="ln">   736</span>					// buckets during a grow).
+<span id="L737" class="ln">   737</span>					t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, IK(h, k), IK(h, k));
+<span id="L738" class="ln">   738</span>					if(eq) {
+<span id="L739" class="ln">   739</span>						// If the item in the oldbucket is not destined for
+<span id="L740" class="ln">   740</span>						// the current new bucket in the iteration, skip it.
+<span id="L741" class="ln">   741</span>						hash = h-&gt;hash0;
+<span id="L742" class="ln">   742</span>						t-&gt;key-&gt;alg-&gt;hash(&amp;hash, t-&gt;key-&gt;size, IK(h, k));
+<span id="L743" class="ln">   743</span>						if((hash &amp; (((uintptr)1 &lt;&lt; it-&gt;B) - 1)) != check_bucket) {
+<span id="L744" class="ln">   744</span>							continue;
+<span id="L745" class="ln">   745</span>						}
+<span id="L746" class="ln">   746</span>					} else {
+<span id="L747" class="ln">   747</span>						// Hash isn&#39;t repeatable if k != k (NaNs).  We need a
+<span id="L748" class="ln">   748</span>						// repeatable and randomish choice of which direction
+<span id="L749" class="ln">   749</span>						// to send NaNs during evacuation.  We&#39;ll use the low
+<span id="L750" class="ln">   750</span>						// bit of tophash to decide which way NaNs go.
+<span id="L751" class="ln">   751</span>						// NOTE: this case is why we need two evacuate tophash
+<span id="L752" class="ln">   752</span>						// values, evacuatedX and evacuatedY, that differ in
+<span id="L753" class="ln">   753</span>						// their low bit.
+<span id="L754" class="ln">   754</span>						if(check_bucket &gt;&gt; (it-&gt;B - 1) != (b-&gt;tophash[offi] &amp; 1)) {
+<span id="L755" class="ln">   755</span>							continue;
+<span id="L756" class="ln">   756</span>						}
+<span id="L757" class="ln">   757</span>					}
+<span id="L758" class="ln">   758</span>				}
+<span id="L759" class="ln">   759</span>				if(b-&gt;tophash[offi] != EvacuatedX &amp;&amp; b-&gt;tophash[offi] != EvacuatedY) {
+<span id="L760" class="ln">   760</span>					// this is the golden data, we can return it.
+<span id="L761" class="ln">   761</span>					it-&gt;key = IK(h, k);
+<span id="L762" class="ln">   762</span>					it-&gt;value = IV(h, v);
+<span id="L763" class="ln">   763</span>				} else {
+<span id="L764" class="ln">   764</span>					// The hash table has grown since the iterator was started.
+<span id="L765" class="ln">   765</span>					// The golden data for this key is now somewhere else.
+<span id="L766" class="ln">   766</span>					t-&gt;key-&gt;alg-&gt;equal(&amp;eq, t-&gt;key-&gt;size, IK(h, k), IK(h, k));
+<span id="L767" class="ln">   767</span>					if(eq) {
+<span id="L768" class="ln">   768</span>						// Check the current hash table for the data.
+<span id="L769" class="ln">   769</span>						// This code handles the case where the key
+<span id="L770" class="ln">   770</span>						// has been deleted, updated, or deleted and reinserted.
+<span id="L771" class="ln">   771</span>						// NOTE: we need to regrab the key as it has potentially been
+<span id="L772" class="ln">   772</span>						// updated to an equal() but not identical key (e.g. +0.0 vs -0.0).
+<span id="L773" class="ln">   773</span>						rk = IK(h, k);
+<span id="L774" class="ln">   774</span>						rv = hash_lookup(t, it-&gt;h, &amp;rk);
+<span id="L775" class="ln">   775</span>						if(rv == nil)
+<span id="L776" class="ln">   776</span>							continue; // key has been deleted
+<span id="L777" class="ln">   777</span>						it-&gt;key = rk;
+<span id="L778" class="ln">   778</span>						it-&gt;value = rv;
+<span id="L779" class="ln">   779</span>					} else {
+<span id="L780" class="ln">   780</span>						// if key!=key then the entry can&#39;t be deleted or
+<span id="L781" class="ln">   781</span>						// updated, so we can just return it.  That&#39;s lucky for
+<span id="L782" class="ln">   782</span>						// us because when key!=key we can&#39;t look it up
+<span id="L783" class="ln">   783</span>						// successfully in the current table.
+<span id="L784" class="ln">   784</span>						it-&gt;key = IK(h, k);
+<span id="L785" class="ln">   785</span>						it-&gt;value = IV(h, v);
+<span id="L786" class="ln">   786</span>					}
+<span id="L787" class="ln">   787</span>				}
+<span id="L788" class="ln">   788</span>				it-&gt;bucket = bucket;
+<span id="L789" class="ln">   789</span>				it-&gt;bptr = b;
+<span id="L790" class="ln">   790</span>				it-&gt;i = i + 1;
+<span id="L791" class="ln">   791</span>				it-&gt;check_bucket = check_bucket;
+<span id="L792" class="ln">   792</span>				return;
+<span id="L793" class="ln">   793</span>			}
+<span id="L794" class="ln">   794</span>		}
+<span id="L795" class="ln">   795</span>		b = b-&gt;overflow;
+<span id="L796" class="ln">   796</span>		i = 0;
+<span id="L797" class="ln">   797</span>		goto next;
+<span id="L798" class="ln">   798</span>	}
+<span id="L799" class="ln">   799</span>	
+<span id="L800" class="ln">   800</span>	//
+<span id="L801" class="ln">   801</span>	/// interfaces to go runtime
+<span id="L802" class="ln">   802</span>	//
+<span id="L803" class="ln">   803</span>	
+<span id="L804" class="ln">   804</span>	func reflect·ismapkey(typ *Type) (ret bool) {
+<span id="L805" class="ln">   805</span>		ret = typ != nil &amp;&amp; typ-&gt;alg-&gt;hash != runtime·nohash;
+<span id="L806" class="ln">   806</span>	}
+<span id="L807" class="ln">   807</span>	
+<span id="L808" class="ln">   808</span>	static Hmap*
+<span id="L809" class="ln">   809</span>	makemap_c(MapType *typ, int64 hint)
+<span id="L810" class="ln">   810</span>	{
+<span id="L811" class="ln">   811</span>		Hmap *h;
+<span id="L812" class="ln">   812</span>		Type *key;
+<span id="L813" class="ln">   813</span>	
+<span id="L814" class="ln">   814</span>		key = typ-&gt;key;
+<span id="L815" class="ln">   815</span>		
+<span id="L816" class="ln">   816</span>		if(sizeof(Hmap) &gt; 48)
+<span id="L817" class="ln">   817</span>			runtime·panicstring(&#34;hmap too large&#34;);
+<span id="L818" class="ln">   818</span>	
+<span id="L819" class="ln">   819</span>		if(hint &lt; 0 || (int32)hint != hint)
+<span id="L820" class="ln">   820</span>			runtime·panicstring(&#34;makemap: size out of range&#34;);
+<span id="L821" class="ln">   821</span>	
+<span id="L822" class="ln">   822</span>		if(key-&gt;alg-&gt;hash == runtime·nohash)
+<span id="L823" class="ln">   823</span>			runtime·throw(&#34;runtime.makemap: unsupported map key type&#34;);
+<span id="L824" class="ln">   824</span>	
+<span id="L825" class="ln">   825</span>		h = runtime·cnew(typ-&gt;hmap);
+<span id="L826" class="ln">   826</span>		hash_init(typ, h, hint);
+<span id="L827" class="ln">   827</span>	
+<span id="L828" class="ln">   828</span>		// these calculations are compiler dependent.
+<span id="L829" class="ln">   829</span>		// figure out offsets of map call arguments.
+<span id="L830" class="ln">   830</span>	
+<span id="L831" class="ln">   831</span>		if(debug) {
+<span id="L832" class="ln">   832</span>			runtime·printf(&#34;makemap: map=%p; keysize=%p; valsize=%p; keyalg=%p; valalg=%p\n&#34;,
+<span id="L833" class="ln">   833</span>				       h, key-&gt;size, typ-&gt;elem-&gt;size, key-&gt;alg, typ-&gt;elem-&gt;alg);
+<span id="L834" class="ln">   834</span>		}
+<span id="L835" class="ln">   835</span>	
+<span id="L836" class="ln">   836</span>		return h;
+<span id="L837" class="ln">   837</span>	}
+<span id="L838" class="ln">   838</span>	
+<span id="L839" class="ln">   839</span>	func makemap(typ *MapType, hint int64) (ret *Hmap) {
+<span id="L840" class="ln">   840</span>		ret = makemap_c(typ, hint);
+<span id="L841" class="ln">   841</span>	}
+<span id="L842" class="ln">   842</span>	
+<span id="L843" class="ln">   843</span>	func reflect·makemap(t *MapType) (ret *Hmap) {
+<span id="L844" class="ln">   844</span>		ret = makemap_c(t, 0);
+<span id="L845" class="ln">   845</span>	}
+<span id="L846" class="ln">   846</span>	
+<span id="L847" class="ln">   847</span>	// NOTE: The returned pointer may keep the whole map live, so don&#39;t
+<span id="L848" class="ln">   848</span>	// hold onto it for very long.
+<span id="L849" class="ln">   849</span>	#pragma textflag NOSPLIT
+<span id="L850" class="ln">   850</span>	func mapaccess1(t *MapType, h *Hmap, key *byte) (val *byte) {
+<span id="L851" class="ln">   851</span>		if(raceenabled &amp;&amp; h != nil) {
+<span id="L852" class="ln">   852</span>			runtime·racereadpc(h, runtime·getcallerpc(&amp;t), runtime·mapaccess1);
+<span id="L853" class="ln">   853</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), runtime·mapaccess1);
+<span id="L854" class="ln">   854</span>		}
+<span id="L855" class="ln">   855</span>		if(h == nil || h-&gt;count == 0) {
+<span id="L856" class="ln">   856</span>			val = t-&gt;elem-&gt;zero;
+<span id="L857" class="ln">   857</span>		} else {
+<span id="L858" class="ln">   858</span>			val = hash_lookup(t, h, &amp;key);
+<span id="L859" class="ln">   859</span>			if(val == nil)
+<span id="L860" class="ln">   860</span>				val = t-&gt;elem-&gt;zero;
+<span id="L861" class="ln">   861</span>		}
+<span id="L862" class="ln">   862</span>	
+<span id="L863" class="ln">   863</span>		if(debug) {
+<span id="L864" class="ln">   864</span>			runtime·prints(&#34;runtime.mapaccess1: map=&#34;);
+<span id="L865" class="ln">   865</span>			runtime·printpointer(h);
+<span id="L866" class="ln">   866</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L867" class="ln">   867</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L868" class="ln">   868</span>			runtime·prints(&#34;; val=&#34;);
+<span id="L869" class="ln">   869</span>			t-&gt;elem-&gt;alg-&gt;print(t-&gt;elem-&gt;size, val);
+<span id="L870" class="ln">   870</span>			runtime·prints(&#34;\n&#34;);
+<span id="L871" class="ln">   871</span>		}
+<span id="L872" class="ln">   872</span>	}
+<span id="L873" class="ln">   873</span>	
+<span id="L874" class="ln">   874</span>	// NOTE: The returned pointer keeps the whole map live, so don&#39;t
+<span id="L875" class="ln">   875</span>	// hold onto it for very long.
+<span id="L876" class="ln">   876</span>	#pragma textflag NOSPLIT
+<span id="L877" class="ln">   877</span>	func mapaccess2(t *MapType, h *Hmap, key *byte) (val *byte, pres bool) {
+<span id="L878" class="ln">   878</span>		if(raceenabled &amp;&amp; h != nil) {
+<span id="L879" class="ln">   879</span>			runtime·racereadpc(h, runtime·getcallerpc(&amp;t), runtime·mapaccess2);
+<span id="L880" class="ln">   880</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), runtime·mapaccess2);
+<span id="L881" class="ln">   881</span>		}
+<span id="L882" class="ln">   882</span>	
+<span id="L883" class="ln">   883</span>		if(h == nil || h-&gt;count == 0) {
+<span id="L884" class="ln">   884</span>			val = t-&gt;elem-&gt;zero;
+<span id="L885" class="ln">   885</span>			pres = false;
+<span id="L886" class="ln">   886</span>		} else {
+<span id="L887" class="ln">   887</span>			val = hash_lookup(t, h, &amp;key);
+<span id="L888" class="ln">   888</span>			if(val == nil) {
+<span id="L889" class="ln">   889</span>				val = t-&gt;elem-&gt;zero;
+<span id="L890" class="ln">   890</span>				pres = false;
+<span id="L891" class="ln">   891</span>			} else {
+<span id="L892" class="ln">   892</span>				pres = true;
+<span id="L893" class="ln">   893</span>			}
+<span id="L894" class="ln">   894</span>		}
+<span id="L895" class="ln">   895</span>	
+<span id="L896" class="ln">   896</span>		if(debug) {
+<span id="L897" class="ln">   897</span>			runtime·prints(&#34;runtime.mapaccess2: map=&#34;);
+<span id="L898" class="ln">   898</span>			runtime·printpointer(h);
+<span id="L899" class="ln">   899</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L900" class="ln">   900</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L901" class="ln">   901</span>			runtime·prints(&#34;; val=&#34;);
+<span id="L902" class="ln">   902</span>			t-&gt;elem-&gt;alg-&gt;print(t-&gt;elem-&gt;size, val);
+<span id="L903" class="ln">   903</span>			runtime·prints(&#34;; pres=&#34;);
+<span id="L904" class="ln">   904</span>			runtime·printbool(pres);
+<span id="L905" class="ln">   905</span>			runtime·prints(&#34;\n&#34;);
+<span id="L906" class="ln">   906</span>		}
+<span id="L907" class="ln">   907</span>	}
+<span id="L908" class="ln">   908</span>	
+<span id="L909" class="ln">   909</span>	#pragma textflag NOSPLIT
+<span id="L910" class="ln">   910</span>	func reflect·mapaccess(t *MapType, h *Hmap, key *byte) (val *byte) {
+<span id="L911" class="ln">   911</span>		if(h == nil)
+<span id="L912" class="ln">   912</span>			val = nil;
+<span id="L913" class="ln">   913</span>		else {
+<span id="L914" class="ln">   914</span>			if(raceenabled) {
+<span id="L915" class="ln">   915</span>				runtime·racereadpc(h, runtime·getcallerpc(&amp;t), reflect·mapaccess);
+<span id="L916" class="ln">   916</span>				runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), reflect·mapaccess);
+<span id="L917" class="ln">   917</span>			}
+<span id="L918" class="ln">   918</span>			val = hash_lookup(t, h, &amp;key);
+<span id="L919" class="ln">   919</span>		}
+<span id="L920" class="ln">   920</span>	}
+<span id="L921" class="ln">   921</span>	
+<span id="L922" class="ln">   922</span>	#pragma textflag NOSPLIT
+<span id="L923" class="ln">   923</span>	func mapassign1(t *MapType, h *Hmap, key *byte, val *byte) {
+<span id="L924" class="ln">   924</span>		if(h == nil)
+<span id="L925" class="ln">   925</span>			runtime·panicstring(&#34;assignment to entry in nil map&#34;);
+<span id="L926" class="ln">   926</span>	
+<span id="L927" class="ln">   927</span>		if(raceenabled) {
+<span id="L928" class="ln">   928</span>			runtime·racewritepc(h, runtime·getcallerpc(&amp;t), runtime·mapassign1);
+<span id="L929" class="ln">   929</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), runtime·mapassign1);
+<span id="L930" class="ln">   930</span>			runtime·racereadobjectpc(val, t-&gt;elem, runtime·getcallerpc(&amp;t), runtime·mapassign1);
+<span id="L931" class="ln">   931</span>		}
+<span id="L932" class="ln">   932</span>	
+<span id="L933" class="ln">   933</span>		hash_insert(t, h, key, val);
+<span id="L934" class="ln">   934</span>	
+<span id="L935" class="ln">   935</span>		if(debug) {
+<span id="L936" class="ln">   936</span>			runtime·prints(&#34;mapassign1: map=&#34;);
+<span id="L937" class="ln">   937</span>			runtime·printpointer(h);
+<span id="L938" class="ln">   938</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L939" class="ln">   939</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L940" class="ln">   940</span>			runtime·prints(&#34;; val=&#34;);
+<span id="L941" class="ln">   941</span>			t-&gt;elem-&gt;alg-&gt;print(t-&gt;elem-&gt;size, val);
+<span id="L942" class="ln">   942</span>			runtime·prints(&#34;\n&#34;);
+<span id="L943" class="ln">   943</span>		}
+<span id="L944" class="ln">   944</span>	}
+<span id="L945" class="ln">   945</span>	
+<span id="L946" class="ln">   946</span>	#pragma textflag NOSPLIT
+<span id="L947" class="ln">   947</span>	func mapdelete(t *MapType, h *Hmap, key *byte) {
+<span id="L948" class="ln">   948</span>		if(h == nil)
+<span id="L949" class="ln">   949</span>			return;
+<span id="L950" class="ln">   950</span>	
+<span id="L951" class="ln">   951</span>		if(raceenabled) {
+<span id="L952" class="ln">   952</span>			runtime·racewritepc(h, runtime·getcallerpc(&amp;t), runtime·mapdelete);
+<span id="L953" class="ln">   953</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), runtime·mapdelete);
+<span id="L954" class="ln">   954</span>		}
+<span id="L955" class="ln">   955</span>	
+<span id="L956" class="ln">   956</span>		hash_remove(t, h, key);
+<span id="L957" class="ln">   957</span>	
+<span id="L958" class="ln">   958</span>		if(debug) {
+<span id="L959" class="ln">   959</span>			runtime·prints(&#34;mapdelete: map=&#34;);
+<span id="L960" class="ln">   960</span>			runtime·printpointer(h);
+<span id="L961" class="ln">   961</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L962" class="ln">   962</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L963" class="ln">   963</span>			runtime·prints(&#34;\n&#34;);
+<span id="L964" class="ln">   964</span>		}
+<span id="L965" class="ln">   965</span>	}
+<span id="L966" class="ln">   966</span>	
+<span id="L967" class="ln">   967</span>	#pragma textflag NOSPLIT
+<span id="L968" class="ln">   968</span>	func reflect·mapassign(t *MapType, h *Hmap, key *byte, val *byte) {
+<span id="L969" class="ln">   969</span>		if(h == nil)
+<span id="L970" class="ln">   970</span>			runtime·panicstring(&#34;assignment to entry in nil map&#34;);
+<span id="L971" class="ln">   971</span>		if(raceenabled) {
+<span id="L972" class="ln">   972</span>			runtime·racewritepc(h, runtime·getcallerpc(&amp;t), reflect·mapassign);
+<span id="L973" class="ln">   973</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), reflect·mapassign);
+<span id="L974" class="ln">   974</span>			runtime·racereadobjectpc(val, t-&gt;elem, runtime·getcallerpc(&amp;t), reflect·mapassign);
+<span id="L975" class="ln">   975</span>		}
+<span id="L976" class="ln">   976</span>	
+<span id="L977" class="ln">   977</span>		hash_insert(t, h, key, val);
+<span id="L978" class="ln">   978</span>	
+<span id="L979" class="ln">   979</span>		if(debug) {
+<span id="L980" class="ln">   980</span>			runtime·prints(&#34;mapassign: map=&#34;);
+<span id="L981" class="ln">   981</span>			runtime·printpointer(h);
+<span id="L982" class="ln">   982</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L983" class="ln">   983</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L984" class="ln">   984</span>			runtime·prints(&#34;; val=&#34;);
+<span id="L985" class="ln">   985</span>			t-&gt;elem-&gt;alg-&gt;print(t-&gt;elem-&gt;size, val);
+<span id="L986" class="ln">   986</span>			runtime·prints(&#34;\n&#34;);
+<span id="L987" class="ln">   987</span>		}
+<span id="L988" class="ln">   988</span>	}
+<span id="L989" class="ln">   989</span>	
+<span id="L990" class="ln">   990</span>	#pragma textflag NOSPLIT
+<span id="L991" class="ln">   991</span>	func reflect·mapdelete(t *MapType, h *Hmap, key *byte) {
+<span id="L992" class="ln">   992</span>		if(h == nil)
+<span id="L993" class="ln">   993</span>			return; // see bug 8051
+<span id="L994" class="ln">   994</span>		if(raceenabled) {
+<span id="L995" class="ln">   995</span>			runtime·racewritepc(h, runtime·getcallerpc(&amp;t), reflect·mapdelete);
+<span id="L996" class="ln">   996</span>			runtime·racereadobjectpc(key, t-&gt;key, runtime·getcallerpc(&amp;t), reflect·mapdelete);
+<span id="L997" class="ln">   997</span>		}
+<span id="L998" class="ln">   998</span>		hash_remove(t, h, key);
+<span id="L999" class="ln">   999</span>	
+<span id="L1000" class="ln">  1000</span>		if(debug) {
+<span id="L1001" class="ln">  1001</span>			runtime·prints(&#34;mapdelete: map=&#34;);
+<span id="L1002" class="ln">  1002</span>			runtime·printpointer(h);
+<span id="L1003" class="ln">  1003</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L1004" class="ln">  1004</span>			t-&gt;key-&gt;alg-&gt;print(t-&gt;key-&gt;size, key);
+<span id="L1005" class="ln">  1005</span>			runtime·prints(&#34;\n&#34;);
+<span id="L1006" class="ln">  1006</span>		}
+<span id="L1007" class="ln">  1007</span>	}
+<span id="L1008" class="ln">  1008</span>	
+<span id="L1009" class="ln">  1009</span>	#pragma textflag NOSPLIT
+<span id="L1010" class="ln">  1010</span>	func mapiterinit(t *MapType, h *Hmap, it *Hiter) {
+<span id="L1011" class="ln">  1011</span>		// Clear pointer fields so garbage collector does not complain.
+<span id="L1012" class="ln">  1012</span>		it-&gt;key = nil;
+<span id="L1013" class="ln">  1013</span>		it-&gt;value = nil;
+<span id="L1014" class="ln">  1014</span>		it-&gt;t = nil;
+<span id="L1015" class="ln">  1015</span>		it-&gt;h = nil;
+<span id="L1016" class="ln">  1016</span>		it-&gt;buckets = nil;
+<span id="L1017" class="ln">  1017</span>		it-&gt;bptr = nil;
+<span id="L1018" class="ln">  1018</span>	
+<span id="L1019" class="ln">  1019</span>		if(h == nil || h-&gt;count == 0) {
+<span id="L1020" class="ln">  1020</span>			it-&gt;key = nil;
+<span id="L1021" class="ln">  1021</span>			return;
+<span id="L1022" class="ln">  1022</span>		}
+<span id="L1023" class="ln">  1023</span>		if(raceenabled)
+<span id="L1024" class="ln">  1024</span>			runtime·racereadpc(h, runtime·getcallerpc(&amp;t), runtime·mapiterinit);
+<span id="L1025" class="ln">  1025</span>		hash_iter_init(t, h, it);
+<span id="L1026" class="ln">  1026</span>		hash_next(it);
+<span id="L1027" class="ln">  1027</span>		if(debug) {
+<span id="L1028" class="ln">  1028</span>			runtime·prints(&#34;runtime.mapiterinit: map=&#34;);
+<span id="L1029" class="ln">  1029</span>			runtime·printpointer(h);
+<span id="L1030" class="ln">  1030</span>			runtime·prints(&#34;; iter=&#34;);
+<span id="L1031" class="ln">  1031</span>			runtime·printpointer(it);
+<span id="L1032" class="ln">  1032</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L1033" class="ln">  1033</span>			runtime·printpointer(it-&gt;key);
+<span id="L1034" class="ln">  1034</span>			runtime·prints(&#34;\n&#34;);
+<span id="L1035" class="ln">  1035</span>		}
+<span id="L1036" class="ln">  1036</span>	}
+<span id="L1037" class="ln">  1037</span>	
+<span id="L1038" class="ln">  1038</span>	func reflect·mapiterinit(t *MapType, h *Hmap) (it *Hiter) {
+<span id="L1039" class="ln">  1039</span>		it = runtime·mal(sizeof *it);
+<span id="L1040" class="ln">  1040</span>		runtime·mapiterinit(t, h, it);
+<span id="L1041" class="ln">  1041</span>	}
+<span id="L1042" class="ln">  1042</span>	
+<span id="L1043" class="ln">  1043</span>	#pragma textflag NOSPLIT
+<span id="L1044" class="ln">  1044</span>	func mapiternext(it *Hiter) {
+<span id="L1045" class="ln">  1045</span>		if(raceenabled)
+<span id="L1046" class="ln">  1046</span>			runtime·racereadpc(it-&gt;h, runtime·getcallerpc(&amp;it), runtime·mapiternext);
+<span id="L1047" class="ln">  1047</span>	
+<span id="L1048" class="ln">  1048</span>		hash_next(it);
+<span id="L1049" class="ln">  1049</span>		if(debug) {
+<span id="L1050" class="ln">  1050</span>			runtime·prints(&#34;runtime.mapiternext: iter=&#34;);
+<span id="L1051" class="ln">  1051</span>			runtime·printpointer(it);
+<span id="L1052" class="ln">  1052</span>			runtime·prints(&#34;; key=&#34;);
+<span id="L1053" class="ln">  1053</span>			runtime·printpointer(it-&gt;key);
+<span id="L1054" class="ln">  1054</span>			runtime·prints(&#34;\n&#34;);
+<span id="L1055" class="ln">  1055</span>		}
+<span id="L1056" class="ln">  1056</span>	}
+<span id="L1057" class="ln">  1057</span>	
+<span id="L1058" class="ln">  1058</span>	func reflect·mapiternext(it *Hiter) {
+<span id="L1059" class="ln">  1059</span>		runtime·mapiternext(it);
+<span id="L1060" class="ln">  1060</span>	}
+<span id="L1061" class="ln">  1061</span>	
+<span id="L1062" class="ln">  1062</span>	func reflect·mapiterkey(it *Hiter) (key *byte) {
+<span id="L1063" class="ln">  1063</span>		key = it-&gt;key;
+<span id="L1064" class="ln">  1064</span>	}
+<span id="L1065" class="ln">  1065</span>	
+<span id="L1066" class="ln">  1066</span>	#pragma textflag NOSPLIT
+<span id="L1067" class="ln">  1067</span>	func reflect·maplen(h *Hmap) (len int) {
+<span id="L1068" class="ln">  1068</span>		if(h == nil)
+<span id="L1069" class="ln">  1069</span>			len = 0;
+<span id="L1070" class="ln">  1070</span>		else {
+<span id="L1071" class="ln">  1071</span>			len = h-&gt;count;
+<span id="L1072" class="ln">  1072</span>			if(raceenabled)
+<span id="L1073" class="ln">  1073</span>				runtime·racereadpc(h, runtime·getcallerpc(&amp;h), reflect·maplen);
+<span id="L1074" class="ln">  1074</span>		}
+<span id="L1075" class="ln">  1075</span>	}
+<span id="L1076" class="ln">  1076</span>	
+<span id="L1077" class="ln">  1077</span>	// exported value for testing
+<span id="L1078" class="ln">  1078</span>	float64 runtime·hashLoad = LOAD;
+</pre><p><a href="http://golang.org/src/pkg/runtime/hashmap.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

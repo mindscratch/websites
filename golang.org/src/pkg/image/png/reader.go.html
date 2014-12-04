@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/image/png/reader.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/image/png/reader.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package png implements a PNG image decoder and encoder.</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">//</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// The PNG specification is at http://www.w3.org/TR/PNG/.</span>
+<span id="L8" class="ln">     8</span>	package png
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	import (
+<span id="L11" class="ln">    11</span>		&#34;compress/zlib&#34;
+<span id="L12" class="ln">    12</span>		&#34;encoding/binary&#34;
+<span id="L13" class="ln">    13</span>		&#34;fmt&#34;
+<span id="L14" class="ln">    14</span>		&#34;hash&#34;
+<span id="L15" class="ln">    15</span>		&#34;hash/crc32&#34;
+<span id="L16" class="ln">    16</span>		&#34;image&#34;
+<span id="L17" class="ln">    17</span>		&#34;image/color&#34;
+<span id="L18" class="ln">    18</span>		&#34;io&#34;
+<span id="L19" class="ln">    19</span>	)
+<span id="L20" class="ln">    20</span>	
+<span id="L21" class="ln">    21</span>	<span class="comment">// Color type, as per the PNG spec.</span>
+<span id="L22" class="ln">    22</span>	const (
+<span id="L23" class="ln">    23</span>		ctGrayscale      = 0
+<span id="L24" class="ln">    24</span>		ctTrueColor      = 2
+<span id="L25" class="ln">    25</span>		ctPaletted       = 3
+<span id="L26" class="ln">    26</span>		ctGrayscaleAlpha = 4
+<span id="L27" class="ln">    27</span>		ctTrueColorAlpha = 6
+<span id="L28" class="ln">    28</span>	)
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	<span class="comment">// A cb is a combination of color type and bit depth.</span>
+<span id="L31" class="ln">    31</span>	const (
+<span id="L32" class="ln">    32</span>		cbInvalid = iota
+<span id="L33" class="ln">    33</span>		cbG1
+<span id="L34" class="ln">    34</span>		cbG2
+<span id="L35" class="ln">    35</span>		cbG4
+<span id="L36" class="ln">    36</span>		cbG8
+<span id="L37" class="ln">    37</span>		cbGA8
+<span id="L38" class="ln">    38</span>		cbTC8
+<span id="L39" class="ln">    39</span>		cbP1
+<span id="L40" class="ln">    40</span>		cbP2
+<span id="L41" class="ln">    41</span>		cbP4
+<span id="L42" class="ln">    42</span>		cbP8
+<span id="L43" class="ln">    43</span>		cbTCA8
+<span id="L44" class="ln">    44</span>		cbG16
+<span id="L45" class="ln">    45</span>		cbGA16
+<span id="L46" class="ln">    46</span>		cbTC16
+<span id="L47" class="ln">    47</span>		cbTCA16
+<span id="L48" class="ln">    48</span>	)
+<span id="L49" class="ln">    49</span>	
+<span id="L50" class="ln">    50</span>	<span class="comment">// Filter type, as per the PNG spec.</span>
+<span id="L51" class="ln">    51</span>	const (
+<span id="L52" class="ln">    52</span>		ftNone    = 0
+<span id="L53" class="ln">    53</span>		ftSub     = 1
+<span id="L54" class="ln">    54</span>		ftUp      = 2
+<span id="L55" class="ln">    55</span>		ftAverage = 3
+<span id="L56" class="ln">    56</span>		ftPaeth   = 4
+<span id="L57" class="ln">    57</span>		nFilter   = 5
+<span id="L58" class="ln">    58</span>	)
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>	<span class="comment">// Decoding stage.</span>
+<span id="L61" class="ln">    61</span>	<span class="comment">// The PNG specification says that the IHDR, PLTE (if present), IDAT and IEND</span>
+<span id="L62" class="ln">    62</span>	<span class="comment">// chunks must appear in that order. There may be multiple IDAT chunks, and</span>
+<span id="L63" class="ln">    63</span>	<span class="comment">// IDAT chunks must be sequential (i.e. they may not have any other chunks</span>
+<span id="L64" class="ln">    64</span>	<span class="comment">// between them).</span>
+<span id="L65" class="ln">    65</span>	<span class="comment">// http://www.w3.org/TR/PNG/#5ChunkOrdering</span>
+<span id="L66" class="ln">    66</span>	const (
+<span id="L67" class="ln">    67</span>		dsStart = iota
+<span id="L68" class="ln">    68</span>		dsSeenIHDR
+<span id="L69" class="ln">    69</span>		dsSeenPLTE
+<span id="L70" class="ln">    70</span>		dsSeenIDAT
+<span id="L71" class="ln">    71</span>		dsSeenIEND
+<span id="L72" class="ln">    72</span>	)
+<span id="L73" class="ln">    73</span>	
+<span id="L74" class="ln">    74</span>	const pngHeader = &#34;\x89PNG\r\n\x1a\n&#34;
+<span id="L75" class="ln">    75</span>	
+<span id="L76" class="ln">    76</span>	type decoder struct {
+<span id="L77" class="ln">    77</span>		r             io.Reader
+<span id="L78" class="ln">    78</span>		img           image.Image
+<span id="L79" class="ln">    79</span>		crc           hash.Hash32
+<span id="L80" class="ln">    80</span>		width, height int
+<span id="L81" class="ln">    81</span>		depth         int
+<span id="L82" class="ln">    82</span>		palette       color.Palette
+<span id="L83" class="ln">    83</span>		cb            int
+<span id="L84" class="ln">    84</span>		stage         int
+<span id="L85" class="ln">    85</span>		idatLength    uint32
+<span id="L86" class="ln">    86</span>		tmp           [3 * 256]byte
+<span id="L87" class="ln">    87</span>	}
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>	<span class="comment">// A FormatError reports that the input is not a valid PNG.</span>
+<span id="L90" class="ln">    90</span>	type FormatError string
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	func (e FormatError) Error() string { return &#34;png: invalid format: &#34; + string(e) }
+<span id="L93" class="ln">    93</span>	
+<span id="L94" class="ln">    94</span>	var chunkOrderError = FormatError(&#34;chunk out of order&#34;)
+<span id="L95" class="ln">    95</span>	
+<span id="L96" class="ln">    96</span>	<span class="comment">// An UnsupportedError reports that the input uses a valid but unimplemented PNG feature.</span>
+<span id="L97" class="ln">    97</span>	type UnsupportedError string
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>	func (e UnsupportedError) Error() string { return &#34;png: unsupported feature: &#34; + string(e) }
+<span id="L100" class="ln">   100</span>	
+<span id="L101" class="ln">   101</span>	func min(a, b int) int {
+<span id="L102" class="ln">   102</span>		if a &lt; b {
+<span id="L103" class="ln">   103</span>			return a
+<span id="L104" class="ln">   104</span>		}
+<span id="L105" class="ln">   105</span>		return b
+<span id="L106" class="ln">   106</span>	}
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>	func (d *decoder) parseIHDR(length uint32) error {
+<span id="L109" class="ln">   109</span>		if length != 13 {
+<span id="L110" class="ln">   110</span>			return FormatError(&#34;bad IHDR length&#34;)
+<span id="L111" class="ln">   111</span>		}
+<span id="L112" class="ln">   112</span>		if _, err := io.ReadFull(d.r, d.tmp[:13]); err != nil {
+<span id="L113" class="ln">   113</span>			return err
+<span id="L114" class="ln">   114</span>		}
+<span id="L115" class="ln">   115</span>		d.crc.Write(d.tmp[:13])
+<span id="L116" class="ln">   116</span>		if d.tmp[10] != 0 || d.tmp[11] != 0 || d.tmp[12] != 0 {
+<span id="L117" class="ln">   117</span>			return UnsupportedError(&#34;compression, filter or interlace method&#34;)
+<span id="L118" class="ln">   118</span>		}
+<span id="L119" class="ln">   119</span>		w := int32(binary.BigEndian.Uint32(d.tmp[0:4]))
+<span id="L120" class="ln">   120</span>		h := int32(binary.BigEndian.Uint32(d.tmp[4:8]))
+<span id="L121" class="ln">   121</span>		if w &lt; 0 || h &lt; 0 {
+<span id="L122" class="ln">   122</span>			return FormatError(&#34;negative dimension&#34;)
+<span id="L123" class="ln">   123</span>		}
+<span id="L124" class="ln">   124</span>		nPixels := int64(w) * int64(h)
+<span id="L125" class="ln">   125</span>		if nPixels != int64(int(nPixels)) {
+<span id="L126" class="ln">   126</span>			return UnsupportedError(&#34;dimension overflow&#34;)
+<span id="L127" class="ln">   127</span>		}
+<span id="L128" class="ln">   128</span>		d.cb = cbInvalid
+<span id="L129" class="ln">   129</span>		d.depth = int(d.tmp[8])
+<span id="L130" class="ln">   130</span>		switch d.depth {
+<span id="L131" class="ln">   131</span>		case 1:
+<span id="L132" class="ln">   132</span>			switch d.tmp[9] {
+<span id="L133" class="ln">   133</span>			case ctGrayscale:
+<span id="L134" class="ln">   134</span>				d.cb = cbG1
+<span id="L135" class="ln">   135</span>			case ctPaletted:
+<span id="L136" class="ln">   136</span>				d.cb = cbP1
+<span id="L137" class="ln">   137</span>			}
+<span id="L138" class="ln">   138</span>		case 2:
+<span id="L139" class="ln">   139</span>			switch d.tmp[9] {
+<span id="L140" class="ln">   140</span>			case ctGrayscale:
+<span id="L141" class="ln">   141</span>				d.cb = cbG2
+<span id="L142" class="ln">   142</span>			case ctPaletted:
+<span id="L143" class="ln">   143</span>				d.cb = cbP2
+<span id="L144" class="ln">   144</span>			}
+<span id="L145" class="ln">   145</span>		case 4:
+<span id="L146" class="ln">   146</span>			switch d.tmp[9] {
+<span id="L147" class="ln">   147</span>			case ctGrayscale:
+<span id="L148" class="ln">   148</span>				d.cb = cbG4
+<span id="L149" class="ln">   149</span>			case ctPaletted:
+<span id="L150" class="ln">   150</span>				d.cb = cbP4
+<span id="L151" class="ln">   151</span>			}
+<span id="L152" class="ln">   152</span>		case 8:
+<span id="L153" class="ln">   153</span>			switch d.tmp[9] {
+<span id="L154" class="ln">   154</span>			case ctGrayscale:
+<span id="L155" class="ln">   155</span>				d.cb = cbG8
+<span id="L156" class="ln">   156</span>			case ctTrueColor:
+<span id="L157" class="ln">   157</span>				d.cb = cbTC8
+<span id="L158" class="ln">   158</span>			case ctPaletted:
+<span id="L159" class="ln">   159</span>				d.cb = cbP8
+<span id="L160" class="ln">   160</span>			case ctGrayscaleAlpha:
+<span id="L161" class="ln">   161</span>				d.cb = cbGA8
+<span id="L162" class="ln">   162</span>			case ctTrueColorAlpha:
+<span id="L163" class="ln">   163</span>				d.cb = cbTCA8
+<span id="L164" class="ln">   164</span>			}
+<span id="L165" class="ln">   165</span>		case 16:
+<span id="L166" class="ln">   166</span>			switch d.tmp[9] {
+<span id="L167" class="ln">   167</span>			case ctGrayscale:
+<span id="L168" class="ln">   168</span>				d.cb = cbG16
+<span id="L169" class="ln">   169</span>			case ctTrueColor:
+<span id="L170" class="ln">   170</span>				d.cb = cbTC16
+<span id="L171" class="ln">   171</span>			case ctGrayscaleAlpha:
+<span id="L172" class="ln">   172</span>				d.cb = cbGA16
+<span id="L173" class="ln">   173</span>			case ctTrueColorAlpha:
+<span id="L174" class="ln">   174</span>				d.cb = cbTCA16
+<span id="L175" class="ln">   175</span>			}
+<span id="L176" class="ln">   176</span>		}
+<span id="L177" class="ln">   177</span>		if d.cb == cbInvalid {
+<span id="L178" class="ln">   178</span>			return UnsupportedError(fmt.Sprintf(&#34;bit depth %d, color type %d&#34;, d.tmp[8], d.tmp[9]))
+<span id="L179" class="ln">   179</span>		}
+<span id="L180" class="ln">   180</span>		d.width, d.height = int(w), int(h)
+<span id="L181" class="ln">   181</span>		return d.verifyChecksum()
+<span id="L182" class="ln">   182</span>	}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	func (d *decoder) parsePLTE(length uint32) error {
+<span id="L185" class="ln">   185</span>		np := int(length / 3) <span class="comment">// The number of palette entries.</span>
+<span id="L186" class="ln">   186</span>		if length%3 != 0 || np &lt;= 0 || np &gt; 256 || np &gt; 1&lt;&lt;uint(d.depth) {
+<span id="L187" class="ln">   187</span>			return FormatError(&#34;bad PLTE length&#34;)
+<span id="L188" class="ln">   188</span>		}
+<span id="L189" class="ln">   189</span>		n, err := io.ReadFull(d.r, d.tmp[:3*np])
+<span id="L190" class="ln">   190</span>		if err != nil {
+<span id="L191" class="ln">   191</span>			return err
+<span id="L192" class="ln">   192</span>		}
+<span id="L193" class="ln">   193</span>		d.crc.Write(d.tmp[:n])
+<span id="L194" class="ln">   194</span>		switch d.cb {
+<span id="L195" class="ln">   195</span>		case cbP1, cbP2, cbP4, cbP8:
+<span id="L196" class="ln">   196</span>			d.palette = make(color.Palette, 256)
+<span id="L197" class="ln">   197</span>			for i := 0; i &lt; np; i++ {
+<span id="L198" class="ln">   198</span>				d.palette[i] = color.RGBA{d.tmp[3*i+0], d.tmp[3*i+1], d.tmp[3*i+2], 0xff}
+<span id="L199" class="ln">   199</span>			}
+<span id="L200" class="ln">   200</span>			for i := np; i &lt; 256; i++ {
+<span id="L201" class="ln">   201</span>				<span class="comment">// Initialize the rest of the palette to opaque black. The spec (section</span>
+<span id="L202" class="ln">   202</span>				<span class="comment">// 11.2.3) says that &#34;any out-of-range pixel value found in the image data</span>
+<span id="L203" class="ln">   203</span>				<span class="comment">// is an error&#34;, but some real-world PNG files have out-of-range pixel</span>
+<span id="L204" class="ln">   204</span>				<span class="comment">// values. We fall back to opaque black, the same as libpng 1.5.13;</span>
+<span id="L205" class="ln">   205</span>				<span class="comment">// ImageMagick 6.5.7 returns an error.</span>
+<span id="L206" class="ln">   206</span>				d.palette[i] = color.RGBA{0x00, 0x00, 0x00, 0xff}
+<span id="L207" class="ln">   207</span>			}
+<span id="L208" class="ln">   208</span>			d.palette = d.palette[:np]
+<span id="L209" class="ln">   209</span>		case cbTC8, cbTCA8, cbTC16, cbTCA16:
+<span id="L210" class="ln">   210</span>			<span class="comment">// As per the PNG spec, a PLTE chunk is optional (and for practical purposes,</span>
+<span id="L211" class="ln">   211</span>			<span class="comment">// ignorable) for the ctTrueColor and ctTrueColorAlpha color types (section 4.1.2).</span>
+<span id="L212" class="ln">   212</span>		default:
+<span id="L213" class="ln">   213</span>			return FormatError(&#34;PLTE, color type mismatch&#34;)
+<span id="L214" class="ln">   214</span>		}
+<span id="L215" class="ln">   215</span>		return d.verifyChecksum()
+<span id="L216" class="ln">   216</span>	}
+<span id="L217" class="ln">   217</span>	
+<span id="L218" class="ln">   218</span>	func (d *decoder) parsetRNS(length uint32) error {
+<span id="L219" class="ln">   219</span>		if length &gt; 256 {
+<span id="L220" class="ln">   220</span>			return FormatError(&#34;bad tRNS length&#34;)
+<span id="L221" class="ln">   221</span>		}
+<span id="L222" class="ln">   222</span>		n, err := io.ReadFull(d.r, d.tmp[:length])
+<span id="L223" class="ln">   223</span>		if err != nil {
+<span id="L224" class="ln">   224</span>			return err
+<span id="L225" class="ln">   225</span>		}
+<span id="L226" class="ln">   226</span>		d.crc.Write(d.tmp[:n])
+<span id="L227" class="ln">   227</span>		switch d.cb {
+<span id="L228" class="ln">   228</span>		case cbG8, cbG16:
+<span id="L229" class="ln">   229</span>			return UnsupportedError(&#34;grayscale transparency&#34;)
+<span id="L230" class="ln">   230</span>		case cbTC8, cbTC16:
+<span id="L231" class="ln">   231</span>			return UnsupportedError(&#34;truecolor transparency&#34;)
+<span id="L232" class="ln">   232</span>		case cbP1, cbP2, cbP4, cbP8:
+<span id="L233" class="ln">   233</span>			if len(d.palette) &lt; n {
+<span id="L234" class="ln">   234</span>				d.palette = d.palette[:n]
+<span id="L235" class="ln">   235</span>			}
+<span id="L236" class="ln">   236</span>			for i := 0; i &lt; n; i++ {
+<span id="L237" class="ln">   237</span>				rgba := d.palette[i].(color.RGBA)
+<span id="L238" class="ln">   238</span>				d.palette[i] = color.NRGBA{rgba.R, rgba.G, rgba.B, d.tmp[i]}
+<span id="L239" class="ln">   239</span>			}
+<span id="L240" class="ln">   240</span>		case cbGA8, cbGA16, cbTCA8, cbTCA16:
+<span id="L241" class="ln">   241</span>			return FormatError(&#34;tRNS, color type mismatch&#34;)
+<span id="L242" class="ln">   242</span>		}
+<span id="L243" class="ln">   243</span>		return d.verifyChecksum()
+<span id="L244" class="ln">   244</span>	}
+<span id="L245" class="ln">   245</span>	
+<span id="L246" class="ln">   246</span>	<span class="comment">// Read presents one or more IDAT chunks as one continuous stream (minus the</span>
+<span id="L247" class="ln">   247</span>	<span class="comment">// intermediate chunk headers and footers). If the PNG data looked like:</span>
+<span id="L248" class="ln">   248</span>	<span class="comment">//   ... len0 IDAT xxx crc0 len1 IDAT yy crc1 len2 IEND crc2</span>
+<span id="L249" class="ln">   249</span>	<span class="comment">// then this reader presents xxxyy. For well-formed PNG data, the decoder state</span>
+<span id="L250" class="ln">   250</span>	<span class="comment">// immediately before the first Read call is that d.r is positioned between the</span>
+<span id="L251" class="ln">   251</span>	<span class="comment">// first IDAT and xxx, and the decoder state immediately after the last Read</span>
+<span id="L252" class="ln">   252</span>	<span class="comment">// call is that d.r is positioned between yy and crc1.</span>
+<span id="L253" class="ln">   253</span>	func (d *decoder) Read(p []byte) (int, error) {
+<span id="L254" class="ln">   254</span>		if len(p) == 0 {
+<span id="L255" class="ln">   255</span>			return 0, nil
+<span id="L256" class="ln">   256</span>		}
+<span id="L257" class="ln">   257</span>		for d.idatLength == 0 {
+<span id="L258" class="ln">   258</span>			<span class="comment">// We have exhausted an IDAT chunk. Verify the checksum of that chunk.</span>
+<span id="L259" class="ln">   259</span>			if err := d.verifyChecksum(); err != nil {
+<span id="L260" class="ln">   260</span>				return 0, err
+<span id="L261" class="ln">   261</span>			}
+<span id="L262" class="ln">   262</span>			<span class="comment">// Read the length and chunk type of the next chunk, and check that</span>
+<span id="L263" class="ln">   263</span>			<span class="comment">// it is an IDAT chunk.</span>
+<span id="L264" class="ln">   264</span>			if _, err := io.ReadFull(d.r, d.tmp[:8]); err != nil {
+<span id="L265" class="ln">   265</span>				return 0, err
+<span id="L266" class="ln">   266</span>			}
+<span id="L267" class="ln">   267</span>			d.idatLength = binary.BigEndian.Uint32(d.tmp[:4])
+<span id="L268" class="ln">   268</span>			if string(d.tmp[4:8]) != &#34;IDAT&#34; {
+<span id="L269" class="ln">   269</span>				return 0, FormatError(&#34;not enough pixel data&#34;)
+<span id="L270" class="ln">   270</span>			}
+<span id="L271" class="ln">   271</span>			d.crc.Reset()
+<span id="L272" class="ln">   272</span>			d.crc.Write(d.tmp[4:8])
+<span id="L273" class="ln">   273</span>		}
+<span id="L274" class="ln">   274</span>		if int(d.idatLength) &lt; 0 {
+<span id="L275" class="ln">   275</span>			return 0, UnsupportedError(&#34;IDAT chunk length overflow&#34;)
+<span id="L276" class="ln">   276</span>		}
+<span id="L277" class="ln">   277</span>		n, err := d.r.Read(p[:min(len(p), int(d.idatLength))])
+<span id="L278" class="ln">   278</span>		d.crc.Write(p[:n])
+<span id="L279" class="ln">   279</span>		d.idatLength -= uint32(n)
+<span id="L280" class="ln">   280</span>		return n, err
+<span id="L281" class="ln">   281</span>	}
+<span id="L282" class="ln">   282</span>	
+<span id="L283" class="ln">   283</span>	<span class="comment">// decode decodes the IDAT data into an image.</span>
+<span id="L284" class="ln">   284</span>	func (d *decoder) decode() (image.Image, error) {
+<span id="L285" class="ln">   285</span>		r, err := zlib.NewReader(d)
+<span id="L286" class="ln">   286</span>		if err != nil {
+<span id="L287" class="ln">   287</span>			return nil, err
+<span id="L288" class="ln">   288</span>		}
+<span id="L289" class="ln">   289</span>		defer r.Close()
+<span id="L290" class="ln">   290</span>		bitsPerPixel := 0
+<span id="L291" class="ln">   291</span>		pixOffset := 0
+<span id="L292" class="ln">   292</span>		var (
+<span id="L293" class="ln">   293</span>			gray     *image.Gray
+<span id="L294" class="ln">   294</span>			rgba     *image.RGBA
+<span id="L295" class="ln">   295</span>			paletted *image.Paletted
+<span id="L296" class="ln">   296</span>			nrgba    *image.NRGBA
+<span id="L297" class="ln">   297</span>			gray16   *image.Gray16
+<span id="L298" class="ln">   298</span>			rgba64   *image.RGBA64
+<span id="L299" class="ln">   299</span>			nrgba64  *image.NRGBA64
+<span id="L300" class="ln">   300</span>			img      image.Image
+<span id="L301" class="ln">   301</span>		)
+<span id="L302" class="ln">   302</span>		switch d.cb {
+<span id="L303" class="ln">   303</span>		case cbG1, cbG2, cbG4, cbG8:
+<span id="L304" class="ln">   304</span>			bitsPerPixel = d.depth
+<span id="L305" class="ln">   305</span>			gray = image.NewGray(image.Rect(0, 0, d.width, d.height))
+<span id="L306" class="ln">   306</span>			img = gray
+<span id="L307" class="ln">   307</span>		case cbGA8:
+<span id="L308" class="ln">   308</span>			bitsPerPixel = 16
+<span id="L309" class="ln">   309</span>			nrgba = image.NewNRGBA(image.Rect(0, 0, d.width, d.height))
+<span id="L310" class="ln">   310</span>			img = nrgba
+<span id="L311" class="ln">   311</span>		case cbTC8:
+<span id="L312" class="ln">   312</span>			bitsPerPixel = 24
+<span id="L313" class="ln">   313</span>			rgba = image.NewRGBA(image.Rect(0, 0, d.width, d.height))
+<span id="L314" class="ln">   314</span>			img = rgba
+<span id="L315" class="ln">   315</span>		case cbP1, cbP2, cbP4, cbP8:
+<span id="L316" class="ln">   316</span>			bitsPerPixel = d.depth
+<span id="L317" class="ln">   317</span>			paletted = image.NewPaletted(image.Rect(0, 0, d.width, d.height), d.palette)
+<span id="L318" class="ln">   318</span>			img = paletted
+<span id="L319" class="ln">   319</span>		case cbTCA8:
+<span id="L320" class="ln">   320</span>			bitsPerPixel = 32
+<span id="L321" class="ln">   321</span>			nrgba = image.NewNRGBA(image.Rect(0, 0, d.width, d.height))
+<span id="L322" class="ln">   322</span>			img = nrgba
+<span id="L323" class="ln">   323</span>		case cbG16:
+<span id="L324" class="ln">   324</span>			bitsPerPixel = 16
+<span id="L325" class="ln">   325</span>			gray16 = image.NewGray16(image.Rect(0, 0, d.width, d.height))
+<span id="L326" class="ln">   326</span>			img = gray16
+<span id="L327" class="ln">   327</span>		case cbGA16:
+<span id="L328" class="ln">   328</span>			bitsPerPixel = 32
+<span id="L329" class="ln">   329</span>			nrgba64 = image.NewNRGBA64(image.Rect(0, 0, d.width, d.height))
+<span id="L330" class="ln">   330</span>			img = nrgba64
+<span id="L331" class="ln">   331</span>		case cbTC16:
+<span id="L332" class="ln">   332</span>			bitsPerPixel = 48
+<span id="L333" class="ln">   333</span>			rgba64 = image.NewRGBA64(image.Rect(0, 0, d.width, d.height))
+<span id="L334" class="ln">   334</span>			img = rgba64
+<span id="L335" class="ln">   335</span>		case cbTCA16:
+<span id="L336" class="ln">   336</span>			bitsPerPixel = 64
+<span id="L337" class="ln">   337</span>			nrgba64 = image.NewNRGBA64(image.Rect(0, 0, d.width, d.height))
+<span id="L338" class="ln">   338</span>			img = nrgba64
+<span id="L339" class="ln">   339</span>		}
+<span id="L340" class="ln">   340</span>		bytesPerPixel := (bitsPerPixel + 7) / 8
+<span id="L341" class="ln">   341</span>	
+<span id="L342" class="ln">   342</span>		<span class="comment">// cr and pr are the bytes for the current and previous row.</span>
+<span id="L343" class="ln">   343</span>		<span class="comment">// The +1 is for the per-row filter type, which is at cr[0].</span>
+<span id="L344" class="ln">   344</span>		cr := make([]uint8, 1+(bitsPerPixel*d.width+7)/8)
+<span id="L345" class="ln">   345</span>		pr := make([]uint8, 1+(bitsPerPixel*d.width+7)/8)
+<span id="L346" class="ln">   346</span>	
+<span id="L347" class="ln">   347</span>		for y := 0; y &lt; d.height; y++ {
+<span id="L348" class="ln">   348</span>			<span class="comment">// Read the decompressed bytes.</span>
+<span id="L349" class="ln">   349</span>			_, err := io.ReadFull(r, cr)
+<span id="L350" class="ln">   350</span>			if err != nil {
+<span id="L351" class="ln">   351</span>				return nil, err
+<span id="L352" class="ln">   352</span>			}
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>			<span class="comment">// Apply the filter.</span>
+<span id="L355" class="ln">   355</span>			cdat := cr[1:]
+<span id="L356" class="ln">   356</span>			pdat := pr[1:]
+<span id="L357" class="ln">   357</span>			switch cr[0] {
+<span id="L358" class="ln">   358</span>			case ftNone:
+<span id="L359" class="ln">   359</span>				<span class="comment">// No-op.</span>
+<span id="L360" class="ln">   360</span>			case ftSub:
+<span id="L361" class="ln">   361</span>				for i := bytesPerPixel; i &lt; len(cdat); i++ {
+<span id="L362" class="ln">   362</span>					cdat[i] += cdat[i-bytesPerPixel]
+<span id="L363" class="ln">   363</span>				}
+<span id="L364" class="ln">   364</span>			case ftUp:
+<span id="L365" class="ln">   365</span>				for i, p := range pdat {
+<span id="L366" class="ln">   366</span>					cdat[i] += p
+<span id="L367" class="ln">   367</span>				}
+<span id="L368" class="ln">   368</span>			case ftAverage:
+<span id="L369" class="ln">   369</span>				for i := 0; i &lt; bytesPerPixel; i++ {
+<span id="L370" class="ln">   370</span>					cdat[i] += pdat[i] / 2
+<span id="L371" class="ln">   371</span>				}
+<span id="L372" class="ln">   372</span>				for i := bytesPerPixel; i &lt; len(cdat); i++ {
+<span id="L373" class="ln">   373</span>					cdat[i] += uint8((int(cdat[i-bytesPerPixel]) + int(pdat[i])) / 2)
+<span id="L374" class="ln">   374</span>				}
+<span id="L375" class="ln">   375</span>			case ftPaeth:
+<span id="L376" class="ln">   376</span>				filterPaeth(cdat, pdat, bytesPerPixel)
+<span id="L377" class="ln">   377</span>			default:
+<span id="L378" class="ln">   378</span>				return nil, FormatError(&#34;bad filter type&#34;)
+<span id="L379" class="ln">   379</span>			}
+<span id="L380" class="ln">   380</span>	
+<span id="L381" class="ln">   381</span>			<span class="comment">// Convert from bytes to colors.</span>
+<span id="L382" class="ln">   382</span>			switch d.cb {
+<span id="L383" class="ln">   383</span>			case cbG1:
+<span id="L384" class="ln">   384</span>				for x := 0; x &lt; d.width; x += 8 {
+<span id="L385" class="ln">   385</span>					b := cdat[x/8]
+<span id="L386" class="ln">   386</span>					for x2 := 0; x2 &lt; 8 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L387" class="ln">   387</span>						gray.SetGray(x+x2, y, color.Gray{(b &gt;&gt; 7) * 0xff})
+<span id="L388" class="ln">   388</span>						b &lt;&lt;= 1
+<span id="L389" class="ln">   389</span>					}
+<span id="L390" class="ln">   390</span>				}
+<span id="L391" class="ln">   391</span>			case cbG2:
+<span id="L392" class="ln">   392</span>				for x := 0; x &lt; d.width; x += 4 {
+<span id="L393" class="ln">   393</span>					b := cdat[x/4]
+<span id="L394" class="ln">   394</span>					for x2 := 0; x2 &lt; 4 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L395" class="ln">   395</span>						gray.SetGray(x+x2, y, color.Gray{(b &gt;&gt; 6) * 0x55})
+<span id="L396" class="ln">   396</span>						b &lt;&lt;= 2
+<span id="L397" class="ln">   397</span>					}
+<span id="L398" class="ln">   398</span>				}
+<span id="L399" class="ln">   399</span>			case cbG4:
+<span id="L400" class="ln">   400</span>				for x := 0; x &lt; d.width; x += 2 {
+<span id="L401" class="ln">   401</span>					b := cdat[x/2]
+<span id="L402" class="ln">   402</span>					for x2 := 0; x2 &lt; 2 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L403" class="ln">   403</span>						gray.SetGray(x+x2, y, color.Gray{(b &gt;&gt; 4) * 0x11})
+<span id="L404" class="ln">   404</span>						b &lt;&lt;= 4
+<span id="L405" class="ln">   405</span>					}
+<span id="L406" class="ln">   406</span>				}
+<span id="L407" class="ln">   407</span>			case cbG8:
+<span id="L408" class="ln">   408</span>				copy(gray.Pix[pixOffset:], cdat)
+<span id="L409" class="ln">   409</span>				pixOffset += gray.Stride
+<span id="L410" class="ln">   410</span>			case cbGA8:
+<span id="L411" class="ln">   411</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L412" class="ln">   412</span>					ycol := cdat[2*x+0]
+<span id="L413" class="ln">   413</span>					nrgba.SetNRGBA(x, y, color.NRGBA{ycol, ycol, ycol, cdat[2*x+1]})
+<span id="L414" class="ln">   414</span>				}
+<span id="L415" class="ln">   415</span>			case cbTC8:
+<span id="L416" class="ln">   416</span>				pix, i, j := rgba.Pix, pixOffset, 0
+<span id="L417" class="ln">   417</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L418" class="ln">   418</span>					pix[i+0] = cdat[j+0]
+<span id="L419" class="ln">   419</span>					pix[i+1] = cdat[j+1]
+<span id="L420" class="ln">   420</span>					pix[i+2] = cdat[j+2]
+<span id="L421" class="ln">   421</span>					pix[i+3] = 0xff
+<span id="L422" class="ln">   422</span>					i += 4
+<span id="L423" class="ln">   423</span>					j += 3
+<span id="L424" class="ln">   424</span>				}
+<span id="L425" class="ln">   425</span>				pixOffset += rgba.Stride
+<span id="L426" class="ln">   426</span>			case cbP1:
+<span id="L427" class="ln">   427</span>				for x := 0; x &lt; d.width; x += 8 {
+<span id="L428" class="ln">   428</span>					b := cdat[x/8]
+<span id="L429" class="ln">   429</span>					for x2 := 0; x2 &lt; 8 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L430" class="ln">   430</span>						idx := b &gt;&gt; 7
+<span id="L431" class="ln">   431</span>						if len(paletted.Palette) &lt;= int(idx) {
+<span id="L432" class="ln">   432</span>							paletted.Palette = paletted.Palette[:int(idx)+1]
+<span id="L433" class="ln">   433</span>						}
+<span id="L434" class="ln">   434</span>						paletted.SetColorIndex(x+x2, y, idx)
+<span id="L435" class="ln">   435</span>						b &lt;&lt;= 1
+<span id="L436" class="ln">   436</span>					}
+<span id="L437" class="ln">   437</span>				}
+<span id="L438" class="ln">   438</span>			case cbP2:
+<span id="L439" class="ln">   439</span>				for x := 0; x &lt; d.width; x += 4 {
+<span id="L440" class="ln">   440</span>					b := cdat[x/4]
+<span id="L441" class="ln">   441</span>					for x2 := 0; x2 &lt; 4 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L442" class="ln">   442</span>						idx := b &gt;&gt; 6
+<span id="L443" class="ln">   443</span>						if len(paletted.Palette) &lt;= int(idx) {
+<span id="L444" class="ln">   444</span>							paletted.Palette = paletted.Palette[:int(idx)+1]
+<span id="L445" class="ln">   445</span>						}
+<span id="L446" class="ln">   446</span>						paletted.SetColorIndex(x+x2, y, idx)
+<span id="L447" class="ln">   447</span>						b &lt;&lt;= 2
+<span id="L448" class="ln">   448</span>					}
+<span id="L449" class="ln">   449</span>				}
+<span id="L450" class="ln">   450</span>			case cbP4:
+<span id="L451" class="ln">   451</span>				for x := 0; x &lt; d.width; x += 2 {
+<span id="L452" class="ln">   452</span>					b := cdat[x/2]
+<span id="L453" class="ln">   453</span>					for x2 := 0; x2 &lt; 2 &amp;&amp; x+x2 &lt; d.width; x2++ {
+<span id="L454" class="ln">   454</span>						idx := b &gt;&gt; 4
+<span id="L455" class="ln">   455</span>						if len(paletted.Palette) &lt;= int(idx) {
+<span id="L456" class="ln">   456</span>							paletted.Palette = paletted.Palette[:int(idx)+1]
+<span id="L457" class="ln">   457</span>						}
+<span id="L458" class="ln">   458</span>						paletted.SetColorIndex(x+x2, y, idx)
+<span id="L459" class="ln">   459</span>						b &lt;&lt;= 4
+<span id="L460" class="ln">   460</span>					}
+<span id="L461" class="ln">   461</span>				}
+<span id="L462" class="ln">   462</span>			case cbP8:
+<span id="L463" class="ln">   463</span>				if len(paletted.Palette) != 255 {
+<span id="L464" class="ln">   464</span>					for x := 0; x &lt; d.width; x++ {
+<span id="L465" class="ln">   465</span>						if len(paletted.Palette) &lt;= int(cdat[x]) {
+<span id="L466" class="ln">   466</span>							paletted.Palette = paletted.Palette[:int(cdat[x])+1]
+<span id="L467" class="ln">   467</span>						}
+<span id="L468" class="ln">   468</span>					}
+<span id="L469" class="ln">   469</span>				}
+<span id="L470" class="ln">   470</span>				copy(paletted.Pix[pixOffset:], cdat)
+<span id="L471" class="ln">   471</span>				pixOffset += paletted.Stride
+<span id="L472" class="ln">   472</span>			case cbTCA8:
+<span id="L473" class="ln">   473</span>				copy(nrgba.Pix[pixOffset:], cdat)
+<span id="L474" class="ln">   474</span>				pixOffset += nrgba.Stride
+<span id="L475" class="ln">   475</span>			case cbG16:
+<span id="L476" class="ln">   476</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L477" class="ln">   477</span>					ycol := uint16(cdat[2*x+0])&lt;&lt;8 | uint16(cdat[2*x+1])
+<span id="L478" class="ln">   478</span>					gray16.SetGray16(x, y, color.Gray16{ycol})
+<span id="L479" class="ln">   479</span>				}
+<span id="L480" class="ln">   480</span>			case cbGA16:
+<span id="L481" class="ln">   481</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L482" class="ln">   482</span>					ycol := uint16(cdat[4*x+0])&lt;&lt;8 | uint16(cdat[4*x+1])
+<span id="L483" class="ln">   483</span>					acol := uint16(cdat[4*x+2])&lt;&lt;8 | uint16(cdat[4*x+3])
+<span id="L484" class="ln">   484</span>					nrgba64.SetNRGBA64(x, y, color.NRGBA64{ycol, ycol, ycol, acol})
+<span id="L485" class="ln">   485</span>				}
+<span id="L486" class="ln">   486</span>			case cbTC16:
+<span id="L487" class="ln">   487</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L488" class="ln">   488</span>					rcol := uint16(cdat[6*x+0])&lt;&lt;8 | uint16(cdat[6*x+1])
+<span id="L489" class="ln">   489</span>					gcol := uint16(cdat[6*x+2])&lt;&lt;8 | uint16(cdat[6*x+3])
+<span id="L490" class="ln">   490</span>					bcol := uint16(cdat[6*x+4])&lt;&lt;8 | uint16(cdat[6*x+5])
+<span id="L491" class="ln">   491</span>					rgba64.SetRGBA64(x, y, color.RGBA64{rcol, gcol, bcol, 0xffff})
+<span id="L492" class="ln">   492</span>				}
+<span id="L493" class="ln">   493</span>			case cbTCA16:
+<span id="L494" class="ln">   494</span>				for x := 0; x &lt; d.width; x++ {
+<span id="L495" class="ln">   495</span>					rcol := uint16(cdat[8*x+0])&lt;&lt;8 | uint16(cdat[8*x+1])
+<span id="L496" class="ln">   496</span>					gcol := uint16(cdat[8*x+2])&lt;&lt;8 | uint16(cdat[8*x+3])
+<span id="L497" class="ln">   497</span>					bcol := uint16(cdat[8*x+4])&lt;&lt;8 | uint16(cdat[8*x+5])
+<span id="L498" class="ln">   498</span>					acol := uint16(cdat[8*x+6])&lt;&lt;8 | uint16(cdat[8*x+7])
+<span id="L499" class="ln">   499</span>					nrgba64.SetNRGBA64(x, y, color.NRGBA64{rcol, gcol, bcol, acol})
+<span id="L500" class="ln">   500</span>				}
+<span id="L501" class="ln">   501</span>			}
+<span id="L502" class="ln">   502</span>	
+<span id="L503" class="ln">   503</span>			<span class="comment">// The current row for y is the previous row for y+1.</span>
+<span id="L504" class="ln">   504</span>			pr, cr = cr, pr
+<span id="L505" class="ln">   505</span>		}
+<span id="L506" class="ln">   506</span>	
+<span id="L507" class="ln">   507</span>		<span class="comment">// Check for EOF, to verify the zlib checksum.</span>
+<span id="L508" class="ln">   508</span>		n := 0
+<span id="L509" class="ln">   509</span>		for i := 0; n == 0 &amp;&amp; err == nil; i++ {
+<span id="L510" class="ln">   510</span>			if i == 100 {
+<span id="L511" class="ln">   511</span>				return nil, io.ErrNoProgress
+<span id="L512" class="ln">   512</span>			}
+<span id="L513" class="ln">   513</span>			n, err = r.Read(pr[:1])
+<span id="L514" class="ln">   514</span>		}
+<span id="L515" class="ln">   515</span>		if err != nil &amp;&amp; err != io.EOF {
+<span id="L516" class="ln">   516</span>			return nil, FormatError(err.Error())
+<span id="L517" class="ln">   517</span>		}
+<span id="L518" class="ln">   518</span>		if n != 0 || d.idatLength != 0 {
+<span id="L519" class="ln">   519</span>			return nil, FormatError(&#34;too much pixel data&#34;)
+<span id="L520" class="ln">   520</span>		}
+<span id="L521" class="ln">   521</span>	
+<span id="L522" class="ln">   522</span>		return img, nil
+<span id="L523" class="ln">   523</span>	}
+<span id="L524" class="ln">   524</span>	
+<span id="L525" class="ln">   525</span>	func (d *decoder) parseIDAT(length uint32) (err error) {
+<span id="L526" class="ln">   526</span>		d.idatLength = length
+<span id="L527" class="ln">   527</span>		d.img, err = d.decode()
+<span id="L528" class="ln">   528</span>		if err != nil {
+<span id="L529" class="ln">   529</span>			return err
+<span id="L530" class="ln">   530</span>		}
+<span id="L531" class="ln">   531</span>		return d.verifyChecksum()
+<span id="L532" class="ln">   532</span>	}
+<span id="L533" class="ln">   533</span>	
+<span id="L534" class="ln">   534</span>	func (d *decoder) parseIEND(length uint32) error {
+<span id="L535" class="ln">   535</span>		if length != 0 {
+<span id="L536" class="ln">   536</span>			return FormatError(&#34;bad IEND length&#34;)
+<span id="L537" class="ln">   537</span>		}
+<span id="L538" class="ln">   538</span>		return d.verifyChecksum()
+<span id="L539" class="ln">   539</span>	}
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>	func (d *decoder) parseChunk() error {
+<span id="L542" class="ln">   542</span>		<span class="comment">// Read the length and chunk type.</span>
+<span id="L543" class="ln">   543</span>		n, err := io.ReadFull(d.r, d.tmp[:8])
+<span id="L544" class="ln">   544</span>		if err != nil {
+<span id="L545" class="ln">   545</span>			return err
+<span id="L546" class="ln">   546</span>		}
+<span id="L547" class="ln">   547</span>		length := binary.BigEndian.Uint32(d.tmp[:4])
+<span id="L548" class="ln">   548</span>		d.crc.Reset()
+<span id="L549" class="ln">   549</span>		d.crc.Write(d.tmp[4:8])
+<span id="L550" class="ln">   550</span>	
+<span id="L551" class="ln">   551</span>		<span class="comment">// Read the chunk data.</span>
+<span id="L552" class="ln">   552</span>		switch string(d.tmp[4:8]) {
+<span id="L553" class="ln">   553</span>		case &#34;IHDR&#34;:
+<span id="L554" class="ln">   554</span>			if d.stage != dsStart {
+<span id="L555" class="ln">   555</span>				return chunkOrderError
+<span id="L556" class="ln">   556</span>			}
+<span id="L557" class="ln">   557</span>			d.stage = dsSeenIHDR
+<span id="L558" class="ln">   558</span>			return d.parseIHDR(length)
+<span id="L559" class="ln">   559</span>		case &#34;PLTE&#34;:
+<span id="L560" class="ln">   560</span>			if d.stage != dsSeenIHDR {
+<span id="L561" class="ln">   561</span>				return chunkOrderError
+<span id="L562" class="ln">   562</span>			}
+<span id="L563" class="ln">   563</span>			d.stage = dsSeenPLTE
+<span id="L564" class="ln">   564</span>			return d.parsePLTE(length)
+<span id="L565" class="ln">   565</span>		case &#34;tRNS&#34;:
+<span id="L566" class="ln">   566</span>			if d.stage != dsSeenPLTE {
+<span id="L567" class="ln">   567</span>				return chunkOrderError
+<span id="L568" class="ln">   568</span>			}
+<span id="L569" class="ln">   569</span>			return d.parsetRNS(length)
+<span id="L570" class="ln">   570</span>		case &#34;IDAT&#34;:
+<span id="L571" class="ln">   571</span>			if d.stage &lt; dsSeenIHDR || d.stage &gt; dsSeenIDAT || (d.cb == cbP8 &amp;&amp; d.stage == dsSeenIHDR) {
+<span id="L572" class="ln">   572</span>				return chunkOrderError
+<span id="L573" class="ln">   573</span>			}
+<span id="L574" class="ln">   574</span>			d.stage = dsSeenIDAT
+<span id="L575" class="ln">   575</span>			return d.parseIDAT(length)
+<span id="L576" class="ln">   576</span>		case &#34;IEND&#34;:
+<span id="L577" class="ln">   577</span>			if d.stage != dsSeenIDAT {
+<span id="L578" class="ln">   578</span>				return chunkOrderError
+<span id="L579" class="ln">   579</span>			}
+<span id="L580" class="ln">   580</span>			d.stage = dsSeenIEND
+<span id="L581" class="ln">   581</span>			return d.parseIEND(length)
+<span id="L582" class="ln">   582</span>		}
+<span id="L583" class="ln">   583</span>		<span class="comment">// Ignore this chunk (of a known length).</span>
+<span id="L584" class="ln">   584</span>		var ignored [4096]byte
+<span id="L585" class="ln">   585</span>		for length &gt; 0 {
+<span id="L586" class="ln">   586</span>			n, err = io.ReadFull(d.r, ignored[:min(len(ignored), int(length))])
+<span id="L587" class="ln">   587</span>			if err != nil {
+<span id="L588" class="ln">   588</span>				return err
+<span id="L589" class="ln">   589</span>			}
+<span id="L590" class="ln">   590</span>			d.crc.Write(ignored[:n])
+<span id="L591" class="ln">   591</span>			length -= uint32(n)
+<span id="L592" class="ln">   592</span>		}
+<span id="L593" class="ln">   593</span>		return d.verifyChecksum()
+<span id="L594" class="ln">   594</span>	}
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>	func (d *decoder) verifyChecksum() error {
+<span id="L597" class="ln">   597</span>		if _, err := io.ReadFull(d.r, d.tmp[:4]); err != nil {
+<span id="L598" class="ln">   598</span>			return err
+<span id="L599" class="ln">   599</span>		}
+<span id="L600" class="ln">   600</span>		if binary.BigEndian.Uint32(d.tmp[:4]) != d.crc.Sum32() {
+<span id="L601" class="ln">   601</span>			return FormatError(&#34;invalid checksum&#34;)
+<span id="L602" class="ln">   602</span>		}
+<span id="L603" class="ln">   603</span>		return nil
+<span id="L604" class="ln">   604</span>	}
+<span id="L605" class="ln">   605</span>	
+<span id="L606" class="ln">   606</span>	func (d *decoder) checkHeader() error {
+<span id="L607" class="ln">   607</span>		_, err := io.ReadFull(d.r, d.tmp[:len(pngHeader)])
+<span id="L608" class="ln">   608</span>		if err != nil {
+<span id="L609" class="ln">   609</span>			return err
+<span id="L610" class="ln">   610</span>		}
+<span id="L611" class="ln">   611</span>		if string(d.tmp[:len(pngHeader)]) != pngHeader {
+<span id="L612" class="ln">   612</span>			return FormatError(&#34;not a PNG file&#34;)
+<span id="L613" class="ln">   613</span>		}
+<span id="L614" class="ln">   614</span>		return nil
+<span id="L615" class="ln">   615</span>	}
+<span id="L616" class="ln">   616</span>	
+<span id="L617" class="ln">   617</span>	<span class="comment">// Decode reads a PNG image from r and returns it as an image.Image.</span>
+<span id="L618" class="ln">   618</span>	<span class="comment">// The type of Image returned depends on the PNG contents.</span>
+<span id="L619" class="ln">   619</span>	func Decode(r io.Reader) (image.Image, error) {
+<span id="L620" class="ln">   620</span>		d := &amp;decoder{
+<span id="L621" class="ln">   621</span>			r:   r,
+<span id="L622" class="ln">   622</span>			crc: crc32.NewIEEE(),
+<span id="L623" class="ln">   623</span>		}
+<span id="L624" class="ln">   624</span>		if err := d.checkHeader(); err != nil {
+<span id="L625" class="ln">   625</span>			if err == io.EOF {
+<span id="L626" class="ln">   626</span>				err = io.ErrUnexpectedEOF
+<span id="L627" class="ln">   627</span>			}
+<span id="L628" class="ln">   628</span>			return nil, err
+<span id="L629" class="ln">   629</span>		}
+<span id="L630" class="ln">   630</span>		for d.stage != dsSeenIEND {
+<span id="L631" class="ln">   631</span>			if err := d.parseChunk(); err != nil {
+<span id="L632" class="ln">   632</span>				if err == io.EOF {
+<span id="L633" class="ln">   633</span>					err = io.ErrUnexpectedEOF
+<span id="L634" class="ln">   634</span>				}
+<span id="L635" class="ln">   635</span>				return nil, err
+<span id="L636" class="ln">   636</span>			}
+<span id="L637" class="ln">   637</span>		}
+<span id="L638" class="ln">   638</span>		return d.img, nil
+<span id="L639" class="ln">   639</span>	}
+<span id="L640" class="ln">   640</span>	
+<span id="L641" class="ln">   641</span>	<span class="comment">// DecodeConfig returns the color model and dimensions of a PNG image without</span>
+<span id="L642" class="ln">   642</span>	<span class="comment">// decoding the entire image.</span>
+<span id="L643" class="ln">   643</span>	func DecodeConfig(r io.Reader) (image.Config, error) {
+<span id="L644" class="ln">   644</span>		d := &amp;decoder{
+<span id="L645" class="ln">   645</span>			r:   r,
+<span id="L646" class="ln">   646</span>			crc: crc32.NewIEEE(),
+<span id="L647" class="ln">   647</span>		}
+<span id="L648" class="ln">   648</span>		if err := d.checkHeader(); err != nil {
+<span id="L649" class="ln">   649</span>			if err == io.EOF {
+<span id="L650" class="ln">   650</span>				err = io.ErrUnexpectedEOF
+<span id="L651" class="ln">   651</span>			}
+<span id="L652" class="ln">   652</span>			return image.Config{}, err
+<span id="L653" class="ln">   653</span>		}
+<span id="L654" class="ln">   654</span>		for {
+<span id="L655" class="ln">   655</span>			if err := d.parseChunk(); err != nil {
+<span id="L656" class="ln">   656</span>				if err == io.EOF {
+<span id="L657" class="ln">   657</span>					err = io.ErrUnexpectedEOF
+<span id="L658" class="ln">   658</span>				}
+<span id="L659" class="ln">   659</span>				return image.Config{}, err
+<span id="L660" class="ln">   660</span>			}
+<span id="L661" class="ln">   661</span>			paletted := d.cb == cbP8 || d.cb == cbP4 || d.cb == cbP2 || d.cb == cbP1
+<span id="L662" class="ln">   662</span>			if d.stage == dsSeenIHDR &amp;&amp; !paletted {
+<span id="L663" class="ln">   663</span>				break
+<span id="L664" class="ln">   664</span>			}
+<span id="L665" class="ln">   665</span>			if d.stage == dsSeenPLTE &amp;&amp; paletted {
+<span id="L666" class="ln">   666</span>				break
+<span id="L667" class="ln">   667</span>			}
+<span id="L668" class="ln">   668</span>		}
+<span id="L669" class="ln">   669</span>		var cm color.Model
+<span id="L670" class="ln">   670</span>		switch d.cb {
+<span id="L671" class="ln">   671</span>		case cbG1, cbG2, cbG4, cbG8:
+<span id="L672" class="ln">   672</span>			cm = color.GrayModel
+<span id="L673" class="ln">   673</span>		case cbGA8:
+<span id="L674" class="ln">   674</span>			cm = color.NRGBAModel
+<span id="L675" class="ln">   675</span>		case cbTC8:
+<span id="L676" class="ln">   676</span>			cm = color.RGBAModel
+<span id="L677" class="ln">   677</span>		case cbP1, cbP2, cbP4, cbP8:
+<span id="L678" class="ln">   678</span>			cm = d.palette
+<span id="L679" class="ln">   679</span>		case cbTCA8:
+<span id="L680" class="ln">   680</span>			cm = color.NRGBAModel
+<span id="L681" class="ln">   681</span>		case cbG16:
+<span id="L682" class="ln">   682</span>			cm = color.Gray16Model
+<span id="L683" class="ln">   683</span>		case cbGA16:
+<span id="L684" class="ln">   684</span>			cm = color.NRGBA64Model
+<span id="L685" class="ln">   685</span>		case cbTC16:
+<span id="L686" class="ln">   686</span>			cm = color.RGBA64Model
+<span id="L687" class="ln">   687</span>		case cbTCA16:
+<span id="L688" class="ln">   688</span>			cm = color.NRGBA64Model
+<span id="L689" class="ln">   689</span>		}
+<span id="L690" class="ln">   690</span>		return image.Config{
+<span id="L691" class="ln">   691</span>			ColorModel: cm,
+<span id="L692" class="ln">   692</span>			Width:      d.width,
+<span id="L693" class="ln">   693</span>			Height:     d.height,
+<span id="L694" class="ln">   694</span>		}, nil
+<span id="L695" class="ln">   695</span>	}
+<span id="L696" class="ln">   696</span>	
+<span id="L697" class="ln">   697</span>	func init() {
+<span id="L698" class="ln">   698</span>		image.RegisterFormat(&#34;png&#34;, pngHeader, Decode, DecodeConfig)
+<span id="L699" class="ln">   699</span>	}
+<span id="L700" class="ln">   700</span>	
+</pre><p><a href="reader.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

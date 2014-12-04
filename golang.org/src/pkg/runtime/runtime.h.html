@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/runtime.h - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/runtime.h</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	/*
+<span id="L6" class="ln">     6</span>	 * basic types
+<span id="L7" class="ln">     7</span>	 */
+<span id="L8" class="ln">     8</span>	typedef	signed char		int8;
+<span id="L9" class="ln">     9</span>	typedef	unsigned char		uint8;
+<span id="L10" class="ln">    10</span>	typedef	signed short		int16;
+<span id="L11" class="ln">    11</span>	typedef	unsigned short		uint16;
+<span id="L12" class="ln">    12</span>	typedef	signed int		int32;
+<span id="L13" class="ln">    13</span>	typedef	unsigned int		uint32;
+<span id="L14" class="ln">    14</span>	typedef	signed long long int	int64;
+<span id="L15" class="ln">    15</span>	typedef	unsigned long long int	uint64;
+<span id="L16" class="ln">    16</span>	typedef	float			float32;
+<span id="L17" class="ln">    17</span>	typedef	double			float64;
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	#ifdef _64BIT
+<span id="L20" class="ln">    20</span>	typedef	uint64		uintptr;
+<span id="L21" class="ln">    21</span>	typedef	int64		intptr;
+<span id="L22" class="ln">    22</span>	typedef	int64		intgo; // Go&#39;s int
+<span id="L23" class="ln">    23</span>	typedef	uint64		uintgo; // Go&#39;s uint
+<span id="L24" class="ln">    24</span>	#else
+<span id="L25" class="ln">    25</span>	typedef	uint32		uintptr;
+<span id="L26" class="ln">    26</span>	typedef	int32		intptr;
+<span id="L27" class="ln">    27</span>	typedef	int32		intgo; // Go&#39;s int
+<span id="L28" class="ln">    28</span>	typedef	uint32		uintgo; // Go&#39;s uint
+<span id="L29" class="ln">    29</span>	#endif
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	#ifdef _64BITREG
+<span id="L32" class="ln">    32</span>	typedef	uint64		uintreg;
+<span id="L33" class="ln">    33</span>	#else
+<span id="L34" class="ln">    34</span>	typedef	uint32		uintreg;
+<span id="L35" class="ln">    35</span>	#endif
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	/*
+<span id="L38" class="ln">    38</span>	 * get rid of C types
+<span id="L39" class="ln">    39</span>	 * the / / / forces a syntax error immediately,
+<span id="L40" class="ln">    40</span>	 * which will show &#34;last name: XXunsigned&#34;.
+<span id="L41" class="ln">    41</span>	 */
+<span id="L42" class="ln">    42</span>	#define	unsigned		XXunsigned / / /
+<span id="L43" class="ln">    43</span>	#define	signed			XXsigned / / /
+<span id="L44" class="ln">    44</span>	#define	char			XXchar / / /
+<span id="L45" class="ln">    45</span>	#define	short			XXshort / / /
+<span id="L46" class="ln">    46</span>	#define	int			XXint / / /
+<span id="L47" class="ln">    47</span>	#define	long			XXlong / / /
+<span id="L48" class="ln">    48</span>	#define	float			XXfloat / / /
+<span id="L49" class="ln">    49</span>	#define	double			XXdouble / / /
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>	/*
+<span id="L52" class="ln">    52</span>	 * defined types
+<span id="L53" class="ln">    53</span>	 */
+<span id="L54" class="ln">    54</span>	typedef	uint8			bool;
+<span id="L55" class="ln">    55</span>	typedef	uint8			byte;
+<span id="L56" class="ln">    56</span>	typedef	struct	Func		Func;
+<span id="L57" class="ln">    57</span>	typedef	struct	G		G;
+<span id="L58" class="ln">    58</span>	typedef	struct	Gobuf		Gobuf;
+<span id="L59" class="ln">    59</span>	typedef	struct	Lock		Lock;
+<span id="L60" class="ln">    60</span>	typedef	struct	M		M;
+<span id="L61" class="ln">    61</span>	typedef	struct	P		P;
+<span id="L62" class="ln">    62</span>	typedef	struct	Note		Note;
+<span id="L63" class="ln">    63</span>	typedef	struct	Slice		Slice;
+<span id="L64" class="ln">    64</span>	typedef	struct	Stktop		Stktop;
+<span id="L65" class="ln">    65</span>	typedef	struct	String		String;
+<span id="L66" class="ln">    66</span>	typedef	struct	FuncVal		FuncVal;
+<span id="L67" class="ln">    67</span>	typedef	struct	SigTab		SigTab;
+<span id="L68" class="ln">    68</span>	typedef	struct	MCache		MCache;
+<span id="L69" class="ln">    69</span>	typedef	struct	FixAlloc	FixAlloc;
+<span id="L70" class="ln">    70</span>	typedef	struct	Iface		Iface;
+<span id="L71" class="ln">    71</span>	typedef	struct	Itab		Itab;
+<span id="L72" class="ln">    72</span>	typedef	struct	InterfaceType	InterfaceType;
+<span id="L73" class="ln">    73</span>	typedef	struct	Eface		Eface;
+<span id="L74" class="ln">    74</span>	typedef	struct	Type		Type;
+<span id="L75" class="ln">    75</span>	typedef	struct	PtrType		PtrType;
+<span id="L76" class="ln">    76</span>	typedef	struct	ChanType		ChanType;
+<span id="L77" class="ln">    77</span>	typedef	struct	MapType		MapType;
+<span id="L78" class="ln">    78</span>	typedef	struct	Defer		Defer;
+<span id="L79" class="ln">    79</span>	typedef	struct	Panic		Panic;
+<span id="L80" class="ln">    80</span>	typedef	struct	Hmap		Hmap;
+<span id="L81" class="ln">    81</span>	typedef	struct	Hiter			Hiter;
+<span id="L82" class="ln">    82</span>	typedef	struct	Hchan		Hchan;
+<span id="L83" class="ln">    83</span>	typedef	struct	Complex64	Complex64;
+<span id="L84" class="ln">    84</span>	typedef	struct	Complex128	Complex128;
+<span id="L85" class="ln">    85</span>	typedef	struct	LibCall		LibCall;
+<span id="L86" class="ln">    86</span>	typedef	struct	WinCallbackContext	WinCallbackContext;
+<span id="L87" class="ln">    87</span>	typedef	struct	Timers		Timers;
+<span id="L88" class="ln">    88</span>	typedef	struct	Timer		Timer;
+<span id="L89" class="ln">    89</span>	typedef	struct	GCStats		GCStats;
+<span id="L90" class="ln">    90</span>	typedef	struct	LFNode		LFNode;
+<span id="L91" class="ln">    91</span>	typedef	struct	ParFor		ParFor;
+<span id="L92" class="ln">    92</span>	typedef	struct	ParForThread	ParForThread;
+<span id="L93" class="ln">    93</span>	typedef	struct	CgoMal		CgoMal;
+<span id="L94" class="ln">    94</span>	typedef	struct	PollDesc	PollDesc;
+<span id="L95" class="ln">    95</span>	typedef	struct	DebugVars	DebugVars;
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>	/*
+<span id="L98" class="ln">    98</span>	 * Per-CPU declaration.
+<span id="L99" class="ln">    99</span>	 *
+<span id="L100" class="ln">   100</span>	 * &#34;extern register&#34; is a special storage class implemented by 6c, 8c, etc.
+<span id="L101" class="ln">   101</span>	 * On the ARM, it is an actual register; elsewhere it is a slot in thread-
+<span id="L102" class="ln">   102</span>	 * local storage indexed by a pseudo-register TLS. See zasmhdr in
+<span id="L103" class="ln">   103</span>	 * src/cmd/dist/buildruntime.c for details, and be aware that the linker may
+<span id="L104" class="ln">   104</span>	 * make further OS-specific changes to the compiler&#39;s output. For example,
+<span id="L105" class="ln">   105</span>	 * 6l/linux rewrites 0(TLS) as -16(FS).
+<span id="L106" class="ln">   106</span>	 *
+<span id="L107" class="ln">   107</span>	 * Every C file linked into a Go program must include runtime.h so that the
+<span id="L108" class="ln">   108</span>	 * C compiler (6c, 8c, etc.) knows to avoid other uses of these dedicated
+<span id="L109" class="ln">   109</span>	 * registers. The Go compiler (6g, 8g, etc.) knows to avoid them.
+<span id="L110" class="ln">   110</span>	 */
+<span id="L111" class="ln">   111</span>	extern	register	G*	g;
+<span id="L112" class="ln">   112</span>	extern	register	M*	m;
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>	/*
+<span id="L115" class="ln">   115</span>	 * defined constants
+<span id="L116" class="ln">   116</span>	 */
+<span id="L117" class="ln">   117</span>	enum
+<span id="L118" class="ln">   118</span>	{
+<span id="L119" class="ln">   119</span>		// G status
+<span id="L120" class="ln">   120</span>		//
+<span id="L121" class="ln">   121</span>		// If you add to this list, add to the list
+<span id="L122" class="ln">   122</span>		// of &#34;okay during garbage collection&#34; status
+<span id="L123" class="ln">   123</span>		// in mgc0.c too.
+<span id="L124" class="ln">   124</span>		Gidle,
+<span id="L125" class="ln">   125</span>		Grunnable,
+<span id="L126" class="ln">   126</span>		Grunning,
+<span id="L127" class="ln">   127</span>		Gsyscall,
+<span id="L128" class="ln">   128</span>		Gwaiting,
+<span id="L129" class="ln">   129</span>		Gmoribund_unused,  // currently unused, but hardcoded in gdb scripts
+<span id="L130" class="ln">   130</span>		Gdead,
+<span id="L131" class="ln">   131</span>	};
+<span id="L132" class="ln">   132</span>	enum
+<span id="L133" class="ln">   133</span>	{
+<span id="L134" class="ln">   134</span>		// P status
+<span id="L135" class="ln">   135</span>		Pidle,
+<span id="L136" class="ln">   136</span>		Prunning,
+<span id="L137" class="ln">   137</span>		Psyscall,
+<span id="L138" class="ln">   138</span>		Pgcstop,
+<span id="L139" class="ln">   139</span>		Pdead,
+<span id="L140" class="ln">   140</span>	};
+<span id="L141" class="ln">   141</span>	enum
+<span id="L142" class="ln">   142</span>	{
+<span id="L143" class="ln">   143</span>		true	= 1,
+<span id="L144" class="ln">   144</span>		false	= 0,
+<span id="L145" class="ln">   145</span>	};
+<span id="L146" class="ln">   146</span>	enum
+<span id="L147" class="ln">   147</span>	{
+<span id="L148" class="ln">   148</span>		PtrSize = sizeof(void*),
+<span id="L149" class="ln">   149</span>	};
+<span id="L150" class="ln">   150</span>	enum
+<span id="L151" class="ln">   151</span>	{
+<span id="L152" class="ln">   152</span>		// Per-M stack segment cache size.
+<span id="L153" class="ln">   153</span>		StackCacheSize = 32,
+<span id="L154" class="ln">   154</span>		// Global &lt;-&gt; per-M stack segment cache transfer batch size.
+<span id="L155" class="ln">   155</span>		StackCacheBatch = 16,
+<span id="L156" class="ln">   156</span>	};
+<span id="L157" class="ln">   157</span>	/*
+<span id="L158" class="ln">   158</span>	 * structures
+<span id="L159" class="ln">   159</span>	 */
+<span id="L160" class="ln">   160</span>	struct	Lock
+<span id="L161" class="ln">   161</span>	{
+<span id="L162" class="ln">   162</span>		// Futex-based impl treats it as uint32 key,
+<span id="L163" class="ln">   163</span>		// while sema-based impl as M* waitm.
+<span id="L164" class="ln">   164</span>		// Used to be a union, but unions break precise GC.
+<span id="L165" class="ln">   165</span>		uintptr	key;
+<span id="L166" class="ln">   166</span>	};
+<span id="L167" class="ln">   167</span>	struct	Note
+<span id="L168" class="ln">   168</span>	{
+<span id="L169" class="ln">   169</span>		// Futex-based impl treats it as uint32 key,
+<span id="L170" class="ln">   170</span>		// while sema-based impl as M* waitm.
+<span id="L171" class="ln">   171</span>		// Used to be a union, but unions break precise GC.
+<span id="L172" class="ln">   172</span>		uintptr	key;
+<span id="L173" class="ln">   173</span>	};
+<span id="L174" class="ln">   174</span>	struct String
+<span id="L175" class="ln">   175</span>	{
+<span id="L176" class="ln">   176</span>		byte*	str;
+<span id="L177" class="ln">   177</span>		intgo	len;
+<span id="L178" class="ln">   178</span>	};
+<span id="L179" class="ln">   179</span>	struct FuncVal
+<span id="L180" class="ln">   180</span>	{
+<span id="L181" class="ln">   181</span>		void	(*fn)(void);
+<span id="L182" class="ln">   182</span>		// variable-size, fn-specific data here
+<span id="L183" class="ln">   183</span>	};
+<span id="L184" class="ln">   184</span>	struct Iface
+<span id="L185" class="ln">   185</span>	{
+<span id="L186" class="ln">   186</span>		Itab*	tab;
+<span id="L187" class="ln">   187</span>		void*	data;
+<span id="L188" class="ln">   188</span>	};
+<span id="L189" class="ln">   189</span>	struct Eface
+<span id="L190" class="ln">   190</span>	{
+<span id="L191" class="ln">   191</span>		Type*	type;
+<span id="L192" class="ln">   192</span>		void*	data;
+<span id="L193" class="ln">   193</span>	};
+<span id="L194" class="ln">   194</span>	struct Complex64
+<span id="L195" class="ln">   195</span>	{
+<span id="L196" class="ln">   196</span>		float32	real;
+<span id="L197" class="ln">   197</span>		float32	imag;
+<span id="L198" class="ln">   198</span>	};
+<span id="L199" class="ln">   199</span>	struct Complex128
+<span id="L200" class="ln">   200</span>	{
+<span id="L201" class="ln">   201</span>		float64	real;
+<span id="L202" class="ln">   202</span>		float64	imag;
+<span id="L203" class="ln">   203</span>	};
+<span id="L204" class="ln">   204</span>	
+<span id="L205" class="ln">   205</span>	struct	Slice
+<span id="L206" class="ln">   206</span>	{				// must not move anything
+<span id="L207" class="ln">   207</span>		byte*	array;		// actual data
+<span id="L208" class="ln">   208</span>		uintgo	len;		// number of elements
+<span id="L209" class="ln">   209</span>		uintgo	cap;		// allocated number of elements
+<span id="L210" class="ln">   210</span>	};
+<span id="L211" class="ln">   211</span>	struct	Gobuf
+<span id="L212" class="ln">   212</span>	{
+<span id="L213" class="ln">   213</span>		// The offsets of sp, pc, and g are known to (hard-coded in) libmach.
+<span id="L214" class="ln">   214</span>		uintptr	sp;
+<span id="L215" class="ln">   215</span>		uintptr	pc;
+<span id="L216" class="ln">   216</span>		G*	g;
+<span id="L217" class="ln">   217</span>		void*	ctxt;
+<span id="L218" class="ln">   218</span>		uintreg	ret;
+<span id="L219" class="ln">   219</span>		uintptr	lr;
+<span id="L220" class="ln">   220</span>	};
+<span id="L221" class="ln">   221</span>	struct	GCStats
+<span id="L222" class="ln">   222</span>	{
+<span id="L223" class="ln">   223</span>		// the struct must consist of only uint64&#39;s,
+<span id="L224" class="ln">   224</span>		// because it is casted to uint64[].
+<span id="L225" class="ln">   225</span>		uint64	nhandoff;
+<span id="L226" class="ln">   226</span>		uint64	nhandoffcnt;
+<span id="L227" class="ln">   227</span>		uint64	nprocyield;
+<span id="L228" class="ln">   228</span>		uint64	nosyield;
+<span id="L229" class="ln">   229</span>		uint64	nsleep;
+<span id="L230" class="ln">   230</span>	};
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>	struct	LibCall
+<span id="L233" class="ln">   233</span>	{
+<span id="L234" class="ln">   234</span>		void	(*fn)(void*);
+<span id="L235" class="ln">   235</span>		uintptr	n;	// number of parameters
+<span id="L236" class="ln">   236</span>		void*	args;	// parameters
+<span id="L237" class="ln">   237</span>		uintptr	r1;	// return values
+<span id="L238" class="ln">   238</span>		uintptr	r2;
+<span id="L239" class="ln">   239</span>		uintptr	err;	// error number
+<span id="L240" class="ln">   240</span>	};
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>	// describes how to handle callback
+<span id="L243" class="ln">   243</span>	struct	WinCallbackContext
+<span id="L244" class="ln">   244</span>	{
+<span id="L245" class="ln">   245</span>		void*	gobody;		// Go function to call
+<span id="L246" class="ln">   246</span>		uintptr	argsize;	// callback arguments size (in bytes)
+<span id="L247" class="ln">   247</span>		uintptr	restorestack;	// adjust stack on return by (in bytes) (386 only)
+<span id="L248" class="ln">   248</span>		bool	cleanstack;
+<span id="L249" class="ln">   249</span>	};
+<span id="L250" class="ln">   250</span>	
+<span id="L251" class="ln">   251</span>	struct	G
+<span id="L252" class="ln">   252</span>	{
+<span id="L253" class="ln">   253</span>		// stackguard0 can be set to StackPreempt as opposed to stackguard
+<span id="L254" class="ln">   254</span>		uintptr	stackguard0;	// cannot move - also known to linker, libmach, runtime/cgo
+<span id="L255" class="ln">   255</span>		uintptr	stackbase;	// cannot move - also known to libmach, runtime/cgo
+<span id="L256" class="ln">   256</span>		uint32	panicwrap;	// cannot move - also known to linker
+<span id="L257" class="ln">   257</span>		Defer*	defer;
+<span id="L258" class="ln">   258</span>		Panic*	panic;
+<span id="L259" class="ln">   259</span>		Gobuf	sched;
+<span id="L260" class="ln">   260</span>		uintptr	syscallstack;	// if status==Gsyscall, syscallstack = stackbase to use during gc
+<span id="L261" class="ln">   261</span>		uintptr	syscallsp;	// if status==Gsyscall, syscallsp = sched.sp to use during gc
+<span id="L262" class="ln">   262</span>		uintptr	syscallpc;	// if status==Gsyscall, syscallpc = sched.pc to use during gc
+<span id="L263" class="ln">   263</span>		uintptr	syscallguard;	// if status==Gsyscall, syscallguard = stackguard to use during gc
+<span id="L264" class="ln">   264</span>		uintptr	stackguard;	// same as stackguard0, but not set to StackPreempt
+<span id="L265" class="ln">   265</span>		uintptr	stack0;
+<span id="L266" class="ln">   266</span>		uintptr	stacksize;
+<span id="L267" class="ln">   267</span>		void*	param;		// passed parameter on wakeup
+<span id="L268" class="ln">   268</span>		int16	status;
+<span id="L269" class="ln">   269</span>		int64	goid;
+<span id="L270" class="ln">   270</span>		int64	waitsince;	// approx time when the G become blocked
+<span id="L271" class="ln">   271</span>		int8*	waitreason;	// if status==Gwaiting
+<span id="L272" class="ln">   272</span>		G*	schedlink;
+<span id="L273" class="ln">   273</span>		bool	ispanic;
+<span id="L274" class="ln">   274</span>		bool	issystem;	// do not output in stack dump
+<span id="L275" class="ln">   275</span>		bool	isbackground;	// ignore in deadlock detector
+<span id="L276" class="ln">   276</span>		bool	preempt;	// preemption signal, duplicates stackguard0 = StackPreempt
+<span id="L277" class="ln">   277</span>		bool	paniconfault;	// panic (instead of crash) on unexpected fault address
+<span id="L278" class="ln">   278</span>		int8	raceignore;	// ignore race detection events
+<span id="L279" class="ln">   279</span>		M*	m;		// for debuggers, but offset not hard-coded
+<span id="L280" class="ln">   280</span>		M*	lockedm;
+<span id="L281" class="ln">   281</span>		int32	sig;
+<span id="L282" class="ln">   282</span>		int32	writenbuf;
+<span id="L283" class="ln">   283</span>		byte*	writebuf;
+<span id="L284" class="ln">   284</span>		uintptr	sigcode0;
+<span id="L285" class="ln">   285</span>		uintptr	sigcode1;
+<span id="L286" class="ln">   286</span>		uintptr	sigpc;
+<span id="L287" class="ln">   287</span>		uintptr	gopc;		// pc of go statement that created this goroutine
+<span id="L288" class="ln">   288</span>		uintptr	racectx;
+<span id="L289" class="ln">   289</span>		uintptr	end[];
+<span id="L290" class="ln">   290</span>	};
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>	struct	M
+<span id="L293" class="ln">   293</span>	{
+<span id="L294" class="ln">   294</span>		G*	g0;		// goroutine with scheduling stack
+<span id="L295" class="ln">   295</span>		void*	moreargp;	// argument pointer for more stack
+<span id="L296" class="ln">   296</span>		Gobuf	morebuf;	// gobuf arg to morestack
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>		// Fields not known to debuggers.
+<span id="L299" class="ln">   299</span>		uint32	moreframesize;	// size arguments to morestack
+<span id="L300" class="ln">   300</span>		uint32	moreargsize;	// known by amd64 asm to follow moreframesize
+<span id="L301" class="ln">   301</span>		uintreg	cret;		// return value from C
+<span id="L302" class="ln">   302</span>		uint64	procid;		// for debuggers, but offset not hard-coded
+<span id="L303" class="ln">   303</span>		G*	gsignal;	// signal-handling G
+<span id="L304" class="ln">   304</span>		uintptr	tls[4];		// thread-local storage (for x86 extern register)
+<span id="L305" class="ln">   305</span>		void	(*mstartfn)(void);
+<span id="L306" class="ln">   306</span>		G*	curg;		// current running goroutine
+<span id="L307" class="ln">   307</span>		G*	caughtsig;	// goroutine running during fatal signal
+<span id="L308" class="ln">   308</span>		P*	p;		// attached P for executing Go code (nil if not executing Go code)
+<span id="L309" class="ln">   309</span>		P*	nextp;
+<span id="L310" class="ln">   310</span>		int32	id;
+<span id="L311" class="ln">   311</span>		int32	mallocing;
+<span id="L312" class="ln">   312</span>		int32	throwing;
+<span id="L313" class="ln">   313</span>		int32	gcing;
+<span id="L314" class="ln">   314</span>		int32	locks;
+<span id="L315" class="ln">   315</span>		int32	softfloat;
+<span id="L316" class="ln">   316</span>		int32	dying;
+<span id="L317" class="ln">   317</span>		int32	profilehz;
+<span id="L318" class="ln">   318</span>		int32	helpgc;
+<span id="L319" class="ln">   319</span>		bool	spinning;	// M is out of work and is actively looking for work
+<span id="L320" class="ln">   320</span>		bool	blocked;	// M is blocked on a Note
+<span id="L321" class="ln">   321</span>		uint32	fastrand;
+<span id="L322" class="ln">   322</span>		uint64	ncgocall;	// number of cgo calls in total
+<span id="L323" class="ln">   323</span>		int32	ncgo;		// number of cgo calls currently in progress
+<span id="L324" class="ln">   324</span>		CgoMal*	cgomal;
+<span id="L325" class="ln">   325</span>		Note	park;
+<span id="L326" class="ln">   326</span>		M*	alllink;	// on allm
+<span id="L327" class="ln">   327</span>		M*	schedlink;
+<span id="L328" class="ln">   328</span>		uint32	machport;	// Return address for Mach IPC (OS X)
+<span id="L329" class="ln">   329</span>		MCache*	mcache;
+<span id="L330" class="ln">   330</span>		int32	stackinuse;
+<span id="L331" class="ln">   331</span>		uint32	stackcachepos;
+<span id="L332" class="ln">   332</span>		uint32	stackcachecnt;
+<span id="L333" class="ln">   333</span>		void*	stackcache[StackCacheSize];
+<span id="L334" class="ln">   334</span>		G*	lockedg;
+<span id="L335" class="ln">   335</span>		uintptr	createstack[32];// Stack that created this thread.
+<span id="L336" class="ln">   336</span>		uint32	freglo[16];	// D[i] lsb and F[i]
+<span id="L337" class="ln">   337</span>		uint32	freghi[16];	// D[i] msb and F[i+16]
+<span id="L338" class="ln">   338</span>		uint32	fflag;		// floating point compare flags
+<span id="L339" class="ln">   339</span>		uint32	locked;		// tracking for LockOSThread
+<span id="L340" class="ln">   340</span>		M*	nextwaitm;	// next M waiting for lock
+<span id="L341" class="ln">   341</span>		uintptr	waitsema;	// semaphore for parking on locks
+<span id="L342" class="ln">   342</span>		uint32	waitsemacount;
+<span id="L343" class="ln">   343</span>		uint32	waitsemalock;
+<span id="L344" class="ln">   344</span>		GCStats	gcstats;
+<span id="L345" class="ln">   345</span>		bool	needextram;
+<span id="L346" class="ln">   346</span>		uint8	traceback;
+<span id="L347" class="ln">   347</span>		bool	(*waitunlockf)(G*, void*);
+<span id="L348" class="ln">   348</span>		void*	waitlock;
+<span id="L349" class="ln">   349</span>		uintptr	forkstackguard;
+<span id="L350" class="ln">   350</span>	#ifdef GOOS_windows
+<span id="L351" class="ln">   351</span>		void*	thread;		// thread handle
+<span id="L352" class="ln">   352</span>		// these are here because they are too large to be on the stack
+<span id="L353" class="ln">   353</span>		// of low-level NOSPLIT functions.
+<span id="L354" class="ln">   354</span>		LibCall	libcall;
+<span id="L355" class="ln">   355</span>		uintptr	libcallpc;	// for cpu profiler
+<span id="L356" class="ln">   356</span>		uintptr	libcallsp;
+<span id="L357" class="ln">   357</span>		G*	libcallg;
+<span id="L358" class="ln">   358</span>	#endif
+<span id="L359" class="ln">   359</span>	#ifdef GOOS_solaris
+<span id="L360" class="ln">   360</span>		int32*	perrno; 	// pointer to TLS errno
+<span id="L361" class="ln">   361</span>		// these are here because they are too large to be on the stack
+<span id="L362" class="ln">   362</span>		// of low-level NOSPLIT functions.
+<span id="L363" class="ln">   363</span>		LibCall	libcall;
+<span id="L364" class="ln">   364</span>		struct {
+<span id="L365" class="ln">   365</span>			int64	tv_sec;
+<span id="L366" class="ln">   366</span>			int64	tv_nsec;
+<span id="L367" class="ln">   367</span>		} ts;
+<span id="L368" class="ln">   368</span>		struct {
+<span id="L369" class="ln">   369</span>			uintptr v[6];
+<span id="L370" class="ln">   370</span>		} scratch;
+<span id="L371" class="ln">   371</span>	#endif
+<span id="L372" class="ln">   372</span>	#ifdef GOOS_plan9
+<span id="L373" class="ln">   373</span>		int8*	notesig;
+<span id="L374" class="ln">   374</span>		byte*	errstr;
+<span id="L375" class="ln">   375</span>	#endif
+<span id="L376" class="ln">   376</span>		uintptr	end[];
+<span id="L377" class="ln">   377</span>	};
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>	struct P
+<span id="L380" class="ln">   380</span>	{
+<span id="L381" class="ln">   381</span>		Lock;
+<span id="L382" class="ln">   382</span>	
+<span id="L383" class="ln">   383</span>		int32	id;
+<span id="L384" class="ln">   384</span>		uint32	status;		// one of Pidle/Prunning/...
+<span id="L385" class="ln">   385</span>		P*	link;
+<span id="L386" class="ln">   386</span>		uint32	schedtick;	// incremented on every scheduler call
+<span id="L387" class="ln">   387</span>		uint32	syscalltick;	// incremented on every system call
+<span id="L388" class="ln">   388</span>		M*	m;		// back-link to associated M (nil if idle)
+<span id="L389" class="ln">   389</span>		MCache*	mcache;
+<span id="L390" class="ln">   390</span>		Defer*	deferpool[5];	// pool of available Defer structs of different sizes (see panic.c)
+<span id="L391" class="ln">   391</span>	
+<span id="L392" class="ln">   392</span>		// Cache of goroutine ids, amortizes accesses to runtime·sched.goidgen.
+<span id="L393" class="ln">   393</span>		uint64	goidcache;
+<span id="L394" class="ln">   394</span>		uint64	goidcacheend;
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>		// Queue of runnable goroutines.
+<span id="L397" class="ln">   397</span>		uint32	runqhead;
+<span id="L398" class="ln">   398</span>		uint32	runqtail;
+<span id="L399" class="ln">   399</span>		G*	runq[256];
+<span id="L400" class="ln">   400</span>	
+<span id="L401" class="ln">   401</span>		// Available G&#39;s (status == Gdead)
+<span id="L402" class="ln">   402</span>		G*	gfree;
+<span id="L403" class="ln">   403</span>		int32	gfreecnt;
+<span id="L404" class="ln">   404</span>	
+<span id="L405" class="ln">   405</span>		byte	pad[64];
+<span id="L406" class="ln">   406</span>	};
+<span id="L407" class="ln">   407</span>	
+<span id="L408" class="ln">   408</span>	// The m-&gt;locked word holds two pieces of state counting active calls to LockOSThread/lockOSThread.
+<span id="L409" class="ln">   409</span>	// The low bit (LockExternal) is a boolean reporting whether any LockOSThread call is active.
+<span id="L410" class="ln">   410</span>	// External locks are not recursive; a second lock is silently ignored.
+<span id="L411" class="ln">   411</span>	// The upper bits of m-&gt;lockedcount record the nesting depth of calls to lockOSThread
+<span id="L412" class="ln">   412</span>	// (counting up by LockInternal), popped by unlockOSThread (counting down by LockInternal).
+<span id="L413" class="ln">   413</span>	// Internal locks can be recursive. For instance, a lock for cgo can occur while the main
+<span id="L414" class="ln">   414</span>	// goroutine is holding the lock during the initialization phase.
+<span id="L415" class="ln">   415</span>	enum
+<span id="L416" class="ln">   416</span>	{
+<span id="L417" class="ln">   417</span>		LockExternal = 1,
+<span id="L418" class="ln">   418</span>		LockInternal = 2,
+<span id="L419" class="ln">   419</span>	};
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>	struct	Stktop
+<span id="L422" class="ln">   422</span>	{
+<span id="L423" class="ln">   423</span>		// The offsets of these fields are known to (hard-coded in) libmach.
+<span id="L424" class="ln">   424</span>		uintptr	stackguard;
+<span id="L425" class="ln">   425</span>		uintptr	stackbase;
+<span id="L426" class="ln">   426</span>		Gobuf	gobuf;
+<span id="L427" class="ln">   427</span>		uint32	argsize;
+<span id="L428" class="ln">   428</span>		uint32	panicwrap;
+<span id="L429" class="ln">   429</span>	
+<span id="L430" class="ln">   430</span>		uint8*	argp;	// pointer to arguments in old frame
+<span id="L431" class="ln">   431</span>		bool	panic;	// is this frame the top of a panic?
+<span id="L432" class="ln">   432</span>		bool	malloced;
+<span id="L433" class="ln">   433</span>	};
+<span id="L434" class="ln">   434</span>	struct	SigTab
+<span id="L435" class="ln">   435</span>	{
+<span id="L436" class="ln">   436</span>		int32	flags;
+<span id="L437" class="ln">   437</span>		int8	*name;
+<span id="L438" class="ln">   438</span>	};
+<span id="L439" class="ln">   439</span>	enum
+<span id="L440" class="ln">   440</span>	{
+<span id="L441" class="ln">   441</span>		SigNotify = 1&lt;&lt;0,	// let signal.Notify have signal, even if from kernel
+<span id="L442" class="ln">   442</span>		SigKill = 1&lt;&lt;1,		// if signal.Notify doesn&#39;t take it, exit quietly
+<span id="L443" class="ln">   443</span>		SigThrow = 1&lt;&lt;2,	// if signal.Notify doesn&#39;t take it, exit loudly
+<span id="L444" class="ln">   444</span>		SigPanic = 1&lt;&lt;3,	// if the signal is from the kernel, panic
+<span id="L445" class="ln">   445</span>		SigDefault = 1&lt;&lt;4,	// if the signal isn&#39;t explicitly requested, don&#39;t monitor it
+<span id="L446" class="ln">   446</span>		SigHandling = 1&lt;&lt;5,	// our signal handler is registered
+<span id="L447" class="ln">   447</span>		SigIgnored = 1&lt;&lt;6,	// the signal was ignored before we registered for it
+<span id="L448" class="ln">   448</span>		SigGoExit = 1&lt;&lt;7,	// cause all runtime procs to exit (only used on Plan 9).
+<span id="L449" class="ln">   449</span>	};
+<span id="L450" class="ln">   450</span>	
+<span id="L451" class="ln">   451</span>	// Layout of in-memory per-function information prepared by linker
+<span id="L452" class="ln">   452</span>	// See http://golang.org/s/go12symtab.
+<span id="L453" class="ln">   453</span>	// Keep in sync with linker and with ../../libmach/sym.c
+<span id="L454" class="ln">   454</span>	// and with package debug/gosym.
+<span id="L455" class="ln">   455</span>	struct	Func
+<span id="L456" class="ln">   456</span>	{
+<span id="L457" class="ln">   457</span>		uintptr	entry;	// start pc
+<span id="L458" class="ln">   458</span>		int32	nameoff;// function name
+<span id="L459" class="ln">   459</span>		
+<span id="L460" class="ln">   460</span>		int32	args;	// in/out args size
+<span id="L461" class="ln">   461</span>		int32	frame;	// legacy frame size; use pcsp if possible
+<span id="L462" class="ln">   462</span>	
+<span id="L463" class="ln">   463</span>		int32	pcsp;
+<span id="L464" class="ln">   464</span>		int32	pcfile;
+<span id="L465" class="ln">   465</span>		int32	pcln;
+<span id="L466" class="ln">   466</span>		int32	npcdata;
+<span id="L467" class="ln">   467</span>		int32	nfuncdata;
+<span id="L468" class="ln">   468</span>	};
+<span id="L469" class="ln">   469</span>	
+<span id="L470" class="ln">   470</span>	// layout of Itab known to compilers
+<span id="L471" class="ln">   471</span>	// allocated in non-garbage-collected memory
+<span id="L472" class="ln">   472</span>	struct	Itab
+<span id="L473" class="ln">   473</span>	{
+<span id="L474" class="ln">   474</span>		InterfaceType*	inter;
+<span id="L475" class="ln">   475</span>		Type*	type;
+<span id="L476" class="ln">   476</span>		Itab*	link;
+<span id="L477" class="ln">   477</span>		int32	bad;
+<span id="L478" class="ln">   478</span>		int32	unused;
+<span id="L479" class="ln">   479</span>		void	(*fun[])(void);
+<span id="L480" class="ln">   480</span>	};
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>	#ifdef GOOS_nacl
+<span id="L483" class="ln">   483</span>	enum {
+<span id="L484" class="ln">   484</span>	   NaCl = 1,
+<span id="L485" class="ln">   485</span>	};
+<span id="L486" class="ln">   486</span>	#else
+<span id="L487" class="ln">   487</span>	enum {
+<span id="L488" class="ln">   488</span>	   NaCl = 0,
+<span id="L489" class="ln">   489</span>	};
+<span id="L490" class="ln">   490</span>	#endif
+<span id="L491" class="ln">   491</span>	
+<span id="L492" class="ln">   492</span>	#ifdef GOOS_windows
+<span id="L493" class="ln">   493</span>	enum {
+<span id="L494" class="ln">   494</span>	   Windows = 1
+<span id="L495" class="ln">   495</span>	};
+<span id="L496" class="ln">   496</span>	#else
+<span id="L497" class="ln">   497</span>	enum {
+<span id="L498" class="ln">   498</span>	   Windows = 0
+<span id="L499" class="ln">   499</span>	};
+<span id="L500" class="ln">   500</span>	#endif
+<span id="L501" class="ln">   501</span>	#ifdef GOOS_solaris
+<span id="L502" class="ln">   502</span>	enum {
+<span id="L503" class="ln">   503</span>	   Solaris = 1
+<span id="L504" class="ln">   504</span>	};
+<span id="L505" class="ln">   505</span>	#else
+<span id="L506" class="ln">   506</span>	enum {
+<span id="L507" class="ln">   507</span>	   Solaris = 0
+<span id="L508" class="ln">   508</span>	};
+<span id="L509" class="ln">   509</span>	#endif
+<span id="L510" class="ln">   510</span>	
+<span id="L511" class="ln">   511</span>	struct	Timers
+<span id="L512" class="ln">   512</span>	{
+<span id="L513" class="ln">   513</span>		Lock;
+<span id="L514" class="ln">   514</span>		G	*timerproc;
+<span id="L515" class="ln">   515</span>		bool		sleeping;
+<span id="L516" class="ln">   516</span>		bool		rescheduling;
+<span id="L517" class="ln">   517</span>		Note	waitnote;
+<span id="L518" class="ln">   518</span>		Timer	**t;
+<span id="L519" class="ln">   519</span>		int32	len;
+<span id="L520" class="ln">   520</span>		int32	cap;
+<span id="L521" class="ln">   521</span>	};
+<span id="L522" class="ln">   522</span>	
+<span id="L523" class="ln">   523</span>	// Package time knows the layout of this structure.
+<span id="L524" class="ln">   524</span>	// If this struct changes, adjust ../time/sleep.go:/runtimeTimer.
+<span id="L525" class="ln">   525</span>	// For GOOS=nacl, package syscall knows the layout of this structure.
+<span id="L526" class="ln">   526</span>	// If this struct changes, adjust ../syscall/net_nacl.go:/runtimeTimer.
+<span id="L527" class="ln">   527</span>	struct	Timer
+<span id="L528" class="ln">   528</span>	{
+<span id="L529" class="ln">   529</span>		int32	i;	// heap index
+<span id="L530" class="ln">   530</span>	
+<span id="L531" class="ln">   531</span>		// Timer wakes up at when, and then at when+period, ... (period &gt; 0 only)
+<span id="L532" class="ln">   532</span>		// each time calling f(now, arg) in the timer goroutine, so f must be
+<span id="L533" class="ln">   533</span>		// a well-behaved function and not block.
+<span id="L534" class="ln">   534</span>		int64	when;
+<span id="L535" class="ln">   535</span>		int64	period;
+<span id="L536" class="ln">   536</span>		FuncVal	*fv;
+<span id="L537" class="ln">   537</span>		Eface	arg;
+<span id="L538" class="ln">   538</span>	};
+<span id="L539" class="ln">   539</span>	
+<span id="L540" class="ln">   540</span>	// Lock-free stack node.
+<span id="L541" class="ln">   541</span>	struct LFNode
+<span id="L542" class="ln">   542</span>	{
+<span id="L543" class="ln">   543</span>		LFNode	*next;
+<span id="L544" class="ln">   544</span>		uintptr	pushcnt;
+<span id="L545" class="ln">   545</span>	};
+<span id="L546" class="ln">   546</span>	
+<span id="L547" class="ln">   547</span>	// Parallel for descriptor.
+<span id="L548" class="ln">   548</span>	struct ParFor
+<span id="L549" class="ln">   549</span>	{
+<span id="L550" class="ln">   550</span>		void (*body)(ParFor*, uint32);	// executed for each element
+<span id="L551" class="ln">   551</span>		uint32 done;			// number of idle threads
+<span id="L552" class="ln">   552</span>		uint32 nthr;			// total number of threads
+<span id="L553" class="ln">   553</span>		uint32 nthrmax;			// maximum number of threads
+<span id="L554" class="ln">   554</span>		uint32 thrseq;			// thread id sequencer
+<span id="L555" class="ln">   555</span>		uint32 cnt;			// iteration space [0, cnt)
+<span id="L556" class="ln">   556</span>		void *ctx;			// arbitrary user context
+<span id="L557" class="ln">   557</span>		bool wait;			// if true, wait while all threads finish processing,
+<span id="L558" class="ln">   558</span>						// otherwise parfor may return while other threads are still working
+<span id="L559" class="ln">   559</span>		ParForThread *thr;		// array of thread descriptors
+<span id="L560" class="ln">   560</span>		uint32 pad;			// to align ParForThread.pos for 64-bit atomic operations
+<span id="L561" class="ln">   561</span>		// stats
+<span id="L562" class="ln">   562</span>		uint64 nsteal;
+<span id="L563" class="ln">   563</span>		uint64 nstealcnt;
+<span id="L564" class="ln">   564</span>		uint64 nprocyield;
+<span id="L565" class="ln">   565</span>		uint64 nosyield;
+<span id="L566" class="ln">   566</span>		uint64 nsleep;
+<span id="L567" class="ln">   567</span>	};
+<span id="L568" class="ln">   568</span>	
+<span id="L569" class="ln">   569</span>	// Track memory allocated by code not written in Go during a cgo call,
+<span id="L570" class="ln">   570</span>	// so that the garbage collector can see them.
+<span id="L571" class="ln">   571</span>	struct CgoMal
+<span id="L572" class="ln">   572</span>	{
+<span id="L573" class="ln">   573</span>		CgoMal	*next;
+<span id="L574" class="ln">   574</span>		void	*alloc;
+<span id="L575" class="ln">   575</span>	};
+<span id="L576" class="ln">   576</span>	
+<span id="L577" class="ln">   577</span>	// Holds variables parsed from GODEBUG env var.
+<span id="L578" class="ln">   578</span>	struct DebugVars
+<span id="L579" class="ln">   579</span>	{
+<span id="L580" class="ln">   580</span>		int32	allocfreetrace;
+<span id="L581" class="ln">   581</span>		int32	efence;
+<span id="L582" class="ln">   582</span>		int32	gctrace;
+<span id="L583" class="ln">   583</span>		int32	gcdead;
+<span id="L584" class="ln">   584</span>		int32	scheddetail;
+<span id="L585" class="ln">   585</span>		int32	schedtrace;
+<span id="L586" class="ln">   586</span>	};
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>	extern bool runtime·precisestack;
+<span id="L589" class="ln">   589</span>	extern bool runtime·copystack;
+<span id="L590" class="ln">   590</span>	
+<span id="L591" class="ln">   591</span>	/*
+<span id="L592" class="ln">   592</span>	 * defined macros
+<span id="L593" class="ln">   593</span>	 *    you need super-gopher-guru privilege
+<span id="L594" class="ln">   594</span>	 *    to add this list.
+<span id="L595" class="ln">   595</span>	 */
+<span id="L596" class="ln">   596</span>	#define	nelem(x)	(sizeof(x)/sizeof((x)[0]))
+<span id="L597" class="ln">   597</span>	#define	nil		((void*)0)
+<span id="L598" class="ln">   598</span>	#define	offsetof(s,m)	(uint32)(&amp;(((s*)0)-&gt;m))
+<span id="L599" class="ln">   599</span>	#define	ROUND(x, n)	(((x)+(n)-1)&amp;~(uintptr)((n)-1)) /* all-caps to mark as macro: it evaluates n twice */
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>	/*
+<span id="L602" class="ln">   602</span>	 * known to compiler
+<span id="L603" class="ln">   603</span>	 */
+<span id="L604" class="ln">   604</span>	enum {
+<span id="L605" class="ln">   605</span>		Structrnd = sizeof(uintreg),
+<span id="L606" class="ln">   606</span>	};
+<span id="L607" class="ln">   607</span>	
+<span id="L608" class="ln">   608</span>	/*
+<span id="L609" class="ln">   609</span>	 * type algorithms - known to compiler
+<span id="L610" class="ln">   610</span>	 */
+<span id="L611" class="ln">   611</span>	enum
+<span id="L612" class="ln">   612</span>	{
+<span id="L613" class="ln">   613</span>		AMEM,
+<span id="L614" class="ln">   614</span>		AMEM0,
+<span id="L615" class="ln">   615</span>		AMEM8,
+<span id="L616" class="ln">   616</span>		AMEM16,
+<span id="L617" class="ln">   617</span>		AMEM32,
+<span id="L618" class="ln">   618</span>		AMEM64,
+<span id="L619" class="ln">   619</span>		AMEM128,
+<span id="L620" class="ln">   620</span>		ANOEQ,
+<span id="L621" class="ln">   621</span>		ANOEQ0,
+<span id="L622" class="ln">   622</span>		ANOEQ8,
+<span id="L623" class="ln">   623</span>		ANOEQ16,
+<span id="L624" class="ln">   624</span>		ANOEQ32,
+<span id="L625" class="ln">   625</span>		ANOEQ64,
+<span id="L626" class="ln">   626</span>		ANOEQ128,
+<span id="L627" class="ln">   627</span>		ASTRING,
+<span id="L628" class="ln">   628</span>		AINTER,
+<span id="L629" class="ln">   629</span>		ANILINTER,
+<span id="L630" class="ln">   630</span>		ASLICE,
+<span id="L631" class="ln">   631</span>		AFLOAT32,
+<span id="L632" class="ln">   632</span>		AFLOAT64,
+<span id="L633" class="ln">   633</span>		ACPLX64,
+<span id="L634" class="ln">   634</span>		ACPLX128,
+<span id="L635" class="ln">   635</span>		Amax
+<span id="L636" class="ln">   636</span>	};
+<span id="L637" class="ln">   637</span>	typedef	struct	Alg		Alg;
+<span id="L638" class="ln">   638</span>	struct	Alg
+<span id="L639" class="ln">   639</span>	{
+<span id="L640" class="ln">   640</span>		void	(*hash)(uintptr*, uintptr, void*);
+<span id="L641" class="ln">   641</span>		void	(*equal)(bool*, uintptr, void*, void*);
+<span id="L642" class="ln">   642</span>		void	(*print)(uintptr, void*);
+<span id="L643" class="ln">   643</span>		void	(*copy)(uintptr, void*, void*);
+<span id="L644" class="ln">   644</span>	};
+<span id="L645" class="ln">   645</span>	
+<span id="L646" class="ln">   646</span>	extern	Alg	runtime·algarray[Amax];
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>	byte*	runtime·startup_random_data;
+<span id="L649" class="ln">   649</span>	uint32	runtime·startup_random_data_len;
+<span id="L650" class="ln">   650</span>	void	runtime·get_random_data(byte**, int32*);
+<span id="L651" class="ln">   651</span>	
+<span id="L652" class="ln">   652</span>	enum {
+<span id="L653" class="ln">   653</span>		// hashinit wants this many random bytes
+<span id="L654" class="ln">   654</span>		HashRandomBytes = 32
+<span id="L655" class="ln">   655</span>	};
+<span id="L656" class="ln">   656</span>	void	runtime·hashinit(void);
+<span id="L657" class="ln">   657</span>	
+<span id="L658" class="ln">   658</span>	void	runtime·memhash(uintptr*, uintptr, void*);
+<span id="L659" class="ln">   659</span>	void	runtime·nohash(uintptr*, uintptr, void*);
+<span id="L660" class="ln">   660</span>	void	runtime·strhash(uintptr*, uintptr, void*);
+<span id="L661" class="ln">   661</span>	void	runtime·interhash(uintptr*, uintptr, void*);
+<span id="L662" class="ln">   662</span>	void	runtime·nilinterhash(uintptr*, uintptr, void*);
+<span id="L663" class="ln">   663</span>	void	runtime·aeshash(uintptr*, uintptr, void*);
+<span id="L664" class="ln">   664</span>	void	runtime·aeshash32(uintptr*, uintptr, void*);
+<span id="L665" class="ln">   665</span>	void	runtime·aeshash64(uintptr*, uintptr, void*);
+<span id="L666" class="ln">   666</span>	void	runtime·aeshashstr(uintptr*, uintptr, void*);
+<span id="L667" class="ln">   667</span>	
+<span id="L668" class="ln">   668</span>	void	runtime·memequal(bool*, uintptr, void*, void*);
+<span id="L669" class="ln">   669</span>	void	runtime·noequal(bool*, uintptr, void*, void*);
+<span id="L670" class="ln">   670</span>	void	runtime·strequal(bool*, uintptr, void*, void*);
+<span id="L671" class="ln">   671</span>	void	runtime·interequal(bool*, uintptr, void*, void*);
+<span id="L672" class="ln">   672</span>	void	runtime·nilinterequal(bool*, uintptr, void*, void*);
+<span id="L673" class="ln">   673</span>	
+<span id="L674" class="ln">   674</span>	bool	runtime·memeq(void*, void*, uintptr);
+<span id="L675" class="ln">   675</span>	
+<span id="L676" class="ln">   676</span>	void	runtime·memprint(uintptr, void*);
+<span id="L677" class="ln">   677</span>	void	runtime·strprint(uintptr, void*);
+<span id="L678" class="ln">   678</span>	void	runtime·interprint(uintptr, void*);
+<span id="L679" class="ln">   679</span>	void	runtime·nilinterprint(uintptr, void*);
+<span id="L680" class="ln">   680</span>	
+<span id="L681" class="ln">   681</span>	void	runtime·memcopy(uintptr, void*, void*);
+<span id="L682" class="ln">   682</span>	void	runtime·memcopy8(uintptr, void*, void*);
+<span id="L683" class="ln">   683</span>	void	runtime·memcopy16(uintptr, void*, void*);
+<span id="L684" class="ln">   684</span>	void	runtime·memcopy32(uintptr, void*, void*);
+<span id="L685" class="ln">   685</span>	void	runtime·memcopy64(uintptr, void*, void*);
+<span id="L686" class="ln">   686</span>	void	runtime·memcopy128(uintptr, void*, void*);
+<span id="L687" class="ln">   687</span>	void	runtime·strcopy(uintptr, void*, void*);
+<span id="L688" class="ln">   688</span>	void	runtime·algslicecopy(uintptr, void*, void*);
+<span id="L689" class="ln">   689</span>	void	runtime·intercopy(uintptr, void*, void*);
+<span id="L690" class="ln">   690</span>	void	runtime·nilintercopy(uintptr, void*, void*);
+<span id="L691" class="ln">   691</span>	
+<span id="L692" class="ln">   692</span>	/*
+<span id="L693" class="ln">   693</span>	 * deferred subroutine calls
+<span id="L694" class="ln">   694</span>	 */
+<span id="L695" class="ln">   695</span>	struct Defer
+<span id="L696" class="ln">   696</span>	{
+<span id="L697" class="ln">   697</span>		int32	siz;
+<span id="L698" class="ln">   698</span>		bool	special;	// not part of defer frame
+<span id="L699" class="ln">   699</span>		byte*	argp;		// where args were copied from
+<span id="L700" class="ln">   700</span>		byte*	pc;
+<span id="L701" class="ln">   701</span>		FuncVal*	fn;
+<span id="L702" class="ln">   702</span>		Defer*	link;
+<span id="L703" class="ln">   703</span>		void*	args[1];	// padded to actual size
+<span id="L704" class="ln">   704</span>	};
+<span id="L705" class="ln">   705</span>	
+<span id="L706" class="ln">   706</span>	// argp used in Defer structs when there is no argp.
+<span id="L707" class="ln">   707</span>	// TODO(rsc): Maybe we could use nil instead, but we&#39;ve always used -1
+<span id="L708" class="ln">   708</span>	// and I don&#39;t want to change this days before the Go 1.3 release.
+<span id="L709" class="ln">   709</span>	#define NoArgs ((byte*)-1)
+<span id="L710" class="ln">   710</span>	
+<span id="L711" class="ln">   711</span>	/*
+<span id="L712" class="ln">   712</span>	 * panics
+<span id="L713" class="ln">   713</span>	 */
+<span id="L714" class="ln">   714</span>	struct Panic
+<span id="L715" class="ln">   715</span>	{
+<span id="L716" class="ln">   716</span>		Eface	arg;		// argument to panic
+<span id="L717" class="ln">   717</span>		uintptr	stackbase;	// g-&gt;stackbase in panic
+<span id="L718" class="ln">   718</span>		Panic*	link;		// link to earlier panic
+<span id="L719" class="ln">   719</span>		Defer*	defer;		// current executing defer
+<span id="L720" class="ln">   720</span>		bool	recovered;	// whether this panic is over
+<span id="L721" class="ln">   721</span>		bool	aborted;	// the panic was aborted
+<span id="L722" class="ln">   722</span>	};
+<span id="L723" class="ln">   723</span>	
+<span id="L724" class="ln">   724</span>	/*
+<span id="L725" class="ln">   725</span>	 * stack traces
+<span id="L726" class="ln">   726</span>	 */
+<span id="L727" class="ln">   727</span>	typedef struct Stkframe Stkframe;
+<span id="L728" class="ln">   728</span>	struct Stkframe
+<span id="L729" class="ln">   729</span>	{
+<span id="L730" class="ln">   730</span>		Func*	fn;	// function being run
+<span id="L731" class="ln">   731</span>		uintptr	pc;	// program counter within fn
+<span id="L732" class="ln">   732</span>		uintptr	continpc;	// program counter where execution can continue, or 0 if not
+<span id="L733" class="ln">   733</span>		uintptr	lr;	// program counter at caller aka link register
+<span id="L734" class="ln">   734</span>		uintptr	sp;	// stack pointer at pc
+<span id="L735" class="ln">   735</span>		uintptr	fp;	// stack pointer at caller aka frame pointer
+<span id="L736" class="ln">   736</span>		byte*	varp;	// top of local variables
+<span id="L737" class="ln">   737</span>		byte*	argp;	// pointer to function arguments
+<span id="L738" class="ln">   738</span>		uintptr	arglen;	// number of bytes at argp
+<span id="L739" class="ln">   739</span>	};
+<span id="L740" class="ln">   740</span>	
+<span id="L741" class="ln">   741</span>	int32	runtime·gentraceback(uintptr, uintptr, uintptr, G*, int32, uintptr*, int32, bool(*)(Stkframe*, void*), void*, bool);
+<span id="L742" class="ln">   742</span>	void	runtime·traceback(uintptr pc, uintptr sp, uintptr lr, G* gp);
+<span id="L743" class="ln">   743</span>	void	runtime·tracebackothers(G*);
+<span id="L744" class="ln">   744</span>	bool	runtime·haszeroargs(uintptr pc);
+<span id="L745" class="ln">   745</span>	bool	runtime·topofstack(Func*);
+<span id="L746" class="ln">   746</span>	enum
+<span id="L747" class="ln">   747</span>	{
+<span id="L748" class="ln">   748</span>		// The maximum number of frames we print for a traceback
+<span id="L749" class="ln">   749</span>		TracebackMaxFrames = 100,
+<span id="L750" class="ln">   750</span>	};
+<span id="L751" class="ln">   751</span>	
+<span id="L752" class="ln">   752</span>	/*
+<span id="L753" class="ln">   753</span>	 * external data
+<span id="L754" class="ln">   754</span>	 */
+<span id="L755" class="ln">   755</span>	extern	String	runtime·emptystring;
+<span id="L756" class="ln">   756</span>	extern	uintptr runtime·zerobase;
+<span id="L757" class="ln">   757</span>	extern	G**	runtime·allg;
+<span id="L758" class="ln">   758</span>	extern	uintptr runtime·allglen;
+<span id="L759" class="ln">   759</span>	extern	G*	runtime·lastg;
+<span id="L760" class="ln">   760</span>	extern	M*	runtime·allm;
+<span id="L761" class="ln">   761</span>	extern	P**	runtime·allp;
+<span id="L762" class="ln">   762</span>	extern	int32	runtime·gomaxprocs;
+<span id="L763" class="ln">   763</span>	extern	uint32	runtime·needextram;
+<span id="L764" class="ln">   764</span>	extern	uint32	runtime·panicking;
+<span id="L765" class="ln">   765</span>	extern	int8*	runtime·goos;
+<span id="L766" class="ln">   766</span>	extern	int32	runtime·ncpu;
+<span id="L767" class="ln">   767</span>	extern	bool	runtime·iscgo;
+<span id="L768" class="ln">   768</span>	extern 	void	(*runtime·sysargs)(int32, uint8**);
+<span id="L769" class="ln">   769</span>	extern	uintptr	runtime·maxstring;
+<span id="L770" class="ln">   770</span>	extern	uint32	runtime·Hchansize;
+<span id="L771" class="ln">   771</span>	extern	uint32	runtime·cpuid_ecx;
+<span id="L772" class="ln">   772</span>	extern	uint32	runtime·cpuid_edx;
+<span id="L773" class="ln">   773</span>	extern	DebugVars	runtime·debug;
+<span id="L774" class="ln">   774</span>	extern	uintptr	runtime·maxstacksize;
+<span id="L775" class="ln">   775</span>	
+<span id="L776" class="ln">   776</span>	/*
+<span id="L777" class="ln">   777</span>	 * common functions and data
+<span id="L778" class="ln">   778</span>	 */
+<span id="L779" class="ln">   779</span>	int32	runtime·strcmp(byte*, byte*);
+<span id="L780" class="ln">   780</span>	int32	runtime·strncmp(byte*, byte*, uintptr);
+<span id="L781" class="ln">   781</span>	byte*	runtime·strstr(byte*, byte*);
+<span id="L782" class="ln">   782</span>	intgo	runtime·findnull(byte*);
+<span id="L783" class="ln">   783</span>	intgo	runtime·findnullw(uint16*);
+<span id="L784" class="ln">   784</span>	void	runtime·dump(byte*, int32);
+<span id="L785" class="ln">   785</span>	int32	runtime·runetochar(byte*, int32);
+<span id="L786" class="ln">   786</span>	int32	runtime·charntorune(int32*, uint8*, int32);
+<span id="L787" class="ln">   787</span>	
+<span id="L788" class="ln">   788</span>	
+<span id="L789" class="ln">   789</span>	/*
+<span id="L790" class="ln">   790</span>	 * This macro is used when writing C functions
+<span id="L791" class="ln">   791</span>	 * called as if they were Go functions.
+<span id="L792" class="ln">   792</span>	 * Passed the address of a result before a return statement,
+<span id="L793" class="ln">   793</span>	 * it makes sure the result has been flushed to memory
+<span id="L794" class="ln">   794</span>	 * before the return.
+<span id="L795" class="ln">   795</span>	 *
+<span id="L796" class="ln">   796</span>	 * It is difficult to write such functions portably, because
+<span id="L797" class="ln">   797</span>	 * of the varying requirements on the alignment of the
+<span id="L798" class="ln">   798</span>	 * first output value. Almost all code should write such
+<span id="L799" class="ln">   799</span>	 * functions in .goc files, where goc2c (part of cmd/dist)
+<span id="L800" class="ln">   800</span>	 * can arrange the correct alignment for the target system.
+<span id="L801" class="ln">   801</span>	 * Goc2c also takes care of conveying to the garbage collector
+<span id="L802" class="ln">   802</span>	 * which parts of the argument list are inputs vs outputs.
+<span id="L803" class="ln">   803</span>	 *
+<span id="L804" class="ln">   804</span>	 * Therefore, do NOT use this macro if at all possible.
+<span id="L805" class="ln">   805</span>	 */ 
+<span id="L806" class="ln">   806</span>	#define FLUSH(x)	USED(x)
+<span id="L807" class="ln">   807</span>	
+<span id="L808" class="ln">   808</span>	/*
+<span id="L809" class="ln">   809</span>	 * GoOutput is a type with the same alignment requirements as the
+<span id="L810" class="ln">   810</span>	 * initial output argument from a Go function. Only for use in cases
+<span id="L811" class="ln">   811</span>	 * where using goc2c is not possible. See comment on FLUSH above.
+<span id="L812" class="ln">   812</span>	 */
+<span id="L813" class="ln">   813</span>	typedef uint64 GoOutput;
+<span id="L814" class="ln">   814</span>	
+<span id="L815" class="ln">   815</span>	void	runtime·gogo(Gobuf*);
+<span id="L816" class="ln">   816</span>	void	runtime·gostartcall(Gobuf*, void(*)(void), void*);
+<span id="L817" class="ln">   817</span>	void	runtime·gostartcallfn(Gobuf*, FuncVal*);
+<span id="L818" class="ln">   818</span>	void	runtime·gosave(Gobuf*);
+<span id="L819" class="ln">   819</span>	void	runtime·lessstack(void);
+<span id="L820" class="ln">   820</span>	void	runtime·goargs(void);
+<span id="L821" class="ln">   821</span>	void	runtime·goenvs(void);
+<span id="L822" class="ln">   822</span>	void	runtime·goenvs_unix(void);
+<span id="L823" class="ln">   823</span>	void*	runtime·getu(void);
+<span id="L824" class="ln">   824</span>	void	runtime·throw(int8*);
+<span id="L825" class="ln">   825</span>	void	runtime·panicstring(int8*);
+<span id="L826" class="ln">   826</span>	bool	runtime·canpanic(G*);
+<span id="L827" class="ln">   827</span>	void	runtime·prints(int8*);
+<span id="L828" class="ln">   828</span>	void	runtime·printf(int8*, ...);
+<span id="L829" class="ln">   829</span>	int32	runtime·snprintf(byte*, int32, int8*, ...);
+<span id="L830" class="ln">   830</span>	byte*	runtime·mchr(byte*, byte, byte*);
+<span id="L831" class="ln">   831</span>	int32	runtime·mcmp(byte*, byte*, uintptr);
+<span id="L832" class="ln">   832</span>	void	runtime·memmove(void*, void*, uintptr);
+<span id="L833" class="ln">   833</span>	void*	runtime·mal(uintptr);
+<span id="L834" class="ln">   834</span>	String	runtime·catstring(String, String);
+<span id="L835" class="ln">   835</span>	String	runtime·gostring(byte*);
+<span id="L836" class="ln">   836</span>	String  runtime·gostringn(byte*, intgo);
+<span id="L837" class="ln">   837</span>	Slice	runtime·gobytes(byte*, intgo);
+<span id="L838" class="ln">   838</span>	String	runtime·gostringnocopy(byte*);
+<span id="L839" class="ln">   839</span>	String	runtime·gostringw(uint16*);
+<span id="L840" class="ln">   840</span>	void	runtime·initsig(void);
+<span id="L841" class="ln">   841</span>	void	runtime·sigenable(uint32 sig);
+<span id="L842" class="ln">   842</span>	void	runtime·sigdisable(uint32 sig);
+<span id="L843" class="ln">   843</span>	int32	runtime·gotraceback(bool *crash);
+<span id="L844" class="ln">   844</span>	void	runtime·goroutineheader(G*);
+<span id="L845" class="ln">   845</span>	int32	runtime·open(int8*, int32, int32);
+<span id="L846" class="ln">   846</span>	int32	runtime·read(int32, void*, int32);
+<span id="L847" class="ln">   847</span>	int32	runtime·write(uintptr, void*, int32); // use uintptr to accommodate windows.
+<span id="L848" class="ln">   848</span>	int32	runtime·close(int32);
+<span id="L849" class="ln">   849</span>	int32	runtime·mincore(void*, uintptr, byte*);
+<span id="L850" class="ln">   850</span>	void	runtime·jmpdefer(FuncVal*, void*);
+<span id="L851" class="ln">   851</span>	void	runtime·exit1(int32);
+<span id="L852" class="ln">   852</span>	void	runtime·ready(G*);
+<span id="L853" class="ln">   853</span>	byte*	runtime·getenv(int8*);
+<span id="L854" class="ln">   854</span>	int32	runtime·atoi(byte*);
+<span id="L855" class="ln">   855</span>	void	runtime·newosproc(M *mp, void *stk);
+<span id="L856" class="ln">   856</span>	void	runtime·mstart(void);
+<span id="L857" class="ln">   857</span>	G*	runtime·malg(int32);
+<span id="L858" class="ln">   858</span>	void	runtime·asminit(void);
+<span id="L859" class="ln">   859</span>	void	runtime·mpreinit(M*);
+<span id="L860" class="ln">   860</span>	void	runtime·minit(void);
+<span id="L861" class="ln">   861</span>	void	runtime·unminit(void);
+<span id="L862" class="ln">   862</span>	void	runtime·signalstack(byte*, int32);
+<span id="L863" class="ln">   863</span>	void	runtime·symtabinit(void);
+<span id="L864" class="ln">   864</span>	Func*	runtime·findfunc(uintptr);
+<span id="L865" class="ln">   865</span>	int32	runtime·funcline(Func*, uintptr, String*);
+<span id="L866" class="ln">   866</span>	int32	runtime·funcarglen(Func*, uintptr);
+<span id="L867" class="ln">   867</span>	int32	runtime·funcspdelta(Func*, uintptr);
+<span id="L868" class="ln">   868</span>	int8*	runtime·funcname(Func*);
+<span id="L869" class="ln">   869</span>	int32	runtime·pcdatavalue(Func*, int32, uintptr);
+<span id="L870" class="ln">   870</span>	void*	runtime·stackalloc(G*, uint32);
+<span id="L871" class="ln">   871</span>	void	runtime·stackfree(G*, void*, Stktop*);
+<span id="L872" class="ln">   872</span>	void	runtime·shrinkstack(G*);
+<span id="L873" class="ln">   873</span>	MCache*	runtime·allocmcache(void);
+<span id="L874" class="ln">   874</span>	void	runtime·freemcache(MCache*);
+<span id="L875" class="ln">   875</span>	void	runtime·mallocinit(void);
+<span id="L876" class="ln">   876</span>	bool	runtime·ifaceeq_c(Iface, Iface);
+<span id="L877" class="ln">   877</span>	bool	runtime·efaceeq_c(Eface, Eface);
+<span id="L878" class="ln">   878</span>	uintptr	runtime·ifacehash(Iface, uintptr);
+<span id="L879" class="ln">   879</span>	uintptr	runtime·efacehash(Eface, uintptr);
+<span id="L880" class="ln">   880</span>	void*	runtime·malloc(uintptr size);
+<span id="L881" class="ln">   881</span>	void	runtime·free(void *v);
+<span id="L882" class="ln">   882</span>	void	runtime·runpanic(Panic*);
+<span id="L883" class="ln">   883</span>	uintptr	runtime·getcallersp(void*);
+<span id="L884" class="ln">   884</span>	int32	runtime·mcount(void);
+<span id="L885" class="ln">   885</span>	int32	runtime·gcount(void);
+<span id="L886" class="ln">   886</span>	void	runtime·mcall(void(*)(G*));
+<span id="L887" class="ln">   887</span>	uint32	runtime·fastrand1(void);
+<span id="L888" class="ln">   888</span>	void	runtime·rewindmorestack(Gobuf*);
+<span id="L889" class="ln">   889</span>	int32	runtime·timediv(int64, int32, int32*);
+<span id="L890" class="ln">   890</span>	int32	runtime·round2(int32 x); // round x up to a power of 2.
+<span id="L891" class="ln">   891</span>	
+<span id="L892" class="ln">   892</span>	// atomic operations
+<span id="L893" class="ln">   893</span>	bool	runtime·cas(uint32*, uint32, uint32);
+<span id="L894" class="ln">   894</span>	bool	runtime·cas64(uint64*, uint64, uint64);
+<span id="L895" class="ln">   895</span>	bool	runtime·casp(void**, void*, void*);
+<span id="L896" class="ln">   896</span>	// Don&#39;t confuse with XADD x86 instruction,
+<span id="L897" class="ln">   897</span>	// this one is actually &#39;addx&#39;, that is, add-and-fetch.
+<span id="L898" class="ln">   898</span>	uint32	runtime·xadd(uint32 volatile*, int32);
+<span id="L899" class="ln">   899</span>	uint64	runtime·xadd64(uint64 volatile*, int64);
+<span id="L900" class="ln">   900</span>	uint32	runtime·xchg(uint32 volatile*, uint32);
+<span id="L901" class="ln">   901</span>	uint64	runtime·xchg64(uint64 volatile*, uint64);
+<span id="L902" class="ln">   902</span>	void*	runtime·xchgp(void* volatile*, void*);
+<span id="L903" class="ln">   903</span>	uint32	runtime·atomicload(uint32 volatile*);
+<span id="L904" class="ln">   904</span>	void	runtime·atomicstore(uint32 volatile*, uint32);
+<span id="L905" class="ln">   905</span>	void	runtime·atomicstore64(uint64 volatile*, uint64);
+<span id="L906" class="ln">   906</span>	uint64	runtime·atomicload64(uint64 volatile*);
+<span id="L907" class="ln">   907</span>	void*	runtime·atomicloadp(void* volatile*);
+<span id="L908" class="ln">   908</span>	void	runtime·atomicstorep(void* volatile*, void*);
+<span id="L909" class="ln">   909</span>	
+<span id="L910" class="ln">   910</span>	void	runtime·setmg(M*, G*);
+<span id="L911" class="ln">   911</span>	void	runtime·newextram(void);
+<span id="L912" class="ln">   912</span>	void	runtime·exit(int32);
+<span id="L913" class="ln">   913</span>	void	runtime·breakpoint(void);
+<span id="L914" class="ln">   914</span>	void	runtime·gosched(void);
+<span id="L915" class="ln">   915</span>	void	runtime·gosched0(G*);
+<span id="L916" class="ln">   916</span>	void	runtime·schedtrace(bool);
+<span id="L917" class="ln">   917</span>	void	runtime·park(bool(*)(G*, void*), void*, int8*);
+<span id="L918" class="ln">   918</span>	void	runtime·parkunlock(Lock*, int8*);
+<span id="L919" class="ln">   919</span>	void	runtime·tsleep(int64, int8*);
+<span id="L920" class="ln">   920</span>	M*	runtime·newm(void);
+<span id="L921" class="ln">   921</span>	void	runtime·goexit(void);
+<span id="L922" class="ln">   922</span>	void	runtime·asmcgocall(void (*fn)(void*), void*);
+<span id="L923" class="ln">   923</span>	void	runtime·entersyscall(void);
+<span id="L924" class="ln">   924</span>	void	runtime·reentersyscall(void*, uintptr);
+<span id="L925" class="ln">   925</span>	void	runtime·entersyscallblock(void);
+<span id="L926" class="ln">   926</span>	void	runtime·exitsyscall(void);
+<span id="L927" class="ln">   927</span>	G*	runtime·newproc1(FuncVal*, byte*, int32, int32, void*);
+<span id="L928" class="ln">   928</span>	bool	runtime·sigsend(int32 sig);
+<span id="L929" class="ln">   929</span>	int32	runtime·callers(int32, uintptr*, int32);
+<span id="L930" class="ln">   930</span>	int64	runtime·nanotime(void);	// monotonic time
+<span id="L931" class="ln">   931</span>	int64	runtime·unixnanotime(void); // real time, can skip
+<span id="L932" class="ln">   932</span>	void	runtime·dopanic(int32);
+<span id="L933" class="ln">   933</span>	void	runtime·startpanic(void);
+<span id="L934" class="ln">   934</span>	void	runtime·freezetheworld(void);
+<span id="L935" class="ln">   935</span>	void	runtime·unwindstack(G*, byte*);
+<span id="L936" class="ln">   936</span>	void	runtime·sigprof(uint8 *pc, uint8 *sp, uint8 *lr, G *gp, M *mp);
+<span id="L937" class="ln">   937</span>	void	runtime·resetcpuprofiler(int32);
+<span id="L938" class="ln">   938</span>	void	runtime·setcpuprofilerate(void(*)(uintptr*, int32), int32);
+<span id="L939" class="ln">   939</span>	void	runtime·usleep(uint32);
+<span id="L940" class="ln">   940</span>	int64	runtime·cputicks(void);
+<span id="L941" class="ln">   941</span>	int64	runtime·tickspersecond(void);
+<span id="L942" class="ln">   942</span>	void	runtime·blockevent(int64, int32);
+<span id="L943" class="ln">   943</span>	extern int64 runtime·blockprofilerate;
+<span id="L944" class="ln">   944</span>	void	runtime·addtimer(Timer*);
+<span id="L945" class="ln">   945</span>	bool	runtime·deltimer(Timer*);
+<span id="L946" class="ln">   946</span>	G*	runtime·netpoll(bool);
+<span id="L947" class="ln">   947</span>	void	runtime·netpollinit(void);
+<span id="L948" class="ln">   948</span>	int32	runtime·netpollopen(uintptr, PollDesc*);
+<span id="L949" class="ln">   949</span>	int32   runtime·netpollclose(uintptr);
+<span id="L950" class="ln">   950</span>	void	runtime·netpollready(G**, PollDesc*, int32);
+<span id="L951" class="ln">   951</span>	uintptr	runtime·netpollfd(PollDesc*);
+<span id="L952" class="ln">   952</span>	void	runtime·netpollarm(PollDesc*, int32);
+<span id="L953" class="ln">   953</span>	void**	runtime·netpolluser(PollDesc*);
+<span id="L954" class="ln">   954</span>	bool	runtime·netpollclosing(PollDesc*);
+<span id="L955" class="ln">   955</span>	void	runtime·netpolllock(PollDesc*);
+<span id="L956" class="ln">   956</span>	void	runtime·netpollunlock(PollDesc*);
+<span id="L957" class="ln">   957</span>	void	runtime·crash(void);
+<span id="L958" class="ln">   958</span>	void	runtime·parsedebugvars(void);
+<span id="L959" class="ln">   959</span>	void	_rt0_go(void);
+<span id="L960" class="ln">   960</span>	void*	runtime·funcdata(Func*, int32);
+<span id="L961" class="ln">   961</span>	int32	runtime·setmaxthreads(int32);
+<span id="L962" class="ln">   962</span>	G*	runtime·timejump(void);
+<span id="L963" class="ln">   963</span>	void	runtime·iterate_itabs(void (*callback)(Itab*));
+<span id="L964" class="ln">   964</span>	void	runtime·iterate_finq(void (*callback)(FuncVal*, byte*, uintptr, Type*, PtrType*));
+<span id="L965" class="ln">   965</span>	
+<span id="L966" class="ln">   966</span>	#pragma	varargck	argpos	runtime·printf	1
+<span id="L967" class="ln">   967</span>	#pragma	varargck	type	&#34;c&#34;	int32
+<span id="L968" class="ln">   968</span>	#pragma	varargck	type	&#34;d&#34;	int32
+<span id="L969" class="ln">   969</span>	#pragma	varargck	type	&#34;d&#34;	uint32
+<span id="L970" class="ln">   970</span>	#pragma	varargck	type	&#34;D&#34;	int64
+<span id="L971" class="ln">   971</span>	#pragma	varargck	type	&#34;D&#34;	uint64
+<span id="L972" class="ln">   972</span>	#pragma	varargck	type	&#34;x&#34;	int32
+<span id="L973" class="ln">   973</span>	#pragma	varargck	type	&#34;x&#34;	uint32
+<span id="L974" class="ln">   974</span>	#pragma	varargck	type	&#34;X&#34;	int64
+<span id="L975" class="ln">   975</span>	#pragma	varargck	type	&#34;X&#34;	uint64
+<span id="L976" class="ln">   976</span>	#pragma	varargck	type	&#34;p&#34;	void*
+<span id="L977" class="ln">   977</span>	#pragma	varargck	type	&#34;p&#34;	uintptr
+<span id="L978" class="ln">   978</span>	#pragma	varargck	type	&#34;s&#34;	int8*
+<span id="L979" class="ln">   979</span>	#pragma	varargck	type	&#34;s&#34;	uint8*
+<span id="L980" class="ln">   980</span>	#pragma	varargck	type	&#34;S&#34;	String
+<span id="L981" class="ln">   981</span>	
+<span id="L982" class="ln">   982</span>	void	runtime·stoptheworld(void);
+<span id="L983" class="ln">   983</span>	void	runtime·starttheworld(void);
+<span id="L984" class="ln">   984</span>	extern uint32 runtime·worldsema;
+<span id="L985" class="ln">   985</span>	
+<span id="L986" class="ln">   986</span>	/*
+<span id="L987" class="ln">   987</span>	 * mutual exclusion locks.  in the uncontended case,
+<span id="L988" class="ln">   988</span>	 * as fast as spin locks (just a few user-level instructions),
+<span id="L989" class="ln">   989</span>	 * but on the contention path they sleep in the kernel.
+<span id="L990" class="ln">   990</span>	 * a zeroed Lock is unlocked (no need to initialize each lock).
+<span id="L991" class="ln">   991</span>	 */
+<span id="L992" class="ln">   992</span>	void	runtime·lock(Lock*);
+<span id="L993" class="ln">   993</span>	void	runtime·unlock(Lock*);
+<span id="L994" class="ln">   994</span>	
+<span id="L995" class="ln">   995</span>	/*
+<span id="L996" class="ln">   996</span>	 * sleep and wakeup on one-time events.
+<span id="L997" class="ln">   997</span>	 * before any calls to notesleep or notewakeup,
+<span id="L998" class="ln">   998</span>	 * must call noteclear to initialize the Note.
+<span id="L999" class="ln">   999</span>	 * then, exactly one thread can call notesleep
+<span id="L1000" class="ln">  1000</span>	 * and exactly one thread can call notewakeup (once).
+<span id="L1001" class="ln">  1001</span>	 * once notewakeup has been called, the notesleep
+<span id="L1002" class="ln">  1002</span>	 * will return.  future notesleep will return immediately.
+<span id="L1003" class="ln">  1003</span>	 * subsequent noteclear must be called only after
+<span id="L1004" class="ln">  1004</span>	 * previous notesleep has returned, e.g. it&#39;s disallowed
+<span id="L1005" class="ln">  1005</span>	 * to call noteclear straight after notewakeup.
+<span id="L1006" class="ln">  1006</span>	 *
+<span id="L1007" class="ln">  1007</span>	 * notetsleep is like notesleep but wakes up after
+<span id="L1008" class="ln">  1008</span>	 * a given number of nanoseconds even if the event
+<span id="L1009" class="ln">  1009</span>	 * has not yet happened.  if a goroutine uses notetsleep to
+<span id="L1010" class="ln">  1010</span>	 * wake up early, it must wait to call noteclear until it
+<span id="L1011" class="ln">  1011</span>	 * can be sure that no other goroutine is calling
+<span id="L1012" class="ln">  1012</span>	 * notewakeup.
+<span id="L1013" class="ln">  1013</span>	 *
+<span id="L1014" class="ln">  1014</span>	 * notesleep/notetsleep are generally called on g0,
+<span id="L1015" class="ln">  1015</span>	 * notetsleepg is similar to notetsleep but is called on user g.
+<span id="L1016" class="ln">  1016</span>	 */
+<span id="L1017" class="ln">  1017</span>	void	runtime·noteclear(Note*);
+<span id="L1018" class="ln">  1018</span>	void	runtime·notesleep(Note*);
+<span id="L1019" class="ln">  1019</span>	void	runtime·notewakeup(Note*);
+<span id="L1020" class="ln">  1020</span>	bool	runtime·notetsleep(Note*, int64);  // false - timeout
+<span id="L1021" class="ln">  1021</span>	bool	runtime·notetsleepg(Note*, int64);  // false - timeout
+<span id="L1022" class="ln">  1022</span>	
+<span id="L1023" class="ln">  1023</span>	/*
+<span id="L1024" class="ln">  1024</span>	 * low-level synchronization for implementing the above
+<span id="L1025" class="ln">  1025</span>	 */
+<span id="L1026" class="ln">  1026</span>	uintptr	runtime·semacreate(void);
+<span id="L1027" class="ln">  1027</span>	int32	runtime·semasleep(int64);
+<span id="L1028" class="ln">  1028</span>	void	runtime·semawakeup(M*);
+<span id="L1029" class="ln">  1029</span>	// or
+<span id="L1030" class="ln">  1030</span>	void	runtime·futexsleep(uint32*, uint32, int64);
+<span id="L1031" class="ln">  1031</span>	void	runtime·futexwakeup(uint32*, uint32);
+<span id="L1032" class="ln">  1032</span>	
+<span id="L1033" class="ln">  1033</span>	/*
+<span id="L1034" class="ln">  1034</span>	 * Lock-free stack.
+<span id="L1035" class="ln">  1035</span>	 * Initialize uint64 head to 0, compare with 0 to test for emptiness.
+<span id="L1036" class="ln">  1036</span>	 * The stack does not keep pointers to nodes,
+<span id="L1037" class="ln">  1037</span>	 * so they can be garbage collected if there are no other pointers to nodes.
+<span id="L1038" class="ln">  1038</span>	 */
+<span id="L1039" class="ln">  1039</span>	void	runtime·lfstackpush(uint64 *head, LFNode *node);
+<span id="L1040" class="ln">  1040</span>	LFNode*	runtime·lfstackpop(uint64 *head);
+<span id="L1041" class="ln">  1041</span>	
+<span id="L1042" class="ln">  1042</span>	/*
+<span id="L1043" class="ln">  1043</span>	 * Parallel for over [0, n).
+<span id="L1044" class="ln">  1044</span>	 * body() is executed for each iteration.
+<span id="L1045" class="ln">  1045</span>	 * nthr - total number of worker threads.
+<span id="L1046" class="ln">  1046</span>	 * ctx - arbitrary user context.
+<span id="L1047" class="ln">  1047</span>	 * if wait=true, threads return from parfor() when all work is done;
+<span id="L1048" class="ln">  1048</span>	 * otherwise, threads can return while other threads are still finishing processing.
+<span id="L1049" class="ln">  1049</span>	 */
+<span id="L1050" class="ln">  1050</span>	ParFor*	runtime·parforalloc(uint32 nthrmax);
+<span id="L1051" class="ln">  1051</span>	void	runtime·parforsetup(ParFor *desc, uint32 nthr, uint32 n, void *ctx, bool wait, void (*body)(ParFor*, uint32));
+<span id="L1052" class="ln">  1052</span>	void	runtime·parfordo(ParFor *desc);
+<span id="L1053" class="ln">  1053</span>	void	runtime·parforiters(ParFor*, uintptr, uintptr*, uintptr*);
+<span id="L1054" class="ln">  1054</span>	
+<span id="L1055" class="ln">  1055</span>	/*
+<span id="L1056" class="ln">  1056</span>	 * low level C-called
+<span id="L1057" class="ln">  1057</span>	 */
+<span id="L1058" class="ln">  1058</span>	// for mmap, we only pass the lower 32 bits of file offset to the 
+<span id="L1059" class="ln">  1059</span>	// assembly routine; the higher bits (if required), should be provided
+<span id="L1060" class="ln">  1060</span>	// by the assembly routine as 0.
+<span id="L1061" class="ln">  1061</span>	uint8*	runtime·mmap(byte*, uintptr, int32, int32, int32, uint32);
+<span id="L1062" class="ln">  1062</span>	void	runtime·munmap(byte*, uintptr);
+<span id="L1063" class="ln">  1063</span>	void	runtime·madvise(byte*, uintptr, int32);
+<span id="L1064" class="ln">  1064</span>	void	runtime·memclr(byte*, uintptr);
+<span id="L1065" class="ln">  1065</span>	void	runtime·setcallerpc(void*, void*);
+<span id="L1066" class="ln">  1066</span>	void*	runtime·getcallerpc(void*);
+<span id="L1067" class="ln">  1067</span>	
+<span id="L1068" class="ln">  1068</span>	/*
+<span id="L1069" class="ln">  1069</span>	 * runtime go-called
+<span id="L1070" class="ln">  1070</span>	 */
+<span id="L1071" class="ln">  1071</span>	void	runtime·printbool(bool);
+<span id="L1072" class="ln">  1072</span>	void	runtime·printbyte(int8);
+<span id="L1073" class="ln">  1073</span>	void	runtime·printfloat(float64);
+<span id="L1074" class="ln">  1074</span>	void	runtime·printint(int64);
+<span id="L1075" class="ln">  1075</span>	void	runtime·printiface(Iface);
+<span id="L1076" class="ln">  1076</span>	void	runtime·printeface(Eface);
+<span id="L1077" class="ln">  1077</span>	void	runtime·printstring(String);
+<span id="L1078" class="ln">  1078</span>	void	runtime·printpc(void*);
+<span id="L1079" class="ln">  1079</span>	void	runtime·printpointer(void*);
+<span id="L1080" class="ln">  1080</span>	void	runtime·printuint(uint64);
+<span id="L1081" class="ln">  1081</span>	void	runtime·printhex(uint64);
+<span id="L1082" class="ln">  1082</span>	void	runtime·printslice(Slice);
+<span id="L1083" class="ln">  1083</span>	void	runtime·printcomplex(Complex128);
+<span id="L1084" class="ln">  1084</span>	void	runtime·newstackcall(FuncVal*, byte*, uint32);
+<span id="L1085" class="ln">  1085</span>	void	reflect·call(FuncVal*, byte*, uint32, uint32);
+<span id="L1086" class="ln">  1086</span>	void	runtime·panic(Eface);
+<span id="L1087" class="ln">  1087</span>	void	runtime·panicindex(void);
+<span id="L1088" class="ln">  1088</span>	void	runtime·panicslice(void);
+<span id="L1089" class="ln">  1089</span>	void	runtime·panicdivide(void);
+<span id="L1090" class="ln">  1090</span>	
+<span id="L1091" class="ln">  1091</span>	/*
+<span id="L1092" class="ln">  1092</span>	 * runtime c-called (but written in Go)
+<span id="L1093" class="ln">  1093</span>	 */
+<span id="L1094" class="ln">  1094</span>	void	runtime·printany(Eface);
+<span id="L1095" class="ln">  1095</span>	void	runtime·newTypeAssertionError(String*, String*, String*, String*, Eface*);
+<span id="L1096" class="ln">  1096</span>	void	runtime·newErrorString(String, Eface*);
+<span id="L1097" class="ln">  1097</span>	void	runtime·newErrorCString(int8*, Eface*);
+<span id="L1098" class="ln">  1098</span>	void	runtime·fadd64c(uint64, uint64, uint64*);
+<span id="L1099" class="ln">  1099</span>	void	runtime·fsub64c(uint64, uint64, uint64*);
+<span id="L1100" class="ln">  1100</span>	void	runtime·fmul64c(uint64, uint64, uint64*);
+<span id="L1101" class="ln">  1101</span>	void	runtime·fdiv64c(uint64, uint64, uint64*);
+<span id="L1102" class="ln">  1102</span>	void	runtime·fneg64c(uint64, uint64*);
+<span id="L1103" class="ln">  1103</span>	void	runtime·f32to64c(uint32, uint64*);
+<span id="L1104" class="ln">  1104</span>	void	runtime·f64to32c(uint64, uint32*);
+<span id="L1105" class="ln">  1105</span>	void	runtime·fcmp64c(uint64, uint64, int32*, bool*);
+<span id="L1106" class="ln">  1106</span>	void	runtime·fintto64c(int64, uint64*);
+<span id="L1107" class="ln">  1107</span>	void	runtime·f64tointc(uint64, int64*, bool*);
+<span id="L1108" class="ln">  1108</span>	
+<span id="L1109" class="ln">  1109</span>	/*
+<span id="L1110" class="ln">  1110</span>	 * wrapped for go users
+<span id="L1111" class="ln">  1111</span>	 */
+<span id="L1112" class="ln">  1112</span>	float64	runtime·Inf(int32 sign);
+<span id="L1113" class="ln">  1113</span>	float64	runtime·NaN(void);
+<span id="L1114" class="ln">  1114</span>	float32	runtime·float32frombits(uint32 i);
+<span id="L1115" class="ln">  1115</span>	uint32	runtime·float32tobits(float32 f);
+<span id="L1116" class="ln">  1116</span>	float64	runtime·float64frombits(uint64 i);
+<span id="L1117" class="ln">  1117</span>	uint64	runtime·float64tobits(float64 f);
+<span id="L1118" class="ln">  1118</span>	float64	runtime·frexp(float64 d, int32 *ep);
+<span id="L1119" class="ln">  1119</span>	bool	runtime·isInf(float64 f, int32 sign);
+<span id="L1120" class="ln">  1120</span>	bool	runtime·isNaN(float64 f);
+<span id="L1121" class="ln">  1121</span>	float64	runtime·ldexp(float64 d, int32 e);
+<span id="L1122" class="ln">  1122</span>	float64	runtime·modf(float64 d, float64 *ip);
+<span id="L1123" class="ln">  1123</span>	void	runtime·semacquire(uint32*, bool);
+<span id="L1124" class="ln">  1124</span>	void	runtime·semrelease(uint32*);
+<span id="L1125" class="ln">  1125</span>	int32	runtime·gomaxprocsfunc(int32 n);
+<span id="L1126" class="ln">  1126</span>	void	runtime·procyield(uint32);
+<span id="L1127" class="ln">  1127</span>	void	runtime·osyield(void);
+<span id="L1128" class="ln">  1128</span>	void	runtime·lockOSThread(void);
+<span id="L1129" class="ln">  1129</span>	void	runtime·unlockOSThread(void);
+<span id="L1130" class="ln">  1130</span>	bool	runtime·lockedOSThread(void);
+<span id="L1131" class="ln">  1131</span>	
+<span id="L1132" class="ln">  1132</span>	bool	runtime·showframe(Func*, G*);
+<span id="L1133" class="ln">  1133</span>	void	runtime·printcreatedby(G*);
+<span id="L1134" class="ln">  1134</span>	
+<span id="L1135" class="ln">  1135</span>	void	runtime·ifaceE2I(InterfaceType*, Eface, Iface*);
+<span id="L1136" class="ln">  1136</span>	bool	runtime·ifaceE2I2(InterfaceType*, Eface, Iface*);
+<span id="L1137" class="ln">  1137</span>	uintptr	runtime·memlimit(void);
+<span id="L1138" class="ln">  1138</span>	
+<span id="L1139" class="ln">  1139</span>	// float.c
+<span id="L1140" class="ln">  1140</span>	extern float64 runtime·nan;
+<span id="L1141" class="ln">  1141</span>	extern float64 runtime·posinf;
+<span id="L1142" class="ln">  1142</span>	extern float64 runtime·neginf;
+<span id="L1143" class="ln">  1143</span>	extern uint64 ·nan;
+<span id="L1144" class="ln">  1144</span>	extern uint64 ·posinf;
+<span id="L1145" class="ln">  1145</span>	extern uint64 ·neginf;
+<span id="L1146" class="ln">  1146</span>	#define ISNAN(f) ((f) != (f))
+<span id="L1147" class="ln">  1147</span>	
+<span id="L1148" class="ln">  1148</span>	enum
+<span id="L1149" class="ln">  1149</span>	{
+<span id="L1150" class="ln">  1150</span>		UseSpanType = 1,
+<span id="L1151" class="ln">  1151</span>	};
+</pre><p><a href="http://golang.org/src/pkg/runtime/runtime.h?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

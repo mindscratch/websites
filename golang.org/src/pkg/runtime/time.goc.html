@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/time.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/time.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// Time-related runtime and pieces of package time.
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	package time
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	#include &#34;runtime.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;defs_GOOS_GOARCH.h&#34;
+<span id="L11" class="ln">    11</span>	#include &#34;os_GOOS.h&#34;
+<span id="L12" class="ln">    12</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L13" class="ln">    13</span>	#include &#34;malloc.h&#34;
+<span id="L14" class="ln">    14</span>	#include &#34;race.h&#34;
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	enum {
+<span id="L17" class="ln">    17</span>		debug = 0,
+<span id="L18" class="ln">    18</span>	};
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	static Timers timers;
+<span id="L21" class="ln">    21</span>	static void addtimer(Timer*);
+<span id="L22" class="ln">    22</span>	static void dumptimers(int8*);
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	// nacl fake time support. 
+<span id="L25" class="ln">    25</span>	int64 runtime·timens;
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	// Package time APIs.
+<span id="L28" class="ln">    28</span>	// Godoc uses the comments in package time, not these.
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	// time.now is implemented in assembly.
+<span id="L31" class="ln">    31</span>	
+<span id="L32" class="ln">    32</span>	// runtimeNano returns the current value of the runtime clock in nanoseconds.
+<span id="L33" class="ln">    33</span>	func runtimeNano() (ns int64) {
+<span id="L34" class="ln">    34</span>		ns = runtime·nanotime();
+<span id="L35" class="ln">    35</span>	}
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	// Sleep puts the current goroutine to sleep for at least ns nanoseconds.
+<span id="L38" class="ln">    38</span>	func Sleep(ns int64) {
+<span id="L39" class="ln">    39</span>		runtime·tsleep(ns, &#34;sleep&#34;);
+<span id="L40" class="ln">    40</span>	}
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	// startTimer adds t to the timer heap.
+<span id="L43" class="ln">    43</span>	func startTimer(t *Timer) {
+<span id="L44" class="ln">    44</span>		if(raceenabled)
+<span id="L45" class="ln">    45</span>			runtime·racerelease(t);
+<span id="L46" class="ln">    46</span>		runtime·addtimer(t);
+<span id="L47" class="ln">    47</span>	}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	// stopTimer removes t from the timer heap if it is there.
+<span id="L50" class="ln">    50</span>	// It returns true if t was removed, false if t wasn&#39;t even there.
+<span id="L51" class="ln">    51</span>	func stopTimer(t *Timer) (stopped bool) {
+<span id="L52" class="ln">    52</span>		stopped = runtime·deltimer(t);
+<span id="L53" class="ln">    53</span>	}
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>	// C runtime.
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>	void runtime·gc_unixnanotime(int64 *now);
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	int64 runtime·unixnanotime(void)
+<span id="L60" class="ln">    60</span>	{
+<span id="L61" class="ln">    61</span>		int64 now;
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>		runtime·gc_unixnanotime(&amp;now);
+<span id="L64" class="ln">    64</span>		return now;
+<span id="L65" class="ln">    65</span>	}
+<span id="L66" class="ln">    66</span>	
+<span id="L67" class="ln">    67</span>	static void timerproc(void);
+<span id="L68" class="ln">    68</span>	static void siftup(int32);
+<span id="L69" class="ln">    69</span>	static void siftdown(int32);
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	// Ready the goroutine e.data.
+<span id="L72" class="ln">    72</span>	static void
+<span id="L73" class="ln">    73</span>	ready(int64 now, Eface e)
+<span id="L74" class="ln">    74</span>	{
+<span id="L75" class="ln">    75</span>		USED(now);
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>		runtime·ready(e.data);
+<span id="L78" class="ln">    78</span>	}
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>	static FuncVal readyv = {(void(*)(void))ready};
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	// Put the current goroutine to sleep for ns nanoseconds.
+<span id="L83" class="ln">    83</span>	void
+<span id="L84" class="ln">    84</span>	runtime·tsleep(int64 ns, int8 *reason)
+<span id="L85" class="ln">    85</span>	{
+<span id="L86" class="ln">    86</span>		Timer t;
+<span id="L87" class="ln">    87</span>	
+<span id="L88" class="ln">    88</span>		if(ns &lt;= 0)
+<span id="L89" class="ln">    89</span>			return;
+<span id="L90" class="ln">    90</span>	
+<span id="L91" class="ln">    91</span>		t.when = runtime·nanotime() + ns;
+<span id="L92" class="ln">    92</span>		t.period = 0;
+<span id="L93" class="ln">    93</span>		t.fv = &amp;readyv;
+<span id="L94" class="ln">    94</span>		t.arg.data = g;
+<span id="L95" class="ln">    95</span>		runtime·lock(&amp;timers);
+<span id="L96" class="ln">    96</span>		addtimer(&amp;t);
+<span id="L97" class="ln">    97</span>		runtime·parkunlock(&amp;timers, reason);
+<span id="L98" class="ln">    98</span>	}
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>	static FuncVal timerprocv = {timerproc};
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	void
+<span id="L103" class="ln">   103</span>	runtime·addtimer(Timer *t)
+<span id="L104" class="ln">   104</span>	{
+<span id="L105" class="ln">   105</span>		runtime·lock(&amp;timers);
+<span id="L106" class="ln">   106</span>		addtimer(t);
+<span id="L107" class="ln">   107</span>		runtime·unlock(&amp;timers);
+<span id="L108" class="ln">   108</span>	}
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>	// Add a timer to the heap and start or kick the timer proc
+<span id="L111" class="ln">   111</span>	// if the new timer is earlier than any of the others.
+<span id="L112" class="ln">   112</span>	static void
+<span id="L113" class="ln">   113</span>	addtimer(Timer *t)
+<span id="L114" class="ln">   114</span>	{
+<span id="L115" class="ln">   115</span>		int32 n;
+<span id="L116" class="ln">   116</span>		Timer **nt;
+<span id="L117" class="ln">   117</span>	
+<span id="L118" class="ln">   118</span>		// when must never be negative; otherwise timerproc will overflow
+<span id="L119" class="ln">   119</span>		// during its delta calculation and never expire other timers.
+<span id="L120" class="ln">   120</span>		if(t-&gt;when &lt; 0)
+<span id="L121" class="ln">   121</span>			t-&gt;when = (1LL&lt;&lt;63)-1;
+<span id="L122" class="ln">   122</span>	
+<span id="L123" class="ln">   123</span>		if(timers.len &gt;= timers.cap) {
+<span id="L124" class="ln">   124</span>			// Grow slice.
+<span id="L125" class="ln">   125</span>			n = 16;
+<span id="L126" class="ln">   126</span>			if(n &lt;= timers.cap)
+<span id="L127" class="ln">   127</span>				n = timers.cap*3 / 2;
+<span id="L128" class="ln">   128</span>			nt = runtime·malloc(n*sizeof nt[0]);
+<span id="L129" class="ln">   129</span>			runtime·memmove(nt, timers.t, timers.len*sizeof nt[0]);
+<span id="L130" class="ln">   130</span>			runtime·free(timers.t);
+<span id="L131" class="ln">   131</span>			timers.t = nt;
+<span id="L132" class="ln">   132</span>			timers.cap = n;
+<span id="L133" class="ln">   133</span>		}
+<span id="L134" class="ln">   134</span>		t-&gt;i = timers.len++;
+<span id="L135" class="ln">   135</span>		timers.t[t-&gt;i] = t;
+<span id="L136" class="ln">   136</span>		siftup(t-&gt;i);
+<span id="L137" class="ln">   137</span>		if(t-&gt;i == 0) {
+<span id="L138" class="ln">   138</span>			// siftup moved to top: new earliest deadline.
+<span id="L139" class="ln">   139</span>			if(timers.sleeping) {
+<span id="L140" class="ln">   140</span>				timers.sleeping = false;
+<span id="L141" class="ln">   141</span>				runtime·notewakeup(&amp;timers.waitnote);
+<span id="L142" class="ln">   142</span>			}
+<span id="L143" class="ln">   143</span>			if(timers.rescheduling) {
+<span id="L144" class="ln">   144</span>				timers.rescheduling = false;
+<span id="L145" class="ln">   145</span>				runtime·ready(timers.timerproc);
+<span id="L146" class="ln">   146</span>			}
+<span id="L147" class="ln">   147</span>		}
+<span id="L148" class="ln">   148</span>		if(timers.timerproc == nil) {
+<span id="L149" class="ln">   149</span>			timers.timerproc = runtime·newproc1(&amp;timerprocv, nil, 0, 0, addtimer);
+<span id="L150" class="ln">   150</span>			timers.timerproc-&gt;issystem = true;
+<span id="L151" class="ln">   151</span>		}
+<span id="L152" class="ln">   152</span>		if(debug)
+<span id="L153" class="ln">   153</span>			dumptimers(&#34;addtimer&#34;);
+<span id="L154" class="ln">   154</span>	}
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>	// Delete timer t from the heap.
+<span id="L157" class="ln">   157</span>	// Do not need to update the timerproc:
+<span id="L158" class="ln">   158</span>	// if it wakes up early, no big deal.
+<span id="L159" class="ln">   159</span>	bool
+<span id="L160" class="ln">   160</span>	runtime·deltimer(Timer *t)
+<span id="L161" class="ln">   161</span>	{
+<span id="L162" class="ln">   162</span>		int32 i;
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>		// Dereference t so that any panic happens before the lock is held.
+<span id="L165" class="ln">   165</span>		// Discard result, because t might be moving in the heap.
+<span id="L166" class="ln">   166</span>		i = t-&gt;i;
+<span id="L167" class="ln">   167</span>		USED(i);
+<span id="L168" class="ln">   168</span>	
+<span id="L169" class="ln">   169</span>		runtime·lock(&amp;timers);
+<span id="L170" class="ln">   170</span>	
+<span id="L171" class="ln">   171</span>		// t may not be registered anymore and may have
+<span id="L172" class="ln">   172</span>		// a bogus i (typically 0, if generated by Go).
+<span id="L173" class="ln">   173</span>		// Verify it before proceeding.
+<span id="L174" class="ln">   174</span>		i = t-&gt;i;
+<span id="L175" class="ln">   175</span>		if(i &lt; 0 || i &gt;= timers.len || timers.t[i] != t) {
+<span id="L176" class="ln">   176</span>			runtime·unlock(&amp;timers);
+<span id="L177" class="ln">   177</span>			return false;
+<span id="L178" class="ln">   178</span>		}
+<span id="L179" class="ln">   179</span>	
+<span id="L180" class="ln">   180</span>		timers.len--;
+<span id="L181" class="ln">   181</span>		if(i == timers.len) {
+<span id="L182" class="ln">   182</span>			timers.t[i] = nil;
+<span id="L183" class="ln">   183</span>		} else {
+<span id="L184" class="ln">   184</span>			timers.t[i] = timers.t[timers.len];
+<span id="L185" class="ln">   185</span>			timers.t[timers.len] = nil;
+<span id="L186" class="ln">   186</span>			timers.t[i]-&gt;i = i;
+<span id="L187" class="ln">   187</span>			siftup(i);
+<span id="L188" class="ln">   188</span>			siftdown(i);
+<span id="L189" class="ln">   189</span>		}
+<span id="L190" class="ln">   190</span>		if(debug)
+<span id="L191" class="ln">   191</span>			dumptimers(&#34;deltimer&#34;);
+<span id="L192" class="ln">   192</span>		runtime·unlock(&amp;timers);
+<span id="L193" class="ln">   193</span>		return true;
+<span id="L194" class="ln">   194</span>	}
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>	// Timerproc runs the time-driven events.
+<span id="L197" class="ln">   197</span>	// It sleeps until the next event in the timers heap.
+<span id="L198" class="ln">   198</span>	// If addtimer inserts a new earlier event, addtimer
+<span id="L199" class="ln">   199</span>	// wakes timerproc early.
+<span id="L200" class="ln">   200</span>	static void
+<span id="L201" class="ln">   201</span>	timerproc(void)
+<span id="L202" class="ln">   202</span>	{
+<span id="L203" class="ln">   203</span>		int64 delta, now;
+<span id="L204" class="ln">   204</span>		Timer *t;
+<span id="L205" class="ln">   205</span>		void (*f)(int64, Eface);
+<span id="L206" class="ln">   206</span>		Eface arg;
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>		for(;;) {
+<span id="L209" class="ln">   209</span>			runtime·lock(&amp;timers);
+<span id="L210" class="ln">   210</span>			timers.sleeping = false;
+<span id="L211" class="ln">   211</span>			now = runtime·nanotime();
+<span id="L212" class="ln">   212</span>			for(;;) {
+<span id="L213" class="ln">   213</span>				if(timers.len == 0) {
+<span id="L214" class="ln">   214</span>					delta = -1;
+<span id="L215" class="ln">   215</span>					break;
+<span id="L216" class="ln">   216</span>				}
+<span id="L217" class="ln">   217</span>				t = timers.t[0];
+<span id="L218" class="ln">   218</span>				delta = t-&gt;when - now;
+<span id="L219" class="ln">   219</span>				if(delta &gt; 0)
+<span id="L220" class="ln">   220</span>					break;
+<span id="L221" class="ln">   221</span>				if(t-&gt;period &gt; 0) {
+<span id="L222" class="ln">   222</span>					// leave in heap but adjust next time to fire
+<span id="L223" class="ln">   223</span>					t-&gt;when += t-&gt;period * (1 + -delta/t-&gt;period);
+<span id="L224" class="ln">   224</span>					siftdown(0);
+<span id="L225" class="ln">   225</span>				} else {
+<span id="L226" class="ln">   226</span>					// remove from heap
+<span id="L227" class="ln">   227</span>					timers.t[0] = timers.t[--timers.len];
+<span id="L228" class="ln">   228</span>					timers.t[0]-&gt;i = 0;
+<span id="L229" class="ln">   229</span>					siftdown(0);
+<span id="L230" class="ln">   230</span>					t-&gt;i = -1;  // mark as removed
+<span id="L231" class="ln">   231</span>				}
+<span id="L232" class="ln">   232</span>				f = (void*)t-&gt;fv-&gt;fn;
+<span id="L233" class="ln">   233</span>				arg = t-&gt;arg;
+<span id="L234" class="ln">   234</span>				runtime·unlock(&amp;timers);
+<span id="L235" class="ln">   235</span>				if(raceenabled)
+<span id="L236" class="ln">   236</span>					runtime·raceacquire(t);
+<span id="L237" class="ln">   237</span>				f(now, arg);
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>				// clear f and arg to avoid leak while sleeping for next timer
+<span id="L240" class="ln">   240</span>				f = nil;
+<span id="L241" class="ln">   241</span>				USED(f);
+<span id="L242" class="ln">   242</span>				arg.type = nil;
+<span id="L243" class="ln">   243</span>				arg.data = nil;
+<span id="L244" class="ln">   244</span>				USED(&amp;arg);
+<span id="L245" class="ln">   245</span>	
+<span id="L246" class="ln">   246</span>				runtime·lock(&amp;timers);
+<span id="L247" class="ln">   247</span>			}
+<span id="L248" class="ln">   248</span>			if(delta &lt; 0) {
+<span id="L249" class="ln">   249</span>				// No timers left - put goroutine to sleep.
+<span id="L250" class="ln">   250</span>				timers.rescheduling = true;
+<span id="L251" class="ln">   251</span>				g-&gt;isbackground = true;
+<span id="L252" class="ln">   252</span>				runtime·parkunlock(&amp;timers, &#34;timer goroutine (idle)&#34;);
+<span id="L253" class="ln">   253</span>				g-&gt;isbackground = false;
+<span id="L254" class="ln">   254</span>				continue;
+<span id="L255" class="ln">   255</span>			}
+<span id="L256" class="ln">   256</span>			// At least one timer pending.  Sleep until then.
+<span id="L257" class="ln">   257</span>			timers.sleeping = true;
+<span id="L258" class="ln">   258</span>			runtime·noteclear(&amp;timers.waitnote);
+<span id="L259" class="ln">   259</span>			runtime·unlock(&amp;timers);
+<span id="L260" class="ln">   260</span>			runtime·notetsleepg(&amp;timers.waitnote, delta);
+<span id="L261" class="ln">   261</span>		}
+<span id="L262" class="ln">   262</span>	}
+<span id="L263" class="ln">   263</span>	
+<span id="L264" class="ln">   264</span>	// heap maintenance algorithms.
+<span id="L265" class="ln">   265</span>	
+<span id="L266" class="ln">   266</span>	static void
+<span id="L267" class="ln">   267</span>	siftup(int32 i)
+<span id="L268" class="ln">   268</span>	{
+<span id="L269" class="ln">   269</span>		int32 p;
+<span id="L270" class="ln">   270</span>		int64 when;
+<span id="L271" class="ln">   271</span>		Timer **t, *tmp;
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>		t = timers.t;
+<span id="L274" class="ln">   274</span>		when = t[i]-&gt;when;
+<span id="L275" class="ln">   275</span>		tmp = t[i];
+<span id="L276" class="ln">   276</span>		while(i &gt; 0) {
+<span id="L277" class="ln">   277</span>			p = (i-1)/4;  // parent
+<span id="L278" class="ln">   278</span>			if(when &gt;= t[p]-&gt;when)
+<span id="L279" class="ln">   279</span>				break;
+<span id="L280" class="ln">   280</span>			t[i] = t[p];
+<span id="L281" class="ln">   281</span>			t[i]-&gt;i = i;
+<span id="L282" class="ln">   282</span>			t[p] = tmp;
+<span id="L283" class="ln">   283</span>			tmp-&gt;i = p;
+<span id="L284" class="ln">   284</span>			i = p;
+<span id="L285" class="ln">   285</span>		}
+<span id="L286" class="ln">   286</span>	}
+<span id="L287" class="ln">   287</span>	
+<span id="L288" class="ln">   288</span>	static void
+<span id="L289" class="ln">   289</span>	siftdown(int32 i)
+<span id="L290" class="ln">   290</span>	{
+<span id="L291" class="ln">   291</span>		int32 c, c3, len;
+<span id="L292" class="ln">   292</span>		int64 when, w, w3;
+<span id="L293" class="ln">   293</span>		Timer **t, *tmp;
+<span id="L294" class="ln">   294</span>	
+<span id="L295" class="ln">   295</span>		t = timers.t;
+<span id="L296" class="ln">   296</span>		len = timers.len;
+<span id="L297" class="ln">   297</span>		when = t[i]-&gt;when;
+<span id="L298" class="ln">   298</span>		tmp = t[i];
+<span id="L299" class="ln">   299</span>		for(;;) {
+<span id="L300" class="ln">   300</span>			c = i*4 + 1;  // left child
+<span id="L301" class="ln">   301</span>			c3 = c + 2;  // mid child
+<span id="L302" class="ln">   302</span>			if(c &gt;= len) {
+<span id="L303" class="ln">   303</span>				break;
+<span id="L304" class="ln">   304</span>			}
+<span id="L305" class="ln">   305</span>			w = t[c]-&gt;when;
+<span id="L306" class="ln">   306</span>			if(c+1 &lt; len &amp;&amp; t[c+1]-&gt;when &lt; w) {
+<span id="L307" class="ln">   307</span>				w = t[c+1]-&gt;when;
+<span id="L308" class="ln">   308</span>				c++;
+<span id="L309" class="ln">   309</span>			}
+<span id="L310" class="ln">   310</span>			if(c3 &lt; len) {
+<span id="L311" class="ln">   311</span>				w3 = t[c3]-&gt;when;
+<span id="L312" class="ln">   312</span>				if(c3+1 &lt; len &amp;&amp; t[c3+1]-&gt;when &lt; w3) {
+<span id="L313" class="ln">   313</span>					w3 = t[c3+1]-&gt;when;
+<span id="L314" class="ln">   314</span>					c3++;
+<span id="L315" class="ln">   315</span>				}
+<span id="L316" class="ln">   316</span>				if(w3 &lt; w) {
+<span id="L317" class="ln">   317</span>					w = w3;
+<span id="L318" class="ln">   318</span>					c = c3;
+<span id="L319" class="ln">   319</span>				}
+<span id="L320" class="ln">   320</span>			}
+<span id="L321" class="ln">   321</span>			if(w &gt;= when)
+<span id="L322" class="ln">   322</span>				break;
+<span id="L323" class="ln">   323</span>			t[i] = t[c];
+<span id="L324" class="ln">   324</span>			t[i]-&gt;i = i;
+<span id="L325" class="ln">   325</span>			t[c] = tmp;
+<span id="L326" class="ln">   326</span>			tmp-&gt;i = c;
+<span id="L327" class="ln">   327</span>			i = c;
+<span id="L328" class="ln">   328</span>		}
+<span id="L329" class="ln">   329</span>	}
+<span id="L330" class="ln">   330</span>	
+<span id="L331" class="ln">   331</span>	static void
+<span id="L332" class="ln">   332</span>	dumptimers(int8 *msg)
+<span id="L333" class="ln">   333</span>	{
+<span id="L334" class="ln">   334</span>		Timer *t;
+<span id="L335" class="ln">   335</span>		int32 i;
+<span id="L336" class="ln">   336</span>	
+<span id="L337" class="ln">   337</span>		runtime·printf(&#34;timers: %s\n&#34;, msg);
+<span id="L338" class="ln">   338</span>		for(i = 0; i &lt; timers.len; i++) {
+<span id="L339" class="ln">   339</span>			t = timers.t[i];
+<span id="L340" class="ln">   340</span>			runtime·printf(&#34;\t%d\t%p:\ti %d when %D period %D fn %p\n&#34;,
+<span id="L341" class="ln">   341</span>					i, t, t-&gt;i, t-&gt;when, t-&gt;period, t-&gt;fv-&gt;fn);
+<span id="L342" class="ln">   342</span>		}
+<span id="L343" class="ln">   343</span>		runtime·printf(&#34;\n&#34;);
+<span id="L344" class="ln">   344</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/time.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

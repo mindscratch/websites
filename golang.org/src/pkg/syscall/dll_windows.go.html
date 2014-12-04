@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/syscall/dll_windows.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/syscall/dll_windows.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors.  All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package syscall
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;sync&#34;
+<span id="L9" class="ln">     9</span>		&#34;sync/atomic&#34;
+<span id="L10" class="ln">    10</span>		&#34;unsafe&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	<span class="comment">// DLLError describes reasons for DLL load failures.</span>
+<span id="L14" class="ln">    14</span>	type DLLError struct {
+<span id="L15" class="ln">    15</span>		Err     error
+<span id="L16" class="ln">    16</span>		ObjName string
+<span id="L17" class="ln">    17</span>		Msg     string
+<span id="L18" class="ln">    18</span>	}
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	func (e *DLLError) Error() string { return e.Msg }
+<span id="L21" class="ln">    21</span>	
+<span id="L22" class="ln">    22</span>	<span class="comment">// Implemented in ../runtime/syscall_windows.goc.</span>
+<span id="L23" class="ln">    23</span>	func Syscall(trap, nargs, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+<span id="L24" class="ln">    24</span>	func Syscall6(trap, nargs, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
+<span id="L25" class="ln">    25</span>	func Syscall9(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err Errno)
+<span id="L26" class="ln">    26</span>	func Syscall12(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12 uintptr) (r1, r2 uintptr, err Errno)
+<span id="L27" class="ln">    27</span>	func Syscall15(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15 uintptr) (r1, r2 uintptr, err Errno)
+<span id="L28" class="ln">    28</span>	func loadlibrary(filename *uint16) (handle uintptr, err Errno)
+<span id="L29" class="ln">    29</span>	func getprocaddress(handle uintptr, procname *uint8) (proc uintptr, err Errno)
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	<span class="comment">// A DLL implements access to a single DLL.</span>
+<span id="L32" class="ln">    32</span>	type DLL struct {
+<span id="L33" class="ln">    33</span>		Name   string
+<span id="L34" class="ln">    34</span>		Handle Handle
+<span id="L35" class="ln">    35</span>	}
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	<span class="comment">// LoadDLL loads DLL file into memory.</span>
+<span id="L38" class="ln">    38</span>	func LoadDLL(name string) (dll *DLL, err error) {
+<span id="L39" class="ln">    39</span>		namep, err := UTF16PtrFromString(name)
+<span id="L40" class="ln">    40</span>		if err != nil {
+<span id="L41" class="ln">    41</span>			return nil, err
+<span id="L42" class="ln">    42</span>		}
+<span id="L43" class="ln">    43</span>		h, e := loadlibrary(namep)
+<span id="L44" class="ln">    44</span>		if e != 0 {
+<span id="L45" class="ln">    45</span>			return nil, &amp;DLLError{
+<span id="L46" class="ln">    46</span>				Err:     e,
+<span id="L47" class="ln">    47</span>				ObjName: name,
+<span id="L48" class="ln">    48</span>				Msg:     &#34;Failed to load &#34; + name + &#34;: &#34; + e.Error(),
+<span id="L49" class="ln">    49</span>			}
+<span id="L50" class="ln">    50</span>		}
+<span id="L51" class="ln">    51</span>		d := &amp;DLL{
+<span id="L52" class="ln">    52</span>			Name:   name,
+<span id="L53" class="ln">    53</span>			Handle: Handle(h),
+<span id="L54" class="ln">    54</span>		}
+<span id="L55" class="ln">    55</span>		return d, nil
+<span id="L56" class="ln">    56</span>	}
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>	<span class="comment">// MustLoadDLL is like LoadDLL but panics if load operation failes.</span>
+<span id="L59" class="ln">    59</span>	func MustLoadDLL(name string) *DLL {
+<span id="L60" class="ln">    60</span>		d, e := LoadDLL(name)
+<span id="L61" class="ln">    61</span>		if e != nil {
+<span id="L62" class="ln">    62</span>			panic(e)
+<span id="L63" class="ln">    63</span>		}
+<span id="L64" class="ln">    64</span>		return d
+<span id="L65" class="ln">    65</span>	}
+<span id="L66" class="ln">    66</span>	
+<span id="L67" class="ln">    67</span>	<span class="comment">// FindProc searches DLL d for procedure named name and returns *Proc</span>
+<span id="L68" class="ln">    68</span>	<span class="comment">// if found. It returns an error if search fails.</span>
+<span id="L69" class="ln">    69</span>	func (d *DLL) FindProc(name string) (proc *Proc, err error) {
+<span id="L70" class="ln">    70</span>		namep, err := BytePtrFromString(name)
+<span id="L71" class="ln">    71</span>		if err != nil {
+<span id="L72" class="ln">    72</span>			return nil, err
+<span id="L73" class="ln">    73</span>		}
+<span id="L74" class="ln">    74</span>		a, e := getprocaddress(uintptr(d.Handle), namep)
+<span id="L75" class="ln">    75</span>		if e != 0 {
+<span id="L76" class="ln">    76</span>			return nil, &amp;DLLError{
+<span id="L77" class="ln">    77</span>				Err:     e,
+<span id="L78" class="ln">    78</span>				ObjName: name,
+<span id="L79" class="ln">    79</span>				Msg:     &#34;Failed to find &#34; + name + &#34; procedure in &#34; + d.Name + &#34;: &#34; + e.Error(),
+<span id="L80" class="ln">    80</span>			}
+<span id="L81" class="ln">    81</span>		}
+<span id="L82" class="ln">    82</span>		p := &amp;Proc{
+<span id="L83" class="ln">    83</span>			Dll:  d,
+<span id="L84" class="ln">    84</span>			Name: name,
+<span id="L85" class="ln">    85</span>			addr: a,
+<span id="L86" class="ln">    86</span>		}
+<span id="L87" class="ln">    87</span>		return p, nil
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	<span class="comment">// MustFindProc is like FindProc but panics if search fails.</span>
+<span id="L91" class="ln">    91</span>	func (d *DLL) MustFindProc(name string) *Proc {
+<span id="L92" class="ln">    92</span>		p, e := d.FindProc(name)
+<span id="L93" class="ln">    93</span>		if e != nil {
+<span id="L94" class="ln">    94</span>			panic(e)
+<span id="L95" class="ln">    95</span>		}
+<span id="L96" class="ln">    96</span>		return p
+<span id="L97" class="ln">    97</span>	}
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>	<span class="comment">// Release unloads DLL d from memory.</span>
+<span id="L100" class="ln">   100</span>	func (d *DLL) Release() (err error) {
+<span id="L101" class="ln">   101</span>		return FreeLibrary(d.Handle)
+<span id="L102" class="ln">   102</span>	}
+<span id="L103" class="ln">   103</span>	
+<span id="L104" class="ln">   104</span>	<span class="comment">// A Proc implements access to a procedure inside a DLL.</span>
+<span id="L105" class="ln">   105</span>	type Proc struct {
+<span id="L106" class="ln">   106</span>		Dll  *DLL
+<span id="L107" class="ln">   107</span>		Name string
+<span id="L108" class="ln">   108</span>		addr uintptr
+<span id="L109" class="ln">   109</span>	}
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>	<span class="comment">// Addr returns the address of the procedure represented by p.</span>
+<span id="L112" class="ln">   112</span>	<span class="comment">// The return value can be passed to Syscall to run the procedure.</span>
+<span id="L113" class="ln">   113</span>	func (p *Proc) Addr() uintptr {
+<span id="L114" class="ln">   114</span>		return p.addr
+<span id="L115" class="ln">   115</span>	}
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>	<span class="comment">// Call executes procedure p with arguments a. It will panic, if more then 15 arguments</span>
+<span id="L118" class="ln">   118</span>	<span class="comment">// are supplied.</span>
+<span id="L119" class="ln">   119</span>	<span class="comment">//</span>
+<span id="L120" class="ln">   120</span>	<span class="comment">// The returned error is always non-nil, constructed from the result of GetLastError.</span>
+<span id="L121" class="ln">   121</span>	<span class="comment">// Callers must inspect the primary return value to decide whether an error occurred</span>
+<span id="L122" class="ln">   122</span>	<span class="comment">// (according to the semantics of the specific function being called) before consulting</span>
+<span id="L123" class="ln">   123</span>	<span class="comment">// the error. The error will be guaranteed to contain syscall.Errno.</span>
+<span id="L124" class="ln">   124</span>	func (p *Proc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
+<span id="L125" class="ln">   125</span>		switch len(a) {
+<span id="L126" class="ln">   126</span>		case 0:
+<span id="L127" class="ln">   127</span>			return Syscall(p.Addr(), uintptr(len(a)), 0, 0, 0)
+<span id="L128" class="ln">   128</span>		case 1:
+<span id="L129" class="ln">   129</span>			return Syscall(p.Addr(), uintptr(len(a)), a[0], 0, 0)
+<span id="L130" class="ln">   130</span>		case 2:
+<span id="L131" class="ln">   131</span>			return Syscall(p.Addr(), uintptr(len(a)), a[0], a[1], 0)
+<span id="L132" class="ln">   132</span>		case 3:
+<span id="L133" class="ln">   133</span>			return Syscall(p.Addr(), uintptr(len(a)), a[0], a[1], a[2])
+<span id="L134" class="ln">   134</span>		case 4:
+<span id="L135" class="ln">   135</span>			return Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], 0, 0)
+<span id="L136" class="ln">   136</span>		case 5:
+<span id="L137" class="ln">   137</span>			return Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], 0)
+<span id="L138" class="ln">   138</span>		case 6:
+<span id="L139" class="ln">   139</span>			return Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5])
+<span id="L140" class="ln">   140</span>		case 7:
+<span id="L141" class="ln">   141</span>			return Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], 0, 0)
+<span id="L142" class="ln">   142</span>		case 8:
+<span id="L143" class="ln">   143</span>			return Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], 0)
+<span id="L144" class="ln">   144</span>		case 9:
+<span id="L145" class="ln">   145</span>			return Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8])
+<span id="L146" class="ln">   146</span>		case 10:
+<span id="L147" class="ln">   147</span>			return Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], 0, 0)
+<span id="L148" class="ln">   148</span>		case 11:
+<span id="L149" class="ln">   149</span>			return Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], 0)
+<span id="L150" class="ln">   150</span>		case 12:
+<span id="L151" class="ln">   151</span>			return Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11])
+<span id="L152" class="ln">   152</span>		case 13:
+<span id="L153" class="ln">   153</span>			return Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], 0, 0)
+<span id="L154" class="ln">   154</span>		case 14:
+<span id="L155" class="ln">   155</span>			return Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], 0)
+<span id="L156" class="ln">   156</span>		case 15:
+<span id="L157" class="ln">   157</span>			return Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14])
+<span id="L158" class="ln">   158</span>		default:
+<span id="L159" class="ln">   159</span>			panic(&#34;Call &#34; + p.Name + &#34; with too many arguments &#34; + itoa(len(a)) + &#34;.&#34;)
+<span id="L160" class="ln">   160</span>		}
+<span id="L161" class="ln">   161</span>		return
+<span id="L162" class="ln">   162</span>	}
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>	<span class="comment">// A LazyDLL implements access to a single DLL.</span>
+<span id="L165" class="ln">   165</span>	<span class="comment">// It will delay the load of the DLL until the first</span>
+<span id="L166" class="ln">   166</span>	<span class="comment">// call to its Handle method or to one of its</span>
+<span id="L167" class="ln">   167</span>	<span class="comment">// LazyProc&#39;s Addr method.</span>
+<span id="L168" class="ln">   168</span>	type LazyDLL struct {
+<span id="L169" class="ln">   169</span>		mu   sync.Mutex
+<span id="L170" class="ln">   170</span>		dll  *DLL <span class="comment">// non nil once DLL is loaded</span>
+<span id="L171" class="ln">   171</span>		Name string
+<span id="L172" class="ln">   172</span>	}
+<span id="L173" class="ln">   173</span>	
+<span id="L174" class="ln">   174</span>	<span class="comment">// Load loads DLL file d.Name into memory. It returns an error if fails.</span>
+<span id="L175" class="ln">   175</span>	<span class="comment">// Load will not try to load DLL, if it is already loaded into memory.</span>
+<span id="L176" class="ln">   176</span>	func (d *LazyDLL) Load() error {
+<span id="L177" class="ln">   177</span>		<span class="comment">// Non-racy version of:</span>
+<span id="L178" class="ln">   178</span>		<span class="comment">// if d.dll == nil {</span>
+<span id="L179" class="ln">   179</span>		if atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&amp;d.dll))) == nil {
+<span id="L180" class="ln">   180</span>			d.mu.Lock()
+<span id="L181" class="ln">   181</span>			defer d.mu.Unlock()
+<span id="L182" class="ln">   182</span>			if d.dll == nil {
+<span id="L183" class="ln">   183</span>				dll, e := LoadDLL(d.Name)
+<span id="L184" class="ln">   184</span>				if e != nil {
+<span id="L185" class="ln">   185</span>					return e
+<span id="L186" class="ln">   186</span>				}
+<span id="L187" class="ln">   187</span>				<span class="comment">// Non-racy version of:</span>
+<span id="L188" class="ln">   188</span>				<span class="comment">// d.dll = dll</span>
+<span id="L189" class="ln">   189</span>				atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&amp;d.dll)), unsafe.Pointer(dll))
+<span id="L190" class="ln">   190</span>			}
+<span id="L191" class="ln">   191</span>		}
+<span id="L192" class="ln">   192</span>		return nil
+<span id="L193" class="ln">   193</span>	}
+<span id="L194" class="ln">   194</span>	
+<span id="L195" class="ln">   195</span>	<span class="comment">// mustLoad is like Load but panics if search fails.</span>
+<span id="L196" class="ln">   196</span>	func (d *LazyDLL) mustLoad() {
+<span id="L197" class="ln">   197</span>		e := d.Load()
+<span id="L198" class="ln">   198</span>		if e != nil {
+<span id="L199" class="ln">   199</span>			panic(e)
+<span id="L200" class="ln">   200</span>		}
+<span id="L201" class="ln">   201</span>	}
+<span id="L202" class="ln">   202</span>	
+<span id="L203" class="ln">   203</span>	<span class="comment">// Handle returns d&#39;s module handle.</span>
+<span id="L204" class="ln">   204</span>	func (d *LazyDLL) Handle() uintptr {
+<span id="L205" class="ln">   205</span>		d.mustLoad()
+<span id="L206" class="ln">   206</span>		return uintptr(d.dll.Handle)
+<span id="L207" class="ln">   207</span>	}
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	<span class="comment">// NewProc returns a LazyProc for accessing the named procedure in the DLL d.</span>
+<span id="L210" class="ln">   210</span>	func (d *LazyDLL) NewProc(name string) *LazyProc {
+<span id="L211" class="ln">   211</span>		return &amp;LazyProc{l: d, Name: name}
+<span id="L212" class="ln">   212</span>	}
+<span id="L213" class="ln">   213</span>	
+<span id="L214" class="ln">   214</span>	<span class="comment">// NewLazyDLL creates new LazyDLL associated with DLL file.</span>
+<span id="L215" class="ln">   215</span>	func NewLazyDLL(name string) *LazyDLL {
+<span id="L216" class="ln">   216</span>		return &amp;LazyDLL{Name: name}
+<span id="L217" class="ln">   217</span>	}
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>	<span class="comment">// A LazyProc implements access to a procedure inside a LazyDLL.</span>
+<span id="L220" class="ln">   220</span>	<span class="comment">// It delays the lookup until the Addr method is called.</span>
+<span id="L221" class="ln">   221</span>	type LazyProc struct {
+<span id="L222" class="ln">   222</span>		mu   sync.Mutex
+<span id="L223" class="ln">   223</span>		Name string
+<span id="L224" class="ln">   224</span>		l    *LazyDLL
+<span id="L225" class="ln">   225</span>		proc *Proc
+<span id="L226" class="ln">   226</span>	}
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	<span class="comment">// Find searches DLL for procedure named p.Name. It returns</span>
+<span id="L229" class="ln">   229</span>	<span class="comment">// an error if search fails. Find will not search procedure,</span>
+<span id="L230" class="ln">   230</span>	<span class="comment">// if it is already found and loaded into memory.</span>
+<span id="L231" class="ln">   231</span>	func (p *LazyProc) Find() error {
+<span id="L232" class="ln">   232</span>		<span class="comment">// Non-racy version of:</span>
+<span id="L233" class="ln">   233</span>		<span class="comment">// if p.proc == nil {</span>
+<span id="L234" class="ln">   234</span>		if atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&amp;p.proc))) == nil {
+<span id="L235" class="ln">   235</span>			p.mu.Lock()
+<span id="L236" class="ln">   236</span>			defer p.mu.Unlock()
+<span id="L237" class="ln">   237</span>			if p.proc == nil {
+<span id="L238" class="ln">   238</span>				e := p.l.Load()
+<span id="L239" class="ln">   239</span>				if e != nil {
+<span id="L240" class="ln">   240</span>					return e
+<span id="L241" class="ln">   241</span>				}
+<span id="L242" class="ln">   242</span>				proc, e := p.l.dll.FindProc(p.Name)
+<span id="L243" class="ln">   243</span>				if e != nil {
+<span id="L244" class="ln">   244</span>					return e
+<span id="L245" class="ln">   245</span>				}
+<span id="L246" class="ln">   246</span>				<span class="comment">// Non-racy version of:</span>
+<span id="L247" class="ln">   247</span>				<span class="comment">// p.proc = proc</span>
+<span id="L248" class="ln">   248</span>				atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&amp;p.proc)), unsafe.Pointer(proc))
+<span id="L249" class="ln">   249</span>			}
+<span id="L250" class="ln">   250</span>		}
+<span id="L251" class="ln">   251</span>		return nil
+<span id="L252" class="ln">   252</span>	}
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>	<span class="comment">// mustFind is like Find but panics if search fails.</span>
+<span id="L255" class="ln">   255</span>	func (p *LazyProc) mustFind() {
+<span id="L256" class="ln">   256</span>		e := p.Find()
+<span id="L257" class="ln">   257</span>		if e != nil {
+<span id="L258" class="ln">   258</span>			panic(e)
+<span id="L259" class="ln">   259</span>		}
+<span id="L260" class="ln">   260</span>	}
+<span id="L261" class="ln">   261</span>	
+<span id="L262" class="ln">   262</span>	<span class="comment">// Addr returns the address of the procedure represented by p.</span>
+<span id="L263" class="ln">   263</span>	<span class="comment">// The return value can be passed to Syscall to run the procedure.</span>
+<span id="L264" class="ln">   264</span>	func (p *LazyProc) Addr() uintptr {
+<span id="L265" class="ln">   265</span>		p.mustFind()
+<span id="L266" class="ln">   266</span>		return p.proc.Addr()
+<span id="L267" class="ln">   267</span>	}
+<span id="L268" class="ln">   268</span>	
+<span id="L269" class="ln">   269</span>	<span class="comment">// Call executes procedure p with arguments a. It will panic, if more then 15 arguments</span>
+<span id="L270" class="ln">   270</span>	<span class="comment">// are supplied.</span>
+<span id="L271" class="ln">   271</span>	<span class="comment">//</span>
+<span id="L272" class="ln">   272</span>	<span class="comment">// The returned error is always non-nil, constructed from the result of GetLastError.</span>
+<span id="L273" class="ln">   273</span>	<span class="comment">// Callers must inspect the primary return value to decide whether an error occurred</span>
+<span id="L274" class="ln">   274</span>	<span class="comment">// (according to the semantics of the specific function being called) before consulting</span>
+<span id="L275" class="ln">   275</span>	<span class="comment">// the error. The error will be guaranteed to contain syscall.Errno.</span>
+<span id="L276" class="ln">   276</span>	func (p *LazyProc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
+<span id="L277" class="ln">   277</span>		p.mustFind()
+<span id="L278" class="ln">   278</span>		return p.proc.Call(a...)
+<span id="L279" class="ln">   279</span>	}
+<span id="L280" class="ln">   280</span>	
+</pre><p><a href="http://golang.org/src/pkg/syscall/dll_windows.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

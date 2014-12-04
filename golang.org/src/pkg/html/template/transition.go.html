@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/html/template/transition.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/html/template/transition.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package template
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;bytes&#34;
+<span id="L9" class="ln">     9</span>		&#34;strings&#34;
+<span id="L10" class="ln">    10</span>	)
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	<span class="comment">// transitionFunc is the array of context transition functions for text nodes.</span>
+<span id="L13" class="ln">    13</span>	<span class="comment">// A transition function takes a context and template text input, and returns</span>
+<span id="L14" class="ln">    14</span>	<span class="comment">// the updated context and the number of bytes consumed from the front of the</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// input.</span>
+<span id="L16" class="ln">    16</span>	var transitionFunc = [...]func(context, []byte) (context, int){
+<span id="L17" class="ln">    17</span>		stateText:        tText,
+<span id="L18" class="ln">    18</span>		stateTag:         tTag,
+<span id="L19" class="ln">    19</span>		stateAttrName:    tAttrName,
+<span id="L20" class="ln">    20</span>		stateAfterName:   tAfterName,
+<span id="L21" class="ln">    21</span>		stateBeforeValue: tBeforeValue,
+<span id="L22" class="ln">    22</span>		stateHTMLCmt:     tHTMLCmt,
+<span id="L23" class="ln">    23</span>		stateRCDATA:      tSpecialTagEnd,
+<span id="L24" class="ln">    24</span>		stateAttr:        tAttr,
+<span id="L25" class="ln">    25</span>		stateURL:         tURL,
+<span id="L26" class="ln">    26</span>		stateJS:          tJS,
+<span id="L27" class="ln">    27</span>		stateJSDqStr:     tJSDelimited,
+<span id="L28" class="ln">    28</span>		stateJSSqStr:     tJSDelimited,
+<span id="L29" class="ln">    29</span>		stateJSRegexp:    tJSDelimited,
+<span id="L30" class="ln">    30</span>		stateJSBlockCmt:  tBlockCmt,
+<span id="L31" class="ln">    31</span>		stateJSLineCmt:   tLineCmt,
+<span id="L32" class="ln">    32</span>		stateCSS:         tCSS,
+<span id="L33" class="ln">    33</span>		stateCSSDqStr:    tCSSStr,
+<span id="L34" class="ln">    34</span>		stateCSSSqStr:    tCSSStr,
+<span id="L35" class="ln">    35</span>		stateCSSDqURL:    tCSSStr,
+<span id="L36" class="ln">    36</span>		stateCSSSqURL:    tCSSStr,
+<span id="L37" class="ln">    37</span>		stateCSSURL:      tCSSStr,
+<span id="L38" class="ln">    38</span>		stateCSSBlockCmt: tBlockCmt,
+<span id="L39" class="ln">    39</span>		stateCSSLineCmt:  tLineCmt,
+<span id="L40" class="ln">    40</span>		stateError:       tError,
+<span id="L41" class="ln">    41</span>	}
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>	var commentStart = []byte(&#34;&lt;!--&#34;)
+<span id="L44" class="ln">    44</span>	var commentEnd = []byte(&#34;--&gt;&#34;)
+<span id="L45" class="ln">    45</span>	
+<span id="L46" class="ln">    46</span>	<span class="comment">// tText is the context transition function for the text state.</span>
+<span id="L47" class="ln">    47</span>	func tText(c context, s []byte) (context, int) {
+<span id="L48" class="ln">    48</span>		k := 0
+<span id="L49" class="ln">    49</span>		for {
+<span id="L50" class="ln">    50</span>			i := k + bytes.IndexByte(s[k:], &#39;&lt;&#39;)
+<span id="L51" class="ln">    51</span>			if i &lt; k || i+1 == len(s) {
+<span id="L52" class="ln">    52</span>				return c, len(s)
+<span id="L53" class="ln">    53</span>			} else if i+4 &lt;= len(s) &amp;&amp; bytes.Equal(commentStart, s[i:i+4]) {
+<span id="L54" class="ln">    54</span>				return context{state: stateHTMLCmt}, i + 4
+<span id="L55" class="ln">    55</span>			}
+<span id="L56" class="ln">    56</span>			i++
+<span id="L57" class="ln">    57</span>			end := false
+<span id="L58" class="ln">    58</span>			if s[i] == &#39;/&#39; {
+<span id="L59" class="ln">    59</span>				if i+1 == len(s) {
+<span id="L60" class="ln">    60</span>					return c, len(s)
+<span id="L61" class="ln">    61</span>				}
+<span id="L62" class="ln">    62</span>				end, i = true, i+1
+<span id="L63" class="ln">    63</span>			}
+<span id="L64" class="ln">    64</span>			j, e := eatTagName(s, i)
+<span id="L65" class="ln">    65</span>			if j != i {
+<span id="L66" class="ln">    66</span>				if end {
+<span id="L67" class="ln">    67</span>					e = elementNone
+<span id="L68" class="ln">    68</span>				}
+<span id="L69" class="ln">    69</span>				<span class="comment">// We&#39;ve found an HTML tag.</span>
+<span id="L70" class="ln">    70</span>				return context{state: stateTag, element: e}, j
+<span id="L71" class="ln">    71</span>			}
+<span id="L72" class="ln">    72</span>			k = j
+<span id="L73" class="ln">    73</span>		}
+<span id="L74" class="ln">    74</span>	}
+<span id="L75" class="ln">    75</span>	
+<span id="L76" class="ln">    76</span>	var elementContentType = [...]state{
+<span id="L77" class="ln">    77</span>		elementNone:     stateText,
+<span id="L78" class="ln">    78</span>		elementScript:   stateJS,
+<span id="L79" class="ln">    79</span>		elementStyle:    stateCSS,
+<span id="L80" class="ln">    80</span>		elementTextarea: stateRCDATA,
+<span id="L81" class="ln">    81</span>		elementTitle:    stateRCDATA,
+<span id="L82" class="ln">    82</span>	}
+<span id="L83" class="ln">    83</span>	
+<span id="L84" class="ln">    84</span>	<span class="comment">// tTag is the context transition function for the tag state.</span>
+<span id="L85" class="ln">    85</span>	func tTag(c context, s []byte) (context, int) {
+<span id="L86" class="ln">    86</span>		<span class="comment">// Find the attribute name.</span>
+<span id="L87" class="ln">    87</span>		i := eatWhiteSpace(s, 0)
+<span id="L88" class="ln">    88</span>		if i == len(s) {
+<span id="L89" class="ln">    89</span>			return c, len(s)
+<span id="L90" class="ln">    90</span>		}
+<span id="L91" class="ln">    91</span>		if s[i] == &#39;&gt;&#39; {
+<span id="L92" class="ln">    92</span>			return context{
+<span id="L93" class="ln">    93</span>				state:   elementContentType[c.element],
+<span id="L94" class="ln">    94</span>				element: c.element,
+<span id="L95" class="ln">    95</span>			}, i + 1
+<span id="L96" class="ln">    96</span>		}
+<span id="L97" class="ln">    97</span>		j, err := eatAttrName(s, i)
+<span id="L98" class="ln">    98</span>		if err != nil {
+<span id="L99" class="ln">    99</span>			return context{state: stateError, err: err}, len(s)
+<span id="L100" class="ln">   100</span>		}
+<span id="L101" class="ln">   101</span>		state, attr := stateTag, attrNone
+<span id="L102" class="ln">   102</span>		if i == j {
+<span id="L103" class="ln">   103</span>			return context{
+<span id="L104" class="ln">   104</span>				state: stateError,
+<span id="L105" class="ln">   105</span>				err:   errorf(ErrBadHTML, 0, &#34;expected space, attr name, or end of tag, but got %q&#34;, s[i:]),
+<span id="L106" class="ln">   106</span>			}, len(s)
+<span id="L107" class="ln">   107</span>		}
+<span id="L108" class="ln">   108</span>		switch attrType(string(s[i:j])) {
+<span id="L109" class="ln">   109</span>		case contentTypeURL:
+<span id="L110" class="ln">   110</span>			attr = attrURL
+<span id="L111" class="ln">   111</span>		case contentTypeCSS:
+<span id="L112" class="ln">   112</span>			attr = attrStyle
+<span id="L113" class="ln">   113</span>		case contentTypeJS:
+<span id="L114" class="ln">   114</span>			attr = attrScript
+<span id="L115" class="ln">   115</span>		}
+<span id="L116" class="ln">   116</span>		if j == len(s) {
+<span id="L117" class="ln">   117</span>			state = stateAttrName
+<span id="L118" class="ln">   118</span>		} else {
+<span id="L119" class="ln">   119</span>			state = stateAfterName
+<span id="L120" class="ln">   120</span>		}
+<span id="L121" class="ln">   121</span>		return context{state: state, element: c.element, attr: attr}, j
+<span id="L122" class="ln">   122</span>	}
+<span id="L123" class="ln">   123</span>	
+<span id="L124" class="ln">   124</span>	<span class="comment">// tAttrName is the context transition function for stateAttrName.</span>
+<span id="L125" class="ln">   125</span>	func tAttrName(c context, s []byte) (context, int) {
+<span id="L126" class="ln">   126</span>		i, err := eatAttrName(s, 0)
+<span id="L127" class="ln">   127</span>		if err != nil {
+<span id="L128" class="ln">   128</span>			return context{state: stateError, err: err}, len(s)
+<span id="L129" class="ln">   129</span>		} else if i != len(s) {
+<span id="L130" class="ln">   130</span>			c.state = stateAfterName
+<span id="L131" class="ln">   131</span>		}
+<span id="L132" class="ln">   132</span>		return c, i
+<span id="L133" class="ln">   133</span>	}
+<span id="L134" class="ln">   134</span>	
+<span id="L135" class="ln">   135</span>	<span class="comment">// tAfterName is the context transition function for stateAfterName.</span>
+<span id="L136" class="ln">   136</span>	func tAfterName(c context, s []byte) (context, int) {
+<span id="L137" class="ln">   137</span>		<span class="comment">// Look for the start of the value.</span>
+<span id="L138" class="ln">   138</span>		i := eatWhiteSpace(s, 0)
+<span id="L139" class="ln">   139</span>		if i == len(s) {
+<span id="L140" class="ln">   140</span>			return c, len(s)
+<span id="L141" class="ln">   141</span>		} else if s[i] != &#39;=&#39; {
+<span id="L142" class="ln">   142</span>			<span class="comment">// Occurs due to tag ending &#39;&gt;&#39;, and valueless attribute.</span>
+<span id="L143" class="ln">   143</span>			c.state = stateTag
+<span id="L144" class="ln">   144</span>			return c, i
+<span id="L145" class="ln">   145</span>		}
+<span id="L146" class="ln">   146</span>		c.state = stateBeforeValue
+<span id="L147" class="ln">   147</span>		<span class="comment">// Consume the &#34;=&#34;.</span>
+<span id="L148" class="ln">   148</span>		return c, i + 1
+<span id="L149" class="ln">   149</span>	}
+<span id="L150" class="ln">   150</span>	
+<span id="L151" class="ln">   151</span>	var attrStartStates = [...]state{
+<span id="L152" class="ln">   152</span>		attrNone:   stateAttr,
+<span id="L153" class="ln">   153</span>		attrScript: stateJS,
+<span id="L154" class="ln">   154</span>		attrStyle:  stateCSS,
+<span id="L155" class="ln">   155</span>		attrURL:    stateURL,
+<span id="L156" class="ln">   156</span>	}
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>	<span class="comment">// tBeforeValue is the context transition function for stateBeforeValue.</span>
+<span id="L159" class="ln">   159</span>	func tBeforeValue(c context, s []byte) (context, int) {
+<span id="L160" class="ln">   160</span>		i := eatWhiteSpace(s, 0)
+<span id="L161" class="ln">   161</span>		if i == len(s) {
+<span id="L162" class="ln">   162</span>			return c, len(s)
+<span id="L163" class="ln">   163</span>		}
+<span id="L164" class="ln">   164</span>		<span class="comment">// Find the attribute delimiter.</span>
+<span id="L165" class="ln">   165</span>		delim := delimSpaceOrTagEnd
+<span id="L166" class="ln">   166</span>		switch s[i] {
+<span id="L167" class="ln">   167</span>		case &#39;\&#39;&#39;:
+<span id="L168" class="ln">   168</span>			delim, i = delimSingleQuote, i+1
+<span id="L169" class="ln">   169</span>		case &#39;&#34;&#39;:
+<span id="L170" class="ln">   170</span>			delim, i = delimDoubleQuote, i+1
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>		c.state, c.delim, c.attr = attrStartStates[c.attr], delim, attrNone
+<span id="L173" class="ln">   173</span>		return c, i
+<span id="L174" class="ln">   174</span>	}
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>	<span class="comment">// tHTMLCmt is the context transition function for stateHTMLCmt.</span>
+<span id="L177" class="ln">   177</span>	func tHTMLCmt(c context, s []byte) (context, int) {
+<span id="L178" class="ln">   178</span>		if i := bytes.Index(s, commentEnd); i != -1 {
+<span id="L179" class="ln">   179</span>			return context{}, i + 3
+<span id="L180" class="ln">   180</span>		}
+<span id="L181" class="ln">   181</span>		return c, len(s)
+<span id="L182" class="ln">   182</span>	}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	<span class="comment">// specialTagEndMarkers maps element types to the character sequence that</span>
+<span id="L185" class="ln">   185</span>	<span class="comment">// case-insensitively signals the end of the special tag body.</span>
+<span id="L186" class="ln">   186</span>	var specialTagEndMarkers = [...]string{
+<span id="L187" class="ln">   187</span>		elementScript:   &#34;&lt;/script&#34;,
+<span id="L188" class="ln">   188</span>		elementStyle:    &#34;&lt;/style&#34;,
+<span id="L189" class="ln">   189</span>		elementTextarea: &#34;&lt;/textarea&#34;,
+<span id="L190" class="ln">   190</span>		elementTitle:    &#34;&lt;/title&#34;,
+<span id="L191" class="ln">   191</span>	}
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>	<span class="comment">// tSpecialTagEnd is the context transition function for raw text and RCDATA</span>
+<span id="L194" class="ln">   194</span>	<span class="comment">// element states.</span>
+<span id="L195" class="ln">   195</span>	func tSpecialTagEnd(c context, s []byte) (context, int) {
+<span id="L196" class="ln">   196</span>		if c.element != elementNone {
+<span id="L197" class="ln">   197</span>			if i := strings.Index(strings.ToLower(string(s)), specialTagEndMarkers[c.element]); i != -1 {
+<span id="L198" class="ln">   198</span>				return context{}, i
+<span id="L199" class="ln">   199</span>			}
+<span id="L200" class="ln">   200</span>		}
+<span id="L201" class="ln">   201</span>		return c, len(s)
+<span id="L202" class="ln">   202</span>	}
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>	<span class="comment">// tAttr is the context transition function for the attribute state.</span>
+<span id="L205" class="ln">   205</span>	func tAttr(c context, s []byte) (context, int) {
+<span id="L206" class="ln">   206</span>		return c, len(s)
+<span id="L207" class="ln">   207</span>	}
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	<span class="comment">// tURL is the context transition function for the URL state.</span>
+<span id="L210" class="ln">   210</span>	func tURL(c context, s []byte) (context, int) {
+<span id="L211" class="ln">   211</span>		if bytes.IndexAny(s, &#34;#?&#34;) &gt;= 0 {
+<span id="L212" class="ln">   212</span>			c.urlPart = urlPartQueryOrFrag
+<span id="L213" class="ln">   213</span>		} else if len(s) != eatWhiteSpace(s, 0) &amp;&amp; c.urlPart == urlPartNone {
+<span id="L214" class="ln">   214</span>			<span class="comment">// HTML5 uses &#34;Valid URL potentially surrounded by spaces&#34; for</span>
+<span id="L215" class="ln">   215</span>			<span class="comment">// attrs: http://www.w3.org/TR/html5/index.html#attributes-1</span>
+<span id="L216" class="ln">   216</span>			c.urlPart = urlPartPreQuery
+<span id="L217" class="ln">   217</span>		}
+<span id="L218" class="ln">   218</span>		return c, len(s)
+<span id="L219" class="ln">   219</span>	}
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	<span class="comment">// tJS is the context transition function for the JS state.</span>
+<span id="L222" class="ln">   222</span>	func tJS(c context, s []byte) (context, int) {
+<span id="L223" class="ln">   223</span>		i := bytes.IndexAny(s, `&#34;&#39;/`)
+<span id="L224" class="ln">   224</span>		if i == -1 {
+<span id="L225" class="ln">   225</span>			<span class="comment">// Entire input is non string, comment, regexp tokens.</span>
+<span id="L226" class="ln">   226</span>			c.jsCtx = nextJSCtx(s, c.jsCtx)
+<span id="L227" class="ln">   227</span>			return c, len(s)
+<span id="L228" class="ln">   228</span>		}
+<span id="L229" class="ln">   229</span>		c.jsCtx = nextJSCtx(s[:i], c.jsCtx)
+<span id="L230" class="ln">   230</span>		switch s[i] {
+<span id="L231" class="ln">   231</span>		case &#39;&#34;&#39;:
+<span id="L232" class="ln">   232</span>			c.state, c.jsCtx = stateJSDqStr, jsCtxRegexp
+<span id="L233" class="ln">   233</span>		case &#39;\&#39;&#39;:
+<span id="L234" class="ln">   234</span>			c.state, c.jsCtx = stateJSSqStr, jsCtxRegexp
+<span id="L235" class="ln">   235</span>		case &#39;/&#39;:
+<span id="L236" class="ln">   236</span>			switch {
+<span id="L237" class="ln">   237</span>			case i+1 &lt; len(s) &amp;&amp; s[i+1] == &#39;/&#39;:
+<span id="L238" class="ln">   238</span>				c.state, i = stateJSLineCmt, i+1
+<span id="L239" class="ln">   239</span>			case i+1 &lt; len(s) &amp;&amp; s[i+1] == &#39;*&#39;:
+<span id="L240" class="ln">   240</span>				c.state, i = stateJSBlockCmt, i+1
+<span id="L241" class="ln">   241</span>			case c.jsCtx == jsCtxRegexp:
+<span id="L242" class="ln">   242</span>				c.state = stateJSRegexp
+<span id="L243" class="ln">   243</span>			case c.jsCtx == jsCtxDivOp:
+<span id="L244" class="ln">   244</span>				c.jsCtx = jsCtxRegexp
+<span id="L245" class="ln">   245</span>			default:
+<span id="L246" class="ln">   246</span>				return context{
+<span id="L247" class="ln">   247</span>					state: stateError,
+<span id="L248" class="ln">   248</span>					err:   errorf(ErrSlashAmbig, 0, &#34;&#39;/&#39; could start a division or regexp: %.32q&#34;, s[i:]),
+<span id="L249" class="ln">   249</span>				}, len(s)
+<span id="L250" class="ln">   250</span>			}
+<span id="L251" class="ln">   251</span>		default:
+<span id="L252" class="ln">   252</span>			panic(&#34;unreachable&#34;)
+<span id="L253" class="ln">   253</span>		}
+<span id="L254" class="ln">   254</span>		return c, i + 1
+<span id="L255" class="ln">   255</span>	}
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>	<span class="comment">// tJSDelimited is the context transition function for the JS string and regexp</span>
+<span id="L258" class="ln">   258</span>	<span class="comment">// states.</span>
+<span id="L259" class="ln">   259</span>	func tJSDelimited(c context, s []byte) (context, int) {
+<span id="L260" class="ln">   260</span>		specials := `\&#34;`
+<span id="L261" class="ln">   261</span>		switch c.state {
+<span id="L262" class="ln">   262</span>		case stateJSSqStr:
+<span id="L263" class="ln">   263</span>			specials = `\&#39;`
+<span id="L264" class="ln">   264</span>		case stateJSRegexp:
+<span id="L265" class="ln">   265</span>			specials = `\/[]`
+<span id="L266" class="ln">   266</span>		}
+<span id="L267" class="ln">   267</span>	
+<span id="L268" class="ln">   268</span>		k, inCharset := 0, false
+<span id="L269" class="ln">   269</span>		for {
+<span id="L270" class="ln">   270</span>			i := k + bytes.IndexAny(s[k:], specials)
+<span id="L271" class="ln">   271</span>			if i &lt; k {
+<span id="L272" class="ln">   272</span>				break
+<span id="L273" class="ln">   273</span>			}
+<span id="L274" class="ln">   274</span>			switch s[i] {
+<span id="L275" class="ln">   275</span>			case &#39;\\&#39;:
+<span id="L276" class="ln">   276</span>				i++
+<span id="L277" class="ln">   277</span>				if i == len(s) {
+<span id="L278" class="ln">   278</span>					return context{
+<span id="L279" class="ln">   279</span>						state: stateError,
+<span id="L280" class="ln">   280</span>						err:   errorf(ErrPartialEscape, 0, &#34;unfinished escape sequence in JS string: %q&#34;, s),
+<span id="L281" class="ln">   281</span>					}, len(s)
+<span id="L282" class="ln">   282</span>				}
+<span id="L283" class="ln">   283</span>			case &#39;[&#39;:
+<span id="L284" class="ln">   284</span>				inCharset = true
+<span id="L285" class="ln">   285</span>			case &#39;]&#39;:
+<span id="L286" class="ln">   286</span>				inCharset = false
+<span id="L287" class="ln">   287</span>			default:
+<span id="L288" class="ln">   288</span>				<span class="comment">// end delimiter</span>
+<span id="L289" class="ln">   289</span>				if !inCharset {
+<span id="L290" class="ln">   290</span>					c.state, c.jsCtx = stateJS, jsCtxDivOp
+<span id="L291" class="ln">   291</span>					return c, i + 1
+<span id="L292" class="ln">   292</span>				}
+<span id="L293" class="ln">   293</span>			}
+<span id="L294" class="ln">   294</span>			k = i + 1
+<span id="L295" class="ln">   295</span>		}
+<span id="L296" class="ln">   296</span>	
+<span id="L297" class="ln">   297</span>		if inCharset {
+<span id="L298" class="ln">   298</span>			<span class="comment">// This can be fixed by making context richer if interpolation</span>
+<span id="L299" class="ln">   299</span>			<span class="comment">// into charsets is desired.</span>
+<span id="L300" class="ln">   300</span>			return context{
+<span id="L301" class="ln">   301</span>				state: stateError,
+<span id="L302" class="ln">   302</span>				err:   errorf(ErrPartialCharset, 0, &#34;unfinished JS regexp charset: %q&#34;, s),
+<span id="L303" class="ln">   303</span>			}, len(s)
+<span id="L304" class="ln">   304</span>		}
+<span id="L305" class="ln">   305</span>	
+<span id="L306" class="ln">   306</span>		return c, len(s)
+<span id="L307" class="ln">   307</span>	}
+<span id="L308" class="ln">   308</span>	
+<span id="L309" class="ln">   309</span>	var blockCommentEnd = []byte(&#34;*/&#34;)
+<span id="L310" class="ln">   310</span>	
+<span id="L311" class="ln">   311</span>	<span class="comment">// tBlockCmt is the context transition function for /*comment*/ states.</span>
+<span id="L312" class="ln">   312</span>	func tBlockCmt(c context, s []byte) (context, int) {
+<span id="L313" class="ln">   313</span>		i := bytes.Index(s, blockCommentEnd)
+<span id="L314" class="ln">   314</span>		if i == -1 {
+<span id="L315" class="ln">   315</span>			return c, len(s)
+<span id="L316" class="ln">   316</span>		}
+<span id="L317" class="ln">   317</span>		switch c.state {
+<span id="L318" class="ln">   318</span>		case stateJSBlockCmt:
+<span id="L319" class="ln">   319</span>			c.state = stateJS
+<span id="L320" class="ln">   320</span>		case stateCSSBlockCmt:
+<span id="L321" class="ln">   321</span>			c.state = stateCSS
+<span id="L322" class="ln">   322</span>		default:
+<span id="L323" class="ln">   323</span>			panic(c.state.String())
+<span id="L324" class="ln">   324</span>		}
+<span id="L325" class="ln">   325</span>		return c, i + 2
+<span id="L326" class="ln">   326</span>	}
+<span id="L327" class="ln">   327</span>	
+<span id="L328" class="ln">   328</span>	<span class="comment">// tLineCmt is the context transition function for //comment states.</span>
+<span id="L329" class="ln">   329</span>	func tLineCmt(c context, s []byte) (context, int) {
+<span id="L330" class="ln">   330</span>		var lineTerminators string
+<span id="L331" class="ln">   331</span>		var endState state
+<span id="L332" class="ln">   332</span>		switch c.state {
+<span id="L333" class="ln">   333</span>		case stateJSLineCmt:
+<span id="L334" class="ln">   334</span>			lineTerminators, endState = &#34;\n\r\u2028\u2029&#34;, stateJS
+<span id="L335" class="ln">   335</span>		case stateCSSLineCmt:
+<span id="L336" class="ln">   336</span>			lineTerminators, endState = &#34;\n\f\r&#34;, stateCSS
+<span id="L337" class="ln">   337</span>			<span class="comment">// Line comments are not part of any published CSS standard but</span>
+<span id="L338" class="ln">   338</span>			<span class="comment">// are supported by the 4 major browsers.</span>
+<span id="L339" class="ln">   339</span>			<span class="comment">// This defines line comments as</span>
+<span id="L340" class="ln">   340</span>			<span class="comment">//     LINECOMMENT ::= &#34;//&#34; [^\n\f\d]*</span>
+<span id="L341" class="ln">   341</span>			<span class="comment">// since http://www.w3.org/TR/css3-syntax/#SUBTOK-nl defines</span>
+<span id="L342" class="ln">   342</span>			<span class="comment">// newlines:</span>
+<span id="L343" class="ln">   343</span>			<span class="comment">//     nl ::= #xA | #xD #xA | #xD | #xC</span>
+<span id="L344" class="ln">   344</span>		default:
+<span id="L345" class="ln">   345</span>			panic(c.state.String())
+<span id="L346" class="ln">   346</span>		}
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>		i := bytes.IndexAny(s, lineTerminators)
+<span id="L349" class="ln">   349</span>		if i == -1 {
+<span id="L350" class="ln">   350</span>			return c, len(s)
+<span id="L351" class="ln">   351</span>		}
+<span id="L352" class="ln">   352</span>		c.state = endState
+<span id="L353" class="ln">   353</span>		<span class="comment">// Per section 7.4 of EcmaScript 5 : http://es5.github.com/#x7.4</span>
+<span id="L354" class="ln">   354</span>		<span class="comment">// &#34;However, the LineTerminator at the end of the line is not</span>
+<span id="L355" class="ln">   355</span>		<span class="comment">// considered to be part of the single-line comment; it is</span>
+<span id="L356" class="ln">   356</span>		<span class="comment">// recognized separately by the lexical grammar and becomes part</span>
+<span id="L357" class="ln">   357</span>		<span class="comment">// of the stream of input elements for the syntactic grammar.&#34;</span>
+<span id="L358" class="ln">   358</span>		return c, i
+<span id="L359" class="ln">   359</span>	}
+<span id="L360" class="ln">   360</span>	
+<span id="L361" class="ln">   361</span>	<span class="comment">// tCSS is the context transition function for the CSS state.</span>
+<span id="L362" class="ln">   362</span>	func tCSS(c context, s []byte) (context, int) {
+<span id="L363" class="ln">   363</span>		<span class="comment">// CSS quoted strings are almost never used except for:</span>
+<span id="L364" class="ln">   364</span>		<span class="comment">// (1) URLs as in background: &#34;/foo.png&#34;</span>
+<span id="L365" class="ln">   365</span>		<span class="comment">// (2) Multiword font-names as in font-family: &#34;Times New Roman&#34;</span>
+<span id="L366" class="ln">   366</span>		<span class="comment">// (3) List separators in content values as in inline-lists:</span>
+<span id="L367" class="ln">   367</span>		<span class="comment">//    &lt;style&gt;</span>
+<span id="L368" class="ln">   368</span>		<span class="comment">//    ul.inlineList { list-style: none; padding:0 }</span>
+<span id="L369" class="ln">   369</span>		<span class="comment">//    ul.inlineList &gt; li { display: inline }</span>
+<span id="L370" class="ln">   370</span>		<span class="comment">//    ul.inlineList &gt; li:before { content: &#34;, &#34; }</span>
+<span id="L371" class="ln">   371</span>		<span class="comment">//    ul.inlineList &gt; li:first-child:before { content: &#34;&#34; }</span>
+<span id="L372" class="ln">   372</span>		<span class="comment">//    &lt;/style&gt;</span>
+<span id="L373" class="ln">   373</span>		<span class="comment">//    &lt;ul class=inlineList&gt;&lt;li&gt;One&lt;li&gt;Two&lt;li&gt;Three&lt;/ul&gt;</span>
+<span id="L374" class="ln">   374</span>		<span class="comment">// (4) Attribute value selectors as in a[href=&#34;http://example.com/&#34;]</span>
+<span id="L375" class="ln">   375</span>		<span class="comment">//</span>
+<span id="L376" class="ln">   376</span>		<span class="comment">// We conservatively treat all strings as URLs, but make some</span>
+<span id="L377" class="ln">   377</span>		<span class="comment">// allowances to avoid confusion.</span>
+<span id="L378" class="ln">   378</span>		<span class="comment">//</span>
+<span id="L379" class="ln">   379</span>		<span class="comment">// In (1), our conservative assumption is justified.</span>
+<span id="L380" class="ln">   380</span>		<span class="comment">// In (2), valid font names do not contain &#39;:&#39;, &#39;?&#39;, or &#39;#&#39;, so our</span>
+<span id="L381" class="ln">   381</span>		<span class="comment">// conservative assumption is fine since we will never transition past</span>
+<span id="L382" class="ln">   382</span>		<span class="comment">// urlPartPreQuery.</span>
+<span id="L383" class="ln">   383</span>		<span class="comment">// In (3), our protocol heuristic should not be tripped, and there</span>
+<span id="L384" class="ln">   384</span>		<span class="comment">// should not be non-space content after a &#39;?&#39; or &#39;#&#39;, so as long as</span>
+<span id="L385" class="ln">   385</span>		<span class="comment">// we only %-encode RFC 3986 reserved characters we are ok.</span>
+<span id="L386" class="ln">   386</span>		<span class="comment">// In (4), we should URL escape for URL attributes, and for others we</span>
+<span id="L387" class="ln">   387</span>		<span class="comment">// have the attribute name available if our conservative assumption</span>
+<span id="L388" class="ln">   388</span>		<span class="comment">// proves problematic for real code.</span>
+<span id="L389" class="ln">   389</span>	
+<span id="L390" class="ln">   390</span>		k := 0
+<span id="L391" class="ln">   391</span>		for {
+<span id="L392" class="ln">   392</span>			i := k + bytes.IndexAny(s[k:], `(&#34;&#39;/`)
+<span id="L393" class="ln">   393</span>			if i &lt; k {
+<span id="L394" class="ln">   394</span>				return c, len(s)
+<span id="L395" class="ln">   395</span>			}
+<span id="L396" class="ln">   396</span>			switch s[i] {
+<span id="L397" class="ln">   397</span>			case &#39;(&#39;:
+<span id="L398" class="ln">   398</span>				<span class="comment">// Look for url to the left.</span>
+<span id="L399" class="ln">   399</span>				p := bytes.TrimRight(s[:i], &#34;\t\n\f\r &#34;)
+<span id="L400" class="ln">   400</span>				if endsWithCSSKeyword(p, &#34;url&#34;) {
+<span id="L401" class="ln">   401</span>					j := len(s) - len(bytes.TrimLeft(s[i+1:], &#34;\t\n\f\r &#34;))
+<span id="L402" class="ln">   402</span>					switch {
+<span id="L403" class="ln">   403</span>					case j != len(s) &amp;&amp; s[j] == &#39;&#34;&#39;:
+<span id="L404" class="ln">   404</span>						c.state, j = stateCSSDqURL, j+1
+<span id="L405" class="ln">   405</span>					case j != len(s) &amp;&amp; s[j] == &#39;\&#39;&#39;:
+<span id="L406" class="ln">   406</span>						c.state, j = stateCSSSqURL, j+1
+<span id="L407" class="ln">   407</span>					default:
+<span id="L408" class="ln">   408</span>						c.state = stateCSSURL
+<span id="L409" class="ln">   409</span>					}
+<span id="L410" class="ln">   410</span>					return c, j
+<span id="L411" class="ln">   411</span>				}
+<span id="L412" class="ln">   412</span>			case &#39;/&#39;:
+<span id="L413" class="ln">   413</span>				if i+1 &lt; len(s) {
+<span id="L414" class="ln">   414</span>					switch s[i+1] {
+<span id="L415" class="ln">   415</span>					case &#39;/&#39;:
+<span id="L416" class="ln">   416</span>						c.state = stateCSSLineCmt
+<span id="L417" class="ln">   417</span>						return c, i + 2
+<span id="L418" class="ln">   418</span>					case &#39;*&#39;:
+<span id="L419" class="ln">   419</span>						c.state = stateCSSBlockCmt
+<span id="L420" class="ln">   420</span>						return c, i + 2
+<span id="L421" class="ln">   421</span>					}
+<span id="L422" class="ln">   422</span>				}
+<span id="L423" class="ln">   423</span>			case &#39;&#34;&#39;:
+<span id="L424" class="ln">   424</span>				c.state = stateCSSDqStr
+<span id="L425" class="ln">   425</span>				return c, i + 1
+<span id="L426" class="ln">   426</span>			case &#39;\&#39;&#39;:
+<span id="L427" class="ln">   427</span>				c.state = stateCSSSqStr
+<span id="L428" class="ln">   428</span>				return c, i + 1
+<span id="L429" class="ln">   429</span>			}
+<span id="L430" class="ln">   430</span>			k = i + 1
+<span id="L431" class="ln">   431</span>		}
+<span id="L432" class="ln">   432</span>	}
+<span id="L433" class="ln">   433</span>	
+<span id="L434" class="ln">   434</span>	<span class="comment">// tCSSStr is the context transition function for the CSS string and URL states.</span>
+<span id="L435" class="ln">   435</span>	func tCSSStr(c context, s []byte) (context, int) {
+<span id="L436" class="ln">   436</span>		var endAndEsc string
+<span id="L437" class="ln">   437</span>		switch c.state {
+<span id="L438" class="ln">   438</span>		case stateCSSDqStr, stateCSSDqURL:
+<span id="L439" class="ln">   439</span>			endAndEsc = `\&#34;`
+<span id="L440" class="ln">   440</span>		case stateCSSSqStr, stateCSSSqURL:
+<span id="L441" class="ln">   441</span>			endAndEsc = `\&#39;`
+<span id="L442" class="ln">   442</span>		case stateCSSURL:
+<span id="L443" class="ln">   443</span>			<span class="comment">// Unquoted URLs end with a newline or close parenthesis.</span>
+<span id="L444" class="ln">   444</span>			<span class="comment">// The below includes the wc (whitespace character) and nl.</span>
+<span id="L445" class="ln">   445</span>			endAndEsc = &#34;\\\t\n\f\r )&#34;
+<span id="L446" class="ln">   446</span>		default:
+<span id="L447" class="ln">   447</span>			panic(c.state.String())
+<span id="L448" class="ln">   448</span>		}
+<span id="L449" class="ln">   449</span>	
+<span id="L450" class="ln">   450</span>		k := 0
+<span id="L451" class="ln">   451</span>		for {
+<span id="L452" class="ln">   452</span>			i := k + bytes.IndexAny(s[k:], endAndEsc)
+<span id="L453" class="ln">   453</span>			if i &lt; k {
+<span id="L454" class="ln">   454</span>				c, nread := tURL(c, decodeCSS(s[k:]))
+<span id="L455" class="ln">   455</span>				return c, k + nread
+<span id="L456" class="ln">   456</span>			}
+<span id="L457" class="ln">   457</span>			if s[i] == &#39;\\&#39; {
+<span id="L458" class="ln">   458</span>				i++
+<span id="L459" class="ln">   459</span>				if i == len(s) {
+<span id="L460" class="ln">   460</span>					return context{
+<span id="L461" class="ln">   461</span>						state: stateError,
+<span id="L462" class="ln">   462</span>						err:   errorf(ErrPartialEscape, 0, &#34;unfinished escape sequence in CSS string: %q&#34;, s),
+<span id="L463" class="ln">   463</span>					}, len(s)
+<span id="L464" class="ln">   464</span>				}
+<span id="L465" class="ln">   465</span>			} else {
+<span id="L466" class="ln">   466</span>				c.state = stateCSS
+<span id="L467" class="ln">   467</span>				return c, i + 1
+<span id="L468" class="ln">   468</span>			}
+<span id="L469" class="ln">   469</span>			c, _ = tURL(c, decodeCSS(s[:i+1]))
+<span id="L470" class="ln">   470</span>			k = i + 1
+<span id="L471" class="ln">   471</span>		}
+<span id="L472" class="ln">   472</span>	}
+<span id="L473" class="ln">   473</span>	
+<span id="L474" class="ln">   474</span>	<span class="comment">// tError is the context transition function for the error state.</span>
+<span id="L475" class="ln">   475</span>	func tError(c context, s []byte) (context, int) {
+<span id="L476" class="ln">   476</span>		return c, len(s)
+<span id="L477" class="ln">   477</span>	}
+<span id="L478" class="ln">   478</span>	
+<span id="L479" class="ln">   479</span>	<span class="comment">// eatAttrName returns the largest j such that s[i:j] is an attribute name.</span>
+<span id="L480" class="ln">   480</span>	<span class="comment">// It returns an error if s[i:] does not look like it begins with an</span>
+<span id="L481" class="ln">   481</span>	<span class="comment">// attribute name, such as encountering a quote mark without a preceding</span>
+<span id="L482" class="ln">   482</span>	<span class="comment">// equals sign.</span>
+<span id="L483" class="ln">   483</span>	func eatAttrName(s []byte, i int) (int, *Error) {
+<span id="L484" class="ln">   484</span>		for j := i; j &lt; len(s); j++ {
+<span id="L485" class="ln">   485</span>			switch s[j] {
+<span id="L486" class="ln">   486</span>			case &#39; &#39;, &#39;\t&#39;, &#39;\n&#39;, &#39;\f&#39;, &#39;\r&#39;, &#39;=&#39;, &#39;&gt;&#39;:
+<span id="L487" class="ln">   487</span>				return j, nil
+<span id="L488" class="ln">   488</span>			case &#39;\&#39;&#39;, &#39;&#34;&#39;, &#39;&lt;&#39;:
+<span id="L489" class="ln">   489</span>				<span class="comment">// These result in a parse warning in HTML5 and are</span>
+<span id="L490" class="ln">   490</span>				<span class="comment">// indicative of serious problems if seen in an attr</span>
+<span id="L491" class="ln">   491</span>				<span class="comment">// name in a template.</span>
+<span id="L492" class="ln">   492</span>				return -1, errorf(ErrBadHTML, 0, &#34;%q in attribute name: %.32q&#34;, s[j:j+1], s)
+<span id="L493" class="ln">   493</span>			default:
+<span id="L494" class="ln">   494</span>				<span class="comment">// No-op.</span>
+<span id="L495" class="ln">   495</span>			}
+<span id="L496" class="ln">   496</span>		}
+<span id="L497" class="ln">   497</span>		return len(s), nil
+<span id="L498" class="ln">   498</span>	}
+<span id="L499" class="ln">   499</span>	
+<span id="L500" class="ln">   500</span>	var elementNameMap = map[string]element{
+<span id="L501" class="ln">   501</span>		&#34;script&#34;:   elementScript,
+<span id="L502" class="ln">   502</span>		&#34;style&#34;:    elementStyle,
+<span id="L503" class="ln">   503</span>		&#34;textarea&#34;: elementTextarea,
+<span id="L504" class="ln">   504</span>		&#34;title&#34;:    elementTitle,
+<span id="L505" class="ln">   505</span>	}
+<span id="L506" class="ln">   506</span>	
+<span id="L507" class="ln">   507</span>	<span class="comment">// asciiAlpha reports whether c is an ASCII letter.</span>
+<span id="L508" class="ln">   508</span>	func asciiAlpha(c byte) bool {
+<span id="L509" class="ln">   509</span>		return &#39;A&#39; &lt;= c &amp;&amp; c &lt;= &#39;Z&#39; || &#39;a&#39; &lt;= c &amp;&amp; c &lt;= &#39;z&#39;
+<span id="L510" class="ln">   510</span>	}
+<span id="L511" class="ln">   511</span>	
+<span id="L512" class="ln">   512</span>	<span class="comment">// asciiAlphaNum reports whether c is an ASCII letter or digit.</span>
+<span id="L513" class="ln">   513</span>	func asciiAlphaNum(c byte) bool {
+<span id="L514" class="ln">   514</span>		return asciiAlpha(c) || &#39;0&#39; &lt;= c &amp;&amp; c &lt;= &#39;9&#39;
+<span id="L515" class="ln">   515</span>	}
+<span id="L516" class="ln">   516</span>	
+<span id="L517" class="ln">   517</span>	<span class="comment">// eatTagName returns the largest j such that s[i:j] is a tag name and the tag type.</span>
+<span id="L518" class="ln">   518</span>	func eatTagName(s []byte, i int) (int, element) {
+<span id="L519" class="ln">   519</span>		if i == len(s) || !asciiAlpha(s[i]) {
+<span id="L520" class="ln">   520</span>			return i, elementNone
+<span id="L521" class="ln">   521</span>		}
+<span id="L522" class="ln">   522</span>		j := i + 1
+<span id="L523" class="ln">   523</span>		for j &lt; len(s) {
+<span id="L524" class="ln">   524</span>			x := s[j]
+<span id="L525" class="ln">   525</span>			if asciiAlphaNum(x) {
+<span id="L526" class="ln">   526</span>				j++
+<span id="L527" class="ln">   527</span>				continue
+<span id="L528" class="ln">   528</span>			}
+<span id="L529" class="ln">   529</span>			<span class="comment">// Allow &#34;x-y&#34; or &#34;x:y&#34; but not &#34;x-&#34;, &#34;-y&#34;, or &#34;x--y&#34;.</span>
+<span id="L530" class="ln">   530</span>			if (x == &#39;:&#39; || x == &#39;-&#39;) &amp;&amp; j+1 &lt; len(s) &amp;&amp; asciiAlphaNum(s[j+1]) {
+<span id="L531" class="ln">   531</span>				j += 2
+<span id="L532" class="ln">   532</span>				continue
+<span id="L533" class="ln">   533</span>			}
+<span id="L534" class="ln">   534</span>			break
+<span id="L535" class="ln">   535</span>		}
+<span id="L536" class="ln">   536</span>		return j, elementNameMap[strings.ToLower(string(s[i:j]))]
+<span id="L537" class="ln">   537</span>	}
+<span id="L538" class="ln">   538</span>	
+<span id="L539" class="ln">   539</span>	<span class="comment">// eatWhiteSpace returns the largest j such that s[i:j] is white space.</span>
+<span id="L540" class="ln">   540</span>	func eatWhiteSpace(s []byte, i int) int {
+<span id="L541" class="ln">   541</span>		for j := i; j &lt; len(s); j++ {
+<span id="L542" class="ln">   542</span>			switch s[j] {
+<span id="L543" class="ln">   543</span>			case &#39; &#39;, &#39;\t&#39;, &#39;\n&#39;, &#39;\f&#39;, &#39;\r&#39;:
+<span id="L544" class="ln">   544</span>				<span class="comment">// No-op.</span>
+<span id="L545" class="ln">   545</span>			default:
+<span id="L546" class="ln">   546</span>				return j
+<span id="L547" class="ln">   547</span>			}
+<span id="L548" class="ln">   548</span>		}
+<span id="L549" class="ln">   549</span>		return len(s)
+<span id="L550" class="ln">   550</span>	}
+<span id="L551" class="ln">   551</span>	
+</pre><p><a href="transition.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

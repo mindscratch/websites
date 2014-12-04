@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/image/decode_example_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/image/decode_example_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2012 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// This example demonstrates decoding a JPEG image and examining its pixels.</span>
+<span id="L6" class="ln">     6</span>	package image_test
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	import (
+<span id="L9" class="ln">     9</span>		&#34;encoding/base64&#34;
+<span id="L10" class="ln">    10</span>		&#34;fmt&#34;
+<span id="L11" class="ln">    11</span>		&#34;image&#34;
+<span id="L12" class="ln">    12</span>		&#34;log&#34;
+<span id="L13" class="ln">    13</span>		&#34;strings&#34;
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>		<span class="comment">// Package image/jpeg is not used explicitly in the code below,</span>
+<span id="L16" class="ln">    16</span>		<span class="comment">// but is imported for its initialization side-effect, which allows</span>
+<span id="L17" class="ln">    17</span>		<span class="comment">// image.Decode to understand JPEG formatted images. Uncomment these</span>
+<span id="L18" class="ln">    18</span>		<span class="comment">// two lines to also understand GIF and PNG images:</span>
+<span id="L19" class="ln">    19</span>		<span class="comment">// _ &#34;image/gif&#34;</span>
+<span id="L20" class="ln">    20</span>		<span class="comment">// _ &#34;image/png&#34;</span>
+<span id="L21" class="ln">    21</span>		_ &#34;image/jpeg&#34;
+<span id="L22" class="ln">    22</span>	)
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	func Example() {
+<span id="L25" class="ln">    25</span>		<span class="comment">// Decode the JPEG data. If reading from file, create a reader with</span>
+<span id="L26" class="ln">    26</span>		<span class="comment">//</span>
+<span id="L27" class="ln">    27</span>		<span class="comment">// reader, err := os.Open(&#34;testdata/video-001.q50.420.jpeg&#34;)</span>
+<span id="L28" class="ln">    28</span>		<span class="comment">// if err != nil {</span>
+<span id="L29" class="ln">    29</span>		<span class="comment">//     log.Fatal(err)</span>
+<span id="L30" class="ln">    30</span>		<span class="comment">// }</span>
+<span id="L31" class="ln">    31</span>		<span class="comment">// defer reader.Close()</span>
+<span id="L32" class="ln">    32</span>		reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(data))
+<span id="L33" class="ln">    33</span>		m, _, err := image.Decode(reader)
+<span id="L34" class="ln">    34</span>		if err != nil {
+<span id="L35" class="ln">    35</span>			log.Fatal(err)
+<span id="L36" class="ln">    36</span>		}
+<span id="L37" class="ln">    37</span>		bounds := m.Bounds()
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>		<span class="comment">// Calculate a 16-bin histogram for m&#39;s red, green, blue and alpha components.</span>
+<span id="L40" class="ln">    40</span>		<span class="comment">//</span>
+<span id="L41" class="ln">    41</span>		<span class="comment">// An image&#39;s bounds do not necessarily start at (0, 0), so the two loops start</span>
+<span id="L42" class="ln">    42</span>		<span class="comment">// at bounds.Min.Y and bounds.Min.X. Looping over Y first and X second is more</span>
+<span id="L43" class="ln">    43</span>		<span class="comment">// likely to result in better memory access patterns than X first and Y second.</span>
+<span id="L44" class="ln">    44</span>		var histogram [16][4]int
+<span id="L45" class="ln">    45</span>		for y := bounds.Min.Y; y &lt; bounds.Max.Y; y++ {
+<span id="L46" class="ln">    46</span>			for x := bounds.Min.X; x &lt; bounds.Max.X; x++ {
+<span id="L47" class="ln">    47</span>				r, g, b, a := m.At(x, y).RGBA()
+<span id="L48" class="ln">    48</span>				<span class="comment">// A color&#39;s RGBA method returns values in the range [0, 65535].</span>
+<span id="L49" class="ln">    49</span>				<span class="comment">// Shifting by 12 reduces this to the range [0, 15].</span>
+<span id="L50" class="ln">    50</span>				histogram[r&gt;&gt;12][0]++
+<span id="L51" class="ln">    51</span>				histogram[g&gt;&gt;12][1]++
+<span id="L52" class="ln">    52</span>				histogram[b&gt;&gt;12][2]++
+<span id="L53" class="ln">    53</span>				histogram[a&gt;&gt;12][3]++
+<span id="L54" class="ln">    54</span>			}
+<span id="L55" class="ln">    55</span>		}
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>		<span class="comment">// Print the results.</span>
+<span id="L58" class="ln">    58</span>		fmt.Printf(&#34;%-14s %6s %6s %6s %6s\n&#34;, &#34;bin&#34;, &#34;red&#34;, &#34;green&#34;, &#34;blue&#34;, &#34;alpha&#34;)
+<span id="L59" class="ln">    59</span>		for i, x := range histogram {
+<span id="L60" class="ln">    60</span>			fmt.Printf(&#34;0x%04x-0x%04x: %6d %6d %6d %6d\n&#34;, i&lt;&lt;12, (i+1)&lt;&lt;12-1, x[0], x[1], x[2], x[3])
+<span id="L61" class="ln">    61</span>		}
+<span id="L62" class="ln">    62</span>		<span class="comment">// Output:</span>
+<span id="L63" class="ln">    63</span>		<span class="comment">// bin               red  green   blue  alpha</span>
+<span id="L64" class="ln">    64</span>		<span class="comment">// 0x0000-0x0fff:    353    759   7228      0</span>
+<span id="L65" class="ln">    65</span>		<span class="comment">// 0x1000-0x1fff:    629   2944   1036      0</span>
+<span id="L66" class="ln">    66</span>		<span class="comment">// 0x2000-0x2fff:   1075   2319    984      0</span>
+<span id="L67" class="ln">    67</span>		<span class="comment">// 0x3000-0x3fff:    838   2291    988      0</span>
+<span id="L68" class="ln">    68</span>		<span class="comment">// 0x4000-0x4fff:    540   1302    542      0</span>
+<span id="L69" class="ln">    69</span>		<span class="comment">// 0x5000-0x5fff:    319    971    263      0</span>
+<span id="L70" class="ln">    70</span>		<span class="comment">// 0x6000-0x6fff:    316    377    178      0</span>
+<span id="L71" class="ln">    71</span>		<span class="comment">// 0x7000-0x7fff:    581    280    216      0</span>
+<span id="L72" class="ln">    72</span>		<span class="comment">// 0x8000-0x8fff:   3457    228    274      0</span>
+<span id="L73" class="ln">    73</span>		<span class="comment">// 0x9000-0x9fff:   2294    237    334      0</span>
+<span id="L74" class="ln">    74</span>		<span class="comment">// 0xa000-0xafff:    938    283    370      0</span>
+<span id="L75" class="ln">    75</span>		<span class="comment">// 0xb000-0xbfff:    322    338    401      0</span>
+<span id="L76" class="ln">    76</span>		<span class="comment">// 0xc000-0xcfff:    229    386    295      0</span>
+<span id="L77" class="ln">    77</span>		<span class="comment">// 0xd000-0xdfff:    263    416    281      0</span>
+<span id="L78" class="ln">    78</span>		<span class="comment">// 0xe000-0xefff:    538    433    312      0</span>
+<span id="L79" class="ln">    79</span>		<span class="comment">// 0xf000-0xffff:   2758   1886   1748  15450</span>
+<span id="L80" class="ln">    80</span>	}
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	const data = `
+<span id="L83" class="ln">    83</span>	/9j/4AAQSkZJRgABAQIAHAAcAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdA
+<span id="L84" class="ln">    84</span>	SFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2Nj
+<span id="L85" class="ln">    85</span>	Y2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCABnAJYDASIAAhEBAxEB/8QA
+<span id="L86" class="ln">    86</span>	HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIh
+<span id="L87" class="ln">    87</span>	MUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVW
+<span id="L88" class="ln">    88</span>	V1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG
+<span id="L89" class="ln">    89</span>	x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQF
+<span id="L90" class="ln">    90</span>	BgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAV
+<span id="L91" class="ln">    91</span>	YnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE
+<span id="L92" class="ln">    92</span>	hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq
+<span id="L93" class="ln">    93</span>	8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlwKMD0pwzSiuK57QzGDxS7D6in8Y5ximnAPUfSlcq4m3ilUYp
+<span id="L94" class="ln">    94</span>	2OKXHvRcVxnTtS7c07HNFK4DQPakC4PNOA+tOx70XAjK/So5gBGP94fzqfvUVx/qxx/EP51UXqRP4WSE
+<span id="L95" class="ln">    95</span>	cmgjilP3jSEZqS0IO/NGDnpUiocDg/McDjvV6HTPOdVWYgsM5KcfzzQ2JySM2jp6VYu7SWzmMUwG4cgj
+<span id="L96" class="ln">    96</span>	kMPUVBjjtTGtRu0Zopw+lFFxhinrGzuqqMsxAA9yaXFSRv5cqSEcIwYj6GpuZ30O30fSLKzhUpbpNMv3
+<span id="L97" class="ln">    97</span>	5XGTn29BV28jt7pPLuIVljPBBFVreYx+VbqAjycgt3x14zRcNOxGyVFHQkIc/wA61exyKLbuzjdZ046d
+<span id="L98" class="ln">    98</span>	ftEuTEw3Rk9SPT8P8Kpbea3tchbyVae4JkjbbGpGdwOM89Af6ViFTWUtGdcXoM2+woK1JtpNtTcoZt+l
+<span id="L99" class="ln">    99</span>	Jt7ZqTbRtouFyPFRXI/c9D94fzqzioLsfuD/ALw/nVReqIn8LJCOTSY+tSMOTmkIpXLRu+F0t5pJxPHG
+<span id="L100" class="ln">   100</span>	wjjUAuBjJJz1+laD6Pai+WaK9SBX6puzn6ZP+NV/Dkdtc6ZNbyAFwxLAHDYPv6VoQ21nPNEEiQGEFRtk
+<span id="L101" class="ln">   101</span>	Gf0NaWTOeW7Of8QwGG4MRZnEbYXPJwRnOR0zWNXW+KrqBLUWi5EjbWCgcAA9c/gRXKYqZaGlK/LqMH0F
+<span id="L102" class="ln">   102</span>	FLtHvRSNiYD2pSDTgpp6p0ywUHoTULXYxcktzrdCf7Xo8LP/AKyEmMNjJ46dfbFWJ5TDGNwB9lFUvDV9
+<span id="L103" class="ln">   103</span>	YrbfYGbyrjcWG88S57g+vtV26ZIvMlumKwwjLZ6V0WfU54yTvYwtbubea2WNWbzg4bYQeBgj8OtYeKhj
+<span id="L104" class="ln">   104</span>	u4y2HQxqxOD1xzxmrWAQCCGB6EGsaikndmsJxeiYzBo280/Z7UbayuaXGY5oIp+2lx9KLjIsVDeD/Rj/
+<span id="L105" class="ln">   105</span>	ALy/zq1t96r3y4tT/vL/ADq4P3kRP4WSleTSFKkkKoCW4GaqNcMxIjXj1pxjKT0FKrGC1Nrw3vGrKkYz
+<span id="L106" class="ln">   106</span>	5kTAr6455/HH510UdwPtRgWCbzF5+YYUf4Vwun39xpmoR3qASMmQUJwGU9Rnt/8AWrpbrxhb8/ZdOmaQ
+<span id="L107" class="ln">   107</span>	gAGZwFH5ZJrpVKVlY5ZYhN6kXiu2eO/ikZlIljAAB5yM549OawSOOlPuLqe+umuLqTfM4OSOAo7ADsKh
+<span id="L108" class="ln">   108</span>	hl/cRsTuJHPv7mlKi3sVTxNtGP20VJhThgSQaK52mnZnUqsWrpkyeUrr5pABOAPU1AGaXUCWJISHGPfP
+<span id="L109" class="ln">   109</span>	P8qL7BiKnsMg46H3qrbzupbj5mPTPTpXVSglG551SpzSsXJ4/MBUgYIxyKpySyGBYJriV1D7kRpCVH4V
+<span id="L110" class="ln">   110</span>	bSeNJ4xchni3DeqnBI+td7F4b0mKIRjT45VbktJlzk455+n6VtYzv2PNwFZWBHBGKVJDGVC54/nXQeMN
+<span id="L111" class="ln">   111</span>	NttLNkba1jgWVWDmM8bhg4/nzXLSSbXVj6fyNKUdNRp21RtIRJGrjuM0u3FQ2DbodvcEkfQmrW2vLqLl
+<span id="L112" class="ln">   112</span>	k0ejCXNFMj2/jQV9qkxSYNRcsZiq2oI32N2CkhWXJxwOe9XMcVt6hoPn6dFaW0wgRpNzvKDlz6+/0rai
+<span id="L113" class="ln">   113</span>	ryv2Jm9LHJai+ZRGCBjnr71ErdAxAY9B611t1Y2cunbbaOQ3FvKZI3UqGlZMbiWwfcfhV231iwvLSM3U
+<span id="L114" class="ln">   114</span>	lt5Uq52TuZG+hGMA12xXJGxxzjzybOQtNOvb5j9ktZJhnBIHyg+5PFX38JayqK/2eLJIBUTgkDA9q7ex
+<span id="L115" class="ln">   115</span>	itrSHFpGsUbndhRgc+g7VNIyfZJAoJZUbb3I46CtFJMylBo8sdWhmYMuCnylc9wef5VUT7+1chc5NS7h
+<span id="L116" class="ln">   116</span>	sUZO5RtIPUH3pkBDOxxxmqM9TQtn+WilhHfHaik43KTG3Z4IyPyrNVjGCsZ+dmwv6V3cXhSG8sYpJLud
+<span id="L117" class="ln">   117</span>	JJIwxChdoJGcYx/Wkg8DafA4knvLiQr/ALqj+VQpKw3FtnFFfvbiSMgZJ6/jXp2n3d9cQRBTFsKD96EP
+<span id="L118" class="ln">   118</span>	oOxPU/8A68VVtbbRtMVntbePKDLTSHJH/Aj/AEqHTvE66rq72VugMMcbSGTnL4wMAfjT5n0HyW3L+s6b
+<span id="L119" class="ln">   119</span>	baxaJBdzN+7bcrxkAhun0rz3VNCv7e7lgigknWI43xLu6jjIHTjtXqfkpPGVYsBkghTikgsYIN/lhgXb
+<span id="L120" class="ln">   120</span>	cxLkknp/ShczQ7xtY8vtEmhkj8yGRBuCnehUcnHcVtmwfJ/fQ8e7f/E12txZW91C0U6b42xlST2OR/Ko
+<span id="L121" class="ln">   121</span>	Bo1gM/uW55/1jf41nOipu7LhV5FZHIGzI6zwj/vr/Ck+yr3uYf8Ax7/CutbQdMb71tn/ALaN/jSf8I/p
+<span id="L122" class="ln">   122</span>	X/PoP++2/wAan6rAr6wzkWt0II+1Rc/7Lf4Vd1eeCSKBbdZDdShYoiZNoyfY10P/AAj2lf8APmP++2/x
+<span id="L123" class="ln">   123</span>	oPh/SjKspsozIuNrZORjp3qo0FHYPb3OZt7ae3SzjuItsiRSAgnccl/UA+3Q1yNjKLR4ZZYY5VD7tkv3
+<span id="L124" class="ln">   124</span>	WwO/+e1evPp9nI257aJm6bioz1z1+tY+s6Hplnot9PbWMMcqwOFcLyOO1bJWMZSTOPHi+9w3mosrlyd2
+<span id="L125" class="ln">   125</span>	9lCj02g9P/1e9a3hzxAbl2ikZRcdQueHHt7j864Y8Z4I4oRzG6urFWU5BHBB7HNJxTFGbR6he6Vpmtgm
+<span id="L126" class="ln">   126</span>	eLy5zwZI/lb8fX8azIvBUUTHdfSFP4QsYB/HNZ+k+KEnRY75hHOvAk6K/v7H9K6yyvlnQBmDZ6GsnzR0
+<span id="L127" class="ln">   127</span>	N0oy1RzOtaN/Y1tHNFO06u+zYy4I4Jzx9KKveJblXuordSGES5b6n/62PzorKVdp2LjQTVyWz8UWEWlq
+<span id="L128" class="ln">   128</span>	jSgyxfJt6EgdDzWTdeLIZGO7zHI/hVajGmWWP+PWL8qwlAIURrhpMAHHJA71pRcZrToZzcoEuo6heakA
+<span id="L129" class="ln">   129</span>	GHk245CZ6/X1qPTLq40q+W5t2QybSpDAkEEc55/zilk5k2r91eKhLDzWz2rpsczbbuemeD76fUNG865I
+<span id="L130" class="ln">   130</span>	MiysmQMZAAwa3a5j4ftu0ByP+fh/5CulkLLG7INzhSVHqe1Fh3uOoqn9qQQxyhndmHIxwOmSR2xQ13KD
+<span id="L131" class="ln">   131</span>	KoiBZOV9JBnt707MVy5RWdNdy7wRGf3bfMinnO1jg+vY03WXLaJO3mhQ20b0zwpYf0qlG7S7icrJs08U
+<span id="L132" class="ln">   132</span>	VwumgC+YiQyeVtZH567hzj8aSL949oGhE/2v5pJCDkksQwBHC4/+vXQ8LZ2uYxxCavY7us/xCcaBfn0h
+<span id="L133" class="ln">   133</span>	b+VP0bnSrb94ZMJgOecj1rl/GfidUE2k2gy5+SeQjgA/wj3rlas2jdao48qrjLAGkSKPk4Gc1WMj92I+
+<span id="L134" class="ln">   134</span>	lIJnU8OfxPWo5inBokmtQTmM4OOh71b0q6vbFmWCbaxHyqQGAP0PT8KhSTzVyo5ocSKA5VfTOTmqsmRd
+<span id="L135" class="ln">   135</span>	pl99XjPzThzK3zOeOSeveirNmkgg/fIpYsTkYORxRXmzlTjJqx6EVUcU7mhkKCzdAK59QI9zYxtG1fYU
+<span id="L136" class="ln">   136</span>	UVtgtmY4nZEa8Ak9aqFv3rfSiiu1nMeifDv/AJF+T/r4f+QrqqKKQwzQenNFFMCOKFIgNuThdoJ5OPSk
+<span id="L137" class="ln">   137</span>	ubeK6t3gnXdG4wwziiii/UTKMOg6dbzJLFE4dSCP3rEdeOM8805tDsGMvySgSsS6rM6gk9eAcUUVftZt
+<span id="L138" class="ln">   138</span>	3uyVGNthuq3Eei6DK8H7sRR7YuMgHtXkc8rzTNLM26RyWY+p70UVnLY0iEsUipG7rhZBlDkc1HgYoorM
+<span id="L139" class="ln">   139</span>	0HwyBXGeRjmrcUhMg2ghezd//rUUVcTKW5s2jZtY/QDaOKKKK8ip8bPRj8KP/9k=
+<span id="L140" class="ln">   140</span>	`
+<span id="L141" class="ln">   141</span>	
+</pre><p><a href="http://golang.org/src/pkg/image/decode_example_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

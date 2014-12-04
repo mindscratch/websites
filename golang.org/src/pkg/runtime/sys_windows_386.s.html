@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/sys_windows_386.s - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/sys_windows_386.s</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;zasm_GOOS_GOARCH.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	// void runtime·asmstdcall(void *c);
+<span id="L9" class="ln">     9</span>	TEXT runtime·asmstdcall(SB),NOSPLIT,$0
+<span id="L10" class="ln">    10</span>		MOVL	c+0(FP), BX
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>		// SetLastError(0).
+<span id="L13" class="ln">    13</span>		MOVL	$0, 0x34(FS)
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>		// Copy args to the stack.
+<span id="L16" class="ln">    16</span>		MOVL	SP, BP
+<span id="L17" class="ln">    17</span>		MOVL	libcall_n(BX), CX	// words
+<span id="L18" class="ln">    18</span>		MOVL	CX, AX
+<span id="L19" class="ln">    19</span>		SALL	$2, AX
+<span id="L20" class="ln">    20</span>		SUBL	AX, SP			// room for args
+<span id="L21" class="ln">    21</span>		MOVL	SP, DI
+<span id="L22" class="ln">    22</span>		MOVL	libcall_args(BX), SI
+<span id="L23" class="ln">    23</span>		CLD
+<span id="L24" class="ln">    24</span>		REP; MOVSL
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>		// Call stdcall or cdecl function.
+<span id="L27" class="ln">    27</span>		// DI SI BP BX are preserved, SP is not
+<span id="L28" class="ln">    28</span>		CALL	libcall_fn(BX)
+<span id="L29" class="ln">    29</span>		MOVL	BP, SP
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>		// Return result.
+<span id="L32" class="ln">    32</span>		MOVL	c+0(FP), BX
+<span id="L33" class="ln">    33</span>		MOVL	AX, libcall_r1(BX)
+<span id="L34" class="ln">    34</span>		MOVL	DX, libcall_r2(BX)
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>		// GetLastError().
+<span id="L37" class="ln">    37</span>		MOVL	0x34(FS), AX
+<span id="L38" class="ln">    38</span>		MOVL	AX, libcall_err(BX)
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>		RET
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	TEXT	runtime·badsignal2(SB),NOSPLIT,$24
+<span id="L43" class="ln">    43</span>		// stderr
+<span id="L44" class="ln">    44</span>		MOVL	$-12, 0(SP)
+<span id="L45" class="ln">    45</span>		MOVL	SP, BP
+<span id="L46" class="ln">    46</span>		CALL	*runtime·GetStdHandle(SB)
+<span id="L47" class="ln">    47</span>		MOVL	BP, SP
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>		MOVL	AX, 0(SP)	// handle
+<span id="L50" class="ln">    50</span>		MOVL	$runtime·badsignalmsg(SB), DX // pointer
+<span id="L51" class="ln">    51</span>		MOVL	DX, 4(SP)
+<span id="L52" class="ln">    52</span>		MOVL	runtime·badsignallen(SB), DX // count
+<span id="L53" class="ln">    53</span>		MOVL	DX, 8(SP)
+<span id="L54" class="ln">    54</span>		LEAL	20(SP), DX  // written count
+<span id="L55" class="ln">    55</span>		MOVL	$0, 0(DX)
+<span id="L56" class="ln">    56</span>		MOVL	DX, 12(SP)
+<span id="L57" class="ln">    57</span>		MOVL	$0, 16(SP) // overlapped
+<span id="L58" class="ln">    58</span>		CALL	*runtime·WriteFile(SB)
+<span id="L59" class="ln">    59</span>		MOVL	BP, SI
+<span id="L60" class="ln">    60</span>		RET
+<span id="L61" class="ln">    61</span>	
+<span id="L62" class="ln">    62</span>	// faster get/set last error
+<span id="L63" class="ln">    63</span>	TEXT runtime·getlasterror(SB),NOSPLIT,$0
+<span id="L64" class="ln">    64</span>		MOVL	0x34(FS), AX
+<span id="L65" class="ln">    65</span>		RET
+<span id="L66" class="ln">    66</span>	
+<span id="L67" class="ln">    67</span>	TEXT runtime·setlasterror(SB),NOSPLIT,$0
+<span id="L68" class="ln">    68</span>		MOVL	err+0(FP), AX
+<span id="L69" class="ln">    69</span>		MOVL	AX, 0x34(FS)
+<span id="L70" class="ln">    70</span>		RET
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	// Called by Windows as a Vectored Exception Handler (VEH).
+<span id="L73" class="ln">    73</span>	// First argument is pointer to struct containing
+<span id="L74" class="ln">    74</span>	// exception record and context pointers.
+<span id="L75" class="ln">    75</span>	// Return 0 for &#39;not handled&#39;, -1 for handled.
+<span id="L76" class="ln">    76</span>	TEXT runtime·sigtramp(SB),NOSPLIT,$0-0
+<span id="L77" class="ln">    77</span>		MOVL	ptrs+0(FP), CX
+<span id="L78" class="ln">    78</span>		SUBL	$28, SP
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>		// save callee-saved registers
+<span id="L81" class="ln">    81</span>		MOVL	BX, 12(SP)
+<span id="L82" class="ln">    82</span>		MOVL	BP, 16(SP)
+<span id="L83" class="ln">    83</span>		MOVL	SI, 20(SP)
+<span id="L84" class="ln">    84</span>		MOVL	DI, 24(SP)
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>		MOVL	0(CX), BX // ExceptionRecord*
+<span id="L87" class="ln">    87</span>		MOVL	4(CX), CX // Context*
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		// fetch g
+<span id="L90" class="ln">    90</span>		get_tls(DX)
+<span id="L91" class="ln">    91</span>	 	CMPL	DX, $0
+<span id="L92" class="ln">    92</span>	 	JNE	3(PC)
+<span id="L93" class="ln">    93</span>	 	MOVL	$0, AX // continue
+<span id="L94" class="ln">    94</span>	 	JMP	done
+<span id="L95" class="ln">    95</span>		MOVL	m(DX), AX
+<span id="L96" class="ln">    96</span>		CMPL	AX, $0
+<span id="L97" class="ln">    97</span>		JNE	2(PC)
+<span id="L98" class="ln">    98</span>		CALL	runtime·badsignal2(SB)
+<span id="L99" class="ln">    99</span>		MOVL	g(DX), DX
+<span id="L100" class="ln">   100</span>		// call sighandler(ExceptionRecord*, Context*, G*)
+<span id="L101" class="ln">   101</span>		MOVL	BX, 0(SP)
+<span id="L102" class="ln">   102</span>		MOVL	CX, 4(SP)
+<span id="L103" class="ln">   103</span>		MOVL	DX, 8(SP)
+<span id="L104" class="ln">   104</span>		CALL	runtime·sighandler(SB)
+<span id="L105" class="ln">   105</span>		// AX is set to report result back to Windows
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>	done:
+<span id="L108" class="ln">   108</span>		// restore callee-saved registers
+<span id="L109" class="ln">   109</span>		MOVL	24(SP), DI
+<span id="L110" class="ln">   110</span>		MOVL	20(SP), SI
+<span id="L111" class="ln">   111</span>		MOVL	16(SP), BP
+<span id="L112" class="ln">   112</span>		MOVL	12(SP), BX
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>		ADDL	$28, SP
+<span id="L115" class="ln">   115</span>		// RET 4 (return and pop 4 bytes parameters)
+<span id="L116" class="ln">   116</span>		BYTE $0xC2; WORD $4
+<span id="L117" class="ln">   117</span>		RET // unreached; make assembler happy
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	TEXT runtime·ctrlhandler(SB),NOSPLIT,$0
+<span id="L120" class="ln">   120</span>		PUSHL	$runtime·ctrlhandler1(SB)
+<span id="L121" class="ln">   121</span>		CALL	runtime·externalthreadhandler(SB)
+<span id="L122" class="ln">   122</span>		MOVL	4(SP), CX
+<span id="L123" class="ln">   123</span>		ADDL	$12, SP
+<span id="L124" class="ln">   124</span>		JMP	CX
+<span id="L125" class="ln">   125</span>	
+<span id="L126" class="ln">   126</span>	TEXT runtime·profileloop(SB),NOSPLIT,$0
+<span id="L127" class="ln">   127</span>		PUSHL	$runtime·profileloop1(SB)
+<span id="L128" class="ln">   128</span>		CALL	runtime·externalthreadhandler(SB)
+<span id="L129" class="ln">   129</span>		MOVL	4(SP), CX
+<span id="L130" class="ln">   130</span>		ADDL	$12, SP
+<span id="L131" class="ln">   131</span>		JMP	CX
+<span id="L132" class="ln">   132</span>	
+<span id="L133" class="ln">   133</span>	TEXT runtime·externalthreadhandler(SB),NOSPLIT,$0
+<span id="L134" class="ln">   134</span>		PUSHL	BP
+<span id="L135" class="ln">   135</span>		MOVL	SP, BP
+<span id="L136" class="ln">   136</span>		PUSHL	BX
+<span id="L137" class="ln">   137</span>		PUSHL	SI
+<span id="L138" class="ln">   138</span>		PUSHL	DI
+<span id="L139" class="ln">   139</span>		PUSHL	0x14(FS)
+<span id="L140" class="ln">   140</span>		MOVL	SP, DX
+<span id="L141" class="ln">   141</span>	
+<span id="L142" class="ln">   142</span>		// setup dummy m, g
+<span id="L143" class="ln">   143</span>		SUBL	$m_end, SP		// space for M
+<span id="L144" class="ln">   144</span>		MOVL	SP, 0(SP)
+<span id="L145" class="ln">   145</span>		MOVL	$m_end, 4(SP)
+<span id="L146" class="ln">   146</span>		CALL	runtime·memclr(SB)	// smashes AX,BX,CX
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>		LEAL	m_tls(SP), CX
+<span id="L149" class="ln">   149</span>		MOVL	CX, 0x14(FS)
+<span id="L150" class="ln">   150</span>		MOVL	SP, m(CX)
+<span id="L151" class="ln">   151</span>		MOVL	SP, BX
+<span id="L152" class="ln">   152</span>		SUBL	$g_end, SP		// space for G
+<span id="L153" class="ln">   153</span>		MOVL	SP, g(CX)
+<span id="L154" class="ln">   154</span>		MOVL	SP, m_g0(BX)
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>		MOVL	SP, 0(SP)
+<span id="L157" class="ln">   157</span>		MOVL	$g_end, 4(SP)
+<span id="L158" class="ln">   158</span>		CALL	runtime·memclr(SB)	// smashes AX,BX,CX
+<span id="L159" class="ln">   159</span>		LEAL	-4096(SP), CX
+<span id="L160" class="ln">   160</span>		MOVL	CX, g_stackguard(SP)
+<span id="L161" class="ln">   161</span>		MOVL	DX, g_stackbase(SP)
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>		PUSHL	16(BP)			// arg for handler
+<span id="L164" class="ln">   164</span>		CALL	8(BP)
+<span id="L165" class="ln">   165</span>		POPL	CX
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>		get_tls(CX)
+<span id="L168" class="ln">   168</span>		MOVL	g(CX), CX
+<span id="L169" class="ln">   169</span>		MOVL	g_stackbase(CX), SP
+<span id="L170" class="ln">   170</span>		POPL	0x14(FS)
+<span id="L171" class="ln">   171</span>		POPL	DI
+<span id="L172" class="ln">   172</span>		POPL	SI
+<span id="L173" class="ln">   173</span>		POPL	BX
+<span id="L174" class="ln">   174</span>		POPL	BP
+<span id="L175" class="ln">   175</span>		RET
+<span id="L176" class="ln">   176</span>	
+<span id="L177" class="ln">   177</span>	GLOBL runtime·cbctxts(SB), $4
+<span id="L178" class="ln">   178</span>	
+<span id="L179" class="ln">   179</span>	TEXT runtime·callbackasm1+0(SB),NOSPLIT,$0
+<span id="L180" class="ln">   180</span>	  	MOVL	0(SP), AX	// will use to find our callback context
+<span id="L181" class="ln">   181</span>	
+<span id="L182" class="ln">   182</span>		// remove return address from stack, we are not returning there
+<span id="L183" class="ln">   183</span>		ADDL	$4, SP
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>		// address to callback parameters into CX
+<span id="L186" class="ln">   186</span>		LEAL	4(SP), CX
+<span id="L187" class="ln">   187</span>	
+<span id="L188" class="ln">   188</span>		// save registers as required for windows callback
+<span id="L189" class="ln">   189</span>		PUSHL	DI
+<span id="L190" class="ln">   190</span>		PUSHL	SI
+<span id="L191" class="ln">   191</span>		PUSHL	BP
+<span id="L192" class="ln">   192</span>		PUSHL	BX
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>		// determine index into runtime·cbctxts table
+<span id="L195" class="ln">   195</span>		SUBL	$runtime·callbackasm(SB), AX
+<span id="L196" class="ln">   196</span>		MOVL	$0, DX
+<span id="L197" class="ln">   197</span>		MOVL	$5, BX	// divide by 5 because each call instruction in runtime·callbacks is 5 bytes long
+<span id="L198" class="ln">   198</span>		DIVL	BX,
+<span id="L199" class="ln">   199</span>	
+<span id="L200" class="ln">   200</span>		// find correspondent runtime·cbctxts table entry
+<span id="L201" class="ln">   201</span>		MOVL	runtime·cbctxts(SB), BX
+<span id="L202" class="ln">   202</span>		MOVL	-4(BX)(AX*4), BX
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>		// extract callback context
+<span id="L205" class="ln">   205</span>		MOVL	cbctxt_gobody(BX), AX
+<span id="L206" class="ln">   206</span>		MOVL	cbctxt_argsize(BX), DX
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>		// preserve whatever&#39;s at the memory location that
+<span id="L209" class="ln">   209</span>		// the callback will use to store the return value
+<span id="L210" class="ln">   210</span>		PUSHL	0(CX)(DX*1)
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>		// extend argsize by size of return value
+<span id="L213" class="ln">   213</span>		ADDL	$4, DX
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>		// remember how to restore stack on return
+<span id="L216" class="ln">   216</span>		MOVL	cbctxt_restorestack(BX), BX
+<span id="L217" class="ln">   217</span>		PUSHL	BX
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>		// call target Go function
+<span id="L220" class="ln">   220</span>		PUSHL	DX			// argsize (including return value)
+<span id="L221" class="ln">   221</span>		PUSHL	CX			// callback parameters
+<span id="L222" class="ln">   222</span>		PUSHL	AX			// address of target Go function
+<span id="L223" class="ln">   223</span>		CLD
+<span id="L224" class="ln">   224</span>		CALL	runtime·cgocallback_gofunc(SB)
+<span id="L225" class="ln">   225</span>		POPL	AX
+<span id="L226" class="ln">   226</span>		POPL	CX
+<span id="L227" class="ln">   227</span>		POPL	DX
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>		// how to restore stack on return
+<span id="L230" class="ln">   230</span>		POPL	BX
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>		// return value into AX (as per Windows spec)
+<span id="L233" class="ln">   233</span>		// and restore previously preserved value
+<span id="L234" class="ln">   234</span>		MOVL	-4(CX)(DX*1), AX
+<span id="L235" class="ln">   235</span>		POPL	-4(CX)(DX*1)
+<span id="L236" class="ln">   236</span>	
+<span id="L237" class="ln">   237</span>		MOVL	BX, CX			// cannot use BX anymore
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		// restore registers as required for windows callback
+<span id="L240" class="ln">   240</span>		POPL	BX
+<span id="L241" class="ln">   241</span>		POPL	BP
+<span id="L242" class="ln">   242</span>		POPL	SI
+<span id="L243" class="ln">   243</span>		POPL	DI
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>		// remove callback parameters before return (as per Windows spec)
+<span id="L246" class="ln">   246</span>		POPL	DX
+<span id="L247" class="ln">   247</span>		ADDL	CX, SP
+<span id="L248" class="ln">   248</span>		PUSHL	DX
+<span id="L249" class="ln">   249</span>	
+<span id="L250" class="ln">   250</span>		CLD
+<span id="L251" class="ln">   251</span>	
+<span id="L252" class="ln">   252</span>		RET
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>	// void tstart(M *newm);
+<span id="L255" class="ln">   255</span>	TEXT runtime·tstart(SB),NOSPLIT,$0
+<span id="L256" class="ln">   256</span>		MOVL	newm+4(SP), CX		// m
+<span id="L257" class="ln">   257</span>		MOVL	m_g0(CX), DX		// g
+<span id="L258" class="ln">   258</span>	
+<span id="L259" class="ln">   259</span>		// Layout new m scheduler stack on os stack.
+<span id="L260" class="ln">   260</span>		MOVL	SP, AX
+<span id="L261" class="ln">   261</span>		MOVL	AX, g_stackbase(DX)
+<span id="L262" class="ln">   262</span>		SUBL	$(64*1024), AX		// stack size
+<span id="L263" class="ln">   263</span>		MOVL	AX, g_stackguard(DX)
+<span id="L264" class="ln">   264</span>	
+<span id="L265" class="ln">   265</span>		// Set up tls.
+<span id="L266" class="ln">   266</span>		LEAL	m_tls(CX), SI
+<span id="L267" class="ln">   267</span>		MOVL	SI, 0x14(FS)
+<span id="L268" class="ln">   268</span>		MOVL	CX, m(SI)
+<span id="L269" class="ln">   269</span>		MOVL	DX, g(SI)
+<span id="L270" class="ln">   270</span>	
+<span id="L271" class="ln">   271</span>		// Someday the convention will be D is always cleared.
+<span id="L272" class="ln">   272</span>		CLD
+<span id="L273" class="ln">   273</span>	
+<span id="L274" class="ln">   274</span>		CALL	runtime·stackcheck(SB)	// clobbers AX,CX
+<span id="L275" class="ln">   275</span>		CALL	runtime·mstart(SB)
+<span id="L276" class="ln">   276</span>	
+<span id="L277" class="ln">   277</span>		RET
+<span id="L278" class="ln">   278</span>	
+<span id="L279" class="ln">   279</span>	// uint32 tstart_stdcall(M *newm);
+<span id="L280" class="ln">   280</span>	TEXT runtime·tstart_stdcall(SB),NOSPLIT,$0
+<span id="L281" class="ln">   281</span>		MOVL	newm+4(SP), BX
+<span id="L282" class="ln">   282</span>	
+<span id="L283" class="ln">   283</span>		PUSHL	BX
+<span id="L284" class="ln">   284</span>		CALL	runtime·tstart(SB)
+<span id="L285" class="ln">   285</span>		POPL	BX
+<span id="L286" class="ln">   286</span>	
+<span id="L287" class="ln">   287</span>		// Adjust stack for stdcall to return properly.
+<span id="L288" class="ln">   288</span>		MOVL	(SP), AX		// save return address
+<span id="L289" class="ln">   289</span>		ADDL	$4, SP			// remove single parameter
+<span id="L290" class="ln">   290</span>		MOVL	AX, (SP)		// restore return address
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>		XORL	AX, AX			// return 0 == success
+<span id="L293" class="ln">   293</span>	
+<span id="L294" class="ln">   294</span>		RET
+<span id="L295" class="ln">   295</span>	
+<span id="L296" class="ln">   296</span>	// setldt(int entry, int address, int limit)
+<span id="L297" class="ln">   297</span>	TEXT runtime·setldt(SB),NOSPLIT,$0
+<span id="L298" class="ln">   298</span>		MOVL	address+4(FP), CX
+<span id="L299" class="ln">   299</span>		MOVL	CX, 0x14(FS)
+<span id="L300" class="ln">   300</span>		RET
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>	// Sleep duration is in 100ns units.
+<span id="L303" class="ln">   303</span>	TEXT runtime·usleep1(SB),NOSPLIT,$0
+<span id="L304" class="ln">   304</span>		MOVL	duration+0(FP), BX
+<span id="L305" class="ln">   305</span>		MOVL	$runtime·usleep2(SB), AX // to hide from 8l
+<span id="L306" class="ln">   306</span>	
+<span id="L307" class="ln">   307</span>		// Execute call on m-&gt;g0 stack, in case we are not actually
+<span id="L308" class="ln">   308</span>		// calling a system call wrapper, like when running under WINE.
+<span id="L309" class="ln">   309</span>		get_tls(CX)
+<span id="L310" class="ln">   310</span>		CMPL	CX, $0
+<span id="L311" class="ln">   311</span>		JNE	3(PC)
+<span id="L312" class="ln">   312</span>		// Not a Go-managed thread. Do not switch stack.
+<span id="L313" class="ln">   313</span>		CALL	AX
+<span id="L314" class="ln">   314</span>		RET
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		MOVL	m(CX), BP
+<span id="L317" class="ln">   317</span>	
+<span id="L318" class="ln">   318</span>		// leave pc/sp for cpu profiler
+<span id="L319" class="ln">   319</span>		MOVL	(SP), SI
+<span id="L320" class="ln">   320</span>		MOVL	SI, m_libcallpc(BP)
+<span id="L321" class="ln">   321</span>		MOVL	g(CX), SI
+<span id="L322" class="ln">   322</span>		MOVL	SI, m_libcallg(BP)
+<span id="L323" class="ln">   323</span>		// sp must be the last, because once async cpu profiler finds
+<span id="L324" class="ln">   324</span>		// all three values to be non-zero, it will use them
+<span id="L325" class="ln">   325</span>		LEAL	4(SP), SI
+<span id="L326" class="ln">   326</span>		MOVL	SI, m_libcallsp(BP)
+<span id="L327" class="ln">   327</span>	
+<span id="L328" class="ln">   328</span>		MOVL	m_g0(BP), SI
+<span id="L329" class="ln">   329</span>		CMPL	g(CX), SI
+<span id="L330" class="ln">   330</span>		JNE	usleep1_switch
+<span id="L331" class="ln">   331</span>		// executing on m-&gt;g0 already
+<span id="L332" class="ln">   332</span>		CALL	AX
+<span id="L333" class="ln">   333</span>		JMP	usleep1_ret
+<span id="L334" class="ln">   334</span>	
+<span id="L335" class="ln">   335</span>	usleep1_switch:
+<span id="L336" class="ln">   336</span>		// Switch to m-&gt;g0 stack and back.
+<span id="L337" class="ln">   337</span>		MOVL	(g_sched+gobuf_sp)(SI), SI
+<span id="L338" class="ln">   338</span>		MOVL	SP, -4(SI)
+<span id="L339" class="ln">   339</span>		LEAL	-4(SI), SP
+<span id="L340" class="ln">   340</span>		CALL	AX
+<span id="L341" class="ln">   341</span>		MOVL	0(SP), SP
+<span id="L342" class="ln">   342</span>	
+<span id="L343" class="ln">   343</span>	usleep1_ret:
+<span id="L344" class="ln">   344</span>		get_tls(CX)
+<span id="L345" class="ln">   345</span>		MOVL	m(CX), BP
+<span id="L346" class="ln">   346</span>		MOVL	$0, m_libcallsp(BP)
+<span id="L347" class="ln">   347</span>		RET
+<span id="L348" class="ln">   348</span>	
+<span id="L349" class="ln">   349</span>	// Runs on OS stack. duration (in 100ns units) is in BX.
+<span id="L350" class="ln">   350</span>	TEXT runtime·usleep2(SB),NOSPLIT,$20
+<span id="L351" class="ln">   351</span>		// Want negative 100ns units.
+<span id="L352" class="ln">   352</span>		NEGL	BX
+<span id="L353" class="ln">   353</span>		MOVL	$-1, hi-4(SP)
+<span id="L354" class="ln">   354</span>		MOVL	BX, lo-8(SP)
+<span id="L355" class="ln">   355</span>		LEAL	lo-8(SP), BX
+<span id="L356" class="ln">   356</span>		MOVL	BX, ptime-12(SP)
+<span id="L357" class="ln">   357</span>		MOVL	$0, alertable-16(SP)
+<span id="L358" class="ln">   358</span>		MOVL	$-1, handle-20(SP)
+<span id="L359" class="ln">   359</span>		MOVL	SP, BP
+<span id="L360" class="ln">   360</span>		MOVL	runtime·NtWaitForSingleObject(SB), AX
+<span id="L361" class="ln">   361</span>		CALL	AX
+<span id="L362" class="ln">   362</span>		MOVL	BP, SP
+<span id="L363" class="ln">   363</span>		RET
+</pre><p><a href="http://golang.org/src/pkg/runtime/sys_windows_386.s?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

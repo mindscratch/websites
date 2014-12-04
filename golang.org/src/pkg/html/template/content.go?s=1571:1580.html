@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/html/template/content.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/html/template/content.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package template
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;reflect&#34;
+<span id="L10" class="ln">    10</span>	)
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	<span class="comment">// Strings of content from a trusted source.</span>
+<span id="L13" class="ln">    13</span>	type (
+<span id="L14" class="ln">    14</span>		<span class="comment">// CSS encapsulates known safe content that matches any of:</span>
+<span id="L15" class="ln">    15</span>		<span class="comment">//   1. The CSS3 stylesheet production, such as `p { color: purple }`.</span>
+<span id="L16" class="ln">    16</span>		<span class="comment">//   2. The CSS3 rule production, such as `a[href=~&#34;https:&#34;].foo#bar`.</span>
+<span id="L17" class="ln">    17</span>		<span class="comment">//   3. CSS3 declaration productions, such as `color: red; margin: 2px`.</span>
+<span id="L18" class="ln">    18</span>		<span class="comment">//   4. The CSS3 value production, such as `rgba(0, 0, 255, 127)`.</span>
+<span id="L19" class="ln">    19</span>		<span class="comment">// See http://www.w3.org/TR/css3-syntax/#parsing and</span>
+<span id="L20" class="ln">    20</span>		<span class="comment">// https://web.archive.org/web/20090211114933/http://w3.org/TR/css3-syntax#style</span>
+<span id="L21" class="ln">    21</span>		CSS string
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>		<span class="comment">// HTML encapsulates a known safe HTML document fragment.</span>
+<span id="L24" class="ln">    24</span>		<span class="comment">// It should not be used for HTML from a third-party, or HTML with</span>
+<span id="L25" class="ln">    25</span>		<span class="comment">// unclosed tags or comments. The outputs of a sound HTML sanitizer</span>
+<span id="L26" class="ln">    26</span>		<span class="comment">// and a template escaped by this package are fine for use with HTML.</span>
+<span id="L27" class="ln">    27</span>		HTML string
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>		<span class="comment">// HTMLAttr encapsulates an HTML attribute from a trusted source,</span>
+<span id="L30" class="ln">    30</span>		<span class="comment">// for example, ` dir=&#34;ltr&#34;`.</span>
+<span id="L31" class="ln">    31</span>		HTMLAttr string
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>		<span class="comment">// JS encapsulates a known safe EcmaScript5 Expression, for example,</span>
+<span id="L34" class="ln">    34</span>		<span class="comment">// `(x + y * z())`.</span>
+<span id="L35" class="ln">    35</span>		<span class="comment">// Template authors are responsible for ensuring that typed expressions</span>
+<span id="L36" class="ln">    36</span>		<span class="comment">// do not break the intended precedence and that there is no</span>
+<span id="L37" class="ln">    37</span>		<span class="comment">// statement/expression ambiguity as when passing an expression like</span>
+<span id="L38" class="ln">    38</span>		<span class="comment">// &#34;{ foo: bar() }\n[&#39;foo&#39;]()&#34;, which is both a valid Expression and a</span>
+<span id="L39" class="ln">    39</span>		<span class="comment">// valid Program with a very different meaning.</span>
+<span id="L40" class="ln">    40</span>		<span class="selection">JS string</span>
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>		<span class="comment">// JSStr encapsulates a sequence of characters meant to be embedded</span>
+<span id="L43" class="ln">    43</span>		<span class="comment">// between quotes in a JavaScript expression.</span>
+<span id="L44" class="ln">    44</span>		<span class="comment">// The string must match a series of StringCharacters:</span>
+<span id="L45" class="ln">    45</span>		<span class="comment">//   StringCharacter :: SourceCharacter but not `\` or LineTerminator</span>
+<span id="L46" class="ln">    46</span>		<span class="comment">//                    | EscapeSequence</span>
+<span id="L47" class="ln">    47</span>		<span class="comment">// Note that LineContinuations are not allowed.</span>
+<span id="L48" class="ln">    48</span>		<span class="comment">// JSStr(&#34;foo\\nbar&#34;) is fine, but JSStr(&#34;foo\\\nbar&#34;) is not.</span>
+<span id="L49" class="ln">    49</span>		JSStr string
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>		<span class="comment">// URL encapsulates a known safe URL or URL substring (see RFC 3986).</span>
+<span id="L52" class="ln">    52</span>		<span class="comment">// A URL like `javascript:checkThatFormNotEditedBeforeLeavingPage()`</span>
+<span id="L53" class="ln">    53</span>		<span class="comment">// from a trusted source should go in the page, but by default dynamic</span>
+<span id="L54" class="ln">    54</span>		<span class="comment">// `javascript:` URLs are filtered out since they are a frequently</span>
+<span id="L55" class="ln">    55</span>		<span class="comment">// exploited injection vector.</span>
+<span id="L56" class="ln">    56</span>		URL string
+<span id="L57" class="ln">    57</span>	)
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	type contentType uint8
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>	const (
+<span id="L62" class="ln">    62</span>		contentTypePlain contentType = iota
+<span id="L63" class="ln">    63</span>		contentTypeCSS
+<span id="L64" class="ln">    64</span>		contentTypeHTML
+<span id="L65" class="ln">    65</span>		contentTypeHTMLAttr
+<span id="L66" class="ln">    66</span>		contentTypeJS
+<span id="L67" class="ln">    67</span>		contentTypeJSStr
+<span id="L68" class="ln">    68</span>		contentTypeURL
+<span id="L69" class="ln">    69</span>		<span class="comment">// contentTypeUnsafe is used in attr.go for values that affect how</span>
+<span id="L70" class="ln">    70</span>		<span class="comment">// embedded content and network messages are formed, vetted,</span>
+<span id="L71" class="ln">    71</span>		<span class="comment">// or interpreted; or which credentials network messages carry.</span>
+<span id="L72" class="ln">    72</span>		contentTypeUnsafe
+<span id="L73" class="ln">    73</span>	)
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>	<span class="comment">// indirect returns the value, after dereferencing as many times</span>
+<span id="L76" class="ln">    76</span>	<span class="comment">// as necessary to reach the base type (or nil).</span>
+<span id="L77" class="ln">    77</span>	func indirect(a interface{}) interface{} {
+<span id="L78" class="ln">    78</span>		if a == nil {
+<span id="L79" class="ln">    79</span>			return nil
+<span id="L80" class="ln">    80</span>		}
+<span id="L81" class="ln">    81</span>		if t := reflect.TypeOf(a); t.Kind() != reflect.Ptr {
+<span id="L82" class="ln">    82</span>			<span class="comment">// Avoid creating a reflect.Value if it&#39;s not a pointer.</span>
+<span id="L83" class="ln">    83</span>			return a
+<span id="L84" class="ln">    84</span>		}
+<span id="L85" class="ln">    85</span>		v := reflect.ValueOf(a)
+<span id="L86" class="ln">    86</span>		for v.Kind() == reflect.Ptr &amp;&amp; !v.IsNil() {
+<span id="L87" class="ln">    87</span>			v = v.Elem()
+<span id="L88" class="ln">    88</span>		}
+<span id="L89" class="ln">    89</span>		return v.Interface()
+<span id="L90" class="ln">    90</span>	}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	var (
+<span id="L93" class="ln">    93</span>		errorType       = reflect.TypeOf((*error)(nil)).Elem()
+<span id="L94" class="ln">    94</span>		fmtStringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
+<span id="L95" class="ln">    95</span>	)
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>	<span class="comment">// indirectToStringerOrError returns the value, after dereferencing as many times</span>
+<span id="L98" class="ln">    98</span>	<span class="comment">// as necessary to reach the base type (or nil) or an implementation of fmt.Stringer</span>
+<span id="L99" class="ln">    99</span>	<span class="comment">// or error,</span>
+<span id="L100" class="ln">   100</span>	func indirectToStringerOrError(a interface{}) interface{} {
+<span id="L101" class="ln">   101</span>		if a == nil {
+<span id="L102" class="ln">   102</span>			return nil
+<span id="L103" class="ln">   103</span>		}
+<span id="L104" class="ln">   104</span>		v := reflect.ValueOf(a)
+<span id="L105" class="ln">   105</span>		for !v.Type().Implements(fmtStringerType) &amp;&amp; !v.Type().Implements(errorType) &amp;&amp; v.Kind() == reflect.Ptr &amp;&amp; !v.IsNil() {
+<span id="L106" class="ln">   106</span>			v = v.Elem()
+<span id="L107" class="ln">   107</span>		}
+<span id="L108" class="ln">   108</span>		return v.Interface()
+<span id="L109" class="ln">   109</span>	}
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>	<span class="comment">// stringify converts its arguments to a string and the type of the content.</span>
+<span id="L112" class="ln">   112</span>	<span class="comment">// All pointers are dereferenced, as in the text/template package.</span>
+<span id="L113" class="ln">   113</span>	func stringify(args ...interface{}) (string, contentType) {
+<span id="L114" class="ln">   114</span>		if len(args) == 1 {
+<span id="L115" class="ln">   115</span>			switch s := indirect(args[0]).(type) {
+<span id="L116" class="ln">   116</span>			case string:
+<span id="L117" class="ln">   117</span>				return s, contentTypePlain
+<span id="L118" class="ln">   118</span>			case CSS:
+<span id="L119" class="ln">   119</span>				return string(s), contentTypeCSS
+<span id="L120" class="ln">   120</span>			case HTML:
+<span id="L121" class="ln">   121</span>				return string(s), contentTypeHTML
+<span id="L122" class="ln">   122</span>			case HTMLAttr:
+<span id="L123" class="ln">   123</span>				return string(s), contentTypeHTMLAttr
+<span id="L124" class="ln">   124</span>			case JS:
+<span id="L125" class="ln">   125</span>				return string(s), contentTypeJS
+<span id="L126" class="ln">   126</span>			case JSStr:
+<span id="L127" class="ln">   127</span>				return string(s), contentTypeJSStr
+<span id="L128" class="ln">   128</span>			case URL:
+<span id="L129" class="ln">   129</span>				return string(s), contentTypeURL
+<span id="L130" class="ln">   130</span>			}
+<span id="L131" class="ln">   131</span>		}
+<span id="L132" class="ln">   132</span>		for i, arg := range args {
+<span id="L133" class="ln">   133</span>			args[i] = indirectToStringerOrError(arg)
+<span id="L134" class="ln">   134</span>		}
+<span id="L135" class="ln">   135</span>		return fmt.Sprint(args...), contentTypePlain
+<span id="L136" class="ln">   136</span>	}
+<span id="L137" class="ln">   137</span>	
+</pre><p><a href="content.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

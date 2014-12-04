@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/os/exec.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/os/exec.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package os
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;runtime&#34;
+<span id="L9" class="ln">     9</span>		&#34;sync/atomic&#34;
+<span id="L10" class="ln">    10</span>		&#34;syscall&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	<span class="comment">// Process stores the information about a process created by StartProcess.</span>
+<span id="L14" class="ln">    14</span>	type Process struct {
+<span id="L15" class="ln">    15</span>		Pid    int
+<span id="L16" class="ln">    16</span>		handle uintptr
+<span id="L17" class="ln">    17</span>		isdone uint32 <span class="comment">// process has been successfully waited on, non zero if true</span>
+<span id="L18" class="ln">    18</span>	}
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	func newProcess(pid int, handle uintptr) *Process {
+<span id="L21" class="ln">    21</span>		p := &amp;Process{Pid: pid, handle: handle}
+<span id="L22" class="ln">    22</span>		runtime.SetFinalizer(p, (*Process).Release)
+<span id="L23" class="ln">    23</span>		return p
+<span id="L24" class="ln">    24</span>	}
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	func (p *Process) setDone() {
+<span id="L27" class="ln">    27</span>		atomic.StoreUint32(&amp;p.isdone, 1)
+<span id="L28" class="ln">    28</span>	}
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	func (p *Process) done() bool {
+<span id="L31" class="ln">    31</span>		return atomic.LoadUint32(&amp;p.isdone) &gt; 0
+<span id="L32" class="ln">    32</span>	}
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	<span class="comment">// ProcAttr holds the attributes that will be applied to a new process</span>
+<span id="L35" class="ln">    35</span>	<span class="comment">// started by StartProcess.</span>
+<span id="L36" class="ln">    36</span>	type ProcAttr struct {
+<span id="L37" class="ln">    37</span>		<span class="comment">// If Dir is non-empty, the child changes into the directory before</span>
+<span id="L38" class="ln">    38</span>		<span class="comment">// creating the process.</span>
+<span id="L39" class="ln">    39</span>		Dir string
+<span id="L40" class="ln">    40</span>		<span class="comment">// If Env is non-nil, it gives the environment variables for the</span>
+<span id="L41" class="ln">    41</span>		<span class="comment">// new process in the form returned by Environ.</span>
+<span id="L42" class="ln">    42</span>		<span class="comment">// If it is nil, the result of Environ will be used.</span>
+<span id="L43" class="ln">    43</span>		Env []string
+<span id="L44" class="ln">    44</span>		<span class="comment">// Files specifies the open files inherited by the new process.  The</span>
+<span id="L45" class="ln">    45</span>		<span class="comment">// first three entries correspond to standard input, standard output, and</span>
+<span id="L46" class="ln">    46</span>		<span class="comment">// standard error.  An implementation may support additional entries,</span>
+<span id="L47" class="ln">    47</span>		<span class="comment">// depending on the underlying operating system.  A nil entry corresponds</span>
+<span id="L48" class="ln">    48</span>		<span class="comment">// to that file being closed when the process starts.</span>
+<span id="L49" class="ln">    49</span>		Files []*File
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>		<span class="comment">// Operating system-specific process creation attributes.</span>
+<span id="L52" class="ln">    52</span>		<span class="comment">// Note that setting this field means that your program</span>
+<span id="L53" class="ln">    53</span>		<span class="comment">// may not execute properly or even compile on some</span>
+<span id="L54" class="ln">    54</span>		<span class="comment">// operating systems.</span>
+<span id="L55" class="ln">    55</span>		Sys *syscall.SysProcAttr
+<span id="L56" class="ln">    56</span>	}
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>	<span class="comment">// A Signal represents an operating system signal.</span>
+<span id="L59" class="ln">    59</span>	<span class="comment">// The usual underlying implementation is operating system-dependent:</span>
+<span id="L60" class="ln">    60</span>	<span class="comment">// on Unix it is syscall.Signal.</span>
+<span id="L61" class="ln">    61</span>	<span class="selection">type Signal interface {
+<span id="L62" class="ln">    62</span>		String() string
+<span id="L63" class="ln">    63</span>		Signal() </span><span class="selection-comment">// to distinguish from other Stringers</span><span class="selection">
+<span id="L64" class="ln">    64</span>	}</span>
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	<span class="comment">// Getpid returns the process id of the caller.</span>
+<span id="L67" class="ln">    67</span>	func Getpid() int { return syscall.Getpid() }
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	<span class="comment">// Getppid returns the process id of the caller&#39;s parent.</span>
+<span id="L70" class="ln">    70</span>	func Getppid() int { return syscall.Getppid() }
+<span id="L71" class="ln">    71</span>	
+</pre><p><a href="exec.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

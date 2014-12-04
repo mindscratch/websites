@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/syscall/syscall_windows.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/syscall/syscall_windows.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors.  All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Windows system calls.</span>
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	package syscall
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	import (
+<span id="L10" class="ln">    10</span>		errorspkg &#34;errors&#34;
+<span id="L11" class="ln">    11</span>		&#34;sync&#34;
+<span id="L12" class="ln">    12</span>		&#34;unicode/utf16&#34;
+<span id="L13" class="ln">    13</span>		&#34;unsafe&#34;
+<span id="L14" class="ln">    14</span>	)
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	type Handle uintptr
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>	const InvalidHandle = ^Handle(0)
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	<span class="comment">// StringToUTF16 is deprecated. Use UTF16FromString instead.</span>
+<span id="L21" class="ln">    21</span>	<span class="comment">// If s contains a NUL byte this function panics instead of</span>
+<span id="L22" class="ln">    22</span>	<span class="comment">// returning an error.</span>
+<span id="L23" class="ln">    23</span>	func StringToUTF16(s string) []uint16 {
+<span id="L24" class="ln">    24</span>		a, err := UTF16FromString(s)
+<span id="L25" class="ln">    25</span>		if err != nil {
+<span id="L26" class="ln">    26</span>			panic(&#34;syscall: string with NUL passed to StringToUTF16&#34;)
+<span id="L27" class="ln">    27</span>		}
+<span id="L28" class="ln">    28</span>		return a
+<span id="L29" class="ln">    29</span>	}
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	<span class="comment">// UTF16FromString returns the UTF-16 encoding of the UTF-8 string</span>
+<span id="L32" class="ln">    32</span>	<span class="comment">// s, with a terminating NUL added. If s contains a NUL byte at any</span>
+<span id="L33" class="ln">    33</span>	<span class="comment">// location, it returns (nil, EINVAL).</span>
+<span id="L34" class="ln">    34</span>	func UTF16FromString(s string) ([]uint16, error) {
+<span id="L35" class="ln">    35</span>		for i := 0; i &lt; len(s); i++ {
+<span id="L36" class="ln">    36</span>			if s[i] == 0 {
+<span id="L37" class="ln">    37</span>				return nil, EINVAL
+<span id="L38" class="ln">    38</span>			}
+<span id="L39" class="ln">    39</span>		}
+<span id="L40" class="ln">    40</span>		return utf16.Encode([]rune(s + &#34;\x00&#34;)), nil
+<span id="L41" class="ln">    41</span>	}
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>	<span class="comment">// UTF16ToString returns the UTF-8 encoding of the UTF-16 sequence s,</span>
+<span id="L44" class="ln">    44</span>	<span class="comment">// with a terminating NUL removed.</span>
+<span id="L45" class="ln">    45</span>	func UTF16ToString(s []uint16) string {
+<span id="L46" class="ln">    46</span>		for i, v := range s {
+<span id="L47" class="ln">    47</span>			if v == 0 {
+<span id="L48" class="ln">    48</span>				s = s[0:i]
+<span id="L49" class="ln">    49</span>				break
+<span id="L50" class="ln">    50</span>			}
+<span id="L51" class="ln">    51</span>		}
+<span id="L52" class="ln">    52</span>		return string(utf16.Decode(s))
+<span id="L53" class="ln">    53</span>	}
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>	<span class="comment">// StringToUTF16Ptr is deprecated. Use UTF16PtrFromString instead.</span>
+<span id="L56" class="ln">    56</span>	<span class="comment">// If s contains a NUL byte this function panics instead of</span>
+<span id="L57" class="ln">    57</span>	<span class="comment">// returning an error.</span>
+<span id="L58" class="ln">    58</span>	func StringToUTF16Ptr(s string) *uint16 { return &amp;StringToUTF16(s)[0] }
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>	<span class="comment">// UTF16PtrFromString returns pointer to the UTF-16 encoding of</span>
+<span id="L61" class="ln">    61</span>	<span class="comment">// the UTF-8 string s, with a terminating NUL added. If s</span>
+<span id="L62" class="ln">    62</span>	<span class="comment">// contains a NUL byte at any location, it returns (nil, EINVAL).</span>
+<span id="L63" class="ln">    63</span>	func UTF16PtrFromString(s string) (*uint16, error) {
+<span id="L64" class="ln">    64</span>		a, err := UTF16FromString(s)
+<span id="L65" class="ln">    65</span>		if err != nil {
+<span id="L66" class="ln">    66</span>			return nil, err
+<span id="L67" class="ln">    67</span>		}
+<span id="L68" class="ln">    68</span>		return &amp;a[0], nil
+<span id="L69" class="ln">    69</span>	}
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>	func Getpagesize() int { return 4096 }
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>	<span class="comment">// Errno is the Windows error number.</span>
+<span id="L74" class="ln">    74</span>	type Errno uintptr
+<span id="L75" class="ln">    75</span>	
+<span id="L76" class="ln">    76</span>	func langid(pri, sub uint16) uint32 { return uint32(sub)&lt;&lt;10 | uint32(pri) }
+<span id="L77" class="ln">    77</span>	
+<span id="L78" class="ln">    78</span>	func (e Errno) Error() string {
+<span id="L79" class="ln">    79</span>		<span class="comment">// deal with special go errors</span>
+<span id="L80" class="ln">    80</span>		idx := int(e - APPLICATION_ERROR)
+<span id="L81" class="ln">    81</span>		if 0 &lt;= idx &amp;&amp; idx &lt; len(errors) {
+<span id="L82" class="ln">    82</span>			return errors[idx]
+<span id="L83" class="ln">    83</span>		}
+<span id="L84" class="ln">    84</span>		<span class="comment">// ask windows for the remaining errors</span>
+<span id="L85" class="ln">    85</span>		var flags uint32 = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_IGNORE_INSERTS
+<span id="L86" class="ln">    86</span>		b := make([]uint16, 300)
+<span id="L87" class="ln">    87</span>		n, err := FormatMessage(flags, 0, uint32(e), langid(LANG_ENGLISH, SUBLANG_ENGLISH_US), b, nil)
+<span id="L88" class="ln">    88</span>		if err != nil {
+<span id="L89" class="ln">    89</span>			n, err = FormatMessage(flags, 0, uint32(e), 0, b, nil)
+<span id="L90" class="ln">    90</span>			if err != nil {
+<span id="L91" class="ln">    91</span>				return &#34;winapi error #&#34; + itoa(int(e))
+<span id="L92" class="ln">    92</span>			}
+<span id="L93" class="ln">    93</span>		}
+<span id="L94" class="ln">    94</span>		<span class="comment">// trim terminating \r and \n</span>
+<span id="L95" class="ln">    95</span>		for ; n &gt; 0 &amp;&amp; (b[n-1] == &#39;\n&#39; || b[n-1] == &#39;\r&#39;); n-- {
+<span id="L96" class="ln">    96</span>		}
+<span id="L97" class="ln">    97</span>		return string(utf16.Decode(b[:n]))
+<span id="L98" class="ln">    98</span>	}
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>	func (e Errno) Temporary() bool {
+<span id="L101" class="ln">   101</span>		return e == EINTR || e == EMFILE || e.Timeout()
+<span id="L102" class="ln">   102</span>	}
+<span id="L103" class="ln">   103</span>	
+<span id="L104" class="ln">   104</span>	func (e Errno) Timeout() bool {
+<span id="L105" class="ln">   105</span>		return e == EAGAIN || e == EWOULDBLOCK || e == ETIMEDOUT
+<span id="L106" class="ln">   106</span>	}
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>	<span class="comment">// Converts a Go function to a function pointer conforming</span>
+<span id="L109" class="ln">   109</span>	<span class="comment">// to the stdcall or cdecl calling convention.  This is useful when</span>
+<span id="L110" class="ln">   110</span>	<span class="comment">// interoperating with Windows code requiring callbacks.</span>
+<span id="L111" class="ln">   111</span>	<span class="comment">// Implemented in ../runtime/syscall_windows.goc</span>
+<span id="L112" class="ln">   112</span>	func NewCallback(fn interface{}) uintptr
+<span id="L113" class="ln">   113</span>	func NewCallbackCDecl(fn interface{}) uintptr
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>	<span class="comment">// windows api calls</span>
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>	<span class="comment">//sys	GetLastError() (lasterr error)</span>
+<span id="L118" class="ln">   118</span>	<span class="comment">//sys	LoadLibrary(libname string) (handle Handle, err error) = LoadLibraryW</span>
+<span id="L119" class="ln">   119</span>	<span class="comment">//sys	FreeLibrary(handle Handle) (err error)</span>
+<span id="L120" class="ln">   120</span>	<span class="comment">//sys	GetProcAddress(module Handle, procname string) (proc uintptr, err error)</span>
+<span id="L121" class="ln">   121</span>	<span class="comment">//sys	GetVersion() (ver uint32, err error)</span>
+<span id="L122" class="ln">   122</span>	<span class="comment">//sys	FormatMessage(flags uint32, msgsrc uint32, msgid uint32, langid uint32, buf []uint16, args *byte) (n uint32, err error) = FormatMessageW</span>
+<span id="L123" class="ln">   123</span>	<span class="comment">//sys	ExitProcess(exitcode uint32)</span>
+<span id="L124" class="ln">   124</span>	<span class="comment">//sys	CreateFile(name *uint16, access uint32, mode uint32, sa *SecurityAttributes, createmode uint32, attrs uint32, templatefile int32) (handle Handle, err error) [failretval==InvalidHandle] = CreateFileW</span>
+<span id="L125" class="ln">   125</span>	<span class="comment">//sys	ReadFile(handle Handle, buf []byte, done *uint32, overlapped *Overlapped) (err error)</span>
+<span id="L126" class="ln">   126</span>	<span class="comment">//sys	WriteFile(handle Handle, buf []byte, done *uint32, overlapped *Overlapped) (err error)</span>
+<span id="L127" class="ln">   127</span>	<span class="comment">//sys	SetFilePointer(handle Handle, lowoffset int32, highoffsetptr *int32, whence uint32) (newlowoffset uint32, err error) [failretval==0xffffffff]</span>
+<span id="L128" class="ln">   128</span>	<span class="comment">//sys	CloseHandle(handle Handle) (err error)</span>
+<span id="L129" class="ln">   129</span>	<span class="comment">//sys	GetStdHandle(stdhandle int) (handle Handle, err error) [failretval==InvalidHandle]</span>
+<span id="L130" class="ln">   130</span>	<span class="comment">//sys	findFirstFile1(name *uint16, data *win32finddata1) (handle Handle, err error) [failretval==InvalidHandle] = FindFirstFileW</span>
+<span id="L131" class="ln">   131</span>	<span class="comment">//sys	findNextFile1(handle Handle, data *win32finddata1) (err error) = FindNextFileW</span>
+<span id="L132" class="ln">   132</span>	<span class="comment">//sys	FindClose(handle Handle) (err error)</span>
+<span id="L133" class="ln">   133</span>	<span class="comment">//sys	GetFileInformationByHandle(handle Handle, data *ByHandleFileInformation) (err error)</span>
+<span id="L134" class="ln">   134</span>	<span class="comment">//sys	GetCurrentDirectory(buflen uint32, buf *uint16) (n uint32, err error) = GetCurrentDirectoryW</span>
+<span id="L135" class="ln">   135</span>	<span class="comment">//sys	SetCurrentDirectory(path *uint16) (err error) = SetCurrentDirectoryW</span>
+<span id="L136" class="ln">   136</span>	<span class="comment">//sys	CreateDirectory(path *uint16, sa *SecurityAttributes) (err error) = CreateDirectoryW</span>
+<span id="L137" class="ln">   137</span>	<span class="comment">//sys	RemoveDirectory(path *uint16) (err error) = RemoveDirectoryW</span>
+<span id="L138" class="ln">   138</span>	<span class="comment">//sys	DeleteFile(path *uint16) (err error) = DeleteFileW</span>
+<span id="L139" class="ln">   139</span>	<span class="comment">//sys	MoveFile(from *uint16, to *uint16) (err error) = MoveFileW</span>
+<span id="L140" class="ln">   140</span>	<span class="comment">//sys	GetComputerName(buf *uint16, n *uint32) (err error) = GetComputerNameW</span>
+<span id="L141" class="ln">   141</span>	<span class="comment">//sys	SetEndOfFile(handle Handle) (err error)</span>
+<span id="L142" class="ln">   142</span>	<span class="comment">//sys	GetSystemTimeAsFileTime(time *Filetime)</span>
+<span id="L143" class="ln">   143</span>	<span class="comment">//sys	GetTimeZoneInformation(tzi *Timezoneinformation) (rc uint32, err error) [failretval==0xffffffff]</span>
+<span id="L144" class="ln">   144</span>	<span class="comment">//sys	CreateIoCompletionPort(filehandle Handle, cphandle Handle, key uint32, threadcnt uint32) (handle Handle, err error)</span>
+<span id="L145" class="ln">   145</span>	<span class="comment">//sys	GetQueuedCompletionStatus(cphandle Handle, qty *uint32, key *uint32, overlapped **Overlapped, timeout uint32) (err error)</span>
+<span id="L146" class="ln">   146</span>	<span class="comment">//sys	PostQueuedCompletionStatus(cphandle Handle, qty uint32, key uint32, overlapped *Overlapped) (err error)</span>
+<span id="L147" class="ln">   147</span>	<span class="comment">//sys	CancelIo(s Handle) (err error)</span>
+<span id="L148" class="ln">   148</span>	<span class="comment">//sys	CancelIoEx(s Handle, o *Overlapped) (err error)</span>
+<span id="L149" class="ln">   149</span>	<span class="comment">//sys	CreateProcess(appName *uint16, commandLine *uint16, procSecurity *SecurityAttributes, threadSecurity *SecurityAttributes, inheritHandles bool, creationFlags uint32, env *uint16, currentDir *uint16, startupInfo *StartupInfo, outProcInfo *ProcessInformation) (err error) = CreateProcessW</span>
+<span id="L150" class="ln">   150</span>	<span class="comment">//sys	OpenProcess(da uint32, inheritHandle bool, pid uint32) (handle Handle, err error)</span>
+<span id="L151" class="ln">   151</span>	<span class="comment">//sys	TerminateProcess(handle Handle, exitcode uint32) (err error)</span>
+<span id="L152" class="ln">   152</span>	<span class="comment">//sys	GetExitCodeProcess(handle Handle, exitcode *uint32) (err error)</span>
+<span id="L153" class="ln">   153</span>	<span class="comment">//sys	GetStartupInfo(startupInfo *StartupInfo) (err error) = GetStartupInfoW</span>
+<span id="L154" class="ln">   154</span>	<span class="comment">//sys	GetCurrentProcess() (pseudoHandle Handle, err error)</span>
+<span id="L155" class="ln">   155</span>	<span class="comment">//sys	GetProcessTimes(handle Handle, creationTime *Filetime, exitTime *Filetime, kernelTime *Filetime, userTime *Filetime) (err error)</span>
+<span id="L156" class="ln">   156</span>	<span class="comment">//sys	DuplicateHandle(hSourceProcessHandle Handle, hSourceHandle Handle, hTargetProcessHandle Handle, lpTargetHandle *Handle, dwDesiredAccess uint32, bInheritHandle bool, dwOptions uint32) (err error)</span>
+<span id="L157" class="ln">   157</span>	<span class="comment">//sys	WaitForSingleObject(handle Handle, waitMilliseconds uint32) (event uint32, err error) [failretval==0xffffffff]</span>
+<span id="L158" class="ln">   158</span>	<span class="comment">//sys	GetTempPath(buflen uint32, buf *uint16) (n uint32, err error) = GetTempPathW</span>
+<span id="L159" class="ln">   159</span>	<span class="comment">//sys	CreatePipe(readhandle *Handle, writehandle *Handle, sa *SecurityAttributes, size uint32) (err error)</span>
+<span id="L160" class="ln">   160</span>	<span class="comment">//sys	GetFileType(filehandle Handle) (n uint32, err error)</span>
+<span id="L161" class="ln">   161</span>	<span class="comment">//sys	CryptAcquireContext(provhandle *Handle, container *uint16, provider *uint16, provtype uint32, flags uint32) (err error) = advapi32.CryptAcquireContextW</span>
+<span id="L162" class="ln">   162</span>	<span class="comment">//sys	CryptReleaseContext(provhandle Handle, flags uint32) (err error) = advapi32.CryptReleaseContext</span>
+<span id="L163" class="ln">   163</span>	<span class="comment">//sys	CryptGenRandom(provhandle Handle, buflen uint32, buf *byte) (err error) = advapi32.CryptGenRandom</span>
+<span id="L164" class="ln">   164</span>	<span class="comment">//sys	GetEnvironmentStrings() (envs *uint16, err error) [failretval==nil] = kernel32.GetEnvironmentStringsW</span>
+<span id="L165" class="ln">   165</span>	<span class="comment">//sys	FreeEnvironmentStrings(envs *uint16) (err error) = kernel32.FreeEnvironmentStringsW</span>
+<span id="L166" class="ln">   166</span>	<span class="comment">//sys	GetEnvironmentVariable(name *uint16, buffer *uint16, size uint32) (n uint32, err error) = kernel32.GetEnvironmentVariableW</span>
+<span id="L167" class="ln">   167</span>	<span class="comment">//sys	SetEnvironmentVariable(name *uint16, value *uint16) (err error) = kernel32.SetEnvironmentVariableW</span>
+<span id="L168" class="ln">   168</span>	<span class="comment">//sys	SetFileTime(handle Handle, ctime *Filetime, atime *Filetime, wtime *Filetime) (err error)</span>
+<span id="L169" class="ln">   169</span>	<span class="comment">//sys	GetFileAttributes(name *uint16) (attrs uint32, err error) [failretval==INVALID_FILE_ATTRIBUTES] = kernel32.GetFileAttributesW</span>
+<span id="L170" class="ln">   170</span>	<span class="comment">//sys	SetFileAttributes(name *uint16, attrs uint32) (err error) = kernel32.SetFileAttributesW</span>
+<span id="L171" class="ln">   171</span>	<span class="comment">//sys	GetFileAttributesEx(name *uint16, level uint32, info *byte) (err error) = kernel32.GetFileAttributesExW</span>
+<span id="L172" class="ln">   172</span>	<span class="comment">//sys	GetCommandLine() (cmd *uint16) = kernel32.GetCommandLineW</span>
+<span id="L173" class="ln">   173</span>	<span class="comment">//sys	CommandLineToArgv(cmd *uint16, argc *int32) (argv *[8192]*[8192]uint16, err error) [failretval==nil] = shell32.CommandLineToArgvW</span>
+<span id="L174" class="ln">   174</span>	<span class="comment">//sys	LocalFree(hmem Handle) (handle Handle, err error) [failretval!=0]</span>
+<span id="L175" class="ln">   175</span>	<span class="comment">//sys	SetHandleInformation(handle Handle, mask uint32, flags uint32) (err error)</span>
+<span id="L176" class="ln">   176</span>	<span class="comment">//sys	FlushFileBuffers(handle Handle) (err error)</span>
+<span id="L177" class="ln">   177</span>	<span class="comment">//sys	GetFullPathName(path *uint16, buflen uint32, buf *uint16, fname **uint16) (n uint32, err error) = kernel32.GetFullPathNameW</span>
+<span id="L178" class="ln">   178</span>	<span class="comment">//sys	GetLongPathName(path *uint16, buf *uint16, buflen uint32) (n uint32, err error) = kernel32.GetLongPathNameW</span>
+<span id="L179" class="ln">   179</span>	<span class="comment">//sys	GetShortPathName(longpath *uint16, shortpath *uint16, buflen uint32) (n uint32, err error) = kernel32.GetShortPathNameW</span>
+<span id="L180" class="ln">   180</span>	<span class="comment">//sys	CreateFileMapping(fhandle Handle, sa *SecurityAttributes, prot uint32, maxSizeHigh uint32, maxSizeLow uint32, name *uint16) (handle Handle, err error) = kernel32.CreateFileMappingW</span>
+<span id="L181" class="ln">   181</span>	<span class="comment">//sys	MapViewOfFile(handle Handle, access uint32, offsetHigh uint32, offsetLow uint32, length uintptr) (addr uintptr, err error)</span>
+<span id="L182" class="ln">   182</span>	<span class="comment">//sys	UnmapViewOfFile(addr uintptr) (err error)</span>
+<span id="L183" class="ln">   183</span>	<span class="comment">//sys	FlushViewOfFile(addr uintptr, length uintptr) (err error)</span>
+<span id="L184" class="ln">   184</span>	<span class="comment">//sys	VirtualLock(addr uintptr, length uintptr) (err error)</span>
+<span id="L185" class="ln">   185</span>	<span class="comment">//sys	VirtualUnlock(addr uintptr, length uintptr) (err error)</span>
+<span id="L186" class="ln">   186</span>	<span class="comment">//sys	TransmitFile(s Handle, handle Handle, bytesToWrite uint32, bytsPerSend uint32, overlapped *Overlapped, transmitFileBuf *TransmitFileBuffers, flags uint32) (err error) = mswsock.TransmitFile</span>
+<span id="L187" class="ln">   187</span>	<span class="comment">//sys	ReadDirectoryChanges(handle Handle, buf *byte, buflen uint32, watchSubTree bool, mask uint32, retlen *uint32, overlapped *Overlapped, completionRoutine uintptr) (err error) = kernel32.ReadDirectoryChangesW</span>
+<span id="L188" class="ln">   188</span>	<span class="comment">//sys	CertOpenSystemStore(hprov Handle, name *uint16) (store Handle, err error) = crypt32.CertOpenSystemStoreW</span>
+<span id="L189" class="ln">   189</span>	<span class="comment">//sys   CertOpenStore(storeProvider uintptr, msgAndCertEncodingType uint32, cryptProv uintptr, flags uint32, para uintptr) (handle Handle, err error) [failretval==InvalidHandle] = crypt32.CertOpenStore</span>
+<span id="L190" class="ln">   190</span>	<span class="comment">//sys	CertEnumCertificatesInStore(store Handle, prevContext *CertContext) (context *CertContext, err error) [failretval==nil] = crypt32.CertEnumCertificatesInStore</span>
+<span id="L191" class="ln">   191</span>	<span class="comment">//sys   CertAddCertificateContextToStore(store Handle, certContext *CertContext, addDisposition uint32, storeContext **CertContext) (err error) = crypt32.CertAddCertificateContextToStore</span>
+<span id="L192" class="ln">   192</span>	<span class="comment">//sys	CertCloseStore(store Handle, flags uint32) (err error) = crypt32.CertCloseStore</span>
+<span id="L193" class="ln">   193</span>	<span class="comment">//sys   CertGetCertificateChain(engine Handle, leaf *CertContext, time *Filetime, additionalStore Handle, para *CertChainPara, flags uint32, reserved uintptr, chainCtx **CertChainContext) (err error) = crypt32.CertGetCertificateChain</span>
+<span id="L194" class="ln">   194</span>	<span class="comment">//sys   CertFreeCertificateChain(ctx *CertChainContext) = crypt32.CertFreeCertificateChain</span>
+<span id="L195" class="ln">   195</span>	<span class="comment">//sys   CertCreateCertificateContext(certEncodingType uint32, certEncoded *byte, encodedLen uint32) (context *CertContext, err error) [failretval==nil] = crypt32.CertCreateCertificateContext</span>
+<span id="L196" class="ln">   196</span>	<span class="comment">//sys   CertFreeCertificateContext(ctx *CertContext) (err error) = crypt32.CertFreeCertificateContext</span>
+<span id="L197" class="ln">   197</span>	<span class="comment">//sys   CertVerifyCertificateChainPolicy(policyOID uintptr, chain *CertChainContext, para *CertChainPolicyPara, status *CertChainPolicyStatus) (err error) = crypt32.CertVerifyCertificateChainPolicy</span>
+<span id="L198" class="ln">   198</span>	<span class="comment">//sys	RegOpenKeyEx(key Handle, subkey *uint16, options uint32, desiredAccess uint32, result *Handle) (regerrno error) = advapi32.RegOpenKeyExW</span>
+<span id="L199" class="ln">   199</span>	<span class="comment">//sys	RegCloseKey(key Handle) (regerrno error) = advapi32.RegCloseKey</span>
+<span id="L200" class="ln">   200</span>	<span class="comment">//sys	RegQueryInfoKey(key Handle, class *uint16, classLen *uint32, reserved *uint32, subkeysLen *uint32, maxSubkeyLen *uint32, maxClassLen *uint32, valuesLen *uint32, maxValueNameLen *uint32, maxValueLen *uint32, saLen *uint32, lastWriteTime *Filetime) (regerrno error) = advapi32.RegQueryInfoKeyW</span>
+<span id="L201" class="ln">   201</span>	<span class="comment">//sys	RegEnumKeyEx(key Handle, index uint32, name *uint16, nameLen *uint32, reserved *uint32, class *uint16, classLen *uint32, lastWriteTime *Filetime) (regerrno error) = advapi32.RegEnumKeyExW</span>
+<span id="L202" class="ln">   202</span>	<span class="comment">//sys	RegQueryValueEx(key Handle, name *uint16, reserved *uint32, valtype *uint32, buf *byte, buflen *uint32) (regerrno error) = advapi32.RegQueryValueExW</span>
+<span id="L203" class="ln">   203</span>	<span class="comment">//sys	getCurrentProcessId() (pid uint32) = kernel32.GetCurrentProcessId</span>
+<span id="L204" class="ln">   204</span>	<span class="comment">//sys	GetConsoleMode(console Handle, mode *uint32) (err error) = kernel32.GetConsoleMode</span>
+<span id="L205" class="ln">   205</span>	<span class="comment">//sys	WriteConsole(console Handle, buf *uint16, towrite uint32, written *uint32, reserved *byte) (err error) = kernel32.WriteConsoleW</span>
+<span id="L206" class="ln">   206</span>	<span class="comment">//sys	ReadConsole(console Handle, buf *uint16, toread uint32, read *uint32, inputControl *byte) (err error) = kernel32.ReadConsoleW</span>
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>	<span class="comment">// syscall interface implementation for other packages</span>
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>	func Exit(code int) { ExitProcess(uint32(code)) }
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>	func makeInheritSa() *SecurityAttributes {
+<span id="L213" class="ln">   213</span>		var sa SecurityAttributes
+<span id="L214" class="ln">   214</span>		sa.Length = uint32(unsafe.Sizeof(sa))
+<span id="L215" class="ln">   215</span>		sa.InheritHandle = 1
+<span id="L216" class="ln">   216</span>		return &amp;sa
+<span id="L217" class="ln">   217</span>	}
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>	func Open(path string, mode int, perm uint32) (fd Handle, err error) {
+<span id="L220" class="ln">   220</span>		if len(path) == 0 {
+<span id="L221" class="ln">   221</span>			return InvalidHandle, ERROR_FILE_NOT_FOUND
+<span id="L222" class="ln">   222</span>		}
+<span id="L223" class="ln">   223</span>		pathp, err := UTF16PtrFromString(path)
+<span id="L224" class="ln">   224</span>		if err != nil {
+<span id="L225" class="ln">   225</span>			return InvalidHandle, err
+<span id="L226" class="ln">   226</span>		}
+<span id="L227" class="ln">   227</span>		var access uint32
+<span id="L228" class="ln">   228</span>		switch mode &amp; (O_RDONLY | O_WRONLY | O_RDWR) {
+<span id="L229" class="ln">   229</span>		case O_RDONLY:
+<span id="L230" class="ln">   230</span>			access = GENERIC_READ
+<span id="L231" class="ln">   231</span>		case O_WRONLY:
+<span id="L232" class="ln">   232</span>			access = GENERIC_WRITE
+<span id="L233" class="ln">   233</span>		case O_RDWR:
+<span id="L234" class="ln">   234</span>			access = GENERIC_READ | GENERIC_WRITE
+<span id="L235" class="ln">   235</span>		}
+<span id="L236" class="ln">   236</span>		if mode&amp;O_CREAT != 0 {
+<span id="L237" class="ln">   237</span>			access |= GENERIC_WRITE
+<span id="L238" class="ln">   238</span>		}
+<span id="L239" class="ln">   239</span>		if mode&amp;O_APPEND != 0 {
+<span id="L240" class="ln">   240</span>			access &amp;^= GENERIC_WRITE
+<span id="L241" class="ln">   241</span>			access |= FILE_APPEND_DATA
+<span id="L242" class="ln">   242</span>		}
+<span id="L243" class="ln">   243</span>		sharemode := uint32(FILE_SHARE_READ | FILE_SHARE_WRITE)
+<span id="L244" class="ln">   244</span>		var sa *SecurityAttributes
+<span id="L245" class="ln">   245</span>		if mode&amp;O_CLOEXEC == 0 {
+<span id="L246" class="ln">   246</span>			sa = makeInheritSa()
+<span id="L247" class="ln">   247</span>		}
+<span id="L248" class="ln">   248</span>		var createmode uint32
+<span id="L249" class="ln">   249</span>		switch {
+<span id="L250" class="ln">   250</span>		case mode&amp;(O_CREAT|O_EXCL) == (O_CREAT | O_EXCL):
+<span id="L251" class="ln">   251</span>			createmode = CREATE_NEW
+<span id="L252" class="ln">   252</span>		case mode&amp;(O_CREAT|O_TRUNC) == (O_CREAT | O_TRUNC):
+<span id="L253" class="ln">   253</span>			createmode = CREATE_ALWAYS
+<span id="L254" class="ln">   254</span>		case mode&amp;O_CREAT == O_CREAT:
+<span id="L255" class="ln">   255</span>			createmode = OPEN_ALWAYS
+<span id="L256" class="ln">   256</span>		case mode&amp;O_TRUNC == O_TRUNC:
+<span id="L257" class="ln">   257</span>			createmode = TRUNCATE_EXISTING
+<span id="L258" class="ln">   258</span>		default:
+<span id="L259" class="ln">   259</span>			createmode = OPEN_EXISTING
+<span id="L260" class="ln">   260</span>		}
+<span id="L261" class="ln">   261</span>		h, e := CreateFile(pathp, access, sharemode, sa, createmode, FILE_ATTRIBUTE_NORMAL, 0)
+<span id="L262" class="ln">   262</span>		return h, e
+<span id="L263" class="ln">   263</span>	}
+<span id="L264" class="ln">   264</span>	
+<span id="L265" class="ln">   265</span>	func Read(fd Handle, p []byte) (n int, err error) {
+<span id="L266" class="ln">   266</span>		var done uint32
+<span id="L267" class="ln">   267</span>		e := ReadFile(fd, p, &amp;done, nil)
+<span id="L268" class="ln">   268</span>		if e != nil {
+<span id="L269" class="ln">   269</span>			if e == ERROR_BROKEN_PIPE {
+<span id="L270" class="ln">   270</span>				<span class="comment">// NOTE(brainman): work around ERROR_BROKEN_PIPE is returned on reading EOF from stdin</span>
+<span id="L271" class="ln">   271</span>				return 0, nil
+<span id="L272" class="ln">   272</span>			}
+<span id="L273" class="ln">   273</span>			return 0, e
+<span id="L274" class="ln">   274</span>		}
+<span id="L275" class="ln">   275</span>		if raceenabled {
+<span id="L276" class="ln">   276</span>			if done &gt; 0 {
+<span id="L277" class="ln">   277</span>				raceWriteRange(unsafe.Pointer(&amp;p[0]), int(done))
+<span id="L278" class="ln">   278</span>			}
+<span id="L279" class="ln">   279</span>			raceAcquire(unsafe.Pointer(&amp;ioSync))
+<span id="L280" class="ln">   280</span>		}
+<span id="L281" class="ln">   281</span>		return int(done), nil
+<span id="L282" class="ln">   282</span>	}
+<span id="L283" class="ln">   283</span>	
+<span id="L284" class="ln">   284</span>	func Write(fd Handle, p []byte) (n int, err error) {
+<span id="L285" class="ln">   285</span>		if raceenabled {
+<span id="L286" class="ln">   286</span>			raceReleaseMerge(unsafe.Pointer(&amp;ioSync))
+<span id="L287" class="ln">   287</span>		}
+<span id="L288" class="ln">   288</span>		var done uint32
+<span id="L289" class="ln">   289</span>		e := WriteFile(fd, p, &amp;done, nil)
+<span id="L290" class="ln">   290</span>		if e != nil {
+<span id="L291" class="ln">   291</span>			return 0, e
+<span id="L292" class="ln">   292</span>		}
+<span id="L293" class="ln">   293</span>		if raceenabled &amp;&amp; done &gt; 0 {
+<span id="L294" class="ln">   294</span>			raceReadRange(unsafe.Pointer(&amp;p[0]), int(done))
+<span id="L295" class="ln">   295</span>		}
+<span id="L296" class="ln">   296</span>		return int(done), nil
+<span id="L297" class="ln">   297</span>	}
+<span id="L298" class="ln">   298</span>	
+<span id="L299" class="ln">   299</span>	var ioSync int64
+<span id="L300" class="ln">   300</span>	
+<span id="L301" class="ln">   301</span>	func Seek(fd Handle, offset int64, whence int) (newoffset int64, err error) {
+<span id="L302" class="ln">   302</span>		var w uint32
+<span id="L303" class="ln">   303</span>		switch whence {
+<span id="L304" class="ln">   304</span>		case 0:
+<span id="L305" class="ln">   305</span>			w = FILE_BEGIN
+<span id="L306" class="ln">   306</span>		case 1:
+<span id="L307" class="ln">   307</span>			w = FILE_CURRENT
+<span id="L308" class="ln">   308</span>		case 2:
+<span id="L309" class="ln">   309</span>			w = FILE_END
+<span id="L310" class="ln">   310</span>		}
+<span id="L311" class="ln">   311</span>		hi := int32(offset &gt;&gt; 32)
+<span id="L312" class="ln">   312</span>		lo := int32(offset)
+<span id="L313" class="ln">   313</span>		<span class="comment">// use GetFileType to check pipe, pipe can&#39;t do seek</span>
+<span id="L314" class="ln">   314</span>		ft, _ := GetFileType(fd)
+<span id="L315" class="ln">   315</span>		if ft == FILE_TYPE_PIPE {
+<span id="L316" class="ln">   316</span>			return 0, EPIPE
+<span id="L317" class="ln">   317</span>		}
+<span id="L318" class="ln">   318</span>		rlo, e := SetFilePointer(fd, lo, &amp;hi, w)
+<span id="L319" class="ln">   319</span>		if e != nil {
+<span id="L320" class="ln">   320</span>			return 0, e
+<span id="L321" class="ln">   321</span>		}
+<span id="L322" class="ln">   322</span>		return int64(hi)&lt;&lt;32 + int64(rlo), nil
+<span id="L323" class="ln">   323</span>	}
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>	func Close(fd Handle) (err error) {
+<span id="L326" class="ln">   326</span>		return CloseHandle(fd)
+<span id="L327" class="ln">   327</span>	}
+<span id="L328" class="ln">   328</span>	
+<span id="L329" class="ln">   329</span>	var (
+<span id="L330" class="ln">   330</span>		Stdin  = getStdHandle(STD_INPUT_HANDLE)
+<span id="L331" class="ln">   331</span>		Stdout = getStdHandle(STD_OUTPUT_HANDLE)
+<span id="L332" class="ln">   332</span>		Stderr = getStdHandle(STD_ERROR_HANDLE)
+<span id="L333" class="ln">   333</span>	)
+<span id="L334" class="ln">   334</span>	
+<span id="L335" class="ln">   335</span>	func getStdHandle(h int) (fd Handle) {
+<span id="L336" class="ln">   336</span>		r, _ := GetStdHandle(h)
+<span id="L337" class="ln">   337</span>		CloseOnExec(r)
+<span id="L338" class="ln">   338</span>		return r
+<span id="L339" class="ln">   339</span>	}
+<span id="L340" class="ln">   340</span>	
+<span id="L341" class="ln">   341</span>	const ImplementsGetwd = true
+<span id="L342" class="ln">   342</span>	
+<span id="L343" class="ln">   343</span>	func Getwd() (wd string, err error) {
+<span id="L344" class="ln">   344</span>		b := make([]uint16, 300)
+<span id="L345" class="ln">   345</span>		n, e := GetCurrentDirectory(uint32(len(b)), &amp;b[0])
+<span id="L346" class="ln">   346</span>		if e != nil {
+<span id="L347" class="ln">   347</span>			return &#34;&#34;, e
+<span id="L348" class="ln">   348</span>		}
+<span id="L349" class="ln">   349</span>		return string(utf16.Decode(b[0:n])), nil
+<span id="L350" class="ln">   350</span>	}
+<span id="L351" class="ln">   351</span>	
+<span id="L352" class="ln">   352</span>	func Chdir(path string) (err error) {
+<span id="L353" class="ln">   353</span>		pathp, err := UTF16PtrFromString(path)
+<span id="L354" class="ln">   354</span>		if err != nil {
+<span id="L355" class="ln">   355</span>			return err
+<span id="L356" class="ln">   356</span>		}
+<span id="L357" class="ln">   357</span>		return SetCurrentDirectory(pathp)
+<span id="L358" class="ln">   358</span>	}
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>	func Mkdir(path string, mode uint32) (err error) {
+<span id="L361" class="ln">   361</span>		pathp, err := UTF16PtrFromString(path)
+<span id="L362" class="ln">   362</span>		if err != nil {
+<span id="L363" class="ln">   363</span>			return err
+<span id="L364" class="ln">   364</span>		}
+<span id="L365" class="ln">   365</span>		return CreateDirectory(pathp, nil)
+<span id="L366" class="ln">   366</span>	}
+<span id="L367" class="ln">   367</span>	
+<span id="L368" class="ln">   368</span>	func Rmdir(path string) (err error) {
+<span id="L369" class="ln">   369</span>		pathp, err := UTF16PtrFromString(path)
+<span id="L370" class="ln">   370</span>		if err != nil {
+<span id="L371" class="ln">   371</span>			return err
+<span id="L372" class="ln">   372</span>		}
+<span id="L373" class="ln">   373</span>		return RemoveDirectory(pathp)
+<span id="L374" class="ln">   374</span>	}
+<span id="L375" class="ln">   375</span>	
+<span id="L376" class="ln">   376</span>	func Unlink(path string) (err error) {
+<span id="L377" class="ln">   377</span>		pathp, err := UTF16PtrFromString(path)
+<span id="L378" class="ln">   378</span>		if err != nil {
+<span id="L379" class="ln">   379</span>			return err
+<span id="L380" class="ln">   380</span>		}
+<span id="L381" class="ln">   381</span>		return DeleteFile(pathp)
+<span id="L382" class="ln">   382</span>	}
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>	func Rename(oldpath, newpath string) (err error) {
+<span id="L385" class="ln">   385</span>		from, err := UTF16PtrFromString(oldpath)
+<span id="L386" class="ln">   386</span>		if err != nil {
+<span id="L387" class="ln">   387</span>			return err
+<span id="L388" class="ln">   388</span>		}
+<span id="L389" class="ln">   389</span>		to, err := UTF16PtrFromString(newpath)
+<span id="L390" class="ln">   390</span>		if err != nil {
+<span id="L391" class="ln">   391</span>			return err
+<span id="L392" class="ln">   392</span>		}
+<span id="L393" class="ln">   393</span>		return MoveFile(from, to)
+<span id="L394" class="ln">   394</span>	}
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>	func ComputerName() (name string, err error) {
+<span id="L397" class="ln">   397</span>		var n uint32 = MAX_COMPUTERNAME_LENGTH + 1
+<span id="L398" class="ln">   398</span>		b := make([]uint16, n)
+<span id="L399" class="ln">   399</span>		e := GetComputerName(&amp;b[0], &amp;n)
+<span id="L400" class="ln">   400</span>		if e != nil {
+<span id="L401" class="ln">   401</span>			return &#34;&#34;, e
+<span id="L402" class="ln">   402</span>		}
+<span id="L403" class="ln">   403</span>		return string(utf16.Decode(b[0:n])), nil
+<span id="L404" class="ln">   404</span>	}
+<span id="L405" class="ln">   405</span>	
+<span id="L406" class="ln">   406</span>	func Ftruncate(fd Handle, length int64) (err error) {
+<span id="L407" class="ln">   407</span>		curoffset, e := Seek(fd, 0, 1)
+<span id="L408" class="ln">   408</span>		if e != nil {
+<span id="L409" class="ln">   409</span>			return e
+<span id="L410" class="ln">   410</span>		}
+<span id="L411" class="ln">   411</span>		defer Seek(fd, curoffset, 0)
+<span id="L412" class="ln">   412</span>		_, e = Seek(fd, length, 0)
+<span id="L413" class="ln">   413</span>		if e != nil {
+<span id="L414" class="ln">   414</span>			return e
+<span id="L415" class="ln">   415</span>		}
+<span id="L416" class="ln">   416</span>		e = SetEndOfFile(fd)
+<span id="L417" class="ln">   417</span>		if e != nil {
+<span id="L418" class="ln">   418</span>			return e
+<span id="L419" class="ln">   419</span>		}
+<span id="L420" class="ln">   420</span>		return nil
+<span id="L421" class="ln">   421</span>	}
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>	func Gettimeofday(tv *Timeval) (err error) {
+<span id="L424" class="ln">   424</span>		var ft Filetime
+<span id="L425" class="ln">   425</span>		GetSystemTimeAsFileTime(&amp;ft)
+<span id="L426" class="ln">   426</span>		*tv = NsecToTimeval(ft.Nanoseconds())
+<span id="L427" class="ln">   427</span>		return nil
+<span id="L428" class="ln">   428</span>	}
+<span id="L429" class="ln">   429</span>	
+<span id="L430" class="ln">   430</span>	func Pipe(p []Handle) (err error) {
+<span id="L431" class="ln">   431</span>		if len(p) != 2 {
+<span id="L432" class="ln">   432</span>			return EINVAL
+<span id="L433" class="ln">   433</span>		}
+<span id="L434" class="ln">   434</span>		var r, w Handle
+<span id="L435" class="ln">   435</span>		e := CreatePipe(&amp;r, &amp;w, makeInheritSa(), 0)
+<span id="L436" class="ln">   436</span>		if e != nil {
+<span id="L437" class="ln">   437</span>			return e
+<span id="L438" class="ln">   438</span>		}
+<span id="L439" class="ln">   439</span>		p[0] = r
+<span id="L440" class="ln">   440</span>		p[1] = w
+<span id="L441" class="ln">   441</span>		return nil
+<span id="L442" class="ln">   442</span>	}
+<span id="L443" class="ln">   443</span>	
+<span id="L444" class="ln">   444</span>	func Utimes(path string, tv []Timeval) (err error) {
+<span id="L445" class="ln">   445</span>		if len(tv) != 2 {
+<span id="L446" class="ln">   446</span>			return EINVAL
+<span id="L447" class="ln">   447</span>		}
+<span id="L448" class="ln">   448</span>		pathp, e := UTF16PtrFromString(path)
+<span id="L449" class="ln">   449</span>		if e != nil {
+<span id="L450" class="ln">   450</span>			return e
+<span id="L451" class="ln">   451</span>		}
+<span id="L452" class="ln">   452</span>		h, e := CreateFile(pathp,
+<span id="L453" class="ln">   453</span>			FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
+<span id="L454" class="ln">   454</span>			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)
+<span id="L455" class="ln">   455</span>		if e != nil {
+<span id="L456" class="ln">   456</span>			return e
+<span id="L457" class="ln">   457</span>		}
+<span id="L458" class="ln">   458</span>		defer Close(h)
+<span id="L459" class="ln">   459</span>		a := NsecToFiletime(tv[0].Nanoseconds())
+<span id="L460" class="ln">   460</span>		w := NsecToFiletime(tv[1].Nanoseconds())
+<span id="L461" class="ln">   461</span>		return SetFileTime(h, nil, &amp;a, &amp;w)
+<span id="L462" class="ln">   462</span>	}
+<span id="L463" class="ln">   463</span>	
+<span id="L464" class="ln">   464</span>	func UtimesNano(path string, ts []Timespec) (err error) {
+<span id="L465" class="ln">   465</span>		if len(ts) != 2 {
+<span id="L466" class="ln">   466</span>			return EINVAL
+<span id="L467" class="ln">   467</span>		}
+<span id="L468" class="ln">   468</span>		pathp, e := UTF16PtrFromString(path)
+<span id="L469" class="ln">   469</span>		if e != nil {
+<span id="L470" class="ln">   470</span>			return e
+<span id="L471" class="ln">   471</span>		}
+<span id="L472" class="ln">   472</span>		h, e := CreateFile(pathp,
+<span id="L473" class="ln">   473</span>			FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
+<span id="L474" class="ln">   474</span>			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)
+<span id="L475" class="ln">   475</span>		if e != nil {
+<span id="L476" class="ln">   476</span>			return e
+<span id="L477" class="ln">   477</span>		}
+<span id="L478" class="ln">   478</span>		defer Close(h)
+<span id="L479" class="ln">   479</span>		a := NsecToFiletime(TimespecToNsec(ts[0]))
+<span id="L480" class="ln">   480</span>		w := NsecToFiletime(TimespecToNsec(ts[1]))
+<span id="L481" class="ln">   481</span>		return SetFileTime(h, nil, &amp;a, &amp;w)
+<span id="L482" class="ln">   482</span>	}
+<span id="L483" class="ln">   483</span>	
+<span id="L484" class="ln">   484</span>	func Fsync(fd Handle) (err error) {
+<span id="L485" class="ln">   485</span>		return FlushFileBuffers(fd)
+<span id="L486" class="ln">   486</span>	}
+<span id="L487" class="ln">   487</span>	
+<span id="L488" class="ln">   488</span>	func Chmod(path string, mode uint32) (err error) {
+<span id="L489" class="ln">   489</span>		if mode == 0 {
+<span id="L490" class="ln">   490</span>			return EINVAL
+<span id="L491" class="ln">   491</span>		}
+<span id="L492" class="ln">   492</span>		p, e := UTF16PtrFromString(path)
+<span id="L493" class="ln">   493</span>		if e != nil {
+<span id="L494" class="ln">   494</span>			return e
+<span id="L495" class="ln">   495</span>		}
+<span id="L496" class="ln">   496</span>		attrs, e := GetFileAttributes(p)
+<span id="L497" class="ln">   497</span>		if e != nil {
+<span id="L498" class="ln">   498</span>			return e
+<span id="L499" class="ln">   499</span>		}
+<span id="L500" class="ln">   500</span>		if mode&amp;S_IWRITE != 0 {
+<span id="L501" class="ln">   501</span>			attrs &amp;^= FILE_ATTRIBUTE_READONLY
+<span id="L502" class="ln">   502</span>		} else {
+<span id="L503" class="ln">   503</span>			attrs |= FILE_ATTRIBUTE_READONLY
+<span id="L504" class="ln">   504</span>		}
+<span id="L505" class="ln">   505</span>		return SetFileAttributes(p, attrs)
+<span id="L506" class="ln">   506</span>	}
+<span id="L507" class="ln">   507</span>	
+<span id="L508" class="ln">   508</span>	func LoadCancelIoEx() error {
+<span id="L509" class="ln">   509</span>		return procCancelIoEx.Find()
+<span id="L510" class="ln">   510</span>	}
+<span id="L511" class="ln">   511</span>	
+<span id="L512" class="ln">   512</span>	func LoadSetFileCompletionNotificationModes() error {
+<span id="L513" class="ln">   513</span>		return procSetFileCompletionNotificationModes.Find()
+<span id="L514" class="ln">   514</span>	}
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>	<span class="comment">// net api calls</span>
+<span id="L517" class="ln">   517</span>	
+<span id="L518" class="ln">   518</span>	const socket_error = uintptr(^uint32(0))
+<span id="L519" class="ln">   519</span>	
+<span id="L520" class="ln">   520</span>	<span class="comment">//sys	WSAStartup(verreq uint32, data *WSAData) (sockerr error) = ws2_32.WSAStartup</span>
+<span id="L521" class="ln">   521</span>	<span class="comment">//sys	WSACleanup() (err error) [failretval==socket_error] = ws2_32.WSACleanup</span>
+<span id="L522" class="ln">   522</span>	<span class="comment">//sys	WSAIoctl(s Handle, iocc uint32, inbuf *byte, cbif uint32, outbuf *byte, cbob uint32, cbbr *uint32, overlapped *Overlapped, completionRoutine uintptr) (err error) [failretval==socket_error] = ws2_32.WSAIoctl</span>
+<span id="L523" class="ln">   523</span>	<span class="comment">//sys	socket(af int32, typ int32, protocol int32) (handle Handle, err error) [failretval==InvalidHandle] = ws2_32.socket</span>
+<span id="L524" class="ln">   524</span>	<span class="comment">//sys	Setsockopt(s Handle, level int32, optname int32, optval *byte, optlen int32) (err error) [failretval==socket_error] = ws2_32.setsockopt</span>
+<span id="L525" class="ln">   525</span>	<span class="comment">//sys	Getsockopt(s Handle, level int32, optname int32, optval *byte, optlen *int32) (err error) [failretval==socket_error] = ws2_32.getsockopt</span>
+<span id="L526" class="ln">   526</span>	<span class="comment">//sys	bind(s Handle, name unsafe.Pointer, namelen int32) (err error) [failretval==socket_error] = ws2_32.bind</span>
+<span id="L527" class="ln">   527</span>	<span class="comment">//sys	connect(s Handle, name unsafe.Pointer, namelen int32) (err error) [failretval==socket_error] = ws2_32.connect</span>
+<span id="L528" class="ln">   528</span>	<span class="comment">//sys	getsockname(s Handle, rsa *RawSockaddrAny, addrlen *int32) (err error) [failretval==socket_error] = ws2_32.getsockname</span>
+<span id="L529" class="ln">   529</span>	<span class="comment">//sys	getpeername(s Handle, rsa *RawSockaddrAny, addrlen *int32) (err error) [failretval==socket_error] = ws2_32.getpeername</span>
+<span id="L530" class="ln">   530</span>	<span class="comment">//sys	listen(s Handle, backlog int32) (err error) [failretval==socket_error] = ws2_32.listen</span>
+<span id="L531" class="ln">   531</span>	<span class="comment">//sys	shutdown(s Handle, how int32) (err error) [failretval==socket_error] = ws2_32.shutdown</span>
+<span id="L532" class="ln">   532</span>	<span class="comment">//sys	Closesocket(s Handle) (err error) [failretval==socket_error] = ws2_32.closesocket</span>
+<span id="L533" class="ln">   533</span>	<span class="comment">//sys	AcceptEx(ls Handle, as Handle, buf *byte, rxdatalen uint32, laddrlen uint32, raddrlen uint32, recvd *uint32, overlapped *Overlapped) (err error) = mswsock.AcceptEx</span>
+<span id="L534" class="ln">   534</span>	<span class="comment">//sys	GetAcceptExSockaddrs(buf *byte, rxdatalen uint32, laddrlen uint32, raddrlen uint32, lrsa **RawSockaddrAny, lrsalen *int32, rrsa **RawSockaddrAny, rrsalen *int32) = mswsock.GetAcceptExSockaddrs</span>
+<span id="L535" class="ln">   535</span>	<span class="comment">//sys	WSARecv(s Handle, bufs *WSABuf, bufcnt uint32, recvd *uint32, flags *uint32, overlapped *Overlapped, croutine *byte) (err error) [failretval==socket_error] = ws2_32.WSARecv</span>
+<span id="L536" class="ln">   536</span>	<span class="comment">//sys	WSASend(s Handle, bufs *WSABuf, bufcnt uint32, sent *uint32, flags uint32, overlapped *Overlapped, croutine *byte) (err error) [failretval==socket_error] = ws2_32.WSASend</span>
+<span id="L537" class="ln">   537</span>	<span class="comment">//sys	WSARecvFrom(s Handle, bufs *WSABuf, bufcnt uint32, recvd *uint32, flags *uint32,  from *RawSockaddrAny, fromlen *int32, overlapped *Overlapped, croutine *byte) (err error) [failretval==socket_error] = ws2_32.WSARecvFrom</span>
+<span id="L538" class="ln">   538</span>	<span class="comment">//sys	WSASendTo(s Handle, bufs *WSABuf, bufcnt uint32, sent *uint32, flags uint32, to *RawSockaddrAny, tolen int32,  overlapped *Overlapped, croutine *byte) (err error) [failretval==socket_error] = ws2_32.WSASendTo</span>
+<span id="L539" class="ln">   539</span>	<span class="comment">//sys	GetHostByName(name string) (h *Hostent, err error) [failretval==nil] = ws2_32.gethostbyname</span>
+<span id="L540" class="ln">   540</span>	<span class="comment">//sys	GetServByName(name string, proto string) (s *Servent, err error) [failretval==nil] = ws2_32.getservbyname</span>
+<span id="L541" class="ln">   541</span>	<span class="comment">//sys	Ntohs(netshort uint16) (u uint16) = ws2_32.ntohs</span>
+<span id="L542" class="ln">   542</span>	<span class="comment">//sys	GetProtoByName(name string) (p *Protoent, err error) [failretval==nil] = ws2_32.getprotobyname</span>
+<span id="L543" class="ln">   543</span>	<span class="comment">//sys	DnsQuery(name string, qtype uint16, options uint32, extra *byte, qrs **DNSRecord, pr *byte) (status error) = dnsapi.DnsQuery_W</span>
+<span id="L544" class="ln">   544</span>	<span class="comment">//sys	DnsRecordListFree(rl *DNSRecord, freetype uint32) = dnsapi.DnsRecordListFree</span>
+<span id="L545" class="ln">   545</span>	<span class="comment">//sys	GetAddrInfoW(nodename *uint16, servicename *uint16, hints *AddrinfoW, result **AddrinfoW) (sockerr error) = ws2_32.GetAddrInfoW</span>
+<span id="L546" class="ln">   546</span>	<span class="comment">//sys	FreeAddrInfoW(addrinfo *AddrinfoW) = ws2_32.FreeAddrInfoW</span>
+<span id="L547" class="ln">   547</span>	<span class="comment">//sys	GetIfEntry(pIfRow *MibIfRow) (errcode error) = iphlpapi.GetIfEntry</span>
+<span id="L548" class="ln">   548</span>	<span class="comment">//sys	GetAdaptersInfo(ai *IpAdapterInfo, ol *uint32) (errcode error) = iphlpapi.GetAdaptersInfo</span>
+<span id="L549" class="ln">   549</span>	<span class="comment">//sys	SetFileCompletionNotificationModes(handle Handle, flags uint8) (err error) = kernel32.SetFileCompletionNotificationModes</span>
+<span id="L550" class="ln">   550</span>	<span class="comment">//sys	WSAEnumProtocols(protocols *int32, protocolBuffer *WSAProtocolInfo, bufferLength *uint32) (n int32, err error) [failretval==-1] = ws2_32.WSAEnumProtocolsW</span>
+<span id="L551" class="ln">   551</span>	
+<span id="L552" class="ln">   552</span>	<span class="comment">// For testing: clients can set this flag to force</span>
+<span id="L553" class="ln">   553</span>	<span class="comment">// creation of IPv6 sockets to return EAFNOSUPPORT.</span>
+<span id="L554" class="ln">   554</span>	var SocketDisableIPv6 bool
+<span id="L555" class="ln">   555</span>	
+<span id="L556" class="ln">   556</span>	type RawSockaddrInet4 struct {
+<span id="L557" class="ln">   557</span>		Family uint16
+<span id="L558" class="ln">   558</span>		Port   uint16
+<span id="L559" class="ln">   559</span>		Addr   [4]byte <span class="comment">/* in_addr */</span>
+<span id="L560" class="ln">   560</span>		Zero   [8]uint8
+<span id="L561" class="ln">   561</span>	}
+<span id="L562" class="ln">   562</span>	
+<span id="L563" class="ln">   563</span>	type RawSockaddrInet6 struct {
+<span id="L564" class="ln">   564</span>		Family   uint16
+<span id="L565" class="ln">   565</span>		Port     uint16
+<span id="L566" class="ln">   566</span>		Flowinfo uint32
+<span id="L567" class="ln">   567</span>		Addr     [16]byte <span class="comment">/* in6_addr */</span>
+<span id="L568" class="ln">   568</span>		Scope_id uint32
+<span id="L569" class="ln">   569</span>	}
+<span id="L570" class="ln">   570</span>	
+<span id="L571" class="ln">   571</span>	type RawSockaddr struct {
+<span id="L572" class="ln">   572</span>		Family uint16
+<span id="L573" class="ln">   573</span>		Data   [14]int8
+<span id="L574" class="ln">   574</span>	}
+<span id="L575" class="ln">   575</span>	
+<span id="L576" class="ln">   576</span>	type RawSockaddrAny struct {
+<span id="L577" class="ln">   577</span>		Addr RawSockaddr
+<span id="L578" class="ln">   578</span>		Pad  [96]int8
+<span id="L579" class="ln">   579</span>	}
+<span id="L580" class="ln">   580</span>	
+<span id="L581" class="ln">   581</span>	type Sockaddr interface {
+<span id="L582" class="ln">   582</span>		sockaddr() (ptr unsafe.Pointer, len int32, err error) <span class="comment">// lowercase; only we can define Sockaddrs</span>
+<span id="L583" class="ln">   583</span>	}
+<span id="L584" class="ln">   584</span>	
+<span id="L585" class="ln">   585</span>	type SockaddrInet4 struct {
+<span id="L586" class="ln">   586</span>		Port int
+<span id="L587" class="ln">   587</span>		Addr [4]byte
+<span id="L588" class="ln">   588</span>		raw  RawSockaddrInet4
+<span id="L589" class="ln">   589</span>	}
+<span id="L590" class="ln">   590</span>	
+<span id="L591" class="ln">   591</span>	func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, int32, error) {
+<span id="L592" class="ln">   592</span>		if sa.Port &lt; 0 || sa.Port &gt; 0xFFFF {
+<span id="L593" class="ln">   593</span>			return nil, 0, EINVAL
+<span id="L594" class="ln">   594</span>		}
+<span id="L595" class="ln">   595</span>		sa.raw.Family = AF_INET
+<span id="L596" class="ln">   596</span>		p := (*[2]byte)(unsafe.Pointer(&amp;sa.raw.Port))
+<span id="L597" class="ln">   597</span>		p[0] = byte(sa.Port &gt;&gt; 8)
+<span id="L598" class="ln">   598</span>		p[1] = byte(sa.Port)
+<span id="L599" class="ln">   599</span>		for i := 0; i &lt; len(sa.Addr); i++ {
+<span id="L600" class="ln">   600</span>			sa.raw.Addr[i] = sa.Addr[i]
+<span id="L601" class="ln">   601</span>		}
+<span id="L602" class="ln">   602</span>		return unsafe.Pointer(&amp;sa.raw), int32(unsafe.Sizeof(sa.raw)), nil
+<span id="L603" class="ln">   603</span>	}
+<span id="L604" class="ln">   604</span>	
+<span id="L605" class="ln">   605</span>	type SockaddrInet6 struct {
+<span id="L606" class="ln">   606</span>		Port   int
+<span id="L607" class="ln">   607</span>		ZoneId uint32
+<span id="L608" class="ln">   608</span>		Addr   [16]byte
+<span id="L609" class="ln">   609</span>		raw    RawSockaddrInet6
+<span id="L610" class="ln">   610</span>	}
+<span id="L611" class="ln">   611</span>	
+<span id="L612" class="ln">   612</span>	func (sa *SockaddrInet6) sockaddr() (unsafe.Pointer, int32, error) {
+<span id="L613" class="ln">   613</span>		if sa.Port &lt; 0 || sa.Port &gt; 0xFFFF {
+<span id="L614" class="ln">   614</span>			return nil, 0, EINVAL
+<span id="L615" class="ln">   615</span>		}
+<span id="L616" class="ln">   616</span>		sa.raw.Family = AF_INET6
+<span id="L617" class="ln">   617</span>		p := (*[2]byte)(unsafe.Pointer(&amp;sa.raw.Port))
+<span id="L618" class="ln">   618</span>		p[0] = byte(sa.Port &gt;&gt; 8)
+<span id="L619" class="ln">   619</span>		p[1] = byte(sa.Port)
+<span id="L620" class="ln">   620</span>		sa.raw.Scope_id = sa.ZoneId
+<span id="L621" class="ln">   621</span>		for i := 0; i &lt; len(sa.Addr); i++ {
+<span id="L622" class="ln">   622</span>			sa.raw.Addr[i] = sa.Addr[i]
+<span id="L623" class="ln">   623</span>		}
+<span id="L624" class="ln">   624</span>		return unsafe.Pointer(&amp;sa.raw), int32(unsafe.Sizeof(sa.raw)), nil
+<span id="L625" class="ln">   625</span>	}
+<span id="L626" class="ln">   626</span>	
+<span id="L627" class="ln">   627</span>	type SockaddrUnix struct {
+<span id="L628" class="ln">   628</span>		Name string
+<span id="L629" class="ln">   629</span>	}
+<span id="L630" class="ln">   630</span>	
+<span id="L631" class="ln">   631</span>	func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, int32, error) {
+<span id="L632" class="ln">   632</span>		<span class="comment">// TODO(brainman): implement SockaddrUnix.sockaddr()</span>
+<span id="L633" class="ln">   633</span>		return nil, 0, EWINDOWS
+<span id="L634" class="ln">   634</span>	}
+<span id="L635" class="ln">   635</span>	
+<span id="L636" class="ln">   636</span>	func (rsa *RawSockaddrAny) Sockaddr() (Sockaddr, error) {
+<span id="L637" class="ln">   637</span>		switch rsa.Addr.Family {
+<span id="L638" class="ln">   638</span>		case AF_UNIX:
+<span id="L639" class="ln">   639</span>			return nil, EWINDOWS
+<span id="L640" class="ln">   640</span>	
+<span id="L641" class="ln">   641</span>		case AF_INET:
+<span id="L642" class="ln">   642</span>			pp := (*RawSockaddrInet4)(unsafe.Pointer(rsa))
+<span id="L643" class="ln">   643</span>			sa := new(SockaddrInet4)
+<span id="L644" class="ln">   644</span>			p := (*[2]byte)(unsafe.Pointer(&amp;pp.Port))
+<span id="L645" class="ln">   645</span>			sa.Port = int(p[0])&lt;&lt;8 + int(p[1])
+<span id="L646" class="ln">   646</span>			for i := 0; i &lt; len(sa.Addr); i++ {
+<span id="L647" class="ln">   647</span>				sa.Addr[i] = pp.Addr[i]
+<span id="L648" class="ln">   648</span>			}
+<span id="L649" class="ln">   649</span>			return sa, nil
+<span id="L650" class="ln">   650</span>	
+<span id="L651" class="ln">   651</span>		case AF_INET6:
+<span id="L652" class="ln">   652</span>			pp := (*RawSockaddrInet6)(unsafe.Pointer(rsa))
+<span id="L653" class="ln">   653</span>			sa := new(SockaddrInet6)
+<span id="L654" class="ln">   654</span>			p := (*[2]byte)(unsafe.Pointer(&amp;pp.Port))
+<span id="L655" class="ln">   655</span>			sa.Port = int(p[0])&lt;&lt;8 + int(p[1])
+<span id="L656" class="ln">   656</span>			sa.ZoneId = pp.Scope_id
+<span id="L657" class="ln">   657</span>			for i := 0; i &lt; len(sa.Addr); i++ {
+<span id="L658" class="ln">   658</span>				sa.Addr[i] = pp.Addr[i]
+<span id="L659" class="ln">   659</span>			}
+<span id="L660" class="ln">   660</span>			return sa, nil
+<span id="L661" class="ln">   661</span>		}
+<span id="L662" class="ln">   662</span>		return nil, EAFNOSUPPORT
+<span id="L663" class="ln">   663</span>	}
+<span id="L664" class="ln">   664</span>	
+<span id="L665" class="ln">   665</span>	func Socket(domain, typ, proto int) (fd Handle, err error) {
+<span id="L666" class="ln">   666</span>		if domain == AF_INET6 &amp;&amp; SocketDisableIPv6 {
+<span id="L667" class="ln">   667</span>			return InvalidHandle, EAFNOSUPPORT
+<span id="L668" class="ln">   668</span>		}
+<span id="L669" class="ln">   669</span>		return socket(int32(domain), int32(typ), int32(proto))
+<span id="L670" class="ln">   670</span>	}
+<span id="L671" class="ln">   671</span>	
+<span id="L672" class="ln">   672</span>	func SetsockoptInt(fd Handle, level, opt int, value int) (err error) {
+<span id="L673" class="ln">   673</span>		v := int32(value)
+<span id="L674" class="ln">   674</span>		return Setsockopt(fd, int32(level), int32(opt), (*byte)(unsafe.Pointer(&amp;v)), int32(unsafe.Sizeof(v)))
+<span id="L675" class="ln">   675</span>	}
+<span id="L676" class="ln">   676</span>	
+<span id="L677" class="ln">   677</span>	func Bind(fd Handle, sa Sockaddr) (err error) {
+<span id="L678" class="ln">   678</span>		ptr, n, err := sa.sockaddr()
+<span id="L679" class="ln">   679</span>		if err != nil {
+<span id="L680" class="ln">   680</span>			return err
+<span id="L681" class="ln">   681</span>		}
+<span id="L682" class="ln">   682</span>		return bind(fd, ptr, n)
+<span id="L683" class="ln">   683</span>	}
+<span id="L684" class="ln">   684</span>	
+<span id="L685" class="ln">   685</span>	func Connect(fd Handle, sa Sockaddr) (err error) {
+<span id="L686" class="ln">   686</span>		ptr, n, err := sa.sockaddr()
+<span id="L687" class="ln">   687</span>		if err != nil {
+<span id="L688" class="ln">   688</span>			return err
+<span id="L689" class="ln">   689</span>		}
+<span id="L690" class="ln">   690</span>		return connect(fd, ptr, n)
+<span id="L691" class="ln">   691</span>	}
+<span id="L692" class="ln">   692</span>	
+<span id="L693" class="ln">   693</span>	func Getsockname(fd Handle) (sa Sockaddr, err error) {
+<span id="L694" class="ln">   694</span>		var rsa RawSockaddrAny
+<span id="L695" class="ln">   695</span>		l := int32(unsafe.Sizeof(rsa))
+<span id="L696" class="ln">   696</span>		if err = getsockname(fd, &amp;rsa, &amp;l); err != nil {
+<span id="L697" class="ln">   697</span>			return
+<span id="L698" class="ln">   698</span>		}
+<span id="L699" class="ln">   699</span>		return rsa.Sockaddr()
+<span id="L700" class="ln">   700</span>	}
+<span id="L701" class="ln">   701</span>	
+<span id="L702" class="ln">   702</span>	func Getpeername(fd Handle) (sa Sockaddr, err error) {
+<span id="L703" class="ln">   703</span>		var rsa RawSockaddrAny
+<span id="L704" class="ln">   704</span>		l := int32(unsafe.Sizeof(rsa))
+<span id="L705" class="ln">   705</span>		if err = getpeername(fd, &amp;rsa, &amp;l); err != nil {
+<span id="L706" class="ln">   706</span>			return
+<span id="L707" class="ln">   707</span>		}
+<span id="L708" class="ln">   708</span>		return rsa.Sockaddr()
+<span id="L709" class="ln">   709</span>	}
+<span id="L710" class="ln">   710</span>	
+<span id="L711" class="ln">   711</span>	func Listen(s Handle, n int) (err error) {
+<span id="L712" class="ln">   712</span>		return listen(s, int32(n))
+<span id="L713" class="ln">   713</span>	}
+<span id="L714" class="ln">   714</span>	
+<span id="L715" class="ln">   715</span>	func Shutdown(fd Handle, how int) (err error) {
+<span id="L716" class="ln">   716</span>		return shutdown(fd, int32(how))
+<span id="L717" class="ln">   717</span>	}
+<span id="L718" class="ln">   718</span>	
+<span id="L719" class="ln">   719</span>	func WSASendto(s Handle, bufs *WSABuf, bufcnt uint32, sent *uint32, flags uint32, to Sockaddr, overlapped *Overlapped, croutine *byte) (err error) {
+<span id="L720" class="ln">   720</span>		rsa, l, err := to.sockaddr()
+<span id="L721" class="ln">   721</span>		if err != nil {
+<span id="L722" class="ln">   722</span>			return err
+<span id="L723" class="ln">   723</span>		}
+<span id="L724" class="ln">   724</span>		return WSASendTo(s, bufs, bufcnt, sent, flags, (*RawSockaddrAny)(unsafe.Pointer(rsa)), l, overlapped, croutine)
+<span id="L725" class="ln">   725</span>	}
+<span id="L726" class="ln">   726</span>	
+<span id="L727" class="ln">   727</span>	func LoadGetAddrInfo() error {
+<span id="L728" class="ln">   728</span>		return procGetAddrInfoW.Find()
+<span id="L729" class="ln">   729</span>	}
+<span id="L730" class="ln">   730</span>	
+<span id="L731" class="ln">   731</span>	var connectExFunc struct {
+<span id="L732" class="ln">   732</span>		once sync.Once
+<span id="L733" class="ln">   733</span>		addr uintptr
+<span id="L734" class="ln">   734</span>		err  error
+<span id="L735" class="ln">   735</span>	}
+<span id="L736" class="ln">   736</span>	
+<span id="L737" class="ln">   737</span>	func LoadConnectEx() error {
+<span id="L738" class="ln">   738</span>		connectExFunc.once.Do(func() {
+<span id="L739" class="ln">   739</span>			var s Handle
+<span id="L740" class="ln">   740</span>			s, connectExFunc.err = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+<span id="L741" class="ln">   741</span>			if connectExFunc.err != nil {
+<span id="L742" class="ln">   742</span>				return
+<span id="L743" class="ln">   743</span>			}
+<span id="L744" class="ln">   744</span>			defer CloseHandle(s)
+<span id="L745" class="ln">   745</span>			var n uint32
+<span id="L746" class="ln">   746</span>			connectExFunc.err = WSAIoctl(s,
+<span id="L747" class="ln">   747</span>				SIO_GET_EXTENSION_FUNCTION_POINTER,
+<span id="L748" class="ln">   748</span>				(*byte)(unsafe.Pointer(&amp;WSAID_CONNECTEX)),
+<span id="L749" class="ln">   749</span>				uint32(unsafe.Sizeof(WSAID_CONNECTEX)),
+<span id="L750" class="ln">   750</span>				(*byte)(unsafe.Pointer(&amp;connectExFunc.addr)),
+<span id="L751" class="ln">   751</span>				uint32(unsafe.Sizeof(connectExFunc.addr)),
+<span id="L752" class="ln">   752</span>				&amp;n, nil, 0)
+<span id="L753" class="ln">   753</span>		})
+<span id="L754" class="ln">   754</span>		return connectExFunc.err
+<span id="L755" class="ln">   755</span>	}
+<span id="L756" class="ln">   756</span>	
+<span id="L757" class="ln">   757</span>	func connectEx(s Handle, name unsafe.Pointer, namelen int32, sendBuf *byte, sendDataLen uint32, bytesSent *uint32, overlapped *Overlapped) (err error) {
+<span id="L758" class="ln">   758</span>		r1, _, e1 := Syscall9(connectExFunc.addr, 7, uintptr(s), uintptr(name), uintptr(namelen), uintptr(unsafe.Pointer(sendBuf)), uintptr(sendDataLen), uintptr(unsafe.Pointer(bytesSent)), uintptr(unsafe.Pointer(overlapped)), 0, 0)
+<span id="L759" class="ln">   759</span>		if r1 == 0 {
+<span id="L760" class="ln">   760</span>			if e1 != 0 {
+<span id="L761" class="ln">   761</span>				err = error(e1)
+<span id="L762" class="ln">   762</span>			} else {
+<span id="L763" class="ln">   763</span>				err = EINVAL
+<span id="L764" class="ln">   764</span>			}
+<span id="L765" class="ln">   765</span>		}
+<span id="L766" class="ln">   766</span>		return
+<span id="L767" class="ln">   767</span>	}
+<span id="L768" class="ln">   768</span>	
+<span id="L769" class="ln">   769</span>	func ConnectEx(fd Handle, sa Sockaddr, sendBuf *byte, sendDataLen uint32, bytesSent *uint32, overlapped *Overlapped) error {
+<span id="L770" class="ln">   770</span>		err := LoadConnectEx()
+<span id="L771" class="ln">   771</span>		if err != nil {
+<span id="L772" class="ln">   772</span>			return errorspkg.New(&#34;failed to find ConnectEx: &#34; + err.Error())
+<span id="L773" class="ln">   773</span>		}
+<span id="L774" class="ln">   774</span>		ptr, n, err := sa.sockaddr()
+<span id="L775" class="ln">   775</span>		if err != nil {
+<span id="L776" class="ln">   776</span>			return err
+<span id="L777" class="ln">   777</span>		}
+<span id="L778" class="ln">   778</span>		return connectEx(fd, ptr, n, sendBuf, sendDataLen, bytesSent, overlapped)
+<span id="L779" class="ln">   779</span>	}
+<span id="L780" class="ln">   780</span>	
+<span id="L781" class="ln">   781</span>	<span class="comment">// Invented structures to support what package os expects.</span>
+<span id="L782" class="ln">   782</span>	type Rusage struct {
+<span id="L783" class="ln">   783</span>		CreationTime Filetime
+<span id="L784" class="ln">   784</span>		ExitTime     Filetime
+<span id="L785" class="ln">   785</span>		KernelTime   Filetime
+<span id="L786" class="ln">   786</span>		UserTime     Filetime
+<span id="L787" class="ln">   787</span>	}
+<span id="L788" class="ln">   788</span>	
+<span id="L789" class="ln">   789</span>	type WaitStatus struct {
+<span id="L790" class="ln">   790</span>		ExitCode uint32
+<span id="L791" class="ln">   791</span>	}
+<span id="L792" class="ln">   792</span>	
+<span id="L793" class="ln">   793</span>	func (w WaitStatus) Exited() bool { return true }
+<span id="L794" class="ln">   794</span>	
+<span id="L795" class="ln">   795</span>	func (w WaitStatus) ExitStatus() int { return int(w.ExitCode) }
+<span id="L796" class="ln">   796</span>	
+<span id="L797" class="ln">   797</span>	func (w WaitStatus) Signal() Signal { return -1 }
+<span id="L798" class="ln">   798</span>	
+<span id="L799" class="ln">   799</span>	func (w WaitStatus) CoreDump() bool { return false }
+<span id="L800" class="ln">   800</span>	
+<span id="L801" class="ln">   801</span>	func (w WaitStatus) Stopped() bool { return false }
+<span id="L802" class="ln">   802</span>	
+<span id="L803" class="ln">   803</span>	func (w WaitStatus) Continued() bool { return false }
+<span id="L804" class="ln">   804</span>	
+<span id="L805" class="ln">   805</span>	func (w WaitStatus) StopSignal() Signal { return -1 }
+<span id="L806" class="ln">   806</span>	
+<span id="L807" class="ln">   807</span>	func (w WaitStatus) Signaled() bool { return false }
+<span id="L808" class="ln">   808</span>	
+<span id="L809" class="ln">   809</span>	func (w WaitStatus) TrapCause() int { return -1 }
+<span id="L810" class="ln">   810</span>	
+<span id="L811" class="ln">   811</span>	<span class="comment">// Timespec is an invented structure on Windows, but here for</span>
+<span id="L812" class="ln">   812</span>	<span class="comment">// consistency with the syscall package for other operating systems.</span>
+<span id="L813" class="ln">   813</span>	type Timespec struct {
+<span id="L814" class="ln">   814</span>		Sec  int64
+<span id="L815" class="ln">   815</span>		Nsec int64
+<span id="L816" class="ln">   816</span>	}
+<span id="L817" class="ln">   817</span>	
+<span id="L818" class="ln">   818</span>	func TimespecToNsec(ts Timespec) int64 { return int64(ts.Sec)*1e9 + int64(ts.Nsec) }
+<span id="L819" class="ln">   819</span>	
+<span id="L820" class="ln">   820</span>	func NsecToTimespec(nsec int64) (ts Timespec) {
+<span id="L821" class="ln">   821</span>		ts.Sec = nsec / 1e9
+<span id="L822" class="ln">   822</span>		ts.Nsec = nsec % 1e9
+<span id="L823" class="ln">   823</span>		return
+<span id="L824" class="ln">   824</span>	}
+<span id="L825" class="ln">   825</span>	
+<span id="L826" class="ln">   826</span>	<span class="comment">// TODO(brainman): fix all needed for net</span>
+<span id="L827" class="ln">   827</span>	
+<span id="L828" class="ln">   828</span>	func Accept(fd Handle) (nfd Handle, sa Sockaddr, err error) { return 0, nil, EWINDOWS }
+<span id="L829" class="ln">   829</span>	func Recvfrom(fd Handle, p []byte, flags int) (n int, from Sockaddr, err error) {
+<span id="L830" class="ln">   830</span>		return 0, nil, EWINDOWS
+<span id="L831" class="ln">   831</span>	}
+<span id="L832" class="ln">   832</span>	func Sendto(fd Handle, p []byte, flags int, to Sockaddr) (err error)       { return EWINDOWS }
+<span id="L833" class="ln">   833</span>	func SetsockoptTimeval(fd Handle, level, opt int, tv *Timeval) (err error) { return EWINDOWS }
+<span id="L834" class="ln">   834</span>	
+<span id="L835" class="ln">   835</span>	<span class="comment">// The Linger struct is wrong but we only noticed after Go 1.</span>
+<span id="L836" class="ln">   836</span>	<span class="comment">// sysLinger is the real system call structure.</span>
+<span id="L837" class="ln">   837</span>	
+<span id="L838" class="ln">   838</span>	<span class="comment">// BUG(brainman): The definition of Linger is not appropriate for direct use</span>
+<span id="L839" class="ln">   839</span>	<span class="comment">// with Setsockopt and Getsockopt.</span>
+<span id="L840" class="ln">   840</span>	<span class="comment">// Use SetsockoptLinger instead.</span>
+<span id="L841" class="ln">   841</span>	
+<span id="L842" class="ln">   842</span>	type Linger struct {
+<span id="L843" class="ln">   843</span>		Onoff  int32
+<span id="L844" class="ln">   844</span>		Linger int32
+<span id="L845" class="ln">   845</span>	}
+<span id="L846" class="ln">   846</span>	
+<span id="L847" class="ln">   847</span>	type sysLinger struct {
+<span id="L848" class="ln">   848</span>		Onoff  uint16
+<span id="L849" class="ln">   849</span>		Linger uint16
+<span id="L850" class="ln">   850</span>	}
+<span id="L851" class="ln">   851</span>	
+<span id="L852" class="ln">   852</span>	type IPMreq struct {
+<span id="L853" class="ln">   853</span>		Multiaddr [4]byte <span class="comment">/* in_addr */</span>
+<span id="L854" class="ln">   854</span>		Interface [4]byte <span class="comment">/* in_addr */</span>
+<span id="L855" class="ln">   855</span>	}
+<span id="L856" class="ln">   856</span>	
+<span id="L857" class="ln">   857</span>	type IPv6Mreq struct {
+<span id="L858" class="ln">   858</span>		Multiaddr [16]byte <span class="comment">/* in6_addr */</span>
+<span id="L859" class="ln">   859</span>		Interface uint32
+<span id="L860" class="ln">   860</span>	}
+<span id="L861" class="ln">   861</span>	
+<span id="L862" class="ln">   862</span>	func GetsockoptInt(fd Handle, level, opt int) (int, error) { return -1, EWINDOWS }
+<span id="L863" class="ln">   863</span>	
+<span id="L864" class="ln">   864</span>	func SetsockoptLinger(fd Handle, level, opt int, l *Linger) (err error) {
+<span id="L865" class="ln">   865</span>		sys := sysLinger{Onoff: uint16(l.Onoff), Linger: uint16(l.Linger)}
+<span id="L866" class="ln">   866</span>		return Setsockopt(fd, int32(level), int32(opt), (*byte)(unsafe.Pointer(&amp;sys)), int32(unsafe.Sizeof(sys)))
+<span id="L867" class="ln">   867</span>	}
+<span id="L868" class="ln">   868</span>	
+<span id="L869" class="ln">   869</span>	func SetsockoptInet4Addr(fd Handle, level, opt int, value [4]byte) (err error) {
+<span id="L870" class="ln">   870</span>		return Setsockopt(fd, int32(level), int32(opt), (*byte)(unsafe.Pointer(&amp;value[0])), 4)
+<span id="L871" class="ln">   871</span>	}
+<span id="L872" class="ln">   872</span>	func SetsockoptIPMreq(fd Handle, level, opt int, mreq *IPMreq) (err error) {
+<span id="L873" class="ln">   873</span>		return Setsockopt(fd, int32(level), int32(opt), (*byte)(unsafe.Pointer(mreq)), int32(unsafe.Sizeof(*mreq)))
+<span id="L874" class="ln">   874</span>	}
+<span id="L875" class="ln">   875</span>	func SetsockoptIPv6Mreq(fd Handle, level, opt int, mreq *IPv6Mreq) (err error) { return EWINDOWS }
+<span id="L876" class="ln">   876</span>	
+<span id="L877" class="ln">   877</span>	func Getpid() (pid int) { return int(getCurrentProcessId()) }
+<span id="L878" class="ln">   878</span>	
+<span id="L879" class="ln">   879</span>	func FindFirstFile(name *uint16, data *Win32finddata) (handle Handle, err error) {
+<span id="L880" class="ln">   880</span>		<span class="comment">// NOTE(rsc): The Win32finddata struct is wrong for the system call:</span>
+<span id="L881" class="ln">   881</span>		<span class="comment">// the two paths are each one uint16 short. Use the correct struct,</span>
+<span id="L882" class="ln">   882</span>		<span class="comment">// a win32finddata1, and then copy the results out.</span>
+<span id="L883" class="ln">   883</span>		<span class="comment">// There is no loss of expressivity here, because the final</span>
+<span id="L884" class="ln">   884</span>		<span class="comment">// uint16, if it is used, is supposed to be a NUL, and Go doesn&#39;t need that.</span>
+<span id="L885" class="ln">   885</span>		<span class="comment">// For Go 1.1, we might avoid the allocation of win32finddata1 here</span>
+<span id="L886" class="ln">   886</span>		<span class="comment">// by adding a final Bug [2]uint16 field to the struct and then</span>
+<span id="L887" class="ln">   887</span>		<span class="comment">// adjusting the fields in the result directly.</span>
+<span id="L888" class="ln">   888</span>		var data1 win32finddata1
+<span id="L889" class="ln">   889</span>		handle, err = findFirstFile1(name, &amp;data1)
+<span id="L890" class="ln">   890</span>		if err == nil {
+<span id="L891" class="ln">   891</span>			copyFindData(data, &amp;data1)
+<span id="L892" class="ln">   892</span>		}
+<span id="L893" class="ln">   893</span>		return
+<span id="L894" class="ln">   894</span>	}
+<span id="L895" class="ln">   895</span>	
+<span id="L896" class="ln">   896</span>	func FindNextFile(handle Handle, data *Win32finddata) (err error) {
+<span id="L897" class="ln">   897</span>		var data1 win32finddata1
+<span id="L898" class="ln">   898</span>		err = findNextFile1(handle, &amp;data1)
+<span id="L899" class="ln">   899</span>		if err == nil {
+<span id="L900" class="ln">   900</span>			copyFindData(data, &amp;data1)
+<span id="L901" class="ln">   901</span>		}
+<span id="L902" class="ln">   902</span>		return
+<span id="L903" class="ln">   903</span>	}
+<span id="L904" class="ln">   904</span>	
+<span id="L905" class="ln">   905</span>	<span class="comment">// TODO(brainman): fix all needed for os</span>
+<span id="L906" class="ln">   906</span>	func Getppid() (ppid int) { return -1 }
+<span id="L907" class="ln">   907</span>	
+<span id="L908" class="ln">   908</span>	func Fchdir(fd Handle) (err error)                        { return EWINDOWS }
+<span id="L909" class="ln">   909</span>	func Link(oldpath, newpath string) (err error)            { return EWINDOWS }
+<span id="L910" class="ln">   910</span>	func Symlink(path, link string) (err error)               { return EWINDOWS }
+<span id="L911" class="ln">   911</span>	func Readlink(path string, buf []byte) (n int, err error) { return 0, EWINDOWS }
+<span id="L912" class="ln">   912</span>	
+<span id="L913" class="ln">   913</span>	func Fchmod(fd Handle, mode uint32) (err error)        { return EWINDOWS }
+<span id="L914" class="ln">   914</span>	func Chown(path string, uid int, gid int) (err error)  { return EWINDOWS }
+<span id="L915" class="ln">   915</span>	func Lchown(path string, uid int, gid int) (err error) { return EWINDOWS }
+<span id="L916" class="ln">   916</span>	func Fchown(fd Handle, uid int, gid int) (err error)   { return EWINDOWS }
+<span id="L917" class="ln">   917</span>	
+<span id="L918" class="ln">   918</span>	func Getuid() (uid int)                  { return -1 }
+<span id="L919" class="ln">   919</span>	func Geteuid() (euid int)                { return -1 }
+<span id="L920" class="ln">   920</span>	func Getgid() (gid int)                  { return -1 }
+<span id="L921" class="ln">   921</span>	func Getegid() (egid int)                { return -1 }
+<span id="L922" class="ln">   922</span>	func Getgroups() (gids []int, err error) { return nil, EWINDOWS }
+<span id="L923" class="ln">   923</span>	
+<span id="L924" class="ln">   924</span>	type Signal int
+<span id="L925" class="ln">   925</span>	
+<span id="L926" class="ln">   926</span>	func (s Signal) Signal() {}
+<span id="L927" class="ln">   927</span>	
+<span id="L928" class="ln">   928</span>	func (s Signal) String() string {
+<span id="L929" class="ln">   929</span>		if 0 &lt;= s &amp;&amp; int(s) &lt; len(signals) {
+<span id="L930" class="ln">   930</span>			str := signals[s]
+<span id="L931" class="ln">   931</span>			if str != &#34;&#34; {
+<span id="L932" class="ln">   932</span>				return str
+<span id="L933" class="ln">   933</span>			}
+<span id="L934" class="ln">   934</span>		}
+<span id="L935" class="ln">   935</span>		return &#34;signal &#34; + itoa(int(s))
+<span id="L936" class="ln">   936</span>	}
+<span id="L937" class="ln">   937</span>	
+</pre><p><a href="http://golang.org/src/pkg/syscall/syscall_windows.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

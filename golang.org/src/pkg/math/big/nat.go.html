@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/math/big/nat.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/math/big/nat.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package big implements multi-precision arithmetic (big numbers).</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">// The following numeric types are supported:</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">//</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">//	- Int	signed integers</span>
+<span id="L9" class="ln">     9</span>	<span class="comment">//	- Rat	rational numbers</span>
+<span id="L10" class="ln">    10</span>	<span class="comment">//</span>
+<span id="L11" class="ln">    11</span>	<span class="comment">// Methods are typically of the form:</span>
+<span id="L12" class="ln">    12</span>	<span class="comment">//</span>
+<span id="L13" class="ln">    13</span>	<span class="comment">//	func (z *Int) Op(x, y *Int) *Int	(similar for *Rat)</span>
+<span id="L14" class="ln">    14</span>	<span class="comment">//</span>
+<span id="L15" class="ln">    15</span>	<span class="comment">// and implement operations z = x Op y with the result as receiver; if it</span>
+<span id="L16" class="ln">    16</span>	<span class="comment">// is one of the operands it may be overwritten (and its memory reused).</span>
+<span id="L17" class="ln">    17</span>	<span class="comment">// To enable chaining of operations, the result is also returned. Methods</span>
+<span id="L18" class="ln">    18</span>	<span class="comment">// returning a result other than *Int or *Rat take one of the operands as</span>
+<span id="L19" class="ln">    19</span>	<span class="comment">// the receiver.</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">//</span>
+<span id="L21" class="ln">    21</span>	package big
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	<span class="comment">// This file contains operations on unsigned multi-precision integers.</span>
+<span id="L24" class="ln">    24</span>	<span class="comment">// These are the building blocks for the operations on signed integers</span>
+<span id="L25" class="ln">    25</span>	<span class="comment">// and rationals.</span>
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	import (
+<span id="L28" class="ln">    28</span>		&#34;errors&#34;
+<span id="L29" class="ln">    29</span>		&#34;io&#34;
+<span id="L30" class="ln">    30</span>		&#34;math&#34;
+<span id="L31" class="ln">    31</span>		&#34;math/rand&#34;
+<span id="L32" class="ln">    32</span>		&#34;sync&#34;
+<span id="L33" class="ln">    33</span>	)
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>	<span class="comment">// An unsigned integer x of the form</span>
+<span id="L36" class="ln">    36</span>	<span class="comment">//</span>
+<span id="L37" class="ln">    37</span>	<span class="comment">//   x = x[n-1]*_B^(n-1) + x[n-2]*_B^(n-2) + ... + x[1]*_B + x[0]</span>
+<span id="L38" class="ln">    38</span>	<span class="comment">//</span>
+<span id="L39" class="ln">    39</span>	<span class="comment">// with 0 &lt;= x[i] &lt; _B and 0 &lt;= i &lt; n is stored in a slice of length n,</span>
+<span id="L40" class="ln">    40</span>	<span class="comment">// with the digits x[i] as the slice elements.</span>
+<span id="L41" class="ln">    41</span>	<span class="comment">//</span>
+<span id="L42" class="ln">    42</span>	<span class="comment">// A number is normalized if the slice contains no leading 0 digits.</span>
+<span id="L43" class="ln">    43</span>	<span class="comment">// During arithmetic operations, denormalized values may occur but are</span>
+<span id="L44" class="ln">    44</span>	<span class="comment">// always normalized before returning the final result. The normalized</span>
+<span id="L45" class="ln">    45</span>	<span class="comment">// representation of 0 is the empty or nil slice (length = 0).</span>
+<span id="L46" class="ln">    46</span>	<span class="comment">//</span>
+<span id="L47" class="ln">    47</span>	type nat []Word
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	var (
+<span id="L50" class="ln">    50</span>		natOne = nat{1}
+<span id="L51" class="ln">    51</span>		natTwo = nat{2}
+<span id="L52" class="ln">    52</span>		natTen = nat{10}
+<span id="L53" class="ln">    53</span>	)
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>	func (z nat) clear() {
+<span id="L56" class="ln">    56</span>		for i := range z {
+<span id="L57" class="ln">    57</span>			z[i] = 0
+<span id="L58" class="ln">    58</span>		}
+<span id="L59" class="ln">    59</span>	}
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>	func (z nat) norm() nat {
+<span id="L62" class="ln">    62</span>		i := len(z)
+<span id="L63" class="ln">    63</span>		for i &gt; 0 &amp;&amp; z[i-1] == 0 {
+<span id="L64" class="ln">    64</span>			i--
+<span id="L65" class="ln">    65</span>		}
+<span id="L66" class="ln">    66</span>		return z[0:i]
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	func (z nat) make(n int) nat {
+<span id="L70" class="ln">    70</span>		if n &lt;= cap(z) {
+<span id="L71" class="ln">    71</span>			return z[0:n] <span class="comment">// reuse z</span>
+<span id="L72" class="ln">    72</span>		}
+<span id="L73" class="ln">    73</span>		<span class="comment">// Choosing a good value for e has significant performance impact</span>
+<span id="L74" class="ln">    74</span>		<span class="comment">// because it increases the chance that a value can be reused.</span>
+<span id="L75" class="ln">    75</span>		const e = 4 <span class="comment">// extra capacity</span>
+<span id="L76" class="ln">    76</span>		return make(nat, n, n+e)
+<span id="L77" class="ln">    77</span>	}
+<span id="L78" class="ln">    78</span>	
+<span id="L79" class="ln">    79</span>	func (z nat) setWord(x Word) nat {
+<span id="L80" class="ln">    80</span>		if x == 0 {
+<span id="L81" class="ln">    81</span>			return z.make(0)
+<span id="L82" class="ln">    82</span>		}
+<span id="L83" class="ln">    83</span>		z = z.make(1)
+<span id="L84" class="ln">    84</span>		z[0] = x
+<span id="L85" class="ln">    85</span>		return z
+<span id="L86" class="ln">    86</span>	}
+<span id="L87" class="ln">    87</span>	
+<span id="L88" class="ln">    88</span>	func (z nat) setUint64(x uint64) nat {
+<span id="L89" class="ln">    89</span>		<span class="comment">// single-digit values</span>
+<span id="L90" class="ln">    90</span>		if w := Word(x); uint64(w) == x {
+<span id="L91" class="ln">    91</span>			return z.setWord(w)
+<span id="L92" class="ln">    92</span>		}
+<span id="L93" class="ln">    93</span>	
+<span id="L94" class="ln">    94</span>		<span class="comment">// compute number of words n required to represent x</span>
+<span id="L95" class="ln">    95</span>		n := 0
+<span id="L96" class="ln">    96</span>		for t := x; t &gt; 0; t &gt;&gt;= _W {
+<span id="L97" class="ln">    97</span>			n++
+<span id="L98" class="ln">    98</span>		}
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>		<span class="comment">// split x into n words</span>
+<span id="L101" class="ln">   101</span>		z = z.make(n)
+<span id="L102" class="ln">   102</span>		for i := range z {
+<span id="L103" class="ln">   103</span>			z[i] = Word(x &amp; _M)
+<span id="L104" class="ln">   104</span>			x &gt;&gt;= _W
+<span id="L105" class="ln">   105</span>		}
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>		return z
+<span id="L108" class="ln">   108</span>	}
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>	func (z nat) set(x nat) nat {
+<span id="L111" class="ln">   111</span>		z = z.make(len(x))
+<span id="L112" class="ln">   112</span>		copy(z, x)
+<span id="L113" class="ln">   113</span>		return z
+<span id="L114" class="ln">   114</span>	}
+<span id="L115" class="ln">   115</span>	
+<span id="L116" class="ln">   116</span>	func (z nat) add(x, y nat) nat {
+<span id="L117" class="ln">   117</span>		m := len(x)
+<span id="L118" class="ln">   118</span>		n := len(y)
+<span id="L119" class="ln">   119</span>	
+<span id="L120" class="ln">   120</span>		switch {
+<span id="L121" class="ln">   121</span>		case m &lt; n:
+<span id="L122" class="ln">   122</span>			return z.add(y, x)
+<span id="L123" class="ln">   123</span>		case m == 0:
+<span id="L124" class="ln">   124</span>			<span class="comment">// n == 0 because m &gt;= n; result is 0</span>
+<span id="L125" class="ln">   125</span>			return z.make(0)
+<span id="L126" class="ln">   126</span>		case n == 0:
+<span id="L127" class="ln">   127</span>			<span class="comment">// result is x</span>
+<span id="L128" class="ln">   128</span>			return z.set(x)
+<span id="L129" class="ln">   129</span>		}
+<span id="L130" class="ln">   130</span>		<span class="comment">// m &gt; 0</span>
+<span id="L131" class="ln">   131</span>	
+<span id="L132" class="ln">   132</span>		z = z.make(m + 1)
+<span id="L133" class="ln">   133</span>		c := addVV(z[0:n], x, y)
+<span id="L134" class="ln">   134</span>		if m &gt; n {
+<span id="L135" class="ln">   135</span>			c = addVW(z[n:m], x[n:], c)
+<span id="L136" class="ln">   136</span>		}
+<span id="L137" class="ln">   137</span>		z[m] = c
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>		return z.norm()
+<span id="L140" class="ln">   140</span>	}
+<span id="L141" class="ln">   141</span>	
+<span id="L142" class="ln">   142</span>	func (z nat) sub(x, y nat) nat {
+<span id="L143" class="ln">   143</span>		m := len(x)
+<span id="L144" class="ln">   144</span>		n := len(y)
+<span id="L145" class="ln">   145</span>	
+<span id="L146" class="ln">   146</span>		switch {
+<span id="L147" class="ln">   147</span>		case m &lt; n:
+<span id="L148" class="ln">   148</span>			panic(&#34;underflow&#34;)
+<span id="L149" class="ln">   149</span>		case m == 0:
+<span id="L150" class="ln">   150</span>			<span class="comment">// n == 0 because m &gt;= n; result is 0</span>
+<span id="L151" class="ln">   151</span>			return z.make(0)
+<span id="L152" class="ln">   152</span>		case n == 0:
+<span id="L153" class="ln">   153</span>			<span class="comment">// result is x</span>
+<span id="L154" class="ln">   154</span>			return z.set(x)
+<span id="L155" class="ln">   155</span>		}
+<span id="L156" class="ln">   156</span>		<span class="comment">// m &gt; 0</span>
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>		z = z.make(m)
+<span id="L159" class="ln">   159</span>		c := subVV(z[0:n], x, y)
+<span id="L160" class="ln">   160</span>		if m &gt; n {
+<span id="L161" class="ln">   161</span>			c = subVW(z[n:], x[n:], c)
+<span id="L162" class="ln">   162</span>		}
+<span id="L163" class="ln">   163</span>		if c != 0 {
+<span id="L164" class="ln">   164</span>			panic(&#34;underflow&#34;)
+<span id="L165" class="ln">   165</span>		}
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>		return z.norm()
+<span id="L168" class="ln">   168</span>	}
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>	func (x nat) cmp(y nat) (r int) {
+<span id="L171" class="ln">   171</span>		m := len(x)
+<span id="L172" class="ln">   172</span>		n := len(y)
+<span id="L173" class="ln">   173</span>		if m != n || m == 0 {
+<span id="L174" class="ln">   174</span>			switch {
+<span id="L175" class="ln">   175</span>			case m &lt; n:
+<span id="L176" class="ln">   176</span>				r = -1
+<span id="L177" class="ln">   177</span>			case m &gt; n:
+<span id="L178" class="ln">   178</span>				r = 1
+<span id="L179" class="ln">   179</span>			}
+<span id="L180" class="ln">   180</span>			return
+<span id="L181" class="ln">   181</span>		}
+<span id="L182" class="ln">   182</span>	
+<span id="L183" class="ln">   183</span>		i := m - 1
+<span id="L184" class="ln">   184</span>		for i &gt; 0 &amp;&amp; x[i] == y[i] {
+<span id="L185" class="ln">   185</span>			i--
+<span id="L186" class="ln">   186</span>		}
+<span id="L187" class="ln">   187</span>	
+<span id="L188" class="ln">   188</span>		switch {
+<span id="L189" class="ln">   189</span>		case x[i] &lt; y[i]:
+<span id="L190" class="ln">   190</span>			r = -1
+<span id="L191" class="ln">   191</span>		case x[i] &gt; y[i]:
+<span id="L192" class="ln">   192</span>			r = 1
+<span id="L193" class="ln">   193</span>		}
+<span id="L194" class="ln">   194</span>		return
+<span id="L195" class="ln">   195</span>	}
+<span id="L196" class="ln">   196</span>	
+<span id="L197" class="ln">   197</span>	func (z nat) mulAddWW(x nat, y, r Word) nat {
+<span id="L198" class="ln">   198</span>		m := len(x)
+<span id="L199" class="ln">   199</span>		if m == 0 || y == 0 {
+<span id="L200" class="ln">   200</span>			return z.setWord(r) <span class="comment">// result is r</span>
+<span id="L201" class="ln">   201</span>		}
+<span id="L202" class="ln">   202</span>		<span class="comment">// m &gt; 0</span>
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>		z = z.make(m + 1)
+<span id="L205" class="ln">   205</span>		z[m] = mulAddVWW(z[0:m], x, y, r)
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>		return z.norm()
+<span id="L208" class="ln">   208</span>	}
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>	<span class="comment">// basicMul multiplies x and y and leaves the result in z.</span>
+<span id="L211" class="ln">   211</span>	<span class="comment">// The (non-normalized) result is placed in z[0 : len(x) + len(y)].</span>
+<span id="L212" class="ln">   212</span>	func basicMul(z, x, y nat) {
+<span id="L213" class="ln">   213</span>		z[0 : len(x)+len(y)].clear() <span class="comment">// initialize z</span>
+<span id="L214" class="ln">   214</span>		for i, d := range y {
+<span id="L215" class="ln">   215</span>			if d != 0 {
+<span id="L216" class="ln">   216</span>				z[len(x)+i] = addMulVVW(z[i:i+len(x)], x, d)
+<span id="L217" class="ln">   217</span>			}
+<span id="L218" class="ln">   218</span>		}
+<span id="L219" class="ln">   219</span>	}
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	<span class="comment">// Fast version of z[0:n+n&gt;&gt;1].add(z[0:n+n&gt;&gt;1], x[0:n]) w/o bounds checks.</span>
+<span id="L222" class="ln">   222</span>	<span class="comment">// Factored out for readability - do not use outside karatsuba.</span>
+<span id="L223" class="ln">   223</span>	func karatsubaAdd(z, x nat, n int) {
+<span id="L224" class="ln">   224</span>		if c := addVV(z[0:n], z, x); c != 0 {
+<span id="L225" class="ln">   225</span>			addVW(z[n:n+n&gt;&gt;1], z[n:], c)
+<span id="L226" class="ln">   226</span>		}
+<span id="L227" class="ln">   227</span>	}
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>	<span class="comment">// Like karatsubaAdd, but does subtract.</span>
+<span id="L230" class="ln">   230</span>	func karatsubaSub(z, x nat, n int) {
+<span id="L231" class="ln">   231</span>		if c := subVV(z[0:n], z, x); c != 0 {
+<span id="L232" class="ln">   232</span>			subVW(z[n:n+n&gt;&gt;1], z[n:], c)
+<span id="L233" class="ln">   233</span>		}
+<span id="L234" class="ln">   234</span>	}
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	<span class="comment">// Operands that are shorter than karatsubaThreshold are multiplied using</span>
+<span id="L237" class="ln">   237</span>	<span class="comment">// &#34;grade school&#34; multiplication; for longer operands the Karatsuba algorithm</span>
+<span id="L238" class="ln">   238</span>	<span class="comment">// is used.</span>
+<span id="L239" class="ln">   239</span>	var karatsubaThreshold int = 40 <span class="comment">// computed by calibrate.go</span>
+<span id="L240" class="ln">   240</span>	
+<span id="L241" class="ln">   241</span>	<span class="comment">// karatsuba multiplies x and y and leaves the result in z.</span>
+<span id="L242" class="ln">   242</span>	<span class="comment">// Both x and y must have the same length n and n must be a</span>
+<span id="L243" class="ln">   243</span>	<span class="comment">// power of 2. The result vector z must have len(z) &gt;= 6*n.</span>
+<span id="L244" class="ln">   244</span>	<span class="comment">// The (non-normalized) result is placed in z[0 : 2*n].</span>
+<span id="L245" class="ln">   245</span>	func karatsuba(z, x, y nat) {
+<span id="L246" class="ln">   246</span>		n := len(y)
+<span id="L247" class="ln">   247</span>	
+<span id="L248" class="ln">   248</span>		<span class="comment">// Switch to basic multiplication if numbers are odd or small.</span>
+<span id="L249" class="ln">   249</span>		<span class="comment">// (n is always even if karatsubaThreshold is even, but be</span>
+<span id="L250" class="ln">   250</span>		<span class="comment">// conservative)</span>
+<span id="L251" class="ln">   251</span>		if n&amp;1 != 0 || n &lt; karatsubaThreshold || n &lt; 2 {
+<span id="L252" class="ln">   252</span>			basicMul(z, x, y)
+<span id="L253" class="ln">   253</span>			return
+<span id="L254" class="ln">   254</span>		}
+<span id="L255" class="ln">   255</span>		<span class="comment">// n&amp;1 == 0 &amp;&amp; n &gt;= karatsubaThreshold &amp;&amp; n &gt;= 2</span>
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>		<span class="comment">// Karatsuba multiplication is based on the observation that</span>
+<span id="L258" class="ln">   258</span>		<span class="comment">// for two numbers x and y with:</span>
+<span id="L259" class="ln">   259</span>		<span class="comment">//</span>
+<span id="L260" class="ln">   260</span>		<span class="comment">//   x = x1*b + x0</span>
+<span id="L261" class="ln">   261</span>		<span class="comment">//   y = y1*b + y0</span>
+<span id="L262" class="ln">   262</span>		<span class="comment">//</span>
+<span id="L263" class="ln">   263</span>		<span class="comment">// the product x*y can be obtained with 3 products z2, z1, z0</span>
+<span id="L264" class="ln">   264</span>		<span class="comment">// instead of 4:</span>
+<span id="L265" class="ln">   265</span>		<span class="comment">//</span>
+<span id="L266" class="ln">   266</span>		<span class="comment">//   x*y = x1*y1*b*b + (x1*y0 + x0*y1)*b + x0*y0</span>
+<span id="L267" class="ln">   267</span>		<span class="comment">//       =    z2*b*b +              z1*b +    z0</span>
+<span id="L268" class="ln">   268</span>		<span class="comment">//</span>
+<span id="L269" class="ln">   269</span>		<span class="comment">// with:</span>
+<span id="L270" class="ln">   270</span>		<span class="comment">//</span>
+<span id="L271" class="ln">   271</span>		<span class="comment">//   xd = x1 - x0</span>
+<span id="L272" class="ln">   272</span>		<span class="comment">//   yd = y0 - y1</span>
+<span id="L273" class="ln">   273</span>		<span class="comment">//</span>
+<span id="L274" class="ln">   274</span>		<span class="comment">//   z1 =      xd*yd                    + z2 + z0</span>
+<span id="L275" class="ln">   275</span>		<span class="comment">//      = (x1-x0)*(y0 - y1)             + z2 + z0</span>
+<span id="L276" class="ln">   276</span>		<span class="comment">//      = x1*y0 - x1*y1 - x0*y0 + x0*y1 + z2 + z0</span>
+<span id="L277" class="ln">   277</span>		<span class="comment">//      = x1*y0 -    z2 -    z0 + x0*y1 + z2 + z0</span>
+<span id="L278" class="ln">   278</span>		<span class="comment">//      = x1*y0                 + x0*y1</span>
+<span id="L279" class="ln">   279</span>	
+<span id="L280" class="ln">   280</span>		<span class="comment">// split x, y into &#34;digits&#34;</span>
+<span id="L281" class="ln">   281</span>		n2 := n &gt;&gt; 1              <span class="comment">// n2 &gt;= 1</span>
+<span id="L282" class="ln">   282</span>		x1, x0 := x[n2:], x[0:n2] <span class="comment">// x = x1*b + y0</span>
+<span id="L283" class="ln">   283</span>		y1, y0 := y[n2:], y[0:n2] <span class="comment">// y = y1*b + y0</span>
+<span id="L284" class="ln">   284</span>	
+<span id="L285" class="ln">   285</span>		<span class="comment">// z is used for the result and temporary storage:</span>
+<span id="L286" class="ln">   286</span>		<span class="comment">//</span>
+<span id="L287" class="ln">   287</span>		<span class="comment">//   6*n     5*n     4*n     3*n     2*n     1*n     0*n</span>
+<span id="L288" class="ln">   288</span>		<span class="comment">// z = [z2 copy|z0 copy| xd*yd | yd:xd | x1*y1 | x0*y0 ]</span>
+<span id="L289" class="ln">   289</span>		<span class="comment">//</span>
+<span id="L290" class="ln">   290</span>		<span class="comment">// For each recursive call of karatsuba, an unused slice of</span>
+<span id="L291" class="ln">   291</span>		<span class="comment">// z is passed in that has (at least) half the length of the</span>
+<span id="L292" class="ln">   292</span>		<span class="comment">// caller&#39;s z.</span>
+<span id="L293" class="ln">   293</span>	
+<span id="L294" class="ln">   294</span>		<span class="comment">// compute z0 and z2 with the result &#34;in place&#34; in z</span>
+<span id="L295" class="ln">   295</span>		karatsuba(z, x0, y0)     <span class="comment">// z0 = x0*y0</span>
+<span id="L296" class="ln">   296</span>		karatsuba(z[n:], x1, y1) <span class="comment">// z2 = x1*y1</span>
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>		<span class="comment">// compute xd (or the negative value if underflow occurs)</span>
+<span id="L299" class="ln">   299</span>		s := 1 <span class="comment">// sign of product xd*yd</span>
+<span id="L300" class="ln">   300</span>		xd := z[2*n : 2*n+n2]
+<span id="L301" class="ln">   301</span>		if subVV(xd, x1, x0) != 0 { <span class="comment">// x1-x0</span>
+<span id="L302" class="ln">   302</span>			s = -s
+<span id="L303" class="ln">   303</span>			subVV(xd, x0, x1) <span class="comment">// x0-x1</span>
+<span id="L304" class="ln">   304</span>		}
+<span id="L305" class="ln">   305</span>	
+<span id="L306" class="ln">   306</span>		<span class="comment">// compute yd (or the negative value if underflow occurs)</span>
+<span id="L307" class="ln">   307</span>		yd := z[2*n+n2 : 3*n]
+<span id="L308" class="ln">   308</span>		if subVV(yd, y0, y1) != 0 { <span class="comment">// y0-y1</span>
+<span id="L309" class="ln">   309</span>			s = -s
+<span id="L310" class="ln">   310</span>			subVV(yd, y1, y0) <span class="comment">// y1-y0</span>
+<span id="L311" class="ln">   311</span>		}
+<span id="L312" class="ln">   312</span>	
+<span id="L313" class="ln">   313</span>		<span class="comment">// p = (x1-x0)*(y0-y1) == x1*y0 - x1*y1 - x0*y0 + x0*y1 for s &gt; 0</span>
+<span id="L314" class="ln">   314</span>		<span class="comment">// p = (x0-x1)*(y0-y1) == x0*y0 - x0*y1 - x1*y0 + x1*y1 for s &lt; 0</span>
+<span id="L315" class="ln">   315</span>		p := z[n*3:]
+<span id="L316" class="ln">   316</span>		karatsuba(p, xd, yd)
+<span id="L317" class="ln">   317</span>	
+<span id="L318" class="ln">   318</span>		<span class="comment">// save original z2:z0</span>
+<span id="L319" class="ln">   319</span>		<span class="comment">// (ok to use upper half of z since we&#39;re done recursing)</span>
+<span id="L320" class="ln">   320</span>		r := z[n*4:]
+<span id="L321" class="ln">   321</span>		copy(r, z[:n*2])
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>		<span class="comment">// add up all partial products</span>
+<span id="L324" class="ln">   324</span>		<span class="comment">//</span>
+<span id="L325" class="ln">   325</span>		<span class="comment">//   2*n     n     0</span>
+<span id="L326" class="ln">   326</span>		<span class="comment">// z = [ z2  | z0  ]</span>
+<span id="L327" class="ln">   327</span>		<span class="comment">//   +    [ z0  ]</span>
+<span id="L328" class="ln">   328</span>		<span class="comment">//   +    [ z2  ]</span>
+<span id="L329" class="ln">   329</span>		<span class="comment">//   +    [  p  ]</span>
+<span id="L330" class="ln">   330</span>		<span class="comment">//</span>
+<span id="L331" class="ln">   331</span>		karatsubaAdd(z[n2:], r, n)
+<span id="L332" class="ln">   332</span>		karatsubaAdd(z[n2:], r[n:], n)
+<span id="L333" class="ln">   333</span>		if s &gt; 0 {
+<span id="L334" class="ln">   334</span>			karatsubaAdd(z[n2:], p, n)
+<span id="L335" class="ln">   335</span>		} else {
+<span id="L336" class="ln">   336</span>			karatsubaSub(z[n2:], p, n)
+<span id="L337" class="ln">   337</span>		}
+<span id="L338" class="ln">   338</span>	}
+<span id="L339" class="ln">   339</span>	
+<span id="L340" class="ln">   340</span>	<span class="comment">// alias returns true if x and y share the same base array.</span>
+<span id="L341" class="ln">   341</span>	func alias(x, y nat) bool {
+<span id="L342" class="ln">   342</span>		return cap(x) &gt; 0 &amp;&amp; cap(y) &gt; 0 &amp;&amp; &amp;x[0:cap(x)][cap(x)-1] == &amp;y[0:cap(y)][cap(y)-1]
+<span id="L343" class="ln">   343</span>	}
+<span id="L344" class="ln">   344</span>	
+<span id="L345" class="ln">   345</span>	<span class="comment">// addAt implements z += x&lt;&lt;(_W*i); z must be long enough.</span>
+<span id="L346" class="ln">   346</span>	<span class="comment">// (we don&#39;t use nat.add because we need z to stay the same</span>
+<span id="L347" class="ln">   347</span>	<span class="comment">// slice, and we don&#39;t need to normalize z after each addition)</span>
+<span id="L348" class="ln">   348</span>	func addAt(z, x nat, i int) {
+<span id="L349" class="ln">   349</span>		if n := len(x); n &gt; 0 {
+<span id="L350" class="ln">   350</span>			if c := addVV(z[i:i+n], z[i:], x); c != 0 {
+<span id="L351" class="ln">   351</span>				j := i + n
+<span id="L352" class="ln">   352</span>				if j &lt; len(z) {
+<span id="L353" class="ln">   353</span>					addVW(z[j:], z[j:], c)
+<span id="L354" class="ln">   354</span>				}
+<span id="L355" class="ln">   355</span>			}
+<span id="L356" class="ln">   356</span>		}
+<span id="L357" class="ln">   357</span>	}
+<span id="L358" class="ln">   358</span>	
+<span id="L359" class="ln">   359</span>	func max(x, y int) int {
+<span id="L360" class="ln">   360</span>		if x &gt; y {
+<span id="L361" class="ln">   361</span>			return x
+<span id="L362" class="ln">   362</span>		}
+<span id="L363" class="ln">   363</span>		return y
+<span id="L364" class="ln">   364</span>	}
+<span id="L365" class="ln">   365</span>	
+<span id="L366" class="ln">   366</span>	<span class="comment">// karatsubaLen computes an approximation to the maximum k &lt;= n such that</span>
+<span id="L367" class="ln">   367</span>	<span class="comment">// k = p&lt;&lt;i for a number p &lt;= karatsubaThreshold and an i &gt;= 0. Thus, the</span>
+<span id="L368" class="ln">   368</span>	<span class="comment">// result is the largest number that can be divided repeatedly by 2 before</span>
+<span id="L369" class="ln">   369</span>	<span class="comment">// becoming about the value of karatsubaThreshold.</span>
+<span id="L370" class="ln">   370</span>	func karatsubaLen(n int) int {
+<span id="L371" class="ln">   371</span>		i := uint(0)
+<span id="L372" class="ln">   372</span>		for n &gt; karatsubaThreshold {
+<span id="L373" class="ln">   373</span>			n &gt;&gt;= 1
+<span id="L374" class="ln">   374</span>			i++
+<span id="L375" class="ln">   375</span>		}
+<span id="L376" class="ln">   376</span>		return n &lt;&lt; i
+<span id="L377" class="ln">   377</span>	}
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>	func (z nat) mul(x, y nat) nat {
+<span id="L380" class="ln">   380</span>		m := len(x)
+<span id="L381" class="ln">   381</span>		n := len(y)
+<span id="L382" class="ln">   382</span>	
+<span id="L383" class="ln">   383</span>		switch {
+<span id="L384" class="ln">   384</span>		case m &lt; n:
+<span id="L385" class="ln">   385</span>			return z.mul(y, x)
+<span id="L386" class="ln">   386</span>		case m == 0 || n == 0:
+<span id="L387" class="ln">   387</span>			return z.make(0)
+<span id="L388" class="ln">   388</span>		case n == 1:
+<span id="L389" class="ln">   389</span>			return z.mulAddWW(x, y[0], 0)
+<span id="L390" class="ln">   390</span>		}
+<span id="L391" class="ln">   391</span>		<span class="comment">// m &gt;= n &gt; 1</span>
+<span id="L392" class="ln">   392</span>	
+<span id="L393" class="ln">   393</span>		<span class="comment">// determine if z can be reused</span>
+<span id="L394" class="ln">   394</span>		if alias(z, x) || alias(z, y) {
+<span id="L395" class="ln">   395</span>			z = nil <span class="comment">// z is an alias for x or y - cannot reuse</span>
+<span id="L396" class="ln">   396</span>		}
+<span id="L397" class="ln">   397</span>	
+<span id="L398" class="ln">   398</span>		<span class="comment">// use basic multiplication if the numbers are small</span>
+<span id="L399" class="ln">   399</span>		if n &lt; karatsubaThreshold {
+<span id="L400" class="ln">   400</span>			z = z.make(m + n)
+<span id="L401" class="ln">   401</span>			basicMul(z, x, y)
+<span id="L402" class="ln">   402</span>			return z.norm()
+<span id="L403" class="ln">   403</span>		}
+<span id="L404" class="ln">   404</span>		<span class="comment">// m &gt;= n &amp;&amp; n &gt;= karatsubaThreshold &amp;&amp; n &gt;= 2</span>
+<span id="L405" class="ln">   405</span>	
+<span id="L406" class="ln">   406</span>		<span class="comment">// determine Karatsuba length k such that</span>
+<span id="L407" class="ln">   407</span>		<span class="comment">//</span>
+<span id="L408" class="ln">   408</span>		<span class="comment">//   x = xh*b + x0  (0 &lt;= x0 &lt; b)</span>
+<span id="L409" class="ln">   409</span>		<span class="comment">//   y = yh*b + y0  (0 &lt;= y0 &lt; b)</span>
+<span id="L410" class="ln">   410</span>		<span class="comment">//   b = 1&lt;&lt;(_W*k)  (&#34;base&#34; of digits xi, yi)</span>
+<span id="L411" class="ln">   411</span>		<span class="comment">//</span>
+<span id="L412" class="ln">   412</span>		k := karatsubaLen(n)
+<span id="L413" class="ln">   413</span>		<span class="comment">// k &lt;= n</span>
+<span id="L414" class="ln">   414</span>	
+<span id="L415" class="ln">   415</span>		<span class="comment">// multiply x0 and y0 via Karatsuba</span>
+<span id="L416" class="ln">   416</span>		x0 := x[0:k]              <span class="comment">// x0 is not normalized</span>
+<span id="L417" class="ln">   417</span>		y0 := y[0:k]              <span class="comment">// y0 is not normalized</span>
+<span id="L418" class="ln">   418</span>		z = z.make(max(6*k, m+n)) <span class="comment">// enough space for karatsuba of x0*y0 and full result of x*y</span>
+<span id="L419" class="ln">   419</span>		karatsuba(z, x0, y0)
+<span id="L420" class="ln">   420</span>		z = z[0 : m+n]  <span class="comment">// z has final length but may be incomplete</span>
+<span id="L421" class="ln">   421</span>		z[2*k:].clear() <span class="comment">// upper portion of z is garbage (and 2*k &lt;= m+n since k &lt;= n &lt;= m)</span>
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>		<span class="comment">// If xh != 0 or yh != 0, add the missing terms to z. For</span>
+<span id="L424" class="ln">   424</span>		<span class="comment">//</span>
+<span id="L425" class="ln">   425</span>		<span class="comment">//   xh = xi*b^i + ... + x2*b^2 + x1*b (0 &lt;= xi &lt; b)</span>
+<span id="L426" class="ln">   426</span>		<span class="comment">//   yh =                         y1*b (0 &lt;= y1 &lt; b)</span>
+<span id="L427" class="ln">   427</span>		<span class="comment">//</span>
+<span id="L428" class="ln">   428</span>		<span class="comment">// the missing terms are</span>
+<span id="L429" class="ln">   429</span>		<span class="comment">//</span>
+<span id="L430" class="ln">   430</span>		<span class="comment">//   x0*y1*b and xi*y0*b^i, xi*y1*b^(i+1) for i &gt; 0</span>
+<span id="L431" class="ln">   431</span>		<span class="comment">//</span>
+<span id="L432" class="ln">   432</span>		<span class="comment">// since all the yi for i &gt; 1 are 0 by choice of k: If any of them</span>
+<span id="L433" class="ln">   433</span>		<span class="comment">// were &gt; 0, then yh &gt;= b^2 and thus y &gt;= b^2. Then k&#39; = k*2 would</span>
+<span id="L434" class="ln">   434</span>		<span class="comment">// be a larger valid threshold contradicting the assumption about k.</span>
+<span id="L435" class="ln">   435</span>		<span class="comment">//</span>
+<span id="L436" class="ln">   436</span>		if k &lt; n || m != n {
+<span id="L437" class="ln">   437</span>			var t nat
+<span id="L438" class="ln">   438</span>	
+<span id="L439" class="ln">   439</span>			<span class="comment">// add x0*y1*b</span>
+<span id="L440" class="ln">   440</span>			x0 := x0.norm()
+<span id="L441" class="ln">   441</span>			y1 := y[k:]       <span class="comment">// y1 is normalized because y is</span>
+<span id="L442" class="ln">   442</span>			t = t.mul(x0, y1) <span class="comment">// update t so we don&#39;t lose t&#39;s underlying array</span>
+<span id="L443" class="ln">   443</span>			addAt(z, t, k)
+<span id="L444" class="ln">   444</span>	
+<span id="L445" class="ln">   445</span>			<span class="comment">// add xi*y0&lt;&lt;i, xi*y1*b&lt;&lt;(i+k)</span>
+<span id="L446" class="ln">   446</span>			y0 := y0.norm()
+<span id="L447" class="ln">   447</span>			for i := k; i &lt; len(x); i += k {
+<span id="L448" class="ln">   448</span>				xi := x[i:]
+<span id="L449" class="ln">   449</span>				if len(xi) &gt; k {
+<span id="L450" class="ln">   450</span>					xi = xi[:k]
+<span id="L451" class="ln">   451</span>				}
+<span id="L452" class="ln">   452</span>				xi = xi.norm()
+<span id="L453" class="ln">   453</span>				t = t.mul(xi, y0)
+<span id="L454" class="ln">   454</span>				addAt(z, t, i)
+<span id="L455" class="ln">   455</span>				t = t.mul(xi, y1)
+<span id="L456" class="ln">   456</span>				addAt(z, t, i+k)
+<span id="L457" class="ln">   457</span>			}
+<span id="L458" class="ln">   458</span>		}
+<span id="L459" class="ln">   459</span>	
+<span id="L460" class="ln">   460</span>		return z.norm()
+<span id="L461" class="ln">   461</span>	}
+<span id="L462" class="ln">   462</span>	
+<span id="L463" class="ln">   463</span>	<span class="comment">// mulRange computes the product of all the unsigned integers in the</span>
+<span id="L464" class="ln">   464</span>	<span class="comment">// range [a, b] inclusively. If a &gt; b (empty range), the result is 1.</span>
+<span id="L465" class="ln">   465</span>	func (z nat) mulRange(a, b uint64) nat {
+<span id="L466" class="ln">   466</span>		switch {
+<span id="L467" class="ln">   467</span>		case a == 0:
+<span id="L468" class="ln">   468</span>			<span class="comment">// cut long ranges short (optimization)</span>
+<span id="L469" class="ln">   469</span>			return z.setUint64(0)
+<span id="L470" class="ln">   470</span>		case a &gt; b:
+<span id="L471" class="ln">   471</span>			return z.setUint64(1)
+<span id="L472" class="ln">   472</span>		case a == b:
+<span id="L473" class="ln">   473</span>			return z.setUint64(a)
+<span id="L474" class="ln">   474</span>		case a+1 == b:
+<span id="L475" class="ln">   475</span>			return z.mul(nat(nil).setUint64(a), nat(nil).setUint64(b))
+<span id="L476" class="ln">   476</span>		}
+<span id="L477" class="ln">   477</span>		m := (a + b) / 2
+<span id="L478" class="ln">   478</span>		return z.mul(nat(nil).mulRange(a, m), nat(nil).mulRange(m+1, b))
+<span id="L479" class="ln">   479</span>	}
+<span id="L480" class="ln">   480</span>	
+<span id="L481" class="ln">   481</span>	<span class="comment">// q = (x-r)/y, with 0 &lt;= r &lt; y</span>
+<span id="L482" class="ln">   482</span>	func (z nat) divW(x nat, y Word) (q nat, r Word) {
+<span id="L483" class="ln">   483</span>		m := len(x)
+<span id="L484" class="ln">   484</span>		switch {
+<span id="L485" class="ln">   485</span>		case y == 0:
+<span id="L486" class="ln">   486</span>			panic(&#34;division by zero&#34;)
+<span id="L487" class="ln">   487</span>		case y == 1:
+<span id="L488" class="ln">   488</span>			q = z.set(x) <span class="comment">// result is x</span>
+<span id="L489" class="ln">   489</span>			return
+<span id="L490" class="ln">   490</span>		case m == 0:
+<span id="L491" class="ln">   491</span>			q = z.make(0) <span class="comment">// result is 0</span>
+<span id="L492" class="ln">   492</span>			return
+<span id="L493" class="ln">   493</span>		}
+<span id="L494" class="ln">   494</span>		<span class="comment">// m &gt; 0</span>
+<span id="L495" class="ln">   495</span>		z = z.make(m)
+<span id="L496" class="ln">   496</span>		r = divWVW(z, 0, x, y)
+<span id="L497" class="ln">   497</span>		q = z.norm()
+<span id="L498" class="ln">   498</span>		return
+<span id="L499" class="ln">   499</span>	}
+<span id="L500" class="ln">   500</span>	
+<span id="L501" class="ln">   501</span>	func (z nat) div(z2, u, v nat) (q, r nat) {
+<span id="L502" class="ln">   502</span>		if len(v) == 0 {
+<span id="L503" class="ln">   503</span>			panic(&#34;division by zero&#34;)
+<span id="L504" class="ln">   504</span>		}
+<span id="L505" class="ln">   505</span>	
+<span id="L506" class="ln">   506</span>		if u.cmp(v) &lt; 0 {
+<span id="L507" class="ln">   507</span>			q = z.make(0)
+<span id="L508" class="ln">   508</span>			r = z2.set(u)
+<span id="L509" class="ln">   509</span>			return
+<span id="L510" class="ln">   510</span>		}
+<span id="L511" class="ln">   511</span>	
+<span id="L512" class="ln">   512</span>		if len(v) == 1 {
+<span id="L513" class="ln">   513</span>			var r2 Word
+<span id="L514" class="ln">   514</span>			q, r2 = z.divW(u, v[0])
+<span id="L515" class="ln">   515</span>			r = z2.setWord(r2)
+<span id="L516" class="ln">   516</span>			return
+<span id="L517" class="ln">   517</span>		}
+<span id="L518" class="ln">   518</span>	
+<span id="L519" class="ln">   519</span>		q, r = z.divLarge(z2, u, v)
+<span id="L520" class="ln">   520</span>		return
+<span id="L521" class="ln">   521</span>	}
+<span id="L522" class="ln">   522</span>	
+<span id="L523" class="ln">   523</span>	<span class="comment">// q = (uIn-r)/v, with 0 &lt;= r &lt; y</span>
+<span id="L524" class="ln">   524</span>	<span class="comment">// Uses z as storage for q, and u as storage for r if possible.</span>
+<span id="L525" class="ln">   525</span>	<span class="comment">// See Knuth, Volume 2, section 4.3.1, Algorithm D.</span>
+<span id="L526" class="ln">   526</span>	<span class="comment">// Preconditions:</span>
+<span id="L527" class="ln">   527</span>	<span class="comment">//    len(v) &gt;= 2</span>
+<span id="L528" class="ln">   528</span>	<span class="comment">//    len(uIn) &gt;= len(v)</span>
+<span id="L529" class="ln">   529</span>	func (z nat) divLarge(u, uIn, v nat) (q, r nat) {
+<span id="L530" class="ln">   530</span>		n := len(v)
+<span id="L531" class="ln">   531</span>		m := len(uIn) - n
+<span id="L532" class="ln">   532</span>	
+<span id="L533" class="ln">   533</span>		<span class="comment">// determine if z can be reused</span>
+<span id="L534" class="ln">   534</span>		<span class="comment">// TODO(gri) should find a better solution - this if statement</span>
+<span id="L535" class="ln">   535</span>		<span class="comment">//           is very costly (see e.g. time pidigits -s -n 10000)</span>
+<span id="L536" class="ln">   536</span>		if alias(z, uIn) || alias(z, v) {
+<span id="L537" class="ln">   537</span>			z = nil <span class="comment">// z is an alias for uIn or v - cannot reuse</span>
+<span id="L538" class="ln">   538</span>		}
+<span id="L539" class="ln">   539</span>		q = z.make(m + 1)
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>		qhatv := make(nat, n+1)
+<span id="L542" class="ln">   542</span>		if alias(u, uIn) || alias(u, v) {
+<span id="L543" class="ln">   543</span>			u = nil <span class="comment">// u is an alias for uIn or v - cannot reuse</span>
+<span id="L544" class="ln">   544</span>		}
+<span id="L545" class="ln">   545</span>		u = u.make(len(uIn) + 1)
+<span id="L546" class="ln">   546</span>		u.clear()
+<span id="L547" class="ln">   547</span>	
+<span id="L548" class="ln">   548</span>		<span class="comment">// D1.</span>
+<span id="L549" class="ln">   549</span>		shift := leadingZeros(v[n-1])
+<span id="L550" class="ln">   550</span>		if shift &gt; 0 {
+<span id="L551" class="ln">   551</span>			<span class="comment">// do not modify v, it may be used by another goroutine simultaneously</span>
+<span id="L552" class="ln">   552</span>			v1 := make(nat, n)
+<span id="L553" class="ln">   553</span>			shlVU(v1, v, shift)
+<span id="L554" class="ln">   554</span>			v = v1
+<span id="L555" class="ln">   555</span>		}
+<span id="L556" class="ln">   556</span>		u[len(uIn)] = shlVU(u[0:len(uIn)], uIn, shift)
+<span id="L557" class="ln">   557</span>	
+<span id="L558" class="ln">   558</span>		<span class="comment">// D2.</span>
+<span id="L559" class="ln">   559</span>		for j := m; j &gt;= 0; j-- {
+<span id="L560" class="ln">   560</span>			<span class="comment">// D3.</span>
+<span id="L561" class="ln">   561</span>			qhat := Word(_M)
+<span id="L562" class="ln">   562</span>			if u[j+n] != v[n-1] {
+<span id="L563" class="ln">   563</span>				var rhat Word
+<span id="L564" class="ln">   564</span>				qhat, rhat = divWW(u[j+n], u[j+n-1], v[n-1])
+<span id="L565" class="ln">   565</span>	
+<span id="L566" class="ln">   566</span>				<span class="comment">// x1 | x2 = q̂v_{n-2}</span>
+<span id="L567" class="ln">   567</span>				x1, x2 := mulWW(qhat, v[n-2])
+<span id="L568" class="ln">   568</span>				<span class="comment">// test if q̂v_{n-2} &gt; br̂ + u_{j+n-2}</span>
+<span id="L569" class="ln">   569</span>				for greaterThan(x1, x2, rhat, u[j+n-2]) {
+<span id="L570" class="ln">   570</span>					qhat--
+<span id="L571" class="ln">   571</span>					prevRhat := rhat
+<span id="L572" class="ln">   572</span>					rhat += v[n-1]
+<span id="L573" class="ln">   573</span>					<span class="comment">// v[n-1] &gt;= 0, so this tests for overflow.</span>
+<span id="L574" class="ln">   574</span>					if rhat &lt; prevRhat {
+<span id="L575" class="ln">   575</span>						break
+<span id="L576" class="ln">   576</span>					}
+<span id="L577" class="ln">   577</span>					x1, x2 = mulWW(qhat, v[n-2])
+<span id="L578" class="ln">   578</span>				}
+<span id="L579" class="ln">   579</span>			}
+<span id="L580" class="ln">   580</span>	
+<span id="L581" class="ln">   581</span>			<span class="comment">// D4.</span>
+<span id="L582" class="ln">   582</span>			qhatv[n] = mulAddVWW(qhatv[0:n], v, qhat, 0)
+<span id="L583" class="ln">   583</span>	
+<span id="L584" class="ln">   584</span>			c := subVV(u[j:j+len(qhatv)], u[j:], qhatv)
+<span id="L585" class="ln">   585</span>			if c != 0 {
+<span id="L586" class="ln">   586</span>				c := addVV(u[j:j+n], u[j:], v)
+<span id="L587" class="ln">   587</span>				u[j+n] += c
+<span id="L588" class="ln">   588</span>				qhat--
+<span id="L589" class="ln">   589</span>			}
+<span id="L590" class="ln">   590</span>	
+<span id="L591" class="ln">   591</span>			q[j] = qhat
+<span id="L592" class="ln">   592</span>		}
+<span id="L593" class="ln">   593</span>	
+<span id="L594" class="ln">   594</span>		q = q.norm()
+<span id="L595" class="ln">   595</span>		shrVU(u, u, shift)
+<span id="L596" class="ln">   596</span>		r = u.norm()
+<span id="L597" class="ln">   597</span>	
+<span id="L598" class="ln">   598</span>		return q, r
+<span id="L599" class="ln">   599</span>	}
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>	<span class="comment">// Length of x in bits. x must be normalized.</span>
+<span id="L602" class="ln">   602</span>	func (x nat) bitLen() int {
+<span id="L603" class="ln">   603</span>		if i := len(x) - 1; i &gt;= 0 {
+<span id="L604" class="ln">   604</span>			return i*_W + bitLen(x[i])
+<span id="L605" class="ln">   605</span>		}
+<span id="L606" class="ln">   606</span>		return 0
+<span id="L607" class="ln">   607</span>	}
+<span id="L608" class="ln">   608</span>	
+<span id="L609" class="ln">   609</span>	<span class="comment">// MaxBase is the largest number base accepted for string conversions.</span>
+<span id="L610" class="ln">   610</span>	const MaxBase = &#39;z&#39; - &#39;a&#39; + 10 + 1 <span class="comment">// = hexValue(&#39;z&#39;) + 1</span>
+<span id="L611" class="ln">   611</span>	
+<span id="L612" class="ln">   612</span>	func hexValue(ch rune) Word {
+<span id="L613" class="ln">   613</span>		d := int(MaxBase + 1) <span class="comment">// illegal base</span>
+<span id="L614" class="ln">   614</span>		switch {
+<span id="L615" class="ln">   615</span>		case &#39;0&#39; &lt;= ch &amp;&amp; ch &lt;= &#39;9&#39;:
+<span id="L616" class="ln">   616</span>			d = int(ch - &#39;0&#39;)
+<span id="L617" class="ln">   617</span>		case &#39;a&#39; &lt;= ch &amp;&amp; ch &lt;= &#39;z&#39;:
+<span id="L618" class="ln">   618</span>			d = int(ch - &#39;a&#39; + 10)
+<span id="L619" class="ln">   619</span>		case &#39;A&#39; &lt;= ch &amp;&amp; ch &lt;= &#39;Z&#39;:
+<span id="L620" class="ln">   620</span>			d = int(ch - &#39;A&#39; + 10)
+<span id="L621" class="ln">   621</span>		}
+<span id="L622" class="ln">   622</span>		return Word(d)
+<span id="L623" class="ln">   623</span>	}
+<span id="L624" class="ln">   624</span>	
+<span id="L625" class="ln">   625</span>	<span class="comment">// scan sets z to the natural number corresponding to the longest possible prefix</span>
+<span id="L626" class="ln">   626</span>	<span class="comment">// read from r representing an unsigned integer in a given conversion base.</span>
+<span id="L627" class="ln">   627</span>	<span class="comment">// It returns z, the actual conversion base used, and an error, if any. In the</span>
+<span id="L628" class="ln">   628</span>	<span class="comment">// error case, the value of z is undefined. The syntax follows the syntax of</span>
+<span id="L629" class="ln">   629</span>	<span class="comment">// unsigned integer literals in Go.</span>
+<span id="L630" class="ln">   630</span>	<span class="comment">//</span>
+<span id="L631" class="ln">   631</span>	<span class="comment">// The base argument must be 0 or a value from 2 through MaxBase. If the base</span>
+<span id="L632" class="ln">   632</span>	<span class="comment">// is 0, the string prefix determines the actual conversion base. A prefix of</span>
+<span id="L633" class="ln">   633</span>	<span class="comment">// ``0x&#39;&#39; or ``0X&#39;&#39; selects base 16; the ``0&#39;&#39; prefix selects base 8, and a</span>
+<span id="L634" class="ln">   634</span>	<span class="comment">// ``0b&#39;&#39; or ``0B&#39;&#39; prefix selects base 2. Otherwise the selected base is 10.</span>
+<span id="L635" class="ln">   635</span>	<span class="comment">//</span>
+<span id="L636" class="ln">   636</span>	func (z nat) scan(r io.RuneScanner, base int) (nat, int, error) {
+<span id="L637" class="ln">   637</span>		<span class="comment">// reject illegal bases</span>
+<span id="L638" class="ln">   638</span>		if base &lt; 0 || base == 1 || MaxBase &lt; base {
+<span id="L639" class="ln">   639</span>			return z, 0, errors.New(&#34;illegal number base&#34;)
+<span id="L640" class="ln">   640</span>		}
+<span id="L641" class="ln">   641</span>	
+<span id="L642" class="ln">   642</span>		<span class="comment">// one char look-ahead</span>
+<span id="L643" class="ln">   643</span>		ch, _, err := r.ReadRune()
+<span id="L644" class="ln">   644</span>		if err != nil {
+<span id="L645" class="ln">   645</span>			return z, 0, err
+<span id="L646" class="ln">   646</span>		}
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>		<span class="comment">// determine base if necessary</span>
+<span id="L649" class="ln">   649</span>		b := Word(base)
+<span id="L650" class="ln">   650</span>		if base == 0 {
+<span id="L651" class="ln">   651</span>			b = 10
+<span id="L652" class="ln">   652</span>			if ch == &#39;0&#39; {
+<span id="L653" class="ln">   653</span>				switch ch, _, err = r.ReadRune(); err {
+<span id="L654" class="ln">   654</span>				case nil:
+<span id="L655" class="ln">   655</span>					b = 8
+<span id="L656" class="ln">   656</span>					switch ch {
+<span id="L657" class="ln">   657</span>					case &#39;x&#39;, &#39;X&#39;:
+<span id="L658" class="ln">   658</span>						b = 16
+<span id="L659" class="ln">   659</span>					case &#39;b&#39;, &#39;B&#39;:
+<span id="L660" class="ln">   660</span>						b = 2
+<span id="L661" class="ln">   661</span>					}
+<span id="L662" class="ln">   662</span>					if b == 2 || b == 16 {
+<span id="L663" class="ln">   663</span>						if ch, _, err = r.ReadRune(); err != nil {
+<span id="L664" class="ln">   664</span>							return z, 0, err
+<span id="L665" class="ln">   665</span>						}
+<span id="L666" class="ln">   666</span>					}
+<span id="L667" class="ln">   667</span>				case io.EOF:
+<span id="L668" class="ln">   668</span>					return z.make(0), 10, nil
+<span id="L669" class="ln">   669</span>				default:
+<span id="L670" class="ln">   670</span>					return z, 10, err
+<span id="L671" class="ln">   671</span>				}
+<span id="L672" class="ln">   672</span>			}
+<span id="L673" class="ln">   673</span>		}
+<span id="L674" class="ln">   674</span>	
+<span id="L675" class="ln">   675</span>		<span class="comment">// convert string</span>
+<span id="L676" class="ln">   676</span>		<span class="comment">// - group as many digits d as possible together into a &#34;super-digit&#34; dd with &#34;super-base&#34; bb</span>
+<span id="L677" class="ln">   677</span>		<span class="comment">// - only when bb does not fit into a word anymore, do a full number mulAddWW using bb and dd</span>
+<span id="L678" class="ln">   678</span>		z = z.make(0)
+<span id="L679" class="ln">   679</span>		bb := Word(1)
+<span id="L680" class="ln">   680</span>		dd := Word(0)
+<span id="L681" class="ln">   681</span>		for max := _M / b; ; {
+<span id="L682" class="ln">   682</span>			d := hexValue(ch)
+<span id="L683" class="ln">   683</span>			if d &gt;= b {
+<span id="L684" class="ln">   684</span>				r.UnreadRune() <span class="comment">// ch does not belong to number anymore</span>
+<span id="L685" class="ln">   685</span>				break
+<span id="L686" class="ln">   686</span>			}
+<span id="L687" class="ln">   687</span>	
+<span id="L688" class="ln">   688</span>			if bb &lt;= max {
+<span id="L689" class="ln">   689</span>				bb *= b
+<span id="L690" class="ln">   690</span>				dd = dd*b + d
+<span id="L691" class="ln">   691</span>			} else {
+<span id="L692" class="ln">   692</span>				<span class="comment">// bb * b would overflow</span>
+<span id="L693" class="ln">   693</span>				z = z.mulAddWW(z, bb, dd)
+<span id="L694" class="ln">   694</span>				bb = b
+<span id="L695" class="ln">   695</span>				dd = d
+<span id="L696" class="ln">   696</span>			}
+<span id="L697" class="ln">   697</span>	
+<span id="L698" class="ln">   698</span>			if ch, _, err = r.ReadRune(); err != nil {
+<span id="L699" class="ln">   699</span>				if err != io.EOF {
+<span id="L700" class="ln">   700</span>					return z, int(b), err
+<span id="L701" class="ln">   701</span>				}
+<span id="L702" class="ln">   702</span>				break
+<span id="L703" class="ln">   703</span>			}
+<span id="L704" class="ln">   704</span>		}
+<span id="L705" class="ln">   705</span>	
+<span id="L706" class="ln">   706</span>		switch {
+<span id="L707" class="ln">   707</span>		case bb &gt; 1:
+<span id="L708" class="ln">   708</span>			<span class="comment">// there was at least one mantissa digit</span>
+<span id="L709" class="ln">   709</span>			z = z.mulAddWW(z, bb, dd)
+<span id="L710" class="ln">   710</span>		case base == 0 &amp;&amp; b == 8:
+<span id="L711" class="ln">   711</span>			<span class="comment">// there was only the octal prefix 0 (possibly followed by digits &gt; 7);</span>
+<span id="L712" class="ln">   712</span>			<span class="comment">// return base 10, not 8</span>
+<span id="L713" class="ln">   713</span>			return z, 10, nil
+<span id="L714" class="ln">   714</span>		case base != 0 || b != 8:
+<span id="L715" class="ln">   715</span>			<span class="comment">// there was neither a mantissa digit nor the octal prefix 0</span>
+<span id="L716" class="ln">   716</span>			return z, int(b), errors.New(&#34;syntax error scanning number&#34;)
+<span id="L717" class="ln">   717</span>		}
+<span id="L718" class="ln">   718</span>	
+<span id="L719" class="ln">   719</span>		return z.norm(), int(b), nil
+<span id="L720" class="ln">   720</span>	}
+<span id="L721" class="ln">   721</span>	
+<span id="L722" class="ln">   722</span>	<span class="comment">// Character sets for string conversion.</span>
+<span id="L723" class="ln">   723</span>	const (
+<span id="L724" class="ln">   724</span>		lowercaseDigits = &#34;0123456789abcdefghijklmnopqrstuvwxyz&#34;
+<span id="L725" class="ln">   725</span>		uppercaseDigits = &#34;0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;
+<span id="L726" class="ln">   726</span>	)
+<span id="L727" class="ln">   727</span>	
+<span id="L728" class="ln">   728</span>	<span class="comment">// decimalString returns a decimal representation of x.</span>
+<span id="L729" class="ln">   729</span>	<span class="comment">// It calls x.string with the charset &#34;0123456789&#34;.</span>
+<span id="L730" class="ln">   730</span>	func (x nat) decimalString() string {
+<span id="L731" class="ln">   731</span>		return x.string(lowercaseDigits[0:10])
+<span id="L732" class="ln">   732</span>	}
+<span id="L733" class="ln">   733</span>	
+<span id="L734" class="ln">   734</span>	<span class="comment">// string converts x to a string using digits from a charset; a digit with</span>
+<span id="L735" class="ln">   735</span>	<span class="comment">// value d is represented by charset[d]. The conversion base is determined</span>
+<span id="L736" class="ln">   736</span>	<span class="comment">// by len(charset), which must be &gt;= 2 and &lt;= 256.</span>
+<span id="L737" class="ln">   737</span>	func (x nat) string(charset string) string {
+<span id="L738" class="ln">   738</span>		b := Word(len(charset))
+<span id="L739" class="ln">   739</span>	
+<span id="L740" class="ln">   740</span>		<span class="comment">// special cases</span>
+<span id="L741" class="ln">   741</span>		switch {
+<span id="L742" class="ln">   742</span>		case b &lt; 2 || MaxBase &gt; 256:
+<span id="L743" class="ln">   743</span>			panic(&#34;illegal base&#34;)
+<span id="L744" class="ln">   744</span>		case len(x) == 0:
+<span id="L745" class="ln">   745</span>			return string(charset[0])
+<span id="L746" class="ln">   746</span>		}
+<span id="L747" class="ln">   747</span>	
+<span id="L748" class="ln">   748</span>		<span class="comment">// allocate buffer for conversion</span>
+<span id="L749" class="ln">   749</span>		i := int(float64(x.bitLen())/math.Log2(float64(b))) + 1 <span class="comment">// off by one at most</span>
+<span id="L750" class="ln">   750</span>		s := make([]byte, i)
+<span id="L751" class="ln">   751</span>	
+<span id="L752" class="ln">   752</span>		<span class="comment">// convert power of two and non power of two bases separately</span>
+<span id="L753" class="ln">   753</span>		if b == b&amp;-b {
+<span id="L754" class="ln">   754</span>			<span class="comment">// shift is base-b digit size in bits</span>
+<span id="L755" class="ln">   755</span>			shift := trailingZeroBits(b) <span class="comment">// shift &gt; 0 because b &gt;= 2</span>
+<span id="L756" class="ln">   756</span>			mask := Word(1)&lt;&lt;shift - 1
+<span id="L757" class="ln">   757</span>			w := x[0]
+<span id="L758" class="ln">   758</span>			nbits := uint(_W) <span class="comment">// number of unprocessed bits in w</span>
+<span id="L759" class="ln">   759</span>	
+<span id="L760" class="ln">   760</span>			<span class="comment">// convert less-significant words</span>
+<span id="L761" class="ln">   761</span>			for k := 1; k &lt; len(x); k++ {
+<span id="L762" class="ln">   762</span>				<span class="comment">// convert full digits</span>
+<span id="L763" class="ln">   763</span>				for nbits &gt;= shift {
+<span id="L764" class="ln">   764</span>					i--
+<span id="L765" class="ln">   765</span>					s[i] = charset[w&amp;mask]
+<span id="L766" class="ln">   766</span>					w &gt;&gt;= shift
+<span id="L767" class="ln">   767</span>					nbits -= shift
+<span id="L768" class="ln">   768</span>				}
+<span id="L769" class="ln">   769</span>	
+<span id="L770" class="ln">   770</span>				<span class="comment">// convert any partial leading digit and advance to next word</span>
+<span id="L771" class="ln">   771</span>				if nbits == 0 {
+<span id="L772" class="ln">   772</span>					<span class="comment">// no partial digit remaining, just advance</span>
+<span id="L773" class="ln">   773</span>					w = x[k]
+<span id="L774" class="ln">   774</span>					nbits = _W
+<span id="L775" class="ln">   775</span>				} else {
+<span id="L776" class="ln">   776</span>					<span class="comment">// partial digit in current (k-1) and next (k) word</span>
+<span id="L777" class="ln">   777</span>					w |= x[k] &lt;&lt; nbits
+<span id="L778" class="ln">   778</span>					i--
+<span id="L779" class="ln">   779</span>					s[i] = charset[w&amp;mask]
+<span id="L780" class="ln">   780</span>	
+<span id="L781" class="ln">   781</span>					<span class="comment">// advance</span>
+<span id="L782" class="ln">   782</span>					w = x[k] &gt;&gt; (shift - nbits)
+<span id="L783" class="ln">   783</span>					nbits = _W - (shift - nbits)
+<span id="L784" class="ln">   784</span>				}
+<span id="L785" class="ln">   785</span>			}
+<span id="L786" class="ln">   786</span>	
+<span id="L787" class="ln">   787</span>			<span class="comment">// convert digits of most-significant word (omit leading zeros)</span>
+<span id="L788" class="ln">   788</span>			for nbits &gt;= 0 &amp;&amp; w != 0 {
+<span id="L789" class="ln">   789</span>				i--
+<span id="L790" class="ln">   790</span>				s[i] = charset[w&amp;mask]
+<span id="L791" class="ln">   791</span>				w &gt;&gt;= shift
+<span id="L792" class="ln">   792</span>				nbits -= shift
+<span id="L793" class="ln">   793</span>			}
+<span id="L794" class="ln">   794</span>	
+<span id="L795" class="ln">   795</span>		} else {
+<span id="L796" class="ln">   796</span>			<span class="comment">// determine &#34;big base&#34;; i.e., the largest possible value bb</span>
+<span id="L797" class="ln">   797</span>			<span class="comment">// that is a power of base b and still fits into a Word</span>
+<span id="L798" class="ln">   798</span>			<span class="comment">// (as in 10^19 for 19 decimal digits in a 64bit Word)</span>
+<span id="L799" class="ln">   799</span>			bb := b      <span class="comment">// big base is b**ndigits</span>
+<span id="L800" class="ln">   800</span>			ndigits := 1 <span class="comment">// number of base b digits</span>
+<span id="L801" class="ln">   801</span>			for max := Word(_M / b); bb &lt;= max; bb *= b {
+<span id="L802" class="ln">   802</span>				ndigits++ <span class="comment">// maximize ndigits where bb = b**ndigits, bb &lt;= _M</span>
+<span id="L803" class="ln">   803</span>			}
+<span id="L804" class="ln">   804</span>	
+<span id="L805" class="ln">   805</span>			<span class="comment">// construct table of successive squares of bb*leafSize to use in subdivisions</span>
+<span id="L806" class="ln">   806</span>			<span class="comment">// result (table != nil) &lt;=&gt; (len(x) &gt; leafSize &gt; 0)</span>
+<span id="L807" class="ln">   807</span>			table := divisors(len(x), b, ndigits, bb)
+<span id="L808" class="ln">   808</span>	
+<span id="L809" class="ln">   809</span>			<span class="comment">// preserve x, create local copy for use by convertWords</span>
+<span id="L810" class="ln">   810</span>			q := nat(nil).set(x)
+<span id="L811" class="ln">   811</span>	
+<span id="L812" class="ln">   812</span>			<span class="comment">// convert q to string s in base b</span>
+<span id="L813" class="ln">   813</span>			q.convertWords(s, charset, b, ndigits, bb, table)
+<span id="L814" class="ln">   814</span>	
+<span id="L815" class="ln">   815</span>			<span class="comment">// strip leading zeros</span>
+<span id="L816" class="ln">   816</span>			<span class="comment">// (x != 0; thus s must contain at least one non-zero digit</span>
+<span id="L817" class="ln">   817</span>			<span class="comment">// and the loop will terminate)</span>
+<span id="L818" class="ln">   818</span>			i = 0
+<span id="L819" class="ln">   819</span>			for zero := charset[0]; s[i] == zero; {
+<span id="L820" class="ln">   820</span>				i++
+<span id="L821" class="ln">   821</span>			}
+<span id="L822" class="ln">   822</span>		}
+<span id="L823" class="ln">   823</span>	
+<span id="L824" class="ln">   824</span>		return string(s[i:])
+<span id="L825" class="ln">   825</span>	}
+<span id="L826" class="ln">   826</span>	
+<span id="L827" class="ln">   827</span>	<span class="comment">// Convert words of q to base b digits in s. If q is large, it is recursively &#34;split in half&#34;</span>
+<span id="L828" class="ln">   828</span>	<span class="comment">// by nat/nat division using tabulated divisors. Otherwise, it is converted iteratively using</span>
+<span id="L829" class="ln">   829</span>	<span class="comment">// repeated nat/Word division.</span>
+<span id="L830" class="ln">   830</span>	<span class="comment">//</span>
+<span id="L831" class="ln">   831</span>	<span class="comment">// The iterative method processes n Words by n divW() calls, each of which visits every Word in the</span>
+<span id="L832" class="ln">   832</span>	<span class="comment">// incrementally shortened q for a total of n + (n-1) + (n-2) ... + 2 + 1, or n(n+1)/2 divW()&#39;s.</span>
+<span id="L833" class="ln">   833</span>	<span class="comment">// Recursive conversion divides q by its approximate square root, yielding two parts, each half</span>
+<span id="L834" class="ln">   834</span>	<span class="comment">// the size of q. Using the iterative method on both halves means 2 * (n/2)(n/2 + 1)/2 divW()&#39;s</span>
+<span id="L835" class="ln">   835</span>	<span class="comment">// plus the expensive long div(). Asymptotically, the ratio is favorable at 1/2 the divW()&#39;s, and</span>
+<span id="L836" class="ln">   836</span>	<span class="comment">// is made better by splitting the subblocks recursively. Best is to split blocks until one more</span>
+<span id="L837" class="ln">   837</span>	<span class="comment">// split would take longer (because of the nat/nat div()) than the twice as many divW()&#39;s of the</span>
+<span id="L838" class="ln">   838</span>	<span class="comment">// iterative approach. This threshold is represented by leafSize. Benchmarking of leafSize in the</span>
+<span id="L839" class="ln">   839</span>	<span class="comment">// range 2..64 shows that values of 8 and 16 work well, with a 4x speedup at medium lengths and</span>
+<span id="L840" class="ln">   840</span>	<span class="comment">// ~30x for 20000 digits. Use nat_test.go&#39;s BenchmarkLeafSize tests to optimize leafSize for</span>
+<span id="L841" class="ln">   841</span>	<span class="comment">// specific hardware.</span>
+<span id="L842" class="ln">   842</span>	<span class="comment">//</span>
+<span id="L843" class="ln">   843</span>	func (q nat) convertWords(s []byte, charset string, b Word, ndigits int, bb Word, table []divisor) {
+<span id="L844" class="ln">   844</span>		<span class="comment">// split larger blocks recursively</span>
+<span id="L845" class="ln">   845</span>		if table != nil {
+<span id="L846" class="ln">   846</span>			<span class="comment">// len(q) &gt; leafSize &gt; 0</span>
+<span id="L847" class="ln">   847</span>			var r nat
+<span id="L848" class="ln">   848</span>			index := len(table) - 1
+<span id="L849" class="ln">   849</span>			for len(q) &gt; leafSize {
+<span id="L850" class="ln">   850</span>				<span class="comment">// find divisor close to sqrt(q) if possible, but in any case &lt; q</span>
+<span id="L851" class="ln">   851</span>				maxLength := q.bitLen()     <span class="comment">// ~= log2 q, or at of least largest possible q of this bit length</span>
+<span id="L852" class="ln">   852</span>				minLength := maxLength &gt;&gt; 1 <span class="comment">// ~= log2 sqrt(q)</span>
+<span id="L853" class="ln">   853</span>				for index &gt; 0 &amp;&amp; table[index-1].nbits &gt; minLength {
+<span id="L854" class="ln">   854</span>					index-- <span class="comment">// desired</span>
+<span id="L855" class="ln">   855</span>				}
+<span id="L856" class="ln">   856</span>				if table[index].nbits &gt;= maxLength &amp;&amp; table[index].bbb.cmp(q) &gt;= 0 {
+<span id="L857" class="ln">   857</span>					index--
+<span id="L858" class="ln">   858</span>					if index &lt; 0 {
+<span id="L859" class="ln">   859</span>						panic(&#34;internal inconsistency&#34;)
+<span id="L860" class="ln">   860</span>					}
+<span id="L861" class="ln">   861</span>				}
+<span id="L862" class="ln">   862</span>	
+<span id="L863" class="ln">   863</span>				<span class="comment">// split q into the two digit number (q&#39;*bbb + r) to form independent subblocks</span>
+<span id="L864" class="ln">   864</span>				q, r = q.div(r, q, table[index].bbb)
+<span id="L865" class="ln">   865</span>	
+<span id="L866" class="ln">   866</span>				<span class="comment">// convert subblocks and collect results in s[:h] and s[h:]</span>
+<span id="L867" class="ln">   867</span>				h := len(s) - table[index].ndigits
+<span id="L868" class="ln">   868</span>				r.convertWords(s[h:], charset, b, ndigits, bb, table[0:index])
+<span id="L869" class="ln">   869</span>				s = s[:h] <span class="comment">// == q.convertWords(s, charset, b, ndigits, bb, table[0:index+1])</span>
+<span id="L870" class="ln">   870</span>			}
+<span id="L871" class="ln">   871</span>		}
+<span id="L872" class="ln">   872</span>	
+<span id="L873" class="ln">   873</span>		<span class="comment">// having split any large blocks now process the remaining (small) block iteratively</span>
+<span id="L874" class="ln">   874</span>		i := len(s)
+<span id="L875" class="ln">   875</span>		var r Word
+<span id="L876" class="ln">   876</span>		if b == 10 {
+<span id="L877" class="ln">   877</span>			<span class="comment">// hard-coding for 10 here speeds this up by 1.25x (allows for / and % by constants)</span>
+<span id="L878" class="ln">   878</span>			for len(q) &gt; 0 {
+<span id="L879" class="ln">   879</span>				<span class="comment">// extract least significant, base bb &#34;digit&#34;</span>
+<span id="L880" class="ln">   880</span>				q, r = q.divW(q, bb)
+<span id="L881" class="ln">   881</span>				for j := 0; j &lt; ndigits &amp;&amp; i &gt; 0; j++ {
+<span id="L882" class="ln">   882</span>					i--
+<span id="L883" class="ln">   883</span>					<span class="comment">// avoid % computation since r%10 == r - int(r/10)*10;</span>
+<span id="L884" class="ln">   884</span>					<span class="comment">// this appears to be faster for BenchmarkString10000Base10</span>
+<span id="L885" class="ln">   885</span>					<span class="comment">// and smaller strings (but a bit slower for larger ones)</span>
+<span id="L886" class="ln">   886</span>					t := r / 10
+<span id="L887" class="ln">   887</span>					s[i] = charset[r-t&lt;&lt;3-t-t] <span class="comment">// TODO(gri) replace w/ t*10 once compiler produces better code</span>
+<span id="L888" class="ln">   888</span>					r = t
+<span id="L889" class="ln">   889</span>				}
+<span id="L890" class="ln">   890</span>			}
+<span id="L891" class="ln">   891</span>		} else {
+<span id="L892" class="ln">   892</span>			for len(q) &gt; 0 {
+<span id="L893" class="ln">   893</span>				<span class="comment">// extract least significant, base bb &#34;digit&#34;</span>
+<span id="L894" class="ln">   894</span>				q, r = q.divW(q, bb)
+<span id="L895" class="ln">   895</span>				for j := 0; j &lt; ndigits &amp;&amp; i &gt; 0; j++ {
+<span id="L896" class="ln">   896</span>					i--
+<span id="L897" class="ln">   897</span>					s[i] = charset[r%b]
+<span id="L898" class="ln">   898</span>					r /= b
+<span id="L899" class="ln">   899</span>				}
+<span id="L900" class="ln">   900</span>			}
+<span id="L901" class="ln">   901</span>		}
+<span id="L902" class="ln">   902</span>	
+<span id="L903" class="ln">   903</span>		<span class="comment">// prepend high-order zeroes</span>
+<span id="L904" class="ln">   904</span>		zero := charset[0]
+<span id="L905" class="ln">   905</span>		for i &gt; 0 { <span class="comment">// while need more leading zeroes</span>
+<span id="L906" class="ln">   906</span>			i--
+<span id="L907" class="ln">   907</span>			s[i] = zero
+<span id="L908" class="ln">   908</span>		}
+<span id="L909" class="ln">   909</span>	}
+<span id="L910" class="ln">   910</span>	
+<span id="L911" class="ln">   911</span>	<span class="comment">// Split blocks greater than leafSize Words (or set to 0 to disable recursive conversion)</span>
+<span id="L912" class="ln">   912</span>	<span class="comment">// Benchmark and configure leafSize using: go test -bench=&#34;Leaf&#34;</span>
+<span id="L913" class="ln">   913</span>	<span class="comment">//   8 and 16 effective on 3.0 GHz Xeon &#34;Clovertown&#34; CPU (128 byte cache lines)</span>
+<span id="L914" class="ln">   914</span>	<span class="comment">//   8 and 16 effective on 2.66 GHz Core 2 Duo &#34;Penryn&#34; CPU</span>
+<span id="L915" class="ln">   915</span>	var leafSize int = 8 <span class="comment">// number of Word-size binary values treat as a monolithic block</span>
+<span id="L916" class="ln">   916</span>	
+<span id="L917" class="ln">   917</span>	type divisor struct {
+<span id="L918" class="ln">   918</span>		bbb     nat <span class="comment">// divisor</span>
+<span id="L919" class="ln">   919</span>		nbits   int <span class="comment">// bit length of divisor (discounting leading zeroes) ~= log2(bbb)</span>
+<span id="L920" class="ln">   920</span>		ndigits int <span class="comment">// digit length of divisor in terms of output base digits</span>
+<span id="L921" class="ln">   921</span>	}
+<span id="L922" class="ln">   922</span>	
+<span id="L923" class="ln">   923</span>	var cacheBase10 struct {
+<span id="L924" class="ln">   924</span>		sync.Mutex
+<span id="L925" class="ln">   925</span>		table [64]divisor <span class="comment">// cached divisors for base 10</span>
+<span id="L926" class="ln">   926</span>	}
+<span id="L927" class="ln">   927</span>	
+<span id="L928" class="ln">   928</span>	<span class="comment">// expWW computes x**y</span>
+<span id="L929" class="ln">   929</span>	func (z nat) expWW(x, y Word) nat {
+<span id="L930" class="ln">   930</span>		return z.expNN(nat(nil).setWord(x), nat(nil).setWord(y), nil)
+<span id="L931" class="ln">   931</span>	}
+<span id="L932" class="ln">   932</span>	
+<span id="L933" class="ln">   933</span>	<span class="comment">// construct table of powers of bb*leafSize to use in subdivisions</span>
+<span id="L934" class="ln">   934</span>	func divisors(m int, b Word, ndigits int, bb Word) []divisor {
+<span id="L935" class="ln">   935</span>		<span class="comment">// only compute table when recursive conversion is enabled and x is large</span>
+<span id="L936" class="ln">   936</span>		if leafSize == 0 || m &lt;= leafSize {
+<span id="L937" class="ln">   937</span>			return nil
+<span id="L938" class="ln">   938</span>		}
+<span id="L939" class="ln">   939</span>	
+<span id="L940" class="ln">   940</span>		<span class="comment">// determine k where (bb**leafSize)**(2**k) &gt;= sqrt(x)</span>
+<span id="L941" class="ln">   941</span>		k := 1
+<span id="L942" class="ln">   942</span>		for words := leafSize; words &lt; m&gt;&gt;1 &amp;&amp; k &lt; len(cacheBase10.table); words &lt;&lt;= 1 {
+<span id="L943" class="ln">   943</span>			k++
+<span id="L944" class="ln">   944</span>		}
+<span id="L945" class="ln">   945</span>	
+<span id="L946" class="ln">   946</span>		<span class="comment">// reuse and extend existing table of divisors or create new table as appropriate</span>
+<span id="L947" class="ln">   947</span>		var table []divisor <span class="comment">// for b == 10, table overlaps with cacheBase10.table</span>
+<span id="L948" class="ln">   948</span>		if b == 10 {
+<span id="L949" class="ln">   949</span>			cacheBase10.Lock()
+<span id="L950" class="ln">   950</span>			table = cacheBase10.table[0:k] <span class="comment">// reuse old table for this conversion</span>
+<span id="L951" class="ln">   951</span>		} else {
+<span id="L952" class="ln">   952</span>			table = make([]divisor, k) <span class="comment">// create new table for this conversion</span>
+<span id="L953" class="ln">   953</span>		}
+<span id="L954" class="ln">   954</span>	
+<span id="L955" class="ln">   955</span>		<span class="comment">// extend table</span>
+<span id="L956" class="ln">   956</span>		if table[k-1].ndigits == 0 {
+<span id="L957" class="ln">   957</span>			<span class="comment">// add new entries as needed</span>
+<span id="L958" class="ln">   958</span>			var larger nat
+<span id="L959" class="ln">   959</span>			for i := 0; i &lt; k; i++ {
+<span id="L960" class="ln">   960</span>				if table[i].ndigits == 0 {
+<span id="L961" class="ln">   961</span>					if i == 0 {
+<span id="L962" class="ln">   962</span>						table[0].bbb = nat(nil).expWW(bb, Word(leafSize))
+<span id="L963" class="ln">   963</span>						table[0].ndigits = ndigits * leafSize
+<span id="L964" class="ln">   964</span>					} else {
+<span id="L965" class="ln">   965</span>						table[i].bbb = nat(nil).mul(table[i-1].bbb, table[i-1].bbb)
+<span id="L966" class="ln">   966</span>						table[i].ndigits = 2 * table[i-1].ndigits
+<span id="L967" class="ln">   967</span>					}
+<span id="L968" class="ln">   968</span>	
+<span id="L969" class="ln">   969</span>					<span class="comment">// optimization: exploit aggregated extra bits in macro blocks</span>
+<span id="L970" class="ln">   970</span>					larger = nat(nil).set(table[i].bbb)
+<span id="L971" class="ln">   971</span>					for mulAddVWW(larger, larger, b, 0) == 0 {
+<span id="L972" class="ln">   972</span>						table[i].bbb = table[i].bbb.set(larger)
+<span id="L973" class="ln">   973</span>						table[i].ndigits++
+<span id="L974" class="ln">   974</span>					}
+<span id="L975" class="ln">   975</span>	
+<span id="L976" class="ln">   976</span>					table[i].nbits = table[i].bbb.bitLen()
+<span id="L977" class="ln">   977</span>				}
+<span id="L978" class="ln">   978</span>			}
+<span id="L979" class="ln">   979</span>		}
+<span id="L980" class="ln">   980</span>	
+<span id="L981" class="ln">   981</span>		if b == 10 {
+<span id="L982" class="ln">   982</span>			cacheBase10.Unlock()
+<span id="L983" class="ln">   983</span>		}
+<span id="L984" class="ln">   984</span>	
+<span id="L985" class="ln">   985</span>		return table
+<span id="L986" class="ln">   986</span>	}
+<span id="L987" class="ln">   987</span>	
+<span id="L988" class="ln">   988</span>	const deBruijn32 = 0x077CB531
+<span id="L989" class="ln">   989</span>	
+<span id="L990" class="ln">   990</span>	var deBruijn32Lookup = []byte{
+<span id="L991" class="ln">   991</span>		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+<span id="L992" class="ln">   992</span>		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9,
+<span id="L993" class="ln">   993</span>	}
+<span id="L994" class="ln">   994</span>	
+<span id="L995" class="ln">   995</span>	const deBruijn64 = 0x03f79d71b4ca8b09
+<span id="L996" class="ln">   996</span>	
+<span id="L997" class="ln">   997</span>	var deBruijn64Lookup = []byte{
+<span id="L998" class="ln">   998</span>		0, 1, 56, 2, 57, 49, 28, 3, 61, 58, 42, 50, 38, 29, 17, 4,
+<span id="L999" class="ln">   999</span>		62, 47, 59, 36, 45, 43, 51, 22, 53, 39, 33, 30, 24, 18, 12, 5,
+<span id="L1000" class="ln">  1000</span>		63, 55, 48, 27, 60, 41, 37, 16, 46, 35, 44, 21, 52, 32, 23, 11,
+<span id="L1001" class="ln">  1001</span>		54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9, 13, 8, 7, 6,
+<span id="L1002" class="ln">  1002</span>	}
+<span id="L1003" class="ln">  1003</span>	
+<span id="L1004" class="ln">  1004</span>	<span class="comment">// trailingZeroBits returns the number of consecutive least significant zero</span>
+<span id="L1005" class="ln">  1005</span>	<span class="comment">// bits of x.</span>
+<span id="L1006" class="ln">  1006</span>	func trailingZeroBits(x Word) uint {
+<span id="L1007" class="ln">  1007</span>		<span class="comment">// x &amp; -x leaves only the right-most bit set in the word. Let k be the</span>
+<span id="L1008" class="ln">  1008</span>		<span class="comment">// index of that bit. Since only a single bit is set, the value is two</span>
+<span id="L1009" class="ln">  1009</span>		<span class="comment">// to the power of k. Multiplying by a power of two is equivalent to</span>
+<span id="L1010" class="ln">  1010</span>		<span class="comment">// left shifting, in this case by k bits.  The de Bruijn constant is</span>
+<span id="L1011" class="ln">  1011</span>		<span class="comment">// such that all six bit, consecutive substrings are distinct.</span>
+<span id="L1012" class="ln">  1012</span>		<span class="comment">// Therefore, if we have a left shifted version of this constant we can</span>
+<span id="L1013" class="ln">  1013</span>		<span class="comment">// find by how many bits it was shifted by looking at which six bit</span>
+<span id="L1014" class="ln">  1014</span>		<span class="comment">// substring ended up at the top of the word.</span>
+<span id="L1015" class="ln">  1015</span>		<span class="comment">// (Knuth, volume 4, section 7.3.1)</span>
+<span id="L1016" class="ln">  1016</span>		switch _W {
+<span id="L1017" class="ln">  1017</span>		case 32:
+<span id="L1018" class="ln">  1018</span>			return uint(deBruijn32Lookup[((x&amp;-x)*deBruijn32)&gt;&gt;27])
+<span id="L1019" class="ln">  1019</span>		case 64:
+<span id="L1020" class="ln">  1020</span>			return uint(deBruijn64Lookup[((x&amp;-x)*(deBruijn64&amp;_M))&gt;&gt;58])
+<span id="L1021" class="ln">  1021</span>		default:
+<span id="L1022" class="ln">  1022</span>			panic(&#34;unknown word size&#34;)
+<span id="L1023" class="ln">  1023</span>		}
+<span id="L1024" class="ln">  1024</span>	}
+<span id="L1025" class="ln">  1025</span>	
+<span id="L1026" class="ln">  1026</span>	<span class="comment">// trailingZeroBits returns the number of consecutive least significant zero</span>
+<span id="L1027" class="ln">  1027</span>	<span class="comment">// bits of x.</span>
+<span id="L1028" class="ln">  1028</span>	func (x nat) trailingZeroBits() uint {
+<span id="L1029" class="ln">  1029</span>		if len(x) == 0 {
+<span id="L1030" class="ln">  1030</span>			return 0
+<span id="L1031" class="ln">  1031</span>		}
+<span id="L1032" class="ln">  1032</span>		var i uint
+<span id="L1033" class="ln">  1033</span>		for x[i] == 0 {
+<span id="L1034" class="ln">  1034</span>			i++
+<span id="L1035" class="ln">  1035</span>		}
+<span id="L1036" class="ln">  1036</span>		<span class="comment">// x[i] != 0</span>
+<span id="L1037" class="ln">  1037</span>		return i*_W + trailingZeroBits(x[i])
+<span id="L1038" class="ln">  1038</span>	}
+<span id="L1039" class="ln">  1039</span>	
+<span id="L1040" class="ln">  1040</span>	<span class="comment">// z = x &lt;&lt; s</span>
+<span id="L1041" class="ln">  1041</span>	func (z nat) shl(x nat, s uint) nat {
+<span id="L1042" class="ln">  1042</span>		m := len(x)
+<span id="L1043" class="ln">  1043</span>		if m == 0 {
+<span id="L1044" class="ln">  1044</span>			return z.make(0)
+<span id="L1045" class="ln">  1045</span>		}
+<span id="L1046" class="ln">  1046</span>		<span class="comment">// m &gt; 0</span>
+<span id="L1047" class="ln">  1047</span>	
+<span id="L1048" class="ln">  1048</span>		n := m + int(s/_W)
+<span id="L1049" class="ln">  1049</span>		z = z.make(n + 1)
+<span id="L1050" class="ln">  1050</span>		z[n] = shlVU(z[n-m:n], x, s%_W)
+<span id="L1051" class="ln">  1051</span>		z[0 : n-m].clear()
+<span id="L1052" class="ln">  1052</span>	
+<span id="L1053" class="ln">  1053</span>		return z.norm()
+<span id="L1054" class="ln">  1054</span>	}
+<span id="L1055" class="ln">  1055</span>	
+<span id="L1056" class="ln">  1056</span>	<span class="comment">// z = x &gt;&gt; s</span>
+<span id="L1057" class="ln">  1057</span>	func (z nat) shr(x nat, s uint) nat {
+<span id="L1058" class="ln">  1058</span>		m := len(x)
+<span id="L1059" class="ln">  1059</span>		n := m - int(s/_W)
+<span id="L1060" class="ln">  1060</span>		if n &lt;= 0 {
+<span id="L1061" class="ln">  1061</span>			return z.make(0)
+<span id="L1062" class="ln">  1062</span>		}
+<span id="L1063" class="ln">  1063</span>		<span class="comment">// n &gt; 0</span>
+<span id="L1064" class="ln">  1064</span>	
+<span id="L1065" class="ln">  1065</span>		z = z.make(n)
+<span id="L1066" class="ln">  1066</span>		shrVU(z, x[m-n:], s%_W)
+<span id="L1067" class="ln">  1067</span>	
+<span id="L1068" class="ln">  1068</span>		return z.norm()
+<span id="L1069" class="ln">  1069</span>	}
+<span id="L1070" class="ln">  1070</span>	
+<span id="L1071" class="ln">  1071</span>	func (z nat) setBit(x nat, i uint, b uint) nat {
+<span id="L1072" class="ln">  1072</span>		j := int(i / _W)
+<span id="L1073" class="ln">  1073</span>		m := Word(1) &lt;&lt; (i % _W)
+<span id="L1074" class="ln">  1074</span>		n := len(x)
+<span id="L1075" class="ln">  1075</span>		switch b {
+<span id="L1076" class="ln">  1076</span>		case 0:
+<span id="L1077" class="ln">  1077</span>			z = z.make(n)
+<span id="L1078" class="ln">  1078</span>			copy(z, x)
+<span id="L1079" class="ln">  1079</span>			if j &gt;= n {
+<span id="L1080" class="ln">  1080</span>				<span class="comment">// no need to grow</span>
+<span id="L1081" class="ln">  1081</span>				return z
+<span id="L1082" class="ln">  1082</span>			}
+<span id="L1083" class="ln">  1083</span>			z[j] &amp;^= m
+<span id="L1084" class="ln">  1084</span>			return z.norm()
+<span id="L1085" class="ln">  1085</span>		case 1:
+<span id="L1086" class="ln">  1086</span>			if j &gt;= n {
+<span id="L1087" class="ln">  1087</span>				z = z.make(j + 1)
+<span id="L1088" class="ln">  1088</span>				z[n:].clear()
+<span id="L1089" class="ln">  1089</span>			} else {
+<span id="L1090" class="ln">  1090</span>				z = z.make(n)
+<span id="L1091" class="ln">  1091</span>			}
+<span id="L1092" class="ln">  1092</span>			copy(z, x)
+<span id="L1093" class="ln">  1093</span>			z[j] |= m
+<span id="L1094" class="ln">  1094</span>			<span class="comment">// no need to normalize</span>
+<span id="L1095" class="ln">  1095</span>			return z
+<span id="L1096" class="ln">  1096</span>		}
+<span id="L1097" class="ln">  1097</span>		panic(&#34;set bit is not 0 or 1&#34;)
+<span id="L1098" class="ln">  1098</span>	}
+<span id="L1099" class="ln">  1099</span>	
+<span id="L1100" class="ln">  1100</span>	func (z nat) bit(i uint) uint {
+<span id="L1101" class="ln">  1101</span>		j := int(i / _W)
+<span id="L1102" class="ln">  1102</span>		if j &gt;= len(z) {
+<span id="L1103" class="ln">  1103</span>			return 0
+<span id="L1104" class="ln">  1104</span>		}
+<span id="L1105" class="ln">  1105</span>		return uint(z[j] &gt;&gt; (i % _W) &amp; 1)
+<span id="L1106" class="ln">  1106</span>	}
+<span id="L1107" class="ln">  1107</span>	
+<span id="L1108" class="ln">  1108</span>	func (z nat) and(x, y nat) nat {
+<span id="L1109" class="ln">  1109</span>		m := len(x)
+<span id="L1110" class="ln">  1110</span>		n := len(y)
+<span id="L1111" class="ln">  1111</span>		if m &gt; n {
+<span id="L1112" class="ln">  1112</span>			m = n
+<span id="L1113" class="ln">  1113</span>		}
+<span id="L1114" class="ln">  1114</span>		<span class="comment">// m &lt;= n</span>
+<span id="L1115" class="ln">  1115</span>	
+<span id="L1116" class="ln">  1116</span>		z = z.make(m)
+<span id="L1117" class="ln">  1117</span>		for i := 0; i &lt; m; i++ {
+<span id="L1118" class="ln">  1118</span>			z[i] = x[i] &amp; y[i]
+<span id="L1119" class="ln">  1119</span>		}
+<span id="L1120" class="ln">  1120</span>	
+<span id="L1121" class="ln">  1121</span>		return z.norm()
+<span id="L1122" class="ln">  1122</span>	}
+<span id="L1123" class="ln">  1123</span>	
+<span id="L1124" class="ln">  1124</span>	func (z nat) andNot(x, y nat) nat {
+<span id="L1125" class="ln">  1125</span>		m := len(x)
+<span id="L1126" class="ln">  1126</span>		n := len(y)
+<span id="L1127" class="ln">  1127</span>		if n &gt; m {
+<span id="L1128" class="ln">  1128</span>			n = m
+<span id="L1129" class="ln">  1129</span>		}
+<span id="L1130" class="ln">  1130</span>		<span class="comment">// m &gt;= n</span>
+<span id="L1131" class="ln">  1131</span>	
+<span id="L1132" class="ln">  1132</span>		z = z.make(m)
+<span id="L1133" class="ln">  1133</span>		for i := 0; i &lt; n; i++ {
+<span id="L1134" class="ln">  1134</span>			z[i] = x[i] &amp;^ y[i]
+<span id="L1135" class="ln">  1135</span>		}
+<span id="L1136" class="ln">  1136</span>		copy(z[n:m], x[n:m])
+<span id="L1137" class="ln">  1137</span>	
+<span id="L1138" class="ln">  1138</span>		return z.norm()
+<span id="L1139" class="ln">  1139</span>	}
+<span id="L1140" class="ln">  1140</span>	
+<span id="L1141" class="ln">  1141</span>	func (z nat) or(x, y nat) nat {
+<span id="L1142" class="ln">  1142</span>		m := len(x)
+<span id="L1143" class="ln">  1143</span>		n := len(y)
+<span id="L1144" class="ln">  1144</span>		s := x
+<span id="L1145" class="ln">  1145</span>		if m &lt; n {
+<span id="L1146" class="ln">  1146</span>			n, m = m, n
+<span id="L1147" class="ln">  1147</span>			s = y
+<span id="L1148" class="ln">  1148</span>		}
+<span id="L1149" class="ln">  1149</span>		<span class="comment">// m &gt;= n</span>
+<span id="L1150" class="ln">  1150</span>	
+<span id="L1151" class="ln">  1151</span>		z = z.make(m)
+<span id="L1152" class="ln">  1152</span>		for i := 0; i &lt; n; i++ {
+<span id="L1153" class="ln">  1153</span>			z[i] = x[i] | y[i]
+<span id="L1154" class="ln">  1154</span>		}
+<span id="L1155" class="ln">  1155</span>		copy(z[n:m], s[n:m])
+<span id="L1156" class="ln">  1156</span>	
+<span id="L1157" class="ln">  1157</span>		return z.norm()
+<span id="L1158" class="ln">  1158</span>	}
+<span id="L1159" class="ln">  1159</span>	
+<span id="L1160" class="ln">  1160</span>	func (z nat) xor(x, y nat) nat {
+<span id="L1161" class="ln">  1161</span>		m := len(x)
+<span id="L1162" class="ln">  1162</span>		n := len(y)
+<span id="L1163" class="ln">  1163</span>		s := x
+<span id="L1164" class="ln">  1164</span>		if m &lt; n {
+<span id="L1165" class="ln">  1165</span>			n, m = m, n
+<span id="L1166" class="ln">  1166</span>			s = y
+<span id="L1167" class="ln">  1167</span>		}
+<span id="L1168" class="ln">  1168</span>		<span class="comment">// m &gt;= n</span>
+<span id="L1169" class="ln">  1169</span>	
+<span id="L1170" class="ln">  1170</span>		z = z.make(m)
+<span id="L1171" class="ln">  1171</span>		for i := 0; i &lt; n; i++ {
+<span id="L1172" class="ln">  1172</span>			z[i] = x[i] ^ y[i]
+<span id="L1173" class="ln">  1173</span>		}
+<span id="L1174" class="ln">  1174</span>		copy(z[n:m], s[n:m])
+<span id="L1175" class="ln">  1175</span>	
+<span id="L1176" class="ln">  1176</span>		return z.norm()
+<span id="L1177" class="ln">  1177</span>	}
+<span id="L1178" class="ln">  1178</span>	
+<span id="L1179" class="ln">  1179</span>	<span class="comment">// greaterThan returns true iff (x1&lt;&lt;_W + x2) &gt; (y1&lt;&lt;_W + y2)</span>
+<span id="L1180" class="ln">  1180</span>	func greaterThan(x1, x2, y1, y2 Word) bool {
+<span id="L1181" class="ln">  1181</span>		return x1 &gt; y1 || x1 == y1 &amp;&amp; x2 &gt; y2
+<span id="L1182" class="ln">  1182</span>	}
+<span id="L1183" class="ln">  1183</span>	
+<span id="L1184" class="ln">  1184</span>	<span class="comment">// modW returns x % d.</span>
+<span id="L1185" class="ln">  1185</span>	func (x nat) modW(d Word) (r Word) {
+<span id="L1186" class="ln">  1186</span>		<span class="comment">// TODO(agl): we don&#39;t actually need to store the q value.</span>
+<span id="L1187" class="ln">  1187</span>		var q nat
+<span id="L1188" class="ln">  1188</span>		q = q.make(len(x))
+<span id="L1189" class="ln">  1189</span>		return divWVW(q, 0, x, d)
+<span id="L1190" class="ln">  1190</span>	}
+<span id="L1191" class="ln">  1191</span>	
+<span id="L1192" class="ln">  1192</span>	<span class="comment">// random creates a random integer in [0..limit), using the space in z if</span>
+<span id="L1193" class="ln">  1193</span>	<span class="comment">// possible. n is the bit length of limit.</span>
+<span id="L1194" class="ln">  1194</span>	func (z nat) random(rand *rand.Rand, limit nat, n int) nat {
+<span id="L1195" class="ln">  1195</span>		if alias(z, limit) {
+<span id="L1196" class="ln">  1196</span>			z = nil <span class="comment">// z is an alias for limit - cannot reuse</span>
+<span id="L1197" class="ln">  1197</span>		}
+<span id="L1198" class="ln">  1198</span>		z = z.make(len(limit))
+<span id="L1199" class="ln">  1199</span>	
+<span id="L1200" class="ln">  1200</span>		bitLengthOfMSW := uint(n % _W)
+<span id="L1201" class="ln">  1201</span>		if bitLengthOfMSW == 0 {
+<span id="L1202" class="ln">  1202</span>			bitLengthOfMSW = _W
+<span id="L1203" class="ln">  1203</span>		}
+<span id="L1204" class="ln">  1204</span>		mask := Word((1 &lt;&lt; bitLengthOfMSW) - 1)
+<span id="L1205" class="ln">  1205</span>	
+<span id="L1206" class="ln">  1206</span>		for {
+<span id="L1207" class="ln">  1207</span>			switch _W {
+<span id="L1208" class="ln">  1208</span>			case 32:
+<span id="L1209" class="ln">  1209</span>				for i := range z {
+<span id="L1210" class="ln">  1210</span>					z[i] = Word(rand.Uint32())
+<span id="L1211" class="ln">  1211</span>				}
+<span id="L1212" class="ln">  1212</span>			case 64:
+<span id="L1213" class="ln">  1213</span>				for i := range z {
+<span id="L1214" class="ln">  1214</span>					z[i] = Word(rand.Uint32()) | Word(rand.Uint32())&lt;&lt;32
+<span id="L1215" class="ln">  1215</span>				}
+<span id="L1216" class="ln">  1216</span>			default:
+<span id="L1217" class="ln">  1217</span>				panic(&#34;unknown word size&#34;)
+<span id="L1218" class="ln">  1218</span>			}
+<span id="L1219" class="ln">  1219</span>			z[len(limit)-1] &amp;= mask
+<span id="L1220" class="ln">  1220</span>			if z.cmp(limit) &lt; 0 {
+<span id="L1221" class="ln">  1221</span>				break
+<span id="L1222" class="ln">  1222</span>			}
+<span id="L1223" class="ln">  1223</span>		}
+<span id="L1224" class="ln">  1224</span>	
+<span id="L1225" class="ln">  1225</span>		return z.norm()
+<span id="L1226" class="ln">  1226</span>	}
+<span id="L1227" class="ln">  1227</span>	
+<span id="L1228" class="ln">  1228</span>	<span class="comment">// If m != 0 (i.e., len(m) != 0), expNN sets z to x**y mod m;</span>
+<span id="L1229" class="ln">  1229</span>	<span class="comment">// otherwise it sets z to x**y. The result is the value of z.</span>
+<span id="L1230" class="ln">  1230</span>	func (z nat) expNN(x, y, m nat) nat {
+<span id="L1231" class="ln">  1231</span>		if alias(z, x) || alias(z, y) {
+<span id="L1232" class="ln">  1232</span>			<span class="comment">// We cannot allow in-place modification of x or y.</span>
+<span id="L1233" class="ln">  1233</span>			z = nil
+<span id="L1234" class="ln">  1234</span>		}
+<span id="L1235" class="ln">  1235</span>	
+<span id="L1236" class="ln">  1236</span>		<span class="comment">// x**y mod 1 == 0</span>
+<span id="L1237" class="ln">  1237</span>		if len(m) == 1 &amp;&amp; m[0] == 1 {
+<span id="L1238" class="ln">  1238</span>			return z.setWord(0)
+<span id="L1239" class="ln">  1239</span>		}
+<span id="L1240" class="ln">  1240</span>		<span class="comment">// m == 0 || m &gt; 1</span>
+<span id="L1241" class="ln">  1241</span>	
+<span id="L1242" class="ln">  1242</span>		<span class="comment">// x**0 == 1</span>
+<span id="L1243" class="ln">  1243</span>		if len(y) == 0 {
+<span id="L1244" class="ln">  1244</span>			return z.setWord(1)
+<span id="L1245" class="ln">  1245</span>		}
+<span id="L1246" class="ln">  1246</span>		<span class="comment">// y &gt; 0</span>
+<span id="L1247" class="ln">  1247</span>	
+<span id="L1248" class="ln">  1248</span>		if len(m) != 0 {
+<span id="L1249" class="ln">  1249</span>			<span class="comment">// We likely end up being as long as the modulus.</span>
+<span id="L1250" class="ln">  1250</span>			z = z.make(len(m))
+<span id="L1251" class="ln">  1251</span>		}
+<span id="L1252" class="ln">  1252</span>		z = z.set(x)
+<span id="L1253" class="ln">  1253</span>	
+<span id="L1254" class="ln">  1254</span>		<span class="comment">// If the base is non-trivial and the exponent is large, we use</span>
+<span id="L1255" class="ln">  1255</span>		<span class="comment">// 4-bit, windowed exponentiation. This involves precomputing 14 values</span>
+<span id="L1256" class="ln">  1256</span>		<span class="comment">// (x^2...x^15) but then reduces the number of multiply-reduces by a</span>
+<span id="L1257" class="ln">  1257</span>		<span class="comment">// third. Even for a 32-bit exponent, this reduces the number of</span>
+<span id="L1258" class="ln">  1258</span>		<span class="comment">// operations.</span>
+<span id="L1259" class="ln">  1259</span>		if len(x) &gt; 1 &amp;&amp; len(y) &gt; 1 &amp;&amp; len(m) &gt; 0 {
+<span id="L1260" class="ln">  1260</span>			return z.expNNWindowed(x, y, m)
+<span id="L1261" class="ln">  1261</span>		}
+<span id="L1262" class="ln">  1262</span>	
+<span id="L1263" class="ln">  1263</span>		v := y[len(y)-1] <span class="comment">// v &gt; 0 because y is normalized and y &gt; 0</span>
+<span id="L1264" class="ln">  1264</span>		shift := leadingZeros(v) + 1
+<span id="L1265" class="ln">  1265</span>		v &lt;&lt;= shift
+<span id="L1266" class="ln">  1266</span>		var q nat
+<span id="L1267" class="ln">  1267</span>	
+<span id="L1268" class="ln">  1268</span>		const mask = 1 &lt;&lt; (_W - 1)
+<span id="L1269" class="ln">  1269</span>	
+<span id="L1270" class="ln">  1270</span>		<span class="comment">// We walk through the bits of the exponent one by one. Each time we</span>
+<span id="L1271" class="ln">  1271</span>		<span class="comment">// see a bit, we square, thus doubling the power. If the bit is a one,</span>
+<span id="L1272" class="ln">  1272</span>		<span class="comment">// we also multiply by x, thus adding one to the power.</span>
+<span id="L1273" class="ln">  1273</span>	
+<span id="L1274" class="ln">  1274</span>		w := _W - int(shift)
+<span id="L1275" class="ln">  1275</span>		<span class="comment">// zz and r are used to avoid allocating in mul and div as</span>
+<span id="L1276" class="ln">  1276</span>		<span class="comment">// otherwise the arguments would alias.</span>
+<span id="L1277" class="ln">  1277</span>		var zz, r nat
+<span id="L1278" class="ln">  1278</span>		for j := 0; j &lt; w; j++ {
+<span id="L1279" class="ln">  1279</span>			zz = zz.mul(z, z)
+<span id="L1280" class="ln">  1280</span>			zz, z = z, zz
+<span id="L1281" class="ln">  1281</span>	
+<span id="L1282" class="ln">  1282</span>			if v&amp;mask != 0 {
+<span id="L1283" class="ln">  1283</span>				zz = zz.mul(z, x)
+<span id="L1284" class="ln">  1284</span>				zz, z = z, zz
+<span id="L1285" class="ln">  1285</span>			}
+<span id="L1286" class="ln">  1286</span>	
+<span id="L1287" class="ln">  1287</span>			if len(m) != 0 {
+<span id="L1288" class="ln">  1288</span>				zz, r = zz.div(r, z, m)
+<span id="L1289" class="ln">  1289</span>				zz, r, q, z = q, z, zz, r
+<span id="L1290" class="ln">  1290</span>			}
+<span id="L1291" class="ln">  1291</span>	
+<span id="L1292" class="ln">  1292</span>			v &lt;&lt;= 1
+<span id="L1293" class="ln">  1293</span>		}
+<span id="L1294" class="ln">  1294</span>	
+<span id="L1295" class="ln">  1295</span>		for i := len(y) - 2; i &gt;= 0; i-- {
+<span id="L1296" class="ln">  1296</span>			v = y[i]
+<span id="L1297" class="ln">  1297</span>	
+<span id="L1298" class="ln">  1298</span>			for j := 0; j &lt; _W; j++ {
+<span id="L1299" class="ln">  1299</span>				zz = zz.mul(z, z)
+<span id="L1300" class="ln">  1300</span>				zz, z = z, zz
+<span id="L1301" class="ln">  1301</span>	
+<span id="L1302" class="ln">  1302</span>				if v&amp;mask != 0 {
+<span id="L1303" class="ln">  1303</span>					zz = zz.mul(z, x)
+<span id="L1304" class="ln">  1304</span>					zz, z = z, zz
+<span id="L1305" class="ln">  1305</span>				}
+<span id="L1306" class="ln">  1306</span>	
+<span id="L1307" class="ln">  1307</span>				if len(m) != 0 {
+<span id="L1308" class="ln">  1308</span>					zz, r = zz.div(r, z, m)
+<span id="L1309" class="ln">  1309</span>					zz, r, q, z = q, z, zz, r
+<span id="L1310" class="ln">  1310</span>				}
+<span id="L1311" class="ln">  1311</span>	
+<span id="L1312" class="ln">  1312</span>				v &lt;&lt;= 1
+<span id="L1313" class="ln">  1313</span>			}
+<span id="L1314" class="ln">  1314</span>		}
+<span id="L1315" class="ln">  1315</span>	
+<span id="L1316" class="ln">  1316</span>		return z.norm()
+<span id="L1317" class="ln">  1317</span>	}
+<span id="L1318" class="ln">  1318</span>	
+<span id="L1319" class="ln">  1319</span>	<span class="comment">// expNNWindowed calculates x**y mod m using a fixed, 4-bit window.</span>
+<span id="L1320" class="ln">  1320</span>	func (z nat) expNNWindowed(x, y, m nat) nat {
+<span id="L1321" class="ln">  1321</span>		<span class="comment">// zz and r are used to avoid allocating in mul and div as otherwise</span>
+<span id="L1322" class="ln">  1322</span>		<span class="comment">// the arguments would alias.</span>
+<span id="L1323" class="ln">  1323</span>		var zz, r nat
+<span id="L1324" class="ln">  1324</span>	
+<span id="L1325" class="ln">  1325</span>		const n = 4
+<span id="L1326" class="ln">  1326</span>		<span class="comment">// powers[i] contains x^i.</span>
+<span id="L1327" class="ln">  1327</span>		var powers [1 &lt;&lt; n]nat
+<span id="L1328" class="ln">  1328</span>		powers[0] = natOne
+<span id="L1329" class="ln">  1329</span>		powers[1] = x
+<span id="L1330" class="ln">  1330</span>		for i := 2; i &lt; 1&lt;&lt;n; i += 2 {
+<span id="L1331" class="ln">  1331</span>			p2, p, p1 := &amp;powers[i/2], &amp;powers[i], &amp;powers[i+1]
+<span id="L1332" class="ln">  1332</span>			*p = p.mul(*p2, *p2)
+<span id="L1333" class="ln">  1333</span>			zz, r = zz.div(r, *p, m)
+<span id="L1334" class="ln">  1334</span>			*p, r = r, *p
+<span id="L1335" class="ln">  1335</span>			*p1 = p1.mul(*p, x)
+<span id="L1336" class="ln">  1336</span>			zz, r = zz.div(r, *p1, m)
+<span id="L1337" class="ln">  1337</span>			*p1, r = r, *p1
+<span id="L1338" class="ln">  1338</span>		}
+<span id="L1339" class="ln">  1339</span>	
+<span id="L1340" class="ln">  1340</span>		z = z.setWord(1)
+<span id="L1341" class="ln">  1341</span>	
+<span id="L1342" class="ln">  1342</span>		for i := len(y) - 1; i &gt;= 0; i-- {
+<span id="L1343" class="ln">  1343</span>			yi := y[i]
+<span id="L1344" class="ln">  1344</span>			for j := 0; j &lt; _W; j += n {
+<span id="L1345" class="ln">  1345</span>				if i != len(y)-1 || j != 0 {
+<span id="L1346" class="ln">  1346</span>					<span class="comment">// Unrolled loop for significant performance</span>
+<span id="L1347" class="ln">  1347</span>					<span class="comment">// gain.  Use go test -bench=&#34;.*&#34; in crypto/rsa</span>
+<span id="L1348" class="ln">  1348</span>					<span class="comment">// to check performance before making changes.</span>
+<span id="L1349" class="ln">  1349</span>					zz = zz.mul(z, z)
+<span id="L1350" class="ln">  1350</span>					zz, z = z, zz
+<span id="L1351" class="ln">  1351</span>					zz, r = zz.div(r, z, m)
+<span id="L1352" class="ln">  1352</span>					z, r = r, z
+<span id="L1353" class="ln">  1353</span>	
+<span id="L1354" class="ln">  1354</span>					zz = zz.mul(z, z)
+<span id="L1355" class="ln">  1355</span>					zz, z = z, zz
+<span id="L1356" class="ln">  1356</span>					zz, r = zz.div(r, z, m)
+<span id="L1357" class="ln">  1357</span>					z, r = r, z
+<span id="L1358" class="ln">  1358</span>	
+<span id="L1359" class="ln">  1359</span>					zz = zz.mul(z, z)
+<span id="L1360" class="ln">  1360</span>					zz, z = z, zz
+<span id="L1361" class="ln">  1361</span>					zz, r = zz.div(r, z, m)
+<span id="L1362" class="ln">  1362</span>					z, r = r, z
+<span id="L1363" class="ln">  1363</span>	
+<span id="L1364" class="ln">  1364</span>					zz = zz.mul(z, z)
+<span id="L1365" class="ln">  1365</span>					zz, z = z, zz
+<span id="L1366" class="ln">  1366</span>					zz, r = zz.div(r, z, m)
+<span id="L1367" class="ln">  1367</span>					z, r = r, z
+<span id="L1368" class="ln">  1368</span>				}
+<span id="L1369" class="ln">  1369</span>	
+<span id="L1370" class="ln">  1370</span>				zz = zz.mul(z, powers[yi&gt;&gt;(_W-n)])
+<span id="L1371" class="ln">  1371</span>				zz, z = z, zz
+<span id="L1372" class="ln">  1372</span>				zz, r = zz.div(r, z, m)
+<span id="L1373" class="ln">  1373</span>				z, r = r, z
+<span id="L1374" class="ln">  1374</span>	
+<span id="L1375" class="ln">  1375</span>				yi &lt;&lt;= n
+<span id="L1376" class="ln">  1376</span>			}
+<span id="L1377" class="ln">  1377</span>		}
+<span id="L1378" class="ln">  1378</span>	
+<span id="L1379" class="ln">  1379</span>		return z.norm()
+<span id="L1380" class="ln">  1380</span>	}
+<span id="L1381" class="ln">  1381</span>	
+<span id="L1382" class="ln">  1382</span>	<span class="comment">// probablyPrime performs reps Miller-Rabin tests to check whether n is prime.</span>
+<span id="L1383" class="ln">  1383</span>	<span class="comment">// If it returns true, n is prime with probability 1 - 1/4^reps.</span>
+<span id="L1384" class="ln">  1384</span>	<span class="comment">// If it returns false, n is not prime.</span>
+<span id="L1385" class="ln">  1385</span>	func (n nat) probablyPrime(reps int) bool {
+<span id="L1386" class="ln">  1386</span>		if len(n) == 0 {
+<span id="L1387" class="ln">  1387</span>			return false
+<span id="L1388" class="ln">  1388</span>		}
+<span id="L1389" class="ln">  1389</span>	
+<span id="L1390" class="ln">  1390</span>		if len(n) == 1 {
+<span id="L1391" class="ln">  1391</span>			if n[0] &lt; 2 {
+<span id="L1392" class="ln">  1392</span>				return false
+<span id="L1393" class="ln">  1393</span>			}
+<span id="L1394" class="ln">  1394</span>	
+<span id="L1395" class="ln">  1395</span>			if n[0]%2 == 0 {
+<span id="L1396" class="ln">  1396</span>				return n[0] == 2
+<span id="L1397" class="ln">  1397</span>			}
+<span id="L1398" class="ln">  1398</span>	
+<span id="L1399" class="ln">  1399</span>			<span class="comment">// We have to exclude these cases because we reject all</span>
+<span id="L1400" class="ln">  1400</span>			<span class="comment">// multiples of these numbers below.</span>
+<span id="L1401" class="ln">  1401</span>			switch n[0] {
+<span id="L1402" class="ln">  1402</span>			case 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53:
+<span id="L1403" class="ln">  1403</span>				return true
+<span id="L1404" class="ln">  1404</span>			}
+<span id="L1405" class="ln">  1405</span>		}
+<span id="L1406" class="ln">  1406</span>	
+<span id="L1407" class="ln">  1407</span>		const primesProduct32 = 0xC0CFD797         <span class="comment">// Π {p ∈ primes, 2 &lt; p &lt;= 29}</span>
+<span id="L1408" class="ln">  1408</span>		const primesProduct64 = 0xE221F97C30E94E1D <span class="comment">// Π {p ∈ primes, 2 &lt; p &lt;= 53}</span>
+<span id="L1409" class="ln">  1409</span>	
+<span id="L1410" class="ln">  1410</span>		var r Word
+<span id="L1411" class="ln">  1411</span>		switch _W {
+<span id="L1412" class="ln">  1412</span>		case 32:
+<span id="L1413" class="ln">  1413</span>			r = n.modW(primesProduct32)
+<span id="L1414" class="ln">  1414</span>		case 64:
+<span id="L1415" class="ln">  1415</span>			r = n.modW(primesProduct64 &amp; _M)
+<span id="L1416" class="ln">  1416</span>		default:
+<span id="L1417" class="ln">  1417</span>			panic(&#34;Unknown word size&#34;)
+<span id="L1418" class="ln">  1418</span>		}
+<span id="L1419" class="ln">  1419</span>	
+<span id="L1420" class="ln">  1420</span>		if r%3 == 0 || r%5 == 0 || r%7 == 0 || r%11 == 0 ||
+<span id="L1421" class="ln">  1421</span>			r%13 == 0 || r%17 == 0 || r%19 == 0 || r%23 == 0 || r%29 == 0 {
+<span id="L1422" class="ln">  1422</span>			return false
+<span id="L1423" class="ln">  1423</span>		}
+<span id="L1424" class="ln">  1424</span>	
+<span id="L1425" class="ln">  1425</span>		if _W == 64 &amp;&amp; (r%31 == 0 || r%37 == 0 || r%41 == 0 ||
+<span id="L1426" class="ln">  1426</span>			r%43 == 0 || r%47 == 0 || r%53 == 0) {
+<span id="L1427" class="ln">  1427</span>			return false
+<span id="L1428" class="ln">  1428</span>		}
+<span id="L1429" class="ln">  1429</span>	
+<span id="L1430" class="ln">  1430</span>		nm1 := nat(nil).sub(n, natOne)
+<span id="L1431" class="ln">  1431</span>		<span class="comment">// determine q, k such that nm1 = q &lt;&lt; k</span>
+<span id="L1432" class="ln">  1432</span>		k := nm1.trailingZeroBits()
+<span id="L1433" class="ln">  1433</span>		q := nat(nil).shr(nm1, k)
+<span id="L1434" class="ln">  1434</span>	
+<span id="L1435" class="ln">  1435</span>		nm3 := nat(nil).sub(nm1, natTwo)
+<span id="L1436" class="ln">  1436</span>		rand := rand.New(rand.NewSource(int64(n[0])))
+<span id="L1437" class="ln">  1437</span>	
+<span id="L1438" class="ln">  1438</span>		var x, y, quotient nat
+<span id="L1439" class="ln">  1439</span>		nm3Len := nm3.bitLen()
+<span id="L1440" class="ln">  1440</span>	
+<span id="L1441" class="ln">  1441</span>	NextRandom:
+<span id="L1442" class="ln">  1442</span>		for i := 0; i &lt; reps; i++ {
+<span id="L1443" class="ln">  1443</span>			x = x.random(rand, nm3, nm3Len)
+<span id="L1444" class="ln">  1444</span>			x = x.add(x, natTwo)
+<span id="L1445" class="ln">  1445</span>			y = y.expNN(x, q, n)
+<span id="L1446" class="ln">  1446</span>			if y.cmp(natOne) == 0 || y.cmp(nm1) == 0 {
+<span id="L1447" class="ln">  1447</span>				continue
+<span id="L1448" class="ln">  1448</span>			}
+<span id="L1449" class="ln">  1449</span>			for j := uint(1); j &lt; k; j++ {
+<span id="L1450" class="ln">  1450</span>				y = y.mul(y, y)
+<span id="L1451" class="ln">  1451</span>				quotient, y = quotient.div(y, y, n)
+<span id="L1452" class="ln">  1452</span>				if y.cmp(nm1) == 0 {
+<span id="L1453" class="ln">  1453</span>					continue NextRandom
+<span id="L1454" class="ln">  1454</span>				}
+<span id="L1455" class="ln">  1455</span>				if y.cmp(natOne) == 0 {
+<span id="L1456" class="ln">  1456</span>					return false
+<span id="L1457" class="ln">  1457</span>				}
+<span id="L1458" class="ln">  1458</span>			}
+<span id="L1459" class="ln">  1459</span>			return false
+<span id="L1460" class="ln">  1460</span>		}
+<span id="L1461" class="ln">  1461</span>	
+<span id="L1462" class="ln">  1462</span>		return true
+<span id="L1463" class="ln">  1463</span>	}
+<span id="L1464" class="ln">  1464</span>	
+<span id="L1465" class="ln">  1465</span>	<span class="comment">// bytes writes the value of z into buf using big-endian encoding.</span>
+<span id="L1466" class="ln">  1466</span>	<span class="comment">// len(buf) must be &gt;= len(z)*_S. The value of z is encoded in the</span>
+<span id="L1467" class="ln">  1467</span>	<span class="comment">// slice buf[i:]. The number i of unused bytes at the beginning of</span>
+<span id="L1468" class="ln">  1468</span>	<span class="comment">// buf is returned as result.</span>
+<span id="L1469" class="ln">  1469</span>	func (z nat) bytes(buf []byte) (i int) {
+<span id="L1470" class="ln">  1470</span>		i = len(buf)
+<span id="L1471" class="ln">  1471</span>		for _, d := range z {
+<span id="L1472" class="ln">  1472</span>			for j := 0; j &lt; _S; j++ {
+<span id="L1473" class="ln">  1473</span>				i--
+<span id="L1474" class="ln">  1474</span>				buf[i] = byte(d)
+<span id="L1475" class="ln">  1475</span>				d &gt;&gt;= 8
+<span id="L1476" class="ln">  1476</span>			}
+<span id="L1477" class="ln">  1477</span>		}
+<span id="L1478" class="ln">  1478</span>	
+<span id="L1479" class="ln">  1479</span>		for i &lt; len(buf) &amp;&amp; buf[i] == 0 {
+<span id="L1480" class="ln">  1480</span>			i++
+<span id="L1481" class="ln">  1481</span>		}
+<span id="L1482" class="ln">  1482</span>	
+<span id="L1483" class="ln">  1483</span>		return
+<span id="L1484" class="ln">  1484</span>	}
+<span id="L1485" class="ln">  1485</span>	
+<span id="L1486" class="ln">  1486</span>	<span class="comment">// setBytes interprets buf as the bytes of a big-endian unsigned</span>
+<span id="L1487" class="ln">  1487</span>	<span class="comment">// integer, sets z to that value, and returns z.</span>
+<span id="L1488" class="ln">  1488</span>	func (z nat) setBytes(buf []byte) nat {
+<span id="L1489" class="ln">  1489</span>		z = z.make((len(buf) + _S - 1) / _S)
+<span id="L1490" class="ln">  1490</span>	
+<span id="L1491" class="ln">  1491</span>		k := 0
+<span id="L1492" class="ln">  1492</span>		s := uint(0)
+<span id="L1493" class="ln">  1493</span>		var d Word
+<span id="L1494" class="ln">  1494</span>		for i := len(buf); i &gt; 0; i-- {
+<span id="L1495" class="ln">  1495</span>			d |= Word(buf[i-1]) &lt;&lt; s
+<span id="L1496" class="ln">  1496</span>			if s += 8; s == _S*8 {
+<span id="L1497" class="ln">  1497</span>				z[k] = d
+<span id="L1498" class="ln">  1498</span>				k++
+<span id="L1499" class="ln">  1499</span>				s = 0
+<span id="L1500" class="ln">  1500</span>				d = 0
+<span id="L1501" class="ln">  1501</span>			}
+<span id="L1502" class="ln">  1502</span>		}
+<span id="L1503" class="ln">  1503</span>		if k &lt; len(z) {
+<span id="L1504" class="ln">  1504</span>			z[k] = d
+<span id="L1505" class="ln">  1505</span>		}
+<span id="L1506" class="ln">  1506</span>	
+<span id="L1507" class="ln">  1507</span>		return z.norm()
+<span id="L1508" class="ln">  1508</span>	}
+<span id="L1509" class="ln">  1509</span>	
+</pre><p><a href="nat.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

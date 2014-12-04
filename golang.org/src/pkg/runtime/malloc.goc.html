@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/malloc.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/malloc.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// See malloc.h for overview.
+<span id="L6" class="ln">     6</span>	//
+<span id="L7" class="ln">     7</span>	// TODO(rsc): double-check stats.
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	package runtime
+<span id="L10" class="ln">    10</span>	#include &#34;runtime.h&#34;
+<span id="L11" class="ln">    11</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L12" class="ln">    12</span>	#include &#34;malloc.h&#34;
+<span id="L13" class="ln">    13</span>	#include &#34;type.h&#34;
+<span id="L14" class="ln">    14</span>	#include &#34;typekind.h&#34;
+<span id="L15" class="ln">    15</span>	#include &#34;race.h&#34;
+<span id="L16" class="ln">    16</span>	#include &#34;stack.h&#34;
+<span id="L17" class="ln">    17</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	// Mark mheap as &#39;no pointers&#39;, it does not contain interesting pointers but occupies ~45K.
+<span id="L20" class="ln">    20</span>	#pragma dataflag NOPTR
+<span id="L21" class="ln">    21</span>	MHeap runtime·mheap;
+<span id="L22" class="ln">    22</span>	#pragma dataflag NOPTR
+<span id="L23" class="ln">    23</span>	MStats mstats;
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	int32	runtime·checking;
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	extern MStats mstats;	// defined in zruntime_def_$GOOS_$GOARCH.go
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	extern volatile intgo runtime·MemProfileRate;
+<span id="L30" class="ln">    30</span>	
+<span id="L31" class="ln">    31</span>	static MSpan* largealloc(uint32, uintptr*);
+<span id="L32" class="ln">    32</span>	static void profilealloc(void *v, uintptr size);
+<span id="L33" class="ln">    33</span>	static void settype(MSpan *s, void *v, uintptr typ);
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>	// Allocate an object of at least size bytes.
+<span id="L36" class="ln">    36</span>	// Small objects are allocated from the per-thread cache&#39;s free lists.
+<span id="L37" class="ln">    37</span>	// Large objects (&gt; 32 kB) are allocated straight from the heap.
+<span id="L38" class="ln">    38</span>	// If the block will be freed with runtime·free(), typ must be 0.
+<span id="L39" class="ln">    39</span>	void*
+<span id="L40" class="ln">    40</span>	runtime·mallocgc(uintptr size, uintptr typ, uint32 flag)
+<span id="L41" class="ln">    41</span>	{
+<span id="L42" class="ln">    42</span>		int32 sizeclass;
+<span id="L43" class="ln">    43</span>		uintptr tinysize, size1;
+<span id="L44" class="ln">    44</span>		intgo rate;
+<span id="L45" class="ln">    45</span>		MCache *c;
+<span id="L46" class="ln">    46</span>		MSpan *s;
+<span id="L47" class="ln">    47</span>		MLink *v, *next;
+<span id="L48" class="ln">    48</span>		byte *tiny;
+<span id="L49" class="ln">    49</span>	
+<span id="L50" class="ln">    50</span>		if(size == 0) {
+<span id="L51" class="ln">    51</span>			// All 0-length allocations use this pointer.
+<span id="L52" class="ln">    52</span>			// The language does not require the allocations to
+<span id="L53" class="ln">    53</span>			// have distinct values.
+<span id="L54" class="ln">    54</span>			return &amp;runtime·zerobase;
+<span id="L55" class="ln">    55</span>		}
+<span id="L56" class="ln">    56</span>		if(m-&gt;mallocing)
+<span id="L57" class="ln">    57</span>			runtime·throw(&#34;malloc/free - deadlock&#34;);
+<span id="L58" class="ln">    58</span>		// Disable preemption during settype.
+<span id="L59" class="ln">    59</span>		// We can not use m-&gt;mallocing for this, because settype calls mallocgc.
+<span id="L60" class="ln">    60</span>		m-&gt;locks++;
+<span id="L61" class="ln">    61</span>		m-&gt;mallocing = 1;
+<span id="L62" class="ln">    62</span>	
+<span id="L63" class="ln">    63</span>		if(DebugTypeAtBlockEnd)
+<span id="L64" class="ln">    64</span>			size += sizeof(uintptr);
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>		c = m-&gt;mcache;
+<span id="L67" class="ln">    67</span>		if(!runtime·debug.efence &amp;&amp; size &lt;= MaxSmallSize) {
+<span id="L68" class="ln">    68</span>			if((flag&amp;(FlagNoScan|FlagNoGC)) == FlagNoScan &amp;&amp; size &lt; TinySize) {
+<span id="L69" class="ln">    69</span>				// Tiny allocator.
+<span id="L70" class="ln">    70</span>				//
+<span id="L71" class="ln">    71</span>				// Tiny allocator combines several tiny allocation requests
+<span id="L72" class="ln">    72</span>				// into a single memory block. The resulting memory block
+<span id="L73" class="ln">    73</span>				// is freed when all subobjects are unreachable. The subobjects
+<span id="L74" class="ln">    74</span>				// must be FlagNoScan (don&#39;t have pointers), this ensures that
+<span id="L75" class="ln">    75</span>				// the amount of potentially wasted memory is bounded.
+<span id="L76" class="ln">    76</span>				//
+<span id="L77" class="ln">    77</span>				// Size of the memory block used for combining (TinySize) is tunable.
+<span id="L78" class="ln">    78</span>				// Current setting is 16 bytes, which relates to 2x worst case memory
+<span id="L79" class="ln">    79</span>				// wastage (when all but one subobjects are unreachable).
+<span id="L80" class="ln">    80</span>				// 8 bytes would result in no wastage at all, but provides less
+<span id="L81" class="ln">    81</span>				// opportunities for combining.
+<span id="L82" class="ln">    82</span>				// 32 bytes provides more opportunities for combining,
+<span id="L83" class="ln">    83</span>				// but can lead to 4x worst case wastage.
+<span id="L84" class="ln">    84</span>				// The best case winning is 8x regardless of block size.
+<span id="L85" class="ln">    85</span>				//
+<span id="L86" class="ln">    86</span>				// Objects obtained from tiny allocator must not be freed explicitly.
+<span id="L87" class="ln">    87</span>				// So when an object will be freed explicitly, we ensure that
+<span id="L88" class="ln">    88</span>				// its size &gt;= TinySize.
+<span id="L89" class="ln">    89</span>				//
+<span id="L90" class="ln">    90</span>				// SetFinalizer has a special case for objects potentially coming
+<span id="L91" class="ln">    91</span>				// from tiny allocator, it such case it allows to set finalizers
+<span id="L92" class="ln">    92</span>				// for an inner byte of a memory block.
+<span id="L93" class="ln">    93</span>				//
+<span id="L94" class="ln">    94</span>				// The main targets of tiny allocator are small strings and
+<span id="L95" class="ln">    95</span>				// standalone escaping variables. On a json benchmark
+<span id="L96" class="ln">    96</span>				// the allocator reduces number of allocations by ~12% and
+<span id="L97" class="ln">    97</span>				// reduces heap size by ~20%.
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>				tinysize = c-&gt;tinysize;
+<span id="L100" class="ln">   100</span>				if(size &lt;= tinysize) {
+<span id="L101" class="ln">   101</span>					tiny = c-&gt;tiny;
+<span id="L102" class="ln">   102</span>					// Align tiny pointer for required (conservative) alignment.
+<span id="L103" class="ln">   103</span>					if((size&amp;7) == 0)
+<span id="L104" class="ln">   104</span>						tiny = (byte*)ROUND((uintptr)tiny, 8);
+<span id="L105" class="ln">   105</span>					else if((size&amp;3) == 0)
+<span id="L106" class="ln">   106</span>						tiny = (byte*)ROUND((uintptr)tiny, 4);
+<span id="L107" class="ln">   107</span>					else if((size&amp;1) == 0)
+<span id="L108" class="ln">   108</span>						tiny = (byte*)ROUND((uintptr)tiny, 2);
+<span id="L109" class="ln">   109</span>					size1 = size + (tiny - c-&gt;tiny);
+<span id="L110" class="ln">   110</span>					if(size1 &lt;= tinysize) {
+<span id="L111" class="ln">   111</span>						// The object fits into existing tiny block.
+<span id="L112" class="ln">   112</span>						v = (MLink*)tiny;
+<span id="L113" class="ln">   113</span>						c-&gt;tiny += size1;
+<span id="L114" class="ln">   114</span>						c-&gt;tinysize -= size1;
+<span id="L115" class="ln">   115</span>						m-&gt;mallocing = 0;
+<span id="L116" class="ln">   116</span>						m-&gt;locks--;
+<span id="L117" class="ln">   117</span>						if(m-&gt;locks == 0 &amp;&amp; g-&gt;preempt)  // restore the preemption request in case we&#39;ve cleared it in newstack
+<span id="L118" class="ln">   118</span>							g-&gt;stackguard0 = StackPreempt;
+<span id="L119" class="ln">   119</span>						return v;
+<span id="L120" class="ln">   120</span>					}
+<span id="L121" class="ln">   121</span>				}
+<span id="L122" class="ln">   122</span>				// Allocate a new TinySize block.
+<span id="L123" class="ln">   123</span>				s = c-&gt;alloc[TinySizeClass];
+<span id="L124" class="ln">   124</span>				if(s-&gt;freelist == nil)
+<span id="L125" class="ln">   125</span>					s = runtime·MCache_Refill(c, TinySizeClass);
+<span id="L126" class="ln">   126</span>				v = s-&gt;freelist;
+<span id="L127" class="ln">   127</span>				next = v-&gt;next;
+<span id="L128" class="ln">   128</span>				s-&gt;freelist = next;
+<span id="L129" class="ln">   129</span>				s-&gt;ref++;
+<span id="L130" class="ln">   130</span>				if(next != nil)  // prefetching nil leads to a DTLB miss
+<span id="L131" class="ln">   131</span>					PREFETCH(next);
+<span id="L132" class="ln">   132</span>				((uint64*)v)[0] = 0;
+<span id="L133" class="ln">   133</span>				((uint64*)v)[1] = 0;
+<span id="L134" class="ln">   134</span>				// See if we need to replace the existing tiny block with the new one
+<span id="L135" class="ln">   135</span>				// based on amount of remaining free space.
+<span id="L136" class="ln">   136</span>				if(TinySize-size &gt; tinysize) {
+<span id="L137" class="ln">   137</span>					c-&gt;tiny = (byte*)v + size;
+<span id="L138" class="ln">   138</span>					c-&gt;tinysize = TinySize - size;
+<span id="L139" class="ln">   139</span>				}
+<span id="L140" class="ln">   140</span>				size = TinySize;
+<span id="L141" class="ln">   141</span>				goto done;
+<span id="L142" class="ln">   142</span>			}
+<span id="L143" class="ln">   143</span>			// Allocate from mcache free lists.
+<span id="L144" class="ln">   144</span>			// Inlined version of SizeToClass().
+<span id="L145" class="ln">   145</span>			if(size &lt;= 1024-8)
+<span id="L146" class="ln">   146</span>				sizeclass = runtime·size_to_class8[(size+7)&gt;&gt;3];
+<span id="L147" class="ln">   147</span>			else
+<span id="L148" class="ln">   148</span>				sizeclass = runtime·size_to_class128[(size-1024+127) &gt;&gt; 7];
+<span id="L149" class="ln">   149</span>			size = runtime·class_to_size[sizeclass];
+<span id="L150" class="ln">   150</span>			s = c-&gt;alloc[sizeclass];
+<span id="L151" class="ln">   151</span>			if(s-&gt;freelist == nil)
+<span id="L152" class="ln">   152</span>				s = runtime·MCache_Refill(c, sizeclass);
+<span id="L153" class="ln">   153</span>			v = s-&gt;freelist;
+<span id="L154" class="ln">   154</span>			next = v-&gt;next;
+<span id="L155" class="ln">   155</span>			s-&gt;freelist = next;
+<span id="L156" class="ln">   156</span>			s-&gt;ref++;
+<span id="L157" class="ln">   157</span>			if(next != nil)  // prefetching nil leads to a DTLB miss
+<span id="L158" class="ln">   158</span>				PREFETCH(next);
+<span id="L159" class="ln">   159</span>			if(!(flag &amp; FlagNoZero)) {
+<span id="L160" class="ln">   160</span>				v-&gt;next = nil;
+<span id="L161" class="ln">   161</span>				// block is zeroed iff second word is zero ...
+<span id="L162" class="ln">   162</span>				if(size &gt; 2*sizeof(uintptr) &amp;&amp; ((uintptr*)v)[1] != 0)
+<span id="L163" class="ln">   163</span>					runtime·memclr((byte*)v, size);
+<span id="L164" class="ln">   164</span>			}
+<span id="L165" class="ln">   165</span>		done:
+<span id="L166" class="ln">   166</span>			c-&gt;local_cachealloc += size;
+<span id="L167" class="ln">   167</span>		} else {
+<span id="L168" class="ln">   168</span>			// Allocate directly from heap.
+<span id="L169" class="ln">   169</span>			s = largealloc(flag, &amp;size);
+<span id="L170" class="ln">   170</span>			v = (void*)(s-&gt;start &lt;&lt; PageShift);
+<span id="L171" class="ln">   171</span>		}
+<span id="L172" class="ln">   172</span>	
+<span id="L173" class="ln">   173</span>		if(flag &amp; FlagNoGC)
+<span id="L174" class="ln">   174</span>			runtime·marknogc(v);
+<span id="L175" class="ln">   175</span>		else if(!(flag &amp; FlagNoScan))
+<span id="L176" class="ln">   176</span>			runtime·markscan(v);
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>		if(DebugTypeAtBlockEnd)
+<span id="L179" class="ln">   179</span>			*(uintptr*)((uintptr)v+size-sizeof(uintptr)) = typ;
+<span id="L180" class="ln">   180</span>	
+<span id="L181" class="ln">   181</span>		m-&gt;mallocing = 0;
+<span id="L182" class="ln">   182</span>		// TODO: save type even if FlagNoScan?  Potentially expensive but might help
+<span id="L183" class="ln">   183</span>		// heap profiling/tracing.
+<span id="L184" class="ln">   184</span>		if(UseSpanType &amp;&amp; !(flag &amp; FlagNoScan) &amp;&amp; typ != 0)
+<span id="L185" class="ln">   185</span>			settype(s, v, typ);
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>		if(raceenabled)
+<span id="L188" class="ln">   188</span>			runtime·racemalloc(v, size);
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>		if(runtime·debug.allocfreetrace)
+<span id="L191" class="ln">   191</span>			runtime·tracealloc(v, size, typ);
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>		if(!(flag &amp; FlagNoProfiling) &amp;&amp; (rate = runtime·MemProfileRate) &gt; 0) {
+<span id="L194" class="ln">   194</span>			if(size &lt; rate &amp;&amp; size &lt; c-&gt;next_sample)
+<span id="L195" class="ln">   195</span>				c-&gt;next_sample -= size;
+<span id="L196" class="ln">   196</span>			else
+<span id="L197" class="ln">   197</span>				profilealloc(v, size);
+<span id="L198" class="ln">   198</span>		}
+<span id="L199" class="ln">   199</span>	
+<span id="L200" class="ln">   200</span>		m-&gt;locks--;
+<span id="L201" class="ln">   201</span>		if(m-&gt;locks == 0 &amp;&amp; g-&gt;preempt)  // restore the preemption request in case we&#39;ve cleared it in newstack
+<span id="L202" class="ln">   202</span>			g-&gt;stackguard0 = StackPreempt;
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>		if(!(flag &amp; FlagNoInvokeGC) &amp;&amp; mstats.heap_alloc &gt;= mstats.next_gc)
+<span id="L205" class="ln">   205</span>			runtime·gc(0);
+<span id="L206" class="ln">   206</span>	
+<span id="L207" class="ln">   207</span>		return v;
+<span id="L208" class="ln">   208</span>	}
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>	static MSpan*
+<span id="L211" class="ln">   211</span>	largealloc(uint32 flag, uintptr *sizep)
+<span id="L212" class="ln">   212</span>	{
+<span id="L213" class="ln">   213</span>		uintptr npages, size;
+<span id="L214" class="ln">   214</span>		MSpan *s;
+<span id="L215" class="ln">   215</span>		void *v;
+<span id="L216" class="ln">   216</span>	
+<span id="L217" class="ln">   217</span>		// Allocate directly from heap.
+<span id="L218" class="ln">   218</span>		size = *sizep;
+<span id="L219" class="ln">   219</span>		if(size + PageSize &lt; size)
+<span id="L220" class="ln">   220</span>			runtime·throw(&#34;out of memory&#34;);
+<span id="L221" class="ln">   221</span>		npages = size &gt;&gt; PageShift;
+<span id="L222" class="ln">   222</span>		if((size &amp; PageMask) != 0)
+<span id="L223" class="ln">   223</span>			npages++;
+<span id="L224" class="ln">   224</span>		s = runtime·MHeap_Alloc(&amp;runtime·mheap, npages, 0, 1, !(flag &amp; FlagNoZero));
+<span id="L225" class="ln">   225</span>		if(s == nil)
+<span id="L226" class="ln">   226</span>			runtime·throw(&#34;out of memory&#34;);
+<span id="L227" class="ln">   227</span>		s-&gt;limit = (byte*)(s-&gt;start&lt;&lt;PageShift) + size;
+<span id="L228" class="ln">   228</span>		*sizep = npages&lt;&lt;PageShift;
+<span id="L229" class="ln">   229</span>		v = (void*)(s-&gt;start &lt;&lt; PageShift);
+<span id="L230" class="ln">   230</span>		// setup for mark sweep
+<span id="L231" class="ln">   231</span>		runtime·markspan(v, 0, 0, true);
+<span id="L232" class="ln">   232</span>		return s;
+<span id="L233" class="ln">   233</span>	}
+<span id="L234" class="ln">   234</span>	
+<span id="L235" class="ln">   235</span>	static void
+<span id="L236" class="ln">   236</span>	profilealloc(void *v, uintptr size)
+<span id="L237" class="ln">   237</span>	{
+<span id="L238" class="ln">   238</span>		uintptr rate;
+<span id="L239" class="ln">   239</span>		int32 next;
+<span id="L240" class="ln">   240</span>		MCache *c;
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>		c = m-&gt;mcache;
+<span id="L243" class="ln">   243</span>		rate = runtime·MemProfileRate;
+<span id="L244" class="ln">   244</span>		if(size &lt; rate) {
+<span id="L245" class="ln">   245</span>			// pick next profile time
+<span id="L246" class="ln">   246</span>			// If you change this, also change allocmcache.
+<span id="L247" class="ln">   247</span>			if(rate &gt; 0x3fffffff)	// make 2*rate not overflow
+<span id="L248" class="ln">   248</span>				rate = 0x3fffffff;
+<span id="L249" class="ln">   249</span>			next = runtime·fastrand1() % (2*rate);
+<span id="L250" class="ln">   250</span>			// Subtract the &#34;remainder&#34; of the current allocation.
+<span id="L251" class="ln">   251</span>			// Otherwise objects that are close in size to sampling rate
+<span id="L252" class="ln">   252</span>			// will be under-sampled, because we consistently discard this remainder.
+<span id="L253" class="ln">   253</span>			next -= (size - c-&gt;next_sample);
+<span id="L254" class="ln">   254</span>			if(next &lt; 0)
+<span id="L255" class="ln">   255</span>				next = 0;
+<span id="L256" class="ln">   256</span>			c-&gt;next_sample = next;
+<span id="L257" class="ln">   257</span>		}
+<span id="L258" class="ln">   258</span>		runtime·MProf_Malloc(v, size);
+<span id="L259" class="ln">   259</span>	}
+<span id="L260" class="ln">   260</span>	
+<span id="L261" class="ln">   261</span>	void*
+<span id="L262" class="ln">   262</span>	runtime·malloc(uintptr size)
+<span id="L263" class="ln">   263</span>	{
+<span id="L264" class="ln">   264</span>		return runtime·mallocgc(size, 0, FlagNoInvokeGC);
+<span id="L265" class="ln">   265</span>	}
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>	// Free the object whose base pointer is v.
+<span id="L268" class="ln">   268</span>	void
+<span id="L269" class="ln">   269</span>	runtime·free(void *v)
+<span id="L270" class="ln">   270</span>	{
+<span id="L271" class="ln">   271</span>		int32 sizeclass;
+<span id="L272" class="ln">   272</span>		MSpan *s;
+<span id="L273" class="ln">   273</span>		MCache *c;
+<span id="L274" class="ln">   274</span>		uintptr size;
+<span id="L275" class="ln">   275</span>	
+<span id="L276" class="ln">   276</span>		if(v == nil)
+<span id="L277" class="ln">   277</span>			return;
+<span id="L278" class="ln">   278</span>		
+<span id="L279" class="ln">   279</span>		// If you change this also change mgc0.c:/^sweep,
+<span id="L280" class="ln">   280</span>		// which has a copy of the guts of free.
+<span id="L281" class="ln">   281</span>	
+<span id="L282" class="ln">   282</span>		if(m-&gt;mallocing)
+<span id="L283" class="ln">   283</span>			runtime·throw(&#34;malloc/free - deadlock&#34;);
+<span id="L284" class="ln">   284</span>		m-&gt;mallocing = 1;
+<span id="L285" class="ln">   285</span>	
+<span id="L286" class="ln">   286</span>		if(!runtime·mlookup(v, nil, nil, &amp;s)) {
+<span id="L287" class="ln">   287</span>			runtime·printf(&#34;free %p: not an allocated block\n&#34;, v);
+<span id="L288" class="ln">   288</span>			runtime·throw(&#34;free runtime·mlookup&#34;);
+<span id="L289" class="ln">   289</span>		}
+<span id="L290" class="ln">   290</span>		size = s-&gt;elemsize;
+<span id="L291" class="ln">   291</span>		sizeclass = s-&gt;sizeclass;
+<span id="L292" class="ln">   292</span>		// Objects that are smaller than TinySize can be allocated using tiny alloc,
+<span id="L293" class="ln">   293</span>		// if then such object is combined with an object with finalizer, we will crash.
+<span id="L294" class="ln">   294</span>		if(size &lt; TinySize)
+<span id="L295" class="ln">   295</span>			runtime·throw(&#34;freeing too small block&#34;);
+<span id="L296" class="ln">   296</span>	
+<span id="L297" class="ln">   297</span>		if(runtime·debug.allocfreetrace)
+<span id="L298" class="ln">   298</span>			runtime·tracefree(v, size);
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>		// Ensure that the span is swept.
+<span id="L301" class="ln">   301</span>		// If we free into an unswept span, we will corrupt GC bitmaps.
+<span id="L302" class="ln">   302</span>		runtime·MSpan_EnsureSwept(s);
+<span id="L303" class="ln">   303</span>	
+<span id="L304" class="ln">   304</span>		if(s-&gt;specials != nil)
+<span id="L305" class="ln">   305</span>			runtime·freeallspecials(s, v, size);
+<span id="L306" class="ln">   306</span>	
+<span id="L307" class="ln">   307</span>		c = m-&gt;mcache;
+<span id="L308" class="ln">   308</span>		if(sizeclass == 0) {
+<span id="L309" class="ln">   309</span>			// Large object.
+<span id="L310" class="ln">   310</span>			s-&gt;needzero = 1;
+<span id="L311" class="ln">   311</span>			// Must mark v freed before calling unmarkspan and MHeap_Free:
+<span id="L312" class="ln">   312</span>			// they might coalesce v into other spans and change the bitmap further.
+<span id="L313" class="ln">   313</span>			runtime·markfreed(v);
+<span id="L314" class="ln">   314</span>			runtime·unmarkspan(v, 1&lt;&lt;PageShift);
+<span id="L315" class="ln">   315</span>			// NOTE(rsc,dvyukov): The original implementation of efence
+<span id="L316" class="ln">   316</span>			// in CL 22060046 used SysFree instead of SysFault, so that
+<span id="L317" class="ln">   317</span>			// the operating system would eventually give the memory
+<span id="L318" class="ln">   318</span>			// back to us again, so that an efence program could run
+<span id="L319" class="ln">   319</span>			// longer without running out of memory. Unfortunately,
+<span id="L320" class="ln">   320</span>			// calling SysFree here without any kind of adjustment of the
+<span id="L321" class="ln">   321</span>			// heap data structures means that when the memory does
+<span id="L322" class="ln">   322</span>			// come back to us, we have the wrong metadata for it, either in
+<span id="L323" class="ln">   323</span>			// the MSpan structures or in the garbage collection bitmap.
+<span id="L324" class="ln">   324</span>			// Using SysFault here means that the program will run out of
+<span id="L325" class="ln">   325</span>			// memory fairly quickly in efence mode, but at least it won&#39;t
+<span id="L326" class="ln">   326</span>			// have mysterious crashes due to confused memory reuse.
+<span id="L327" class="ln">   327</span>			// It should be possible to switch back to SysFree if we also 
+<span id="L328" class="ln">   328</span>			// implement and then call some kind of MHeap_DeleteSpan.
+<span id="L329" class="ln">   329</span>			if(runtime·debug.efence)
+<span id="L330" class="ln">   330</span>				runtime·SysFault((void*)(s-&gt;start&lt;&lt;PageShift), size);
+<span id="L331" class="ln">   331</span>			else
+<span id="L332" class="ln">   332</span>				runtime·MHeap_Free(&amp;runtime·mheap, s, 1);
+<span id="L333" class="ln">   333</span>			c-&gt;local_nlargefree++;
+<span id="L334" class="ln">   334</span>			c-&gt;local_largefree += size;
+<span id="L335" class="ln">   335</span>		} else {
+<span id="L336" class="ln">   336</span>			// Small object.
+<span id="L337" class="ln">   337</span>			if(size &gt; 2*sizeof(uintptr))
+<span id="L338" class="ln">   338</span>				((uintptr*)v)[1] = (uintptr)0xfeedfeedfeedfeedll;	// mark as &#34;needs to be zeroed&#34;
+<span id="L339" class="ln">   339</span>			else if(size &gt; sizeof(uintptr))
+<span id="L340" class="ln">   340</span>				((uintptr*)v)[1] = 0;
+<span id="L341" class="ln">   341</span>			// Must mark v freed before calling MCache_Free:
+<span id="L342" class="ln">   342</span>			// it might coalesce v and other blocks into a bigger span
+<span id="L343" class="ln">   343</span>			// and change the bitmap further.
+<span id="L344" class="ln">   344</span>			c-&gt;local_nsmallfree[sizeclass]++;
+<span id="L345" class="ln">   345</span>			c-&gt;local_cachealloc -= size;
+<span id="L346" class="ln">   346</span>			if(c-&gt;alloc[sizeclass] == s) {
+<span id="L347" class="ln">   347</span>				// We own the span, so we can just add v to the freelist
+<span id="L348" class="ln">   348</span>				runtime·markfreed(v);
+<span id="L349" class="ln">   349</span>				((MLink*)v)-&gt;next = s-&gt;freelist;
+<span id="L350" class="ln">   350</span>				s-&gt;freelist = v;
+<span id="L351" class="ln">   351</span>				s-&gt;ref--;
+<span id="L352" class="ln">   352</span>			} else {
+<span id="L353" class="ln">   353</span>				// Someone else owns this span.  Add to free queue.
+<span id="L354" class="ln">   354</span>				runtime·MCache_Free(c, v, sizeclass, size);
+<span id="L355" class="ln">   355</span>			}
+<span id="L356" class="ln">   356</span>		}
+<span id="L357" class="ln">   357</span>		m-&gt;mallocing = 0;
+<span id="L358" class="ln">   358</span>	}
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>	int32
+<span id="L361" class="ln">   361</span>	runtime·mlookup(void *v, byte **base, uintptr *size, MSpan **sp)
+<span id="L362" class="ln">   362</span>	{
+<span id="L363" class="ln">   363</span>		uintptr n, i;
+<span id="L364" class="ln">   364</span>		byte *p;
+<span id="L365" class="ln">   365</span>		MSpan *s;
+<span id="L366" class="ln">   366</span>	
+<span id="L367" class="ln">   367</span>		m-&gt;mcache-&gt;local_nlookup++;
+<span id="L368" class="ln">   368</span>		if (sizeof(void*) == 4 &amp;&amp; m-&gt;mcache-&gt;local_nlookup &gt;= (1&lt;&lt;30)) {
+<span id="L369" class="ln">   369</span>			// purge cache stats to prevent overflow
+<span id="L370" class="ln">   370</span>			runtime·lock(&amp;runtime·mheap);
+<span id="L371" class="ln">   371</span>			runtime·purgecachedstats(m-&gt;mcache);
+<span id="L372" class="ln">   372</span>			runtime·unlock(&amp;runtime·mheap);
+<span id="L373" class="ln">   373</span>		}
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>		s = runtime·MHeap_LookupMaybe(&amp;runtime·mheap, v);
+<span id="L376" class="ln">   376</span>		if(sp)
+<span id="L377" class="ln">   377</span>			*sp = s;
+<span id="L378" class="ln">   378</span>		if(s == nil) {
+<span id="L379" class="ln">   379</span>			runtime·checkfreed(v, 1);
+<span id="L380" class="ln">   380</span>			if(base)
+<span id="L381" class="ln">   381</span>				*base = nil;
+<span id="L382" class="ln">   382</span>			if(size)
+<span id="L383" class="ln">   383</span>				*size = 0;
+<span id="L384" class="ln">   384</span>			return 0;
+<span id="L385" class="ln">   385</span>		}
+<span id="L386" class="ln">   386</span>	
+<span id="L387" class="ln">   387</span>		p = (byte*)((uintptr)s-&gt;start&lt;&lt;PageShift);
+<span id="L388" class="ln">   388</span>		if(s-&gt;sizeclass == 0) {
+<span id="L389" class="ln">   389</span>			// Large object.
+<span id="L390" class="ln">   390</span>			if(base)
+<span id="L391" class="ln">   391</span>				*base = p;
+<span id="L392" class="ln">   392</span>			if(size)
+<span id="L393" class="ln">   393</span>				*size = s-&gt;npages&lt;&lt;PageShift;
+<span id="L394" class="ln">   394</span>			return 1;
+<span id="L395" class="ln">   395</span>		}
+<span id="L396" class="ln">   396</span>	
+<span id="L397" class="ln">   397</span>		n = s-&gt;elemsize;
+<span id="L398" class="ln">   398</span>		if(base) {
+<span id="L399" class="ln">   399</span>			i = ((byte*)v - p)/n;
+<span id="L400" class="ln">   400</span>			*base = p + i*n;
+<span id="L401" class="ln">   401</span>		}
+<span id="L402" class="ln">   402</span>		if(size)
+<span id="L403" class="ln">   403</span>			*size = n;
+<span id="L404" class="ln">   404</span>	
+<span id="L405" class="ln">   405</span>		return 1;
+<span id="L406" class="ln">   406</span>	}
+<span id="L407" class="ln">   407</span>	
+<span id="L408" class="ln">   408</span>	void
+<span id="L409" class="ln">   409</span>	runtime·purgecachedstats(MCache *c)
+<span id="L410" class="ln">   410</span>	{
+<span id="L411" class="ln">   411</span>		MHeap *h;
+<span id="L412" class="ln">   412</span>		int32 i;
+<span id="L413" class="ln">   413</span>	
+<span id="L414" class="ln">   414</span>		// Protected by either heap or GC lock.
+<span id="L415" class="ln">   415</span>		h = &amp;runtime·mheap;
+<span id="L416" class="ln">   416</span>		mstats.heap_alloc += c-&gt;local_cachealloc;
+<span id="L417" class="ln">   417</span>		c-&gt;local_cachealloc = 0;
+<span id="L418" class="ln">   418</span>		mstats.nlookup += c-&gt;local_nlookup;
+<span id="L419" class="ln">   419</span>		c-&gt;local_nlookup = 0;
+<span id="L420" class="ln">   420</span>		h-&gt;largefree += c-&gt;local_largefree;
+<span id="L421" class="ln">   421</span>		c-&gt;local_largefree = 0;
+<span id="L422" class="ln">   422</span>		h-&gt;nlargefree += c-&gt;local_nlargefree;
+<span id="L423" class="ln">   423</span>		c-&gt;local_nlargefree = 0;
+<span id="L424" class="ln">   424</span>		for(i=0; i&lt;nelem(c-&gt;local_nsmallfree); i++) {
+<span id="L425" class="ln">   425</span>			h-&gt;nsmallfree[i] += c-&gt;local_nsmallfree[i];
+<span id="L426" class="ln">   426</span>			c-&gt;local_nsmallfree[i] = 0;
+<span id="L427" class="ln">   427</span>		}
+<span id="L428" class="ln">   428</span>	}
+<span id="L429" class="ln">   429</span>	
+<span id="L430" class="ln">   430</span>	// Size of the trailing by_size array differs between Go and C,
+<span id="L431" class="ln">   431</span>	// NumSizeClasses was changed, but we can not change Go struct because of backward compatibility.
+<span id="L432" class="ln">   432</span>	// sizeof_C_MStats is what C thinks about size of Go struct.
+<span id="L433" class="ln">   433</span>	uintptr runtime·sizeof_C_MStats = sizeof(MStats) - (NumSizeClasses - 61) * sizeof(mstats.by_size[0]);
+<span id="L434" class="ln">   434</span>	
+<span id="L435" class="ln">   435</span>	#define MaxArena32 (2U&lt;&lt;30)
+<span id="L436" class="ln">   436</span>	
+<span id="L437" class="ln">   437</span>	void
+<span id="L438" class="ln">   438</span>	runtime·mallocinit(void)
+<span id="L439" class="ln">   439</span>	{
+<span id="L440" class="ln">   440</span>		byte *p, *p1;
+<span id="L441" class="ln">   441</span>		uintptr arena_size, bitmap_size, spans_size, p_size;
+<span id="L442" class="ln">   442</span>		extern byte end[];
+<span id="L443" class="ln">   443</span>		uintptr limit;
+<span id="L444" class="ln">   444</span>		uint64 i;
+<span id="L445" class="ln">   445</span>		bool reserved;
+<span id="L446" class="ln">   446</span>	
+<span id="L447" class="ln">   447</span>		p = nil;
+<span id="L448" class="ln">   448</span>		p_size = 0;
+<span id="L449" class="ln">   449</span>		arena_size = 0;
+<span id="L450" class="ln">   450</span>		bitmap_size = 0;
+<span id="L451" class="ln">   451</span>		spans_size = 0;
+<span id="L452" class="ln">   452</span>		reserved = false;
+<span id="L453" class="ln">   453</span>	
+<span id="L454" class="ln">   454</span>		// for 64-bit build
+<span id="L455" class="ln">   455</span>		USED(p);
+<span id="L456" class="ln">   456</span>		USED(p_size);
+<span id="L457" class="ln">   457</span>		USED(arena_size);
+<span id="L458" class="ln">   458</span>		USED(bitmap_size);
+<span id="L459" class="ln">   459</span>		USED(spans_size);
+<span id="L460" class="ln">   460</span>	
+<span id="L461" class="ln">   461</span>		runtime·InitSizes();
+<span id="L462" class="ln">   462</span>	
+<span id="L463" class="ln">   463</span>		if(runtime·class_to_size[TinySizeClass] != TinySize)
+<span id="L464" class="ln">   464</span>			runtime·throw(&#34;bad TinySizeClass&#34;);
+<span id="L465" class="ln">   465</span>	
+<span id="L466" class="ln">   466</span>		// limit = runtime·memlimit();
+<span id="L467" class="ln">   467</span>		// See https://code.google.com/p/go/issues/detail?id=5049
+<span id="L468" class="ln">   468</span>		// TODO(rsc): Fix after 1.1.
+<span id="L469" class="ln">   469</span>		limit = 0;
+<span id="L470" class="ln">   470</span>	
+<span id="L471" class="ln">   471</span>		// Set up the allocation arena, a contiguous area of memory where
+<span id="L472" class="ln">   472</span>		// allocated data will be found.  The arena begins with a bitmap large
+<span id="L473" class="ln">   473</span>		// enough to hold 4 bits per allocated word.
+<span id="L474" class="ln">   474</span>		if(sizeof(void*) == 8 &amp;&amp; (limit == 0 || limit &gt; (1&lt;&lt;30))) {
+<span id="L475" class="ln">   475</span>			// On a 64-bit machine, allocate from a single contiguous reservation.
+<span id="L476" class="ln">   476</span>			// 128 GB (MaxMem) should be big enough for now.
+<span id="L477" class="ln">   477</span>			//
+<span id="L478" class="ln">   478</span>			// The code will work with the reservation at any address, but ask
+<span id="L479" class="ln">   479</span>			// SysReserve to use 0x0000XXc000000000 if possible (XX=00...7f).
+<span id="L480" class="ln">   480</span>			// Allocating a 128 GB region takes away 37 bits, and the amd64
+<span id="L481" class="ln">   481</span>			// doesn&#39;t let us choose the top 17 bits, so that leaves the 11 bits
+<span id="L482" class="ln">   482</span>			// in the middle of 0x00c0 for us to choose.  Choosing 0x00c0 means
+<span id="L483" class="ln">   483</span>			// that the valid memory addresses will begin 0x00c0, 0x00c1, ..., 0x00df.
+<span id="L484" class="ln">   484</span>			// In little-endian, that&#39;s c0 00, c1 00, ..., df 00. None of those are valid
+<span id="L485" class="ln">   485</span>			// UTF-8 sequences, and they are otherwise as far away from 
+<span id="L486" class="ln">   486</span>			// ff (likely a common byte) as possible.  If that fails, we try other 0xXXc0
+<span id="L487" class="ln">   487</span>			// addresses.  An earlier attempt to use 0x11f8 caused out of memory errors
+<span id="L488" class="ln">   488</span>			// on OS X during thread allocations.  0x00c0 causes conflicts with
+<span id="L489" class="ln">   489</span>			// AddressSanitizer which reserves all memory up to 0x0100.
+<span id="L490" class="ln">   490</span>			// These choices are both for debuggability and to reduce the
+<span id="L491" class="ln">   491</span>			// odds of the conservative garbage collector not collecting memory
+<span id="L492" class="ln">   492</span>			// because some non-pointer block of memory had a bit pattern
+<span id="L493" class="ln">   493</span>			// that matched a memory address.
+<span id="L494" class="ln">   494</span>			//
+<span id="L495" class="ln">   495</span>			// Actually we reserve 136 GB (because the bitmap ends up being 8 GB)
+<span id="L496" class="ln">   496</span>			// but it hardly matters: e0 00 is not valid UTF-8 either.
+<span id="L497" class="ln">   497</span>			//
+<span id="L498" class="ln">   498</span>			// If this fails we fall back to the 32 bit memory mechanism
+<span id="L499" class="ln">   499</span>			arena_size = MaxMem;
+<span id="L500" class="ln">   500</span>			bitmap_size = arena_size / (sizeof(void*)*8/4);
+<span id="L501" class="ln">   501</span>			spans_size = arena_size / PageSize * sizeof(runtime·mheap.spans[0]);
+<span id="L502" class="ln">   502</span>			spans_size = ROUND(spans_size, PageSize);
+<span id="L503" class="ln">   503</span>			for(i = 0; i &lt;= 0x7f; i++) {
+<span id="L504" class="ln">   504</span>				p = (void*)(i&lt;&lt;40 | 0x00c0ULL&lt;&lt;32);
+<span id="L505" class="ln">   505</span>				p_size = bitmap_size + spans_size + arena_size + PageSize;
+<span id="L506" class="ln">   506</span>				p = runtime·SysReserve(p, p_size, &amp;reserved);
+<span id="L507" class="ln">   507</span>				if(p != nil)
+<span id="L508" class="ln">   508</span>					break;
+<span id="L509" class="ln">   509</span>			}
+<span id="L510" class="ln">   510</span>		}
+<span id="L511" class="ln">   511</span>		if (p == nil) {
+<span id="L512" class="ln">   512</span>			// On a 32-bit machine, we can&#39;t typically get away
+<span id="L513" class="ln">   513</span>			// with a giant virtual address space reservation.
+<span id="L514" class="ln">   514</span>			// Instead we map the memory information bitmap
+<span id="L515" class="ln">   515</span>			// immediately after the data segment, large enough
+<span id="L516" class="ln">   516</span>			// to handle another 2GB of mappings (256 MB),
+<span id="L517" class="ln">   517</span>			// along with a reservation for another 512 MB of memory.
+<span id="L518" class="ln">   518</span>			// When that gets used up, we&#39;ll start asking the kernel
+<span id="L519" class="ln">   519</span>			// for any memory anywhere and hope it&#39;s in the 2GB
+<span id="L520" class="ln">   520</span>			// following the bitmap (presumably the executable begins
+<span id="L521" class="ln">   521</span>			// near the bottom of memory, so we&#39;ll have to use up
+<span id="L522" class="ln">   522</span>			// most of memory before the kernel resorts to giving out
+<span id="L523" class="ln">   523</span>			// memory before the beginning of the text segment).
+<span id="L524" class="ln">   524</span>			//
+<span id="L525" class="ln">   525</span>			// Alternatively we could reserve 512 MB bitmap, enough
+<span id="L526" class="ln">   526</span>			// for 4GB of mappings, and then accept any memory the
+<span id="L527" class="ln">   527</span>			// kernel threw at us, but normally that&#39;s a waste of 512 MB
+<span id="L528" class="ln">   528</span>			// of address space, which is probably too much in a 32-bit world.
+<span id="L529" class="ln">   529</span>			bitmap_size = MaxArena32 / (sizeof(void*)*8/4);
+<span id="L530" class="ln">   530</span>			arena_size = 512&lt;&lt;20;
+<span id="L531" class="ln">   531</span>			spans_size = MaxArena32 / PageSize * sizeof(runtime·mheap.spans[0]);
+<span id="L532" class="ln">   532</span>			if(limit &gt; 0 &amp;&amp; arena_size+bitmap_size+spans_size &gt; limit) {
+<span id="L533" class="ln">   533</span>				bitmap_size = (limit / 9) &amp; ~((1&lt;&lt;PageShift) - 1);
+<span id="L534" class="ln">   534</span>				arena_size = bitmap_size * 8;
+<span id="L535" class="ln">   535</span>				spans_size = arena_size / PageSize * sizeof(runtime·mheap.spans[0]);
+<span id="L536" class="ln">   536</span>			}
+<span id="L537" class="ln">   537</span>			spans_size = ROUND(spans_size, PageSize);
+<span id="L538" class="ln">   538</span>	
+<span id="L539" class="ln">   539</span>			// SysReserve treats the address we ask for, end, as a hint,
+<span id="L540" class="ln">   540</span>			// not as an absolute requirement.  If we ask for the end
+<span id="L541" class="ln">   541</span>			// of the data segment but the operating system requires
+<span id="L542" class="ln">   542</span>			// a little more space before we can start allocating, it will
+<span id="L543" class="ln">   543</span>			// give out a slightly higher pointer.  Except QEMU, which
+<span id="L544" class="ln">   544</span>			// is buggy, as usual: it won&#39;t adjust the pointer upward.
+<span id="L545" class="ln">   545</span>			// So adjust it upward a little bit ourselves: 1/4 MB to get
+<span id="L546" class="ln">   546</span>			// away from the running binary image and then round up
+<span id="L547" class="ln">   547</span>			// to a MB boundary.
+<span id="L548" class="ln">   548</span>			p = (byte*)ROUND((uintptr)end + (1&lt;&lt;18), 1&lt;&lt;20);
+<span id="L549" class="ln">   549</span>			p_size = bitmap_size + spans_size + arena_size + PageSize;
+<span id="L550" class="ln">   550</span>			p = runtime·SysReserve(p, p_size, &amp;reserved);
+<span id="L551" class="ln">   551</span>			if(p == nil)
+<span id="L552" class="ln">   552</span>				runtime·throw(&#34;runtime: cannot reserve arena virtual address space&#34;);
+<span id="L553" class="ln">   553</span>		}
+<span id="L554" class="ln">   554</span>	
+<span id="L555" class="ln">   555</span>		// PageSize can be larger than OS definition of page size,
+<span id="L556" class="ln">   556</span>		// so SysReserve can give us a PageSize-unaligned pointer.
+<span id="L557" class="ln">   557</span>		// To overcome this we ask for PageSize more and round up the pointer.
+<span id="L558" class="ln">   558</span>		p1 = (byte*)ROUND((uintptr)p, PageSize);
+<span id="L559" class="ln">   559</span>	
+<span id="L560" class="ln">   560</span>		runtime·mheap.spans = (MSpan**)p1;
+<span id="L561" class="ln">   561</span>		runtime·mheap.bitmap = p1 + spans_size;
+<span id="L562" class="ln">   562</span>		runtime·mheap.arena_start = p1 + spans_size + bitmap_size;
+<span id="L563" class="ln">   563</span>		runtime·mheap.arena_used = runtime·mheap.arena_start;
+<span id="L564" class="ln">   564</span>		runtime·mheap.arena_end = p + p_size;
+<span id="L565" class="ln">   565</span>		runtime·mheap.arena_reserved = reserved;
+<span id="L566" class="ln">   566</span>	
+<span id="L567" class="ln">   567</span>		if(((uintptr)runtime·mheap.arena_start &amp; (PageSize-1)) != 0)
+<span id="L568" class="ln">   568</span>			runtime·throw(&#34;misrounded allocation in mallocinit&#34;);
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>		// Initialize the rest of the allocator.	
+<span id="L571" class="ln">   571</span>		runtime·MHeap_Init(&amp;runtime·mheap);
+<span id="L572" class="ln">   572</span>		m-&gt;mcache = runtime·allocmcache();
+<span id="L573" class="ln">   573</span>	
+<span id="L574" class="ln">   574</span>		// See if it works.
+<span id="L575" class="ln">   575</span>		runtime·free(runtime·malloc(TinySize));
+<span id="L576" class="ln">   576</span>	}
+<span id="L577" class="ln">   577</span>	
+<span id="L578" class="ln">   578</span>	void*
+<span id="L579" class="ln">   579</span>	runtime·MHeap_SysAlloc(MHeap *h, uintptr n)
+<span id="L580" class="ln">   580</span>	{
+<span id="L581" class="ln">   581</span>		byte *p, *p_end;
+<span id="L582" class="ln">   582</span>		uintptr p_size;
+<span id="L583" class="ln">   583</span>		bool reserved;
+<span id="L584" class="ln">   584</span>	
+<span id="L585" class="ln">   585</span>		if(n &gt; h-&gt;arena_end - h-&gt;arena_used) {
+<span id="L586" class="ln">   586</span>			// We are in 32-bit mode, maybe we didn&#39;t use all possible address space yet.
+<span id="L587" class="ln">   587</span>			// Reserve some more space.
+<span id="L588" class="ln">   588</span>			byte *new_end;
+<span id="L589" class="ln">   589</span>	
+<span id="L590" class="ln">   590</span>			p_size = ROUND(n + PageSize, 256&lt;&lt;20);
+<span id="L591" class="ln">   591</span>			new_end = h-&gt;arena_end + p_size;
+<span id="L592" class="ln">   592</span>			if(new_end &lt;= h-&gt;arena_start + MaxArena32) {
+<span id="L593" class="ln">   593</span>				// TODO: It would be bad if part of the arena
+<span id="L594" class="ln">   594</span>				// is reserved and part is not.
+<span id="L595" class="ln">   595</span>				p = runtime·SysReserve(h-&gt;arena_end, p_size, &amp;reserved);
+<span id="L596" class="ln">   596</span>				if(p == h-&gt;arena_end) {
+<span id="L597" class="ln">   597</span>					h-&gt;arena_end = new_end;
+<span id="L598" class="ln">   598</span>					h-&gt;arena_reserved = reserved;
+<span id="L599" class="ln">   599</span>				}
+<span id="L600" class="ln">   600</span>				else if(p+p_size &lt;= h-&gt;arena_start + MaxArena32) {
+<span id="L601" class="ln">   601</span>					// Keep everything page-aligned.
+<span id="L602" class="ln">   602</span>					// Our pages are bigger than hardware pages.
+<span id="L603" class="ln">   603</span>					h-&gt;arena_end = p+p_size;
+<span id="L604" class="ln">   604</span>					h-&gt;arena_used = p + (-(uintptr)p&amp;(PageSize-1));
+<span id="L605" class="ln">   605</span>					h-&gt;arena_reserved = reserved;
+<span id="L606" class="ln">   606</span>				} else {
+<span id="L607" class="ln">   607</span>					uint64 stat;
+<span id="L608" class="ln">   608</span>					stat = 0;
+<span id="L609" class="ln">   609</span>					runtime·SysFree(p, p_size, &amp;stat);
+<span id="L610" class="ln">   610</span>				}
+<span id="L611" class="ln">   611</span>			}
+<span id="L612" class="ln">   612</span>		}
+<span id="L613" class="ln">   613</span>		if(n &lt;= h-&gt;arena_end - h-&gt;arena_used) {
+<span id="L614" class="ln">   614</span>			// Keep taking from our reservation.
+<span id="L615" class="ln">   615</span>			p = h-&gt;arena_used;
+<span id="L616" class="ln">   616</span>			runtime·SysMap(p, n, h-&gt;arena_reserved, &amp;mstats.heap_sys);
+<span id="L617" class="ln">   617</span>			h-&gt;arena_used += n;
+<span id="L618" class="ln">   618</span>			runtime·MHeap_MapBits(h);
+<span id="L619" class="ln">   619</span>			runtime·MHeap_MapSpans(h);
+<span id="L620" class="ln">   620</span>			if(raceenabled)
+<span id="L621" class="ln">   621</span>				runtime·racemapshadow(p, n);
+<span id="L622" class="ln">   622</span>			
+<span id="L623" class="ln">   623</span>			if(((uintptr)p &amp; (PageSize-1)) != 0)
+<span id="L624" class="ln">   624</span>				runtime·throw(&#34;misrounded allocation in MHeap_SysAlloc&#34;);
+<span id="L625" class="ln">   625</span>			return p;
+<span id="L626" class="ln">   626</span>		}
+<span id="L627" class="ln">   627</span>		
+<span id="L628" class="ln">   628</span>		// If using 64-bit, our reservation is all we have.
+<span id="L629" class="ln">   629</span>		if(h-&gt;arena_end - h-&gt;arena_start &gt;= MaxArena32)
+<span id="L630" class="ln">   630</span>			return nil;
+<span id="L631" class="ln">   631</span>	
+<span id="L632" class="ln">   632</span>		// On 32-bit, once the reservation is gone we can
+<span id="L633" class="ln">   633</span>		// try to get memory at a location chosen by the OS
+<span id="L634" class="ln">   634</span>		// and hope that it is in the range we allocated bitmap for.
+<span id="L635" class="ln">   635</span>		p_size = ROUND(n, PageSize) + PageSize;
+<span id="L636" class="ln">   636</span>		p = runtime·SysAlloc(p_size, &amp;mstats.heap_sys);
+<span id="L637" class="ln">   637</span>		if(p == nil)
+<span id="L638" class="ln">   638</span>			return nil;
+<span id="L639" class="ln">   639</span>	
+<span id="L640" class="ln">   640</span>		if(p &lt; h-&gt;arena_start || p+p_size - h-&gt;arena_start &gt;= MaxArena32) {
+<span id="L641" class="ln">   641</span>			runtime·printf(&#34;runtime: memory allocated by OS (%p) not in usable range [%p,%p)\n&#34;,
+<span id="L642" class="ln">   642</span>				p, h-&gt;arena_start, h-&gt;arena_start+MaxArena32);
+<span id="L643" class="ln">   643</span>			runtime·SysFree(p, p_size, &amp;mstats.heap_sys);
+<span id="L644" class="ln">   644</span>			return nil;
+<span id="L645" class="ln">   645</span>		}
+<span id="L646" class="ln">   646</span>		
+<span id="L647" class="ln">   647</span>		p_end = p + p_size;
+<span id="L648" class="ln">   648</span>		p += -(uintptr)p &amp; (PageSize-1);
+<span id="L649" class="ln">   649</span>		if(p+n &gt; h-&gt;arena_used) {
+<span id="L650" class="ln">   650</span>			h-&gt;arena_used = p+n;
+<span id="L651" class="ln">   651</span>			if(p_end &gt; h-&gt;arena_end)
+<span id="L652" class="ln">   652</span>				h-&gt;arena_end = p_end;
+<span id="L653" class="ln">   653</span>			runtime·MHeap_MapBits(h);
+<span id="L654" class="ln">   654</span>			runtime·MHeap_MapSpans(h);
+<span id="L655" class="ln">   655</span>			if(raceenabled)
+<span id="L656" class="ln">   656</span>				runtime·racemapshadow(p, n);
+<span id="L657" class="ln">   657</span>		}
+<span id="L658" class="ln">   658</span>		
+<span id="L659" class="ln">   659</span>		if(((uintptr)p &amp; (PageSize-1)) != 0)
+<span id="L660" class="ln">   660</span>			runtime·throw(&#34;misrounded allocation in MHeap_SysAlloc&#34;);
+<span id="L661" class="ln">   661</span>		return p;
+<span id="L662" class="ln">   662</span>	}
+<span id="L663" class="ln">   663</span>	
+<span id="L664" class="ln">   664</span>	static struct
+<span id="L665" class="ln">   665</span>	{
+<span id="L666" class="ln">   666</span>		Lock;
+<span id="L667" class="ln">   667</span>		byte*	pos;
+<span id="L668" class="ln">   668</span>		byte*	end;
+<span id="L669" class="ln">   669</span>	} persistent;
+<span id="L670" class="ln">   670</span>	
+<span id="L671" class="ln">   671</span>	enum
+<span id="L672" class="ln">   672</span>	{
+<span id="L673" class="ln">   673</span>		PersistentAllocChunk	= 256&lt;&lt;10,
+<span id="L674" class="ln">   674</span>		PersistentAllocMaxBlock	= 64&lt;&lt;10,  // VM reservation granularity is 64K on windows
+<span id="L675" class="ln">   675</span>	};
+<span id="L676" class="ln">   676</span>	
+<span id="L677" class="ln">   677</span>	// Wrapper around SysAlloc that can allocate small chunks.
+<span id="L678" class="ln">   678</span>	// There is no associated free operation.
+<span id="L679" class="ln">   679</span>	// Intended for things like function/type/debug-related persistent data.
+<span id="L680" class="ln">   680</span>	// If align is 0, uses default align (currently 8).
+<span id="L681" class="ln">   681</span>	void*
+<span id="L682" class="ln">   682</span>	runtime·persistentalloc(uintptr size, uintptr align, uint64 *stat)
+<span id="L683" class="ln">   683</span>	{
+<span id="L684" class="ln">   684</span>		byte *p;
+<span id="L685" class="ln">   685</span>	
+<span id="L686" class="ln">   686</span>		if(align != 0) {
+<span id="L687" class="ln">   687</span>			if(align&amp;(align-1))
+<span id="L688" class="ln">   688</span>				runtime·throw(&#34;persistentalloc: align is not a power of 2&#34;);
+<span id="L689" class="ln">   689</span>			if(align &gt; PageSize)
+<span id="L690" class="ln">   690</span>				runtime·throw(&#34;persistentalloc: align is too large&#34;);
+<span id="L691" class="ln">   691</span>		} else
+<span id="L692" class="ln">   692</span>			align = 8;
+<span id="L693" class="ln">   693</span>		if(size &gt;= PersistentAllocMaxBlock)
+<span id="L694" class="ln">   694</span>			return runtime·SysAlloc(size, stat);
+<span id="L695" class="ln">   695</span>		runtime·lock(&amp;persistent);
+<span id="L696" class="ln">   696</span>		persistent.pos = (byte*)ROUND((uintptr)persistent.pos, align);
+<span id="L697" class="ln">   697</span>		if(persistent.pos + size &gt; persistent.end) {
+<span id="L698" class="ln">   698</span>			persistent.pos = runtime·SysAlloc(PersistentAllocChunk, &amp;mstats.other_sys);
+<span id="L699" class="ln">   699</span>			if(persistent.pos == nil) {
+<span id="L700" class="ln">   700</span>				runtime·unlock(&amp;persistent);
+<span id="L701" class="ln">   701</span>				runtime·throw(&#34;runtime: cannot allocate memory&#34;);
+<span id="L702" class="ln">   702</span>			}
+<span id="L703" class="ln">   703</span>			persistent.end = persistent.pos + PersistentAllocChunk;
+<span id="L704" class="ln">   704</span>		}
+<span id="L705" class="ln">   705</span>		p = persistent.pos;
+<span id="L706" class="ln">   706</span>		persistent.pos += size;
+<span id="L707" class="ln">   707</span>		runtime·unlock(&amp;persistent);
+<span id="L708" class="ln">   708</span>		if(stat != &amp;mstats.other_sys) {
+<span id="L709" class="ln">   709</span>			// reaccount the allocation against provided stat
+<span id="L710" class="ln">   710</span>			runtime·xadd64(stat, size);
+<span id="L711" class="ln">   711</span>			runtime·xadd64(&amp;mstats.other_sys, -(uint64)size);
+<span id="L712" class="ln">   712</span>		}
+<span id="L713" class="ln">   713</span>		return p;
+<span id="L714" class="ln">   714</span>	}
+<span id="L715" class="ln">   715</span>	
+<span id="L716" class="ln">   716</span>	static void
+<span id="L717" class="ln">   717</span>	settype(MSpan *s, void *v, uintptr typ)
+<span id="L718" class="ln">   718</span>	{
+<span id="L719" class="ln">   719</span>		uintptr size, ofs, j, t;
+<span id="L720" class="ln">   720</span>		uintptr ntypes, nbytes2, nbytes3;
+<span id="L721" class="ln">   721</span>		uintptr *data2;
+<span id="L722" class="ln">   722</span>		byte *data3;
+<span id="L723" class="ln">   723</span>	
+<span id="L724" class="ln">   724</span>		if(s-&gt;sizeclass == 0) {
+<span id="L725" class="ln">   725</span>			s-&gt;types.compression = MTypes_Single;
+<span id="L726" class="ln">   726</span>			s-&gt;types.data = typ;
+<span id="L727" class="ln">   727</span>			return;
+<span id="L728" class="ln">   728</span>		}
+<span id="L729" class="ln">   729</span>		size = s-&gt;elemsize;
+<span id="L730" class="ln">   730</span>		ofs = ((uintptr)v - (s-&gt;start&lt;&lt;PageShift)) / size;
+<span id="L731" class="ln">   731</span>	
+<span id="L732" class="ln">   732</span>		switch(s-&gt;types.compression) {
+<span id="L733" class="ln">   733</span>		case MTypes_Empty:
+<span id="L734" class="ln">   734</span>			ntypes = (s-&gt;npages &lt;&lt; PageShift) / size;
+<span id="L735" class="ln">   735</span>			nbytes3 = 8*sizeof(uintptr) + 1*ntypes;
+<span id="L736" class="ln">   736</span>			data3 = runtime·mallocgc(nbytes3, 0, FlagNoProfiling|FlagNoScan|FlagNoInvokeGC);
+<span id="L737" class="ln">   737</span>			s-&gt;types.compression = MTypes_Bytes;
+<span id="L738" class="ln">   738</span>			s-&gt;types.data = (uintptr)data3;
+<span id="L739" class="ln">   739</span>			((uintptr*)data3)[1] = typ;
+<span id="L740" class="ln">   740</span>			data3[8*sizeof(uintptr) + ofs] = 1;
+<span id="L741" class="ln">   741</span>			break;
+<span id="L742" class="ln">   742</span>			
+<span id="L743" class="ln">   743</span>		case MTypes_Words:
+<span id="L744" class="ln">   744</span>			((uintptr*)s-&gt;types.data)[ofs] = typ;
+<span id="L745" class="ln">   745</span>			break;
+<span id="L746" class="ln">   746</span>			
+<span id="L747" class="ln">   747</span>		case MTypes_Bytes:
+<span id="L748" class="ln">   748</span>			data3 = (byte*)s-&gt;types.data;
+<span id="L749" class="ln">   749</span>			for(j=1; j&lt;8; j++) {
+<span id="L750" class="ln">   750</span>				if(((uintptr*)data3)[j] == typ) {
+<span id="L751" class="ln">   751</span>					break;
+<span id="L752" class="ln">   752</span>				}
+<span id="L753" class="ln">   753</span>				if(((uintptr*)data3)[j] == 0) {
+<span id="L754" class="ln">   754</span>					((uintptr*)data3)[j] = typ;
+<span id="L755" class="ln">   755</span>					break;
+<span id="L756" class="ln">   756</span>				}
+<span id="L757" class="ln">   757</span>			}
+<span id="L758" class="ln">   758</span>			if(j &lt; 8) {
+<span id="L759" class="ln">   759</span>				data3[8*sizeof(uintptr) + ofs] = j;
+<span id="L760" class="ln">   760</span>			} else {
+<span id="L761" class="ln">   761</span>				ntypes = (s-&gt;npages &lt;&lt; PageShift) / size;
+<span id="L762" class="ln">   762</span>				nbytes2 = ntypes * sizeof(uintptr);
+<span id="L763" class="ln">   763</span>				data2 = runtime·mallocgc(nbytes2, 0, FlagNoProfiling|FlagNoScan|FlagNoInvokeGC);
+<span id="L764" class="ln">   764</span>				s-&gt;types.compression = MTypes_Words;
+<span id="L765" class="ln">   765</span>				s-&gt;types.data = (uintptr)data2;
+<span id="L766" class="ln">   766</span>				
+<span id="L767" class="ln">   767</span>				// Move the contents of data3 to data2. Then deallocate data3.
+<span id="L768" class="ln">   768</span>				for(j=0; j&lt;ntypes; j++) {
+<span id="L769" class="ln">   769</span>					t = data3[8*sizeof(uintptr) + j];
+<span id="L770" class="ln">   770</span>					t = ((uintptr*)data3)[t];
+<span id="L771" class="ln">   771</span>					data2[j] = t;
+<span id="L772" class="ln">   772</span>				}
+<span id="L773" class="ln">   773</span>				data2[ofs] = typ;
+<span id="L774" class="ln">   774</span>			}
+<span id="L775" class="ln">   775</span>			break;
+<span id="L776" class="ln">   776</span>		}
+<span id="L777" class="ln">   777</span>	}
+<span id="L778" class="ln">   778</span>	
+<span id="L779" class="ln">   779</span>	uintptr
+<span id="L780" class="ln">   780</span>	runtime·gettype(void *v)
+<span id="L781" class="ln">   781</span>	{
+<span id="L782" class="ln">   782</span>		MSpan *s;
+<span id="L783" class="ln">   783</span>		uintptr t, ofs;
+<span id="L784" class="ln">   784</span>		byte *data;
+<span id="L785" class="ln">   785</span>	
+<span id="L786" class="ln">   786</span>		s = runtime·MHeap_LookupMaybe(&amp;runtime·mheap, v);
+<span id="L787" class="ln">   787</span>		if(s != nil) {
+<span id="L788" class="ln">   788</span>			t = 0;
+<span id="L789" class="ln">   789</span>			switch(s-&gt;types.compression) {
+<span id="L790" class="ln">   790</span>			case MTypes_Empty:
+<span id="L791" class="ln">   791</span>				break;
+<span id="L792" class="ln">   792</span>			case MTypes_Single:
+<span id="L793" class="ln">   793</span>				t = s-&gt;types.data;
+<span id="L794" class="ln">   794</span>				break;
+<span id="L795" class="ln">   795</span>			case MTypes_Words:
+<span id="L796" class="ln">   796</span>				ofs = (uintptr)v - (s-&gt;start&lt;&lt;PageShift);
+<span id="L797" class="ln">   797</span>				t = ((uintptr*)s-&gt;types.data)[ofs/s-&gt;elemsize];
+<span id="L798" class="ln">   798</span>				break;
+<span id="L799" class="ln">   799</span>			case MTypes_Bytes:
+<span id="L800" class="ln">   800</span>				ofs = (uintptr)v - (s-&gt;start&lt;&lt;PageShift);
+<span id="L801" class="ln">   801</span>				data = (byte*)s-&gt;types.data;
+<span id="L802" class="ln">   802</span>				t = data[8*sizeof(uintptr) + ofs/s-&gt;elemsize];
+<span id="L803" class="ln">   803</span>				t = ((uintptr*)data)[t];
+<span id="L804" class="ln">   804</span>				break;
+<span id="L805" class="ln">   805</span>			default:
+<span id="L806" class="ln">   806</span>				runtime·throw(&#34;runtime·gettype: invalid compression kind&#34;);
+<span id="L807" class="ln">   807</span>			}
+<span id="L808" class="ln">   808</span>			if(0) {
+<span id="L809" class="ln">   809</span>				runtime·printf(&#34;%p -&gt; %d,%X\n&#34;, v, (int32)s-&gt;types.compression, (int64)t);
+<span id="L810" class="ln">   810</span>			}
+<span id="L811" class="ln">   811</span>			return t;
+<span id="L812" class="ln">   812</span>		}
+<span id="L813" class="ln">   813</span>		return 0;
+<span id="L814" class="ln">   814</span>	}
+<span id="L815" class="ln">   815</span>	
+<span id="L816" class="ln">   816</span>	// Runtime stubs.
+<span id="L817" class="ln">   817</span>	
+<span id="L818" class="ln">   818</span>	void*
+<span id="L819" class="ln">   819</span>	runtime·mal(uintptr n)
+<span id="L820" class="ln">   820</span>	{
+<span id="L821" class="ln">   821</span>		return runtime·mallocgc(n, 0, 0);
+<span id="L822" class="ln">   822</span>	}
+<span id="L823" class="ln">   823</span>	
+<span id="L824" class="ln">   824</span>	#pragma textflag NOSPLIT
+<span id="L825" class="ln">   825</span>	func new(typ *Type) (ret *uint8) {
+<span id="L826" class="ln">   826</span>		ret = runtime·mallocgc(typ-&gt;size, (uintptr)typ | TypeInfo_SingleObject, typ-&gt;kind&amp;KindNoPointers ? FlagNoScan : 0);
+<span id="L827" class="ln">   827</span>	}
+<span id="L828" class="ln">   828</span>	
+<span id="L829" class="ln">   829</span>	static void*
+<span id="L830" class="ln">   830</span>	cnew(Type *typ, intgo n, int32 objtyp)
+<span id="L831" class="ln">   831</span>	{
+<span id="L832" class="ln">   832</span>		if((objtyp&amp;(PtrSize-1)) != objtyp)
+<span id="L833" class="ln">   833</span>			runtime·throw(&#34;runtime: invalid objtyp&#34;);
+<span id="L834" class="ln">   834</span>		if(n &lt; 0 || (typ-&gt;size &gt; 0 &amp;&amp; n &gt; MaxMem/typ-&gt;size))
+<span id="L835" class="ln">   835</span>			runtime·panicstring(&#34;runtime: allocation size out of range&#34;);
+<span id="L836" class="ln">   836</span>		return runtime·mallocgc(typ-&gt;size*n, (uintptr)typ | objtyp, typ-&gt;kind&amp;KindNoPointers ? FlagNoScan : 0);
+<span id="L837" class="ln">   837</span>	}
+<span id="L838" class="ln">   838</span>	
+<span id="L839" class="ln">   839</span>	// same as runtime·new, but callable from C
+<span id="L840" class="ln">   840</span>	void*
+<span id="L841" class="ln">   841</span>	runtime·cnew(Type *typ)
+<span id="L842" class="ln">   842</span>	{
+<span id="L843" class="ln">   843</span>		return cnew(typ, 1, TypeInfo_SingleObject);
+<span id="L844" class="ln">   844</span>	}
+<span id="L845" class="ln">   845</span>	
+<span id="L846" class="ln">   846</span>	void*
+<span id="L847" class="ln">   847</span>	runtime·cnewarray(Type *typ, intgo n)
+<span id="L848" class="ln">   848</span>	{
+<span id="L849" class="ln">   849</span>		return cnew(typ, n, TypeInfo_Array);
+<span id="L850" class="ln">   850</span>	}
+<span id="L851" class="ln">   851</span>	
+<span id="L852" class="ln">   852</span>	func GC() {
+<span id="L853" class="ln">   853</span>		runtime·gc(2);  // force GC and do eager sweep
+<span id="L854" class="ln">   854</span>	}
+<span id="L855" class="ln">   855</span>	
+<span id="L856" class="ln">   856</span>	func SetFinalizer(obj Eface, finalizer Eface) {
+<span id="L857" class="ln">   857</span>		byte *base;
+<span id="L858" class="ln">   858</span>		uintptr size;
+<span id="L859" class="ln">   859</span>		FuncType *ft;
+<span id="L860" class="ln">   860</span>		int32 i;
+<span id="L861" class="ln">   861</span>		uintptr nret;
+<span id="L862" class="ln">   862</span>		Type *t;
+<span id="L863" class="ln">   863</span>		Type *fint;
+<span id="L864" class="ln">   864</span>		PtrType *ot;
+<span id="L865" class="ln">   865</span>		Iface iface;
+<span id="L866" class="ln">   866</span>	
+<span id="L867" class="ln">   867</span>		if(obj.type == nil) {
+<span id="L868" class="ln">   868</span>			runtime·printf(&#34;runtime.SetFinalizer: first argument is nil interface\n&#34;);
+<span id="L869" class="ln">   869</span>			goto throw;
+<span id="L870" class="ln">   870</span>		}
+<span id="L871" class="ln">   871</span>		if(obj.type-&gt;kind != KindPtr) {
+<span id="L872" class="ln">   872</span>			runtime·printf(&#34;runtime.SetFinalizer: first argument is %S, not pointer\n&#34;, *obj.type-&gt;string);
+<span id="L873" class="ln">   873</span>			goto throw;
+<span id="L874" class="ln">   874</span>		}
+<span id="L875" class="ln">   875</span>		ot = (PtrType*)obj.type;
+<span id="L876" class="ln">   876</span>		// As an implementation detail we do not run finalizers for zero-sized objects,
+<span id="L877" class="ln">   877</span>		// because we use &amp;runtime·zerobase for all such allocations.
+<span id="L878" class="ln">   878</span>		if(ot-&gt;elem != nil &amp;&amp; ot-&gt;elem-&gt;size == 0)
+<span id="L879" class="ln">   879</span>			return;
+<span id="L880" class="ln">   880</span>		// The following check is required for cases when a user passes a pointer to composite literal,
+<span id="L881" class="ln">   881</span>		// but compiler makes it a pointer to global. For example:
+<span id="L882" class="ln">   882</span>		//	var Foo = &amp;Object{}
+<span id="L883" class="ln">   883</span>		//	func main() {
+<span id="L884" class="ln">   884</span>		//		runtime.SetFinalizer(Foo, nil)
+<span id="L885" class="ln">   885</span>		//	}
+<span id="L886" class="ln">   886</span>		// See issue 7656.
+<span id="L887" class="ln">   887</span>		if((byte*)obj.data &lt; runtime·mheap.arena_start || runtime·mheap.arena_used &lt;= (byte*)obj.data)
+<span id="L888" class="ln">   888</span>			return;
+<span id="L889" class="ln">   889</span>		if(!runtime·mlookup(obj.data, &amp;base, &amp;size, nil) || obj.data != base) {
+<span id="L890" class="ln">   890</span>			// As an implementation detail we allow to set finalizers for an inner byte
+<span id="L891" class="ln">   891</span>			// of an object if it could come from tiny alloc (see mallocgc for details).
+<span id="L892" class="ln">   892</span>			if(ot-&gt;elem == nil || (ot-&gt;elem-&gt;kind&amp;KindNoPointers) == 0 || ot-&gt;elem-&gt;size &gt;= TinySize) {
+<span id="L893" class="ln">   893</span>				runtime·printf(&#34;runtime.SetFinalizer: pointer not at beginning of allocated block (%p)\n&#34;, obj.data);
+<span id="L894" class="ln">   894</span>				goto throw;
+<span id="L895" class="ln">   895</span>			}
+<span id="L896" class="ln">   896</span>		}
+<span id="L897" class="ln">   897</span>		if(finalizer.type != nil) {
+<span id="L898" class="ln">   898</span>			runtime·createfing();
+<span id="L899" class="ln">   899</span>			if(finalizer.type-&gt;kind != KindFunc)
+<span id="L900" class="ln">   900</span>				goto badfunc;
+<span id="L901" class="ln">   901</span>			ft = (FuncType*)finalizer.type;
+<span id="L902" class="ln">   902</span>			if(ft-&gt;dotdotdot || ft-&gt;in.len != 1)
+<span id="L903" class="ln">   903</span>				goto badfunc;
+<span id="L904" class="ln">   904</span>			fint = *(Type**)ft-&gt;in.array;
+<span id="L905" class="ln">   905</span>			if(fint == obj.type) {
+<span id="L906" class="ln">   906</span>				// ok - same type
+<span id="L907" class="ln">   907</span>			} else if(fint-&gt;kind == KindPtr &amp;&amp; (fint-&gt;x == nil || fint-&gt;x-&gt;name == nil || obj.type-&gt;x == nil || obj.type-&gt;x-&gt;name == nil) &amp;&amp; ((PtrType*)fint)-&gt;elem == ((PtrType*)obj.type)-&gt;elem) {
+<span id="L908" class="ln">   908</span>				// ok - not same type, but both pointers,
+<span id="L909" class="ln">   909</span>				// one or the other is unnamed, and same element type, so assignable.
+<span id="L910" class="ln">   910</span>			} else if(fint-&gt;kind == KindInterface &amp;&amp; ((InterfaceType*)fint)-&gt;mhdr.len == 0) {
+<span id="L911" class="ln">   911</span>				// ok - satisfies empty interface
+<span id="L912" class="ln">   912</span>			} else if(fint-&gt;kind == KindInterface &amp;&amp; runtime·ifaceE2I2((InterfaceType*)fint, obj, &amp;iface)) {
+<span id="L913" class="ln">   913</span>				// ok - satisfies non-empty interface
+<span id="L914" class="ln">   914</span>			} else
+<span id="L915" class="ln">   915</span>				goto badfunc;
+<span id="L916" class="ln">   916</span>	
+<span id="L917" class="ln">   917</span>			// compute size needed for return parameters
+<span id="L918" class="ln">   918</span>			nret = 0;
+<span id="L919" class="ln">   919</span>			for(i=0; i&lt;ft-&gt;out.len; i++) {
+<span id="L920" class="ln">   920</span>				t = ((Type**)ft-&gt;out.array)[i];
+<span id="L921" class="ln">   921</span>				nret = ROUND(nret, t-&gt;align) + t-&gt;size;
+<span id="L922" class="ln">   922</span>			}
+<span id="L923" class="ln">   923</span>			nret = ROUND(nret, sizeof(void*));
+<span id="L924" class="ln">   924</span>			ot = (PtrType*)obj.type;
+<span id="L925" class="ln">   925</span>			if(!runtime·addfinalizer(obj.data, finalizer.data, nret, fint, ot)) {
+<span id="L926" class="ln">   926</span>				runtime·printf(&#34;runtime.SetFinalizer: finalizer already set\n&#34;);
+<span id="L927" class="ln">   927</span>				goto throw;
+<span id="L928" class="ln">   928</span>			}
+<span id="L929" class="ln">   929</span>		} else {
+<span id="L930" class="ln">   930</span>			// NOTE: asking to remove a finalizer when there currently isn&#39;t one set is OK.
+<span id="L931" class="ln">   931</span>			runtime·removefinalizer(obj.data);
+<span id="L932" class="ln">   932</span>		}
+<span id="L933" class="ln">   933</span>		return;
+<span id="L934" class="ln">   934</span>	
+<span id="L935" class="ln">   935</span>	badfunc:
+<span id="L936" class="ln">   936</span>		runtime·printf(&#34;runtime.SetFinalizer: cannot pass %S to finalizer %S\n&#34;, *obj.type-&gt;string, *finalizer.type-&gt;string);
+<span id="L937" class="ln">   937</span>	throw:
+<span id="L938" class="ln">   938</span>		runtime·throw(&#34;runtime.SetFinalizer&#34;);
+<span id="L939" class="ln">   939</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/malloc.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

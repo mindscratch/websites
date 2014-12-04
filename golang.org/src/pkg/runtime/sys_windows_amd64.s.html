@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/sys_windows_amd64.s - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/sys_windows_amd64.s</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2011 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;zasm_GOOS_GOARCH.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	// maxargs should be divisible by 2, as Windows stack
+<span id="L9" class="ln">     9</span>	// must be kept 16-byte aligned on syscall entry.
+<span id="L10" class="ln">    10</span>	#define maxargs 16
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	// void runtime·asmstdcall(void *c);
+<span id="L13" class="ln">    13</span>	TEXT runtime·asmstdcall(SB),NOSPLIT,$0
+<span id="L14" class="ln">    14</span>		// asmcgocall will put first argument into CX.
+<span id="L15" class="ln">    15</span>		PUSHQ	CX			// save for later
+<span id="L16" class="ln">    16</span>		MOVQ	libcall_fn(CX), AX
+<span id="L17" class="ln">    17</span>		MOVQ	libcall_args(CX), SI
+<span id="L18" class="ln">    18</span>		MOVQ	libcall_n(CX), CX
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>		// SetLastError(0).
+<span id="L21" class="ln">    21</span>		MOVQ	0x30(GS), DI
+<span id="L22" class="ln">    22</span>		MOVL	$0, 0x68(DI)
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>		SUBQ	$(maxargs*8), SP	// room for args
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>		// Fast version, do not store args on the stack.
+<span id="L27" class="ln">    27</span>		CMPL	CX, $4
+<span id="L28" class="ln">    28</span>		JLE	loadregs
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>		// Check we have enough room for args.
+<span id="L31" class="ln">    31</span>		CMPL	CX, $maxargs
+<span id="L32" class="ln">    32</span>		JLE	2(PC)
+<span id="L33" class="ln">    33</span>		INT	$3			// not enough room -&gt; crash
+<span id="L34" class="ln">    34</span>	
+<span id="L35" class="ln">    35</span>		// Copy args to the stack.
+<span id="L36" class="ln">    36</span>		MOVQ	SP, DI
+<span id="L37" class="ln">    37</span>		CLD
+<span id="L38" class="ln">    38</span>		REP; MOVSQ
+<span id="L39" class="ln">    39</span>		MOVQ	SP, SI
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>	loadregs:
+<span id="L42" class="ln">    42</span>		// Load first 4 args into correspondent registers.
+<span id="L43" class="ln">    43</span>		MOVQ	0(SI), CX
+<span id="L44" class="ln">    44</span>		MOVQ	8(SI), DX
+<span id="L45" class="ln">    45</span>		MOVQ	16(SI), R8
+<span id="L46" class="ln">    46</span>		MOVQ	24(SI), R9
+<span id="L47" class="ln">    47</span>	
+<span id="L48" class="ln">    48</span>		// Call stdcall function.
+<span id="L49" class="ln">    49</span>		CALL	AX
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>		ADDQ	$(maxargs*8), SP
+<span id="L52" class="ln">    52</span>	
+<span id="L53" class="ln">    53</span>		// Return result.
+<span id="L54" class="ln">    54</span>		POPQ	CX
+<span id="L55" class="ln">    55</span>		MOVQ	AX, libcall_r1(CX)
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>		// GetLastError().
+<span id="L58" class="ln">    58</span>		MOVQ	0x30(GS), DI
+<span id="L59" class="ln">    59</span>		MOVL	0x68(DI), AX
+<span id="L60" class="ln">    60</span>		MOVQ	AX, libcall_err(CX)
+<span id="L61" class="ln">    61</span>	
+<span id="L62" class="ln">    62</span>		RET
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>	TEXT runtime·badsignal2(SB),NOSPLIT,$48
+<span id="L65" class="ln">    65</span>		// stderr
+<span id="L66" class="ln">    66</span>		MOVQ	$-12, CX // stderr
+<span id="L67" class="ln">    67</span>		MOVQ	CX, 0(SP)
+<span id="L68" class="ln">    68</span>		MOVQ	runtime·GetStdHandle(SB), AX
+<span id="L69" class="ln">    69</span>		CALL	AX
+<span id="L70" class="ln">    70</span>	
+<span id="L71" class="ln">    71</span>		MOVQ	AX, CX	// handle
+<span id="L72" class="ln">    72</span>		MOVQ	CX, 0(SP)
+<span id="L73" class="ln">    73</span>		MOVQ	$runtime·badsignalmsg(SB), DX // pointer
+<span id="L74" class="ln">    74</span>		MOVQ	DX, 8(SP)
+<span id="L75" class="ln">    75</span>		MOVL	$runtime·badsignallen(SB), R8 // count
+<span id="L76" class="ln">    76</span>		MOVQ	R8, 16(SP)
+<span id="L77" class="ln">    77</span>		LEAQ	40(SP), R9  // written count
+<span id="L78" class="ln">    78</span>		MOVQ	$0, 0(R9)
+<span id="L79" class="ln">    79</span>		MOVQ	R9, 24(SP)
+<span id="L80" class="ln">    80</span>		MOVQ	$0, 32(SP)	// overlapped
+<span id="L81" class="ln">    81</span>		MOVQ	runtime·WriteFile(SB), AX
+<span id="L82" class="ln">    82</span>		CALL	AX
+<span id="L83" class="ln">    83</span>		
+<span id="L84" class="ln">    84</span>		RET
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>	// faster get/set last error
+<span id="L87" class="ln">    87</span>	TEXT runtime·getlasterror(SB),NOSPLIT,$0
+<span id="L88" class="ln">    88</span>		MOVQ	0x30(GS), AX
+<span id="L89" class="ln">    89</span>		MOVL	0x68(AX), AX
+<span id="L90" class="ln">    90</span>		RET
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	TEXT runtime·setlasterror(SB),NOSPLIT,$0
+<span id="L93" class="ln">    93</span>		MOVL	err+0(FP), AX
+<span id="L94" class="ln">    94</span>		MOVQ	0x30(GS),	CX
+<span id="L95" class="ln">    95</span>		MOVL	AX, 0x68(CX)
+<span id="L96" class="ln">    96</span>		RET
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>	// Called by Windows as a Vectored Exception Handler (VEH).
+<span id="L99" class="ln">    99</span>	// First argument is pointer to struct containing
+<span id="L100" class="ln">   100</span>	// exception record and context pointers.
+<span id="L101" class="ln">   101</span>	// Return 0 for &#39;not handled&#39;, -1 for handled.
+<span id="L102" class="ln">   102</span>	TEXT runtime·sigtramp(SB),NOSPLIT,$0-0
+<span id="L103" class="ln">   103</span>		// CX: PEXCEPTION_POINTERS ExceptionInfo
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>		// DI SI BP BX R12 R13 R14 R15 registers and DF flag are preserved
+<span id="L106" class="ln">   106</span>		// as required by windows callback convention.
+<span id="L107" class="ln">   107</span>		PUSHFQ
+<span id="L108" class="ln">   108</span>		SUBQ	$88, SP
+<span id="L109" class="ln">   109</span>		MOVQ	DI, 80(SP)
+<span id="L110" class="ln">   110</span>		MOVQ	SI, 72(SP)
+<span id="L111" class="ln">   111</span>		MOVQ	BP, 64(SP)
+<span id="L112" class="ln">   112</span>		MOVQ	BX, 56(SP)
+<span id="L113" class="ln">   113</span>		MOVQ	R12, 48(SP)
+<span id="L114" class="ln">   114</span>		MOVQ	R13, 40(SP)
+<span id="L115" class="ln">   115</span>		MOVQ	R14, 32(SP)
+<span id="L116" class="ln">   116</span>		MOVQ	R15, 24(SP)
+<span id="L117" class="ln">   117</span>	
+<span id="L118" class="ln">   118</span>		MOVQ	0(CX), BX // ExceptionRecord*
+<span id="L119" class="ln">   119</span>		MOVQ	8(CX), CX // Context*
+<span id="L120" class="ln">   120</span>	
+<span id="L121" class="ln">   121</span>		// fetch g
+<span id="L122" class="ln">   122</span>		get_tls(DX)
+<span id="L123" class="ln">   123</span>	 	CMPQ	DX, $0
+<span id="L124" class="ln">   124</span>	 	JNE	3(PC)
+<span id="L125" class="ln">   125</span>	 	MOVQ	$0, AX // continue
+<span id="L126" class="ln">   126</span>	 	JMP	done
+<span id="L127" class="ln">   127</span>		MOVQ	m(DX), AX
+<span id="L128" class="ln">   128</span>		CMPQ	AX, $0
+<span id="L129" class="ln">   129</span>		JNE	2(PC)
+<span id="L130" class="ln">   130</span>		CALL	runtime·badsignal2(SB)
+<span id="L131" class="ln">   131</span>		MOVQ	g(DX), DX
+<span id="L132" class="ln">   132</span>		// call sighandler(ExceptionRecord*, Context*, G*)
+<span id="L133" class="ln">   133</span>		MOVQ	BX, 0(SP)
+<span id="L134" class="ln">   134</span>		MOVQ	CX, 8(SP)
+<span id="L135" class="ln">   135</span>		MOVQ	DX, 16(SP)
+<span id="L136" class="ln">   136</span>		CALL	runtime·sighandler(SB)
+<span id="L137" class="ln">   137</span>		// AX is set to report result back to Windows
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>	done:
+<span id="L140" class="ln">   140</span>		// restore registers as required for windows callback
+<span id="L141" class="ln">   141</span>		MOVQ	24(SP), R15
+<span id="L142" class="ln">   142</span>		MOVQ	32(SP), R14
+<span id="L143" class="ln">   143</span>		MOVQ	40(SP), R13
+<span id="L144" class="ln">   144</span>		MOVQ	48(SP), R12
+<span id="L145" class="ln">   145</span>		MOVQ	56(SP), BX
+<span id="L146" class="ln">   146</span>		MOVQ	64(SP), BP
+<span id="L147" class="ln">   147</span>		MOVQ	72(SP), SI
+<span id="L148" class="ln">   148</span>		MOVQ	80(SP), DI
+<span id="L149" class="ln">   149</span>		ADDQ	$88, SP
+<span id="L150" class="ln">   150</span>		POPFQ
+<span id="L151" class="ln">   151</span>	
+<span id="L152" class="ln">   152</span>		RET
+<span id="L153" class="ln">   153</span>	
+<span id="L154" class="ln">   154</span>	TEXT runtime·ctrlhandler(SB),NOSPLIT,$8
+<span id="L155" class="ln">   155</span>		MOVQ	CX, 16(SP)		// spill
+<span id="L156" class="ln">   156</span>		MOVQ	$runtime·ctrlhandler1(SB), CX
+<span id="L157" class="ln">   157</span>		MOVQ	CX, 0(SP)
+<span id="L158" class="ln">   158</span>		CALL	runtime·externalthreadhandler(SB)
+<span id="L159" class="ln">   159</span>		RET
+<span id="L160" class="ln">   160</span>	
+<span id="L161" class="ln">   161</span>	TEXT runtime·profileloop(SB),NOSPLIT,$8
+<span id="L162" class="ln">   162</span>		MOVQ	$runtime·profileloop1(SB), CX
+<span id="L163" class="ln">   163</span>		MOVQ	CX, 0(SP)
+<span id="L164" class="ln">   164</span>		CALL	runtime·externalthreadhandler(SB)
+<span id="L165" class="ln">   165</span>		RET
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>	TEXT runtime·externalthreadhandler(SB),NOSPLIT,$0
+<span id="L168" class="ln">   168</span>		PUSHQ	BP
+<span id="L169" class="ln">   169</span>		MOVQ	SP, BP
+<span id="L170" class="ln">   170</span>		PUSHQ	BX
+<span id="L171" class="ln">   171</span>		PUSHQ	SI
+<span id="L172" class="ln">   172</span>		PUSHQ	DI
+<span id="L173" class="ln">   173</span>		PUSHQ	0x28(GS)
+<span id="L174" class="ln">   174</span>		MOVQ	SP, DX
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>		// setup dummy m, g
+<span id="L177" class="ln">   177</span>		SUBQ	$m_end, SP		// space for M
+<span id="L178" class="ln">   178</span>		MOVQ	SP, 0(SP)
+<span id="L179" class="ln">   179</span>		MOVQ	$m_end, 8(SP)
+<span id="L180" class="ln">   180</span>		CALL	runtime·memclr(SB)	// smashes AX,BX,CX
+<span id="L181" class="ln">   181</span>	
+<span id="L182" class="ln">   182</span>		LEAQ	m_tls(SP), CX
+<span id="L183" class="ln">   183</span>		MOVQ	CX, 0x28(GS)
+<span id="L184" class="ln">   184</span>		MOVQ	SP, m(CX)
+<span id="L185" class="ln">   185</span>		MOVQ	SP, BX
+<span id="L186" class="ln">   186</span>		SUBQ	$g_end, SP		// space for G
+<span id="L187" class="ln">   187</span>		MOVQ	SP, g(CX)
+<span id="L188" class="ln">   188</span>		MOVQ	SP, m_g0(BX)
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>		MOVQ	SP, 0(SP)
+<span id="L191" class="ln">   191</span>		MOVQ	$g_end, 8(SP)
+<span id="L192" class="ln">   192</span>		CALL	runtime·memclr(SB)	// smashes AX,BX,CX
+<span id="L193" class="ln">   193</span>		LEAQ	-8192(SP), CX
+<span id="L194" class="ln">   194</span>		MOVQ	CX, g_stackguard(SP)
+<span id="L195" class="ln">   195</span>		MOVQ	DX, g_stackbase(SP)
+<span id="L196" class="ln">   196</span>	
+<span id="L197" class="ln">   197</span>		PUSHQ	32(BP)			// arg for handler
+<span id="L198" class="ln">   198</span>		CALL	16(BP)
+<span id="L199" class="ln">   199</span>		POPQ	CX
+<span id="L200" class="ln">   200</span>	
+<span id="L201" class="ln">   201</span>		get_tls(CX)
+<span id="L202" class="ln">   202</span>		MOVQ	g(CX), CX
+<span id="L203" class="ln">   203</span>		MOVQ	g_stackbase(CX), SP
+<span id="L204" class="ln">   204</span>		POPQ	0x28(GS)
+<span id="L205" class="ln">   205</span>		POPQ	DI
+<span id="L206" class="ln">   206</span>		POPQ	SI
+<span id="L207" class="ln">   207</span>		POPQ	BX
+<span id="L208" class="ln">   208</span>		POPQ	BP
+<span id="L209" class="ln">   209</span>		RET
+<span id="L210" class="ln">   210</span>	
+<span id="L211" class="ln">   211</span>	GLOBL runtime·cbctxts(SB), $8
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	TEXT runtime·callbackasm1(SB),NOSPLIT,$0
+<span id="L214" class="ln">   214</span>		// Construct args vector for cgocallback().
+<span id="L215" class="ln">   215</span>		// By windows/amd64 calling convention first 4 args are in CX, DX, R8, R9
+<span id="L216" class="ln">   216</span>		// args from the 5th on are on the stack.
+<span id="L217" class="ln">   217</span>		// In any case, even if function has 0,1,2,3,4 args, there is reserved
+<span id="L218" class="ln">   218</span>		// but uninitialized &#34;shadow space&#34; for the first 4 args.
+<span id="L219" class="ln">   219</span>		// The values are in registers.
+<span id="L220" class="ln">   220</span>	  	MOVQ	CX, (16+0)(SP)
+<span id="L221" class="ln">   221</span>	  	MOVQ	DX, (16+8)(SP)
+<span id="L222" class="ln">   222</span>	  	MOVQ	R8, (16+16)(SP)
+<span id="L223" class="ln">   223</span>	  	MOVQ	R9, (16+24)(SP)
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>		// remove return address from stack, we are not returning there
+<span id="L226" class="ln">   226</span>	  	MOVQ	0(SP), AX
+<span id="L227" class="ln">   227</span>		ADDQ	$8, SP
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>		// determine index into runtime·cbctxts table
+<span id="L230" class="ln">   230</span>		SUBQ	$runtime·callbackasm(SB), AX
+<span id="L231" class="ln">   231</span>		MOVQ	$0, DX
+<span id="L232" class="ln">   232</span>		MOVQ	$5, CX	// divide by 5 because each call instruction in runtime·callbacks is 5 bytes long
+<span id="L233" class="ln">   233</span>		DIVL	CX,
+<span id="L234" class="ln">   234</span>	
+<span id="L235" class="ln">   235</span>		// find correspondent runtime·cbctxts table entry
+<span id="L236" class="ln">   236</span>		MOVQ	runtime·cbctxts(SB), CX
+<span id="L237" class="ln">   237</span>		MOVQ	-8(CX)(AX*8), AX
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		// extract callback context
+<span id="L240" class="ln">   240</span>		MOVQ	cbctxt_argsize(AX), DX
+<span id="L241" class="ln">   241</span>		MOVQ	cbctxt_gobody(AX), AX
+<span id="L242" class="ln">   242</span>	
+<span id="L243" class="ln">   243</span>		// preserve whatever&#39;s at the memory location that
+<span id="L244" class="ln">   244</span>		// the callback will use to store the return value
+<span id="L245" class="ln">   245</span>		LEAQ	8(SP), CX       // args vector, skip return address
+<span id="L246" class="ln">   246</span>		PUSHQ	0(CX)(DX*1)     // store 8 bytes from just after the args array
+<span id="L247" class="ln">   247</span>		ADDQ	$8, DX          // extend argsize by size of return value
+<span id="L248" class="ln">   248</span>	
+<span id="L249" class="ln">   249</span>		// DI SI BP BX R12 R13 R14 R15 registers and DF flag are preserved
+<span id="L250" class="ln">   250</span>		// as required by windows callback convention.
+<span id="L251" class="ln">   251</span>		PUSHFQ
+<span id="L252" class="ln">   252</span>		SUBQ	$64, SP
+<span id="L253" class="ln">   253</span>		MOVQ	DI, 56(SP)
+<span id="L254" class="ln">   254</span>		MOVQ	SI, 48(SP)
+<span id="L255" class="ln">   255</span>		MOVQ	BP, 40(SP)
+<span id="L256" class="ln">   256</span>		MOVQ	BX, 32(SP)
+<span id="L257" class="ln">   257</span>		MOVQ	R12, 24(SP)
+<span id="L258" class="ln">   258</span>		MOVQ	R13, 16(SP)
+<span id="L259" class="ln">   259</span>		MOVQ	R14, 8(SP)
+<span id="L260" class="ln">   260</span>		MOVQ	R15, 0(SP)
+<span id="L261" class="ln">   261</span>	
+<span id="L262" class="ln">   262</span>		// prepare call stack.  use SUBQ to hide from stack frame checks
+<span id="L263" class="ln">   263</span>		// cgocallback(Go func, void *frame, uintptr framesize)
+<span id="L264" class="ln">   264</span>		SUBQ	$24, SP
+<span id="L265" class="ln">   265</span>		MOVQ	DX, 16(SP)	// argsize (including return value)
+<span id="L266" class="ln">   266</span>		MOVQ	CX, 8(SP)	// callback parameters
+<span id="L267" class="ln">   267</span>		MOVQ	AX, 0(SP)	// address of target Go function
+<span id="L268" class="ln">   268</span>		CLD
+<span id="L269" class="ln">   269</span>		CALL	runtime·cgocallback_gofunc(SB)
+<span id="L270" class="ln">   270</span>		MOVQ	0(SP), AX
+<span id="L271" class="ln">   271</span>		MOVQ	8(SP), CX
+<span id="L272" class="ln">   272</span>		MOVQ	16(SP), DX
+<span id="L273" class="ln">   273</span>		ADDQ	$24, SP
+<span id="L274" class="ln">   274</span>	
+<span id="L275" class="ln">   275</span>		// restore registers as required for windows callback
+<span id="L276" class="ln">   276</span>		MOVQ	0(SP), R15
+<span id="L277" class="ln">   277</span>		MOVQ	8(SP), R14
+<span id="L278" class="ln">   278</span>		MOVQ	16(SP), R13
+<span id="L279" class="ln">   279</span>		MOVQ	24(SP), R12
+<span id="L280" class="ln">   280</span>		MOVQ	32(SP), BX
+<span id="L281" class="ln">   281</span>		MOVQ	40(SP), BP
+<span id="L282" class="ln">   282</span>		MOVQ	48(SP), SI
+<span id="L283" class="ln">   283</span>		MOVQ	56(SP), DI
+<span id="L284" class="ln">   284</span>		ADDQ	$64, SP
+<span id="L285" class="ln">   285</span>		POPFQ
+<span id="L286" class="ln">   286</span>	
+<span id="L287" class="ln">   287</span>		MOVL	-8(CX)(DX*1), AX  // return value
+<span id="L288" class="ln">   288</span>		POPQ	-8(CX)(DX*1)      // restore bytes just after the args
+<span id="L289" class="ln">   289</span>		RET
+<span id="L290" class="ln">   290</span>	
+<span id="L291" class="ln">   291</span>	// uint32 tstart_stdcall(M *newm);
+<span id="L292" class="ln">   292</span>	TEXT runtime·tstart_stdcall(SB),NOSPLIT,$0
+<span id="L293" class="ln">   293</span>		// CX contains first arg newm
+<span id="L294" class="ln">   294</span>		MOVQ	m_g0(CX), DX		// g
+<span id="L295" class="ln">   295</span>	
+<span id="L296" class="ln">   296</span>		// Layout new m scheduler stack on os stack.
+<span id="L297" class="ln">   297</span>		MOVQ	SP, AX
+<span id="L298" class="ln">   298</span>		MOVQ	AX, g_stackbase(DX)
+<span id="L299" class="ln">   299</span>		SUBQ	$(64*1024), AX		// stack size
+<span id="L300" class="ln">   300</span>		MOVQ	AX, g_stackguard(DX)
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>		// Set up tls.
+<span id="L303" class="ln">   303</span>		LEAQ	m_tls(CX), SI
+<span id="L304" class="ln">   304</span>		MOVQ	SI, 0x28(GS)
+<span id="L305" class="ln">   305</span>		MOVQ	CX, m(SI)
+<span id="L306" class="ln">   306</span>		MOVQ	DX, g(SI)
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>		// Someday the convention will be D is always cleared.
+<span id="L309" class="ln">   309</span>		CLD
+<span id="L310" class="ln">   310</span>	
+<span id="L311" class="ln">   311</span>		CALL	runtime·stackcheck(SB)	// clobbers AX,CX
+<span id="L312" class="ln">   312</span>		CALL	runtime·mstart(SB)
+<span id="L313" class="ln">   313</span>	
+<span id="L314" class="ln">   314</span>		XORL	AX, AX			// return 0 == success
+<span id="L315" class="ln">   315</span>		RET
+<span id="L316" class="ln">   316</span>	
+<span id="L317" class="ln">   317</span>	// set tls base to DI
+<span id="L318" class="ln">   318</span>	TEXT runtime·settls(SB),NOSPLIT,$0
+<span id="L319" class="ln">   319</span>		MOVQ	DI, 0x28(GS)
+<span id="L320" class="ln">   320</span>		RET
+<span id="L321" class="ln">   321</span>	
+<span id="L322" class="ln">   322</span>	// Sleep duration is in 100ns units.
+<span id="L323" class="ln">   323</span>	TEXT runtime·usleep1(SB),NOSPLIT,$0
+<span id="L324" class="ln">   324</span>		MOVL	duration+0(FP), BX
+<span id="L325" class="ln">   325</span>		MOVQ	$runtime·usleep2(SB), AX // to hide from 6l
+<span id="L326" class="ln">   326</span>	
+<span id="L327" class="ln">   327</span>		// Execute call on m-&gt;g0 stack, in case we are not actually
+<span id="L328" class="ln">   328</span>		// calling a system call wrapper, like when running under WINE.
+<span id="L329" class="ln">   329</span>		get_tls(R15)
+<span id="L330" class="ln">   330</span>		CMPQ	R15, $0
+<span id="L331" class="ln">   331</span>		JNE	3(PC)
+<span id="L332" class="ln">   332</span>		// Not a Go-managed thread. Do not switch stack.
+<span id="L333" class="ln">   333</span>		CALL	AX
+<span id="L334" class="ln">   334</span>		RET
+<span id="L335" class="ln">   335</span>	
+<span id="L336" class="ln">   336</span>		MOVQ	m(R15), R13
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>		// leave pc/sp for cpu profiler
+<span id="L339" class="ln">   339</span>		MOVQ	(SP), R12
+<span id="L340" class="ln">   340</span>		MOVQ	R12, m_libcallpc(R13)
+<span id="L341" class="ln">   341</span>		MOVQ	g(R15), R12
+<span id="L342" class="ln">   342</span>		MOVQ	R12, m_libcallg(R13)
+<span id="L343" class="ln">   343</span>		// sp must be the last, because once async cpu profiler finds
+<span id="L344" class="ln">   344</span>		// all three values to be non-zero, it will use them
+<span id="L345" class="ln">   345</span>		LEAQ	8(SP), R12
+<span id="L346" class="ln">   346</span>		MOVQ	R12, m_libcallsp(R13)
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>		MOVQ	m_g0(R13), R14
+<span id="L349" class="ln">   349</span>		CMPQ	g(R15), R14
+<span id="L350" class="ln">   350</span>		JNE	usleep1_switch
+<span id="L351" class="ln">   351</span>		// executing on m-&gt;g0 already
+<span id="L352" class="ln">   352</span>		CALL	AX
+<span id="L353" class="ln">   353</span>		JMP	usleep1_ret
+<span id="L354" class="ln">   354</span>	
+<span id="L355" class="ln">   355</span>	usleep1_switch:
+<span id="L356" class="ln">   356</span>		// Switch to m-&gt;g0 stack and back.
+<span id="L357" class="ln">   357</span>		MOVQ	(g_sched+gobuf_sp)(R14), R14
+<span id="L358" class="ln">   358</span>		MOVQ	SP, -8(R14)
+<span id="L359" class="ln">   359</span>		LEAQ	-8(R14), SP
+<span id="L360" class="ln">   360</span>		CALL	AX
+<span id="L361" class="ln">   361</span>		MOVQ	0(SP), SP
+<span id="L362" class="ln">   362</span>	
+<span id="L363" class="ln">   363</span>	usleep1_ret:
+<span id="L364" class="ln">   364</span>		MOVQ	$0, m_libcallsp(R13)
+<span id="L365" class="ln">   365</span>		RET
+<span id="L366" class="ln">   366</span>	
+<span id="L367" class="ln">   367</span>	// Runs on OS stack. duration (in 100ns units) is in BX.
+<span id="L368" class="ln">   368</span>	TEXT runtime·usleep2(SB),NOSPLIT,$8
+<span id="L369" class="ln">   369</span>		// Want negative 100ns units.
+<span id="L370" class="ln">   370</span>		NEGQ	BX
+<span id="L371" class="ln">   371</span>		MOVQ	SP, R8 // ptime
+<span id="L372" class="ln">   372</span>		MOVQ	BX, (R8)
+<span id="L373" class="ln">   373</span>		MOVQ	$-1, CX // handle
+<span id="L374" class="ln">   374</span>		MOVQ	$0, DX // alertable
+<span id="L375" class="ln">   375</span>		MOVQ	runtime·NtWaitForSingleObject(SB), AX
+<span id="L376" class="ln">   376</span>		CALL	AX
+<span id="L377" class="ln">   377</span>		RET
+</pre><p><a href="http://golang.org/src/pkg/runtime/sys_windows_amd64.s?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

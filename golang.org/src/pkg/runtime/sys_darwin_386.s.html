@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/sys_darwin_386.s - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/sys_darwin_386.s</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// System calls and other sys.stuff for 386, Darwin
+<span id="L6" class="ln">     6</span>	// See http://fxr.watson.org/fxr/source/bsd/kern/syscalls.c?v=xnu-1228
+<span id="L7" class="ln">     7</span>	// or /usr/include/sys/syscall.h (on a Mac) for system call numbers.
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	#include &#34;zasm_GOOS_GOARCH.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	// Exit the entire program (like C exit)
+<span id="L13" class="ln">    13</span>	TEXT runtime·exit(SB),NOSPLIT,$0
+<span id="L14" class="ln">    14</span>		MOVL	$1, AX
+<span id="L15" class="ln">    15</span>		INT	$0x80
+<span id="L16" class="ln">    16</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L17" class="ln">    17</span>		RET
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	// Exit this OS thread (like pthread_exit, which eventually
+<span id="L20" class="ln">    20</span>	// calls __bsdthread_terminate).
+<span id="L21" class="ln">    21</span>	TEXT runtime·exit1(SB),NOSPLIT,$0
+<span id="L22" class="ln">    22</span>		MOVL	$361, AX
+<span id="L23" class="ln">    23</span>		INT	$0x80
+<span id="L24" class="ln">    24</span>		JAE 2(PC)
+<span id="L25" class="ln">    25</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L26" class="ln">    26</span>		RET
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>	TEXT runtime·open(SB),NOSPLIT,$0
+<span id="L29" class="ln">    29</span>		MOVL	$5, AX
+<span id="L30" class="ln">    30</span>		INT	$0x80
+<span id="L31" class="ln">    31</span>		RET
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>	TEXT runtime·close(SB),NOSPLIT,$0
+<span id="L34" class="ln">    34</span>		MOVL	$6, AX
+<span id="L35" class="ln">    35</span>		INT	$0x80
+<span id="L36" class="ln">    36</span>		RET
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>	TEXT runtime·read(SB),NOSPLIT,$0
+<span id="L39" class="ln">    39</span>		MOVL	$3, AX
+<span id="L40" class="ln">    40</span>		INT	$0x80
+<span id="L41" class="ln">    41</span>		RET
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>	TEXT runtime·write(SB),NOSPLIT,$0
+<span id="L44" class="ln">    44</span>		MOVL	$4, AX
+<span id="L45" class="ln">    45</span>		INT	$0x80
+<span id="L46" class="ln">    46</span>		RET
+<span id="L47" class="ln">    47</span>	
+<span id="L48" class="ln">    48</span>	TEXT runtime·raise(SB),NOSPLIT,$16
+<span id="L49" class="ln">    49</span>		MOVL	$20, AX // getpid
+<span id="L50" class="ln">    50</span>		INT	$0x80
+<span id="L51" class="ln">    51</span>		MOVL	AX, 4(SP)	// pid
+<span id="L52" class="ln">    52</span>		MOVL	sig+0(FP), AX
+<span id="L53" class="ln">    53</span>		MOVL	AX, 8(SP)	// signal
+<span id="L54" class="ln">    54</span>		MOVL	$1, 12(SP)	// posix
+<span id="L55" class="ln">    55</span>		MOVL	$37, AX // kill
+<span id="L56" class="ln">    56</span>		INT	$0x80
+<span id="L57" class="ln">    57</span>		RET
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	TEXT runtime·mmap(SB),NOSPLIT,$0
+<span id="L60" class="ln">    60</span>		MOVL	$197, AX
+<span id="L61" class="ln">    61</span>		INT	$0x80
+<span id="L62" class="ln">    62</span>		RET
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>	TEXT runtime·madvise(SB),NOSPLIT,$0
+<span id="L65" class="ln">    65</span>		MOVL	$75, AX
+<span id="L66" class="ln">    66</span>		INT	$0x80
+<span id="L67" class="ln">    67</span>		// ignore failure - maybe pages are locked
+<span id="L68" class="ln">    68</span>		RET
+<span id="L69" class="ln">    69</span>	
+<span id="L70" class="ln">    70</span>	TEXT runtime·munmap(SB),NOSPLIT,$0
+<span id="L71" class="ln">    71</span>		MOVL	$73, AX
+<span id="L72" class="ln">    72</span>		INT	$0x80
+<span id="L73" class="ln">    73</span>		JAE	2(PC)
+<span id="L74" class="ln">    74</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L75" class="ln">    75</span>		RET
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	TEXT runtime·setitimer(SB),NOSPLIT,$0
+<span id="L78" class="ln">    78</span>		MOVL	$83, AX
+<span id="L79" class="ln">    79</span>		INT	$0x80
+<span id="L80" class="ln">    80</span>		RET
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	// OS X comm page time offsets
+<span id="L83" class="ln">    83</span>	// http://www.opensource.apple.com/source/xnu/xnu-1699.26.8/osfmk/i386/cpu_capabilities.h
+<span id="L84" class="ln">    84</span>	#define	cpu_capabilities	0x20
+<span id="L85" class="ln">    85</span>	#define	nt_tsc_base	0x50
+<span id="L86" class="ln">    86</span>	#define	nt_scale	0x58
+<span id="L87" class="ln">    87</span>	#define	nt_shift	0x5c
+<span id="L88" class="ln">    88</span>	#define	nt_ns_base	0x60
+<span id="L89" class="ln">    89</span>	#define	nt_generation	0x68
+<span id="L90" class="ln">    90</span>	#define	gtod_generation	0x6c
+<span id="L91" class="ln">    91</span>	#define	gtod_ns_base	0x70
+<span id="L92" class="ln">    92</span>	#define	gtod_sec_base	0x78
+<span id="L93" class="ln">    93</span>	
+<span id="L94" class="ln">    94</span>	// called from assembly
+<span id="L95" class="ln">    95</span>	// 64-bit unix nanoseconds returned in DX:AX.
+<span id="L96" class="ln">    96</span>	// I&#39;d much rather write this in C but we need
+<span id="L97" class="ln">    97</span>	// assembly for the 96-bit multiply and RDTSC.
+<span id="L98" class="ln">    98</span>	TEXT runtime·now(SB),NOSPLIT,$40
+<span id="L99" class="ln">    99</span>		MOVL	$0xffff0000, BP /* comm page base */
+<span id="L100" class="ln">   100</span>		
+<span id="L101" class="ln">   101</span>		// Test for slow CPU. If so, the math is completely
+<span id="L102" class="ln">   102</span>		// different, and unimplemented here, so use the
+<span id="L103" class="ln">   103</span>		// system call.
+<span id="L104" class="ln">   104</span>		MOVL	cpu_capabilities(BP), AX
+<span id="L105" class="ln">   105</span>		TESTL	$0x4000, AX
+<span id="L106" class="ln">   106</span>		JNZ	systime
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>		// Loop trying to take a consistent snapshot
+<span id="L109" class="ln">   109</span>		// of the time parameters.
+<span id="L110" class="ln">   110</span>	timeloop:
+<span id="L111" class="ln">   111</span>		MOVL	gtod_generation(BP), BX
+<span id="L112" class="ln">   112</span>		TESTL	BX, BX
+<span id="L113" class="ln">   113</span>		JZ	systime
+<span id="L114" class="ln">   114</span>		MOVL	nt_generation(BP), CX
+<span id="L115" class="ln">   115</span>		TESTL	CX, CX
+<span id="L116" class="ln">   116</span>		JZ	timeloop
+<span id="L117" class="ln">   117</span>		RDTSC
+<span id="L118" class="ln">   118</span>		MOVL	nt_tsc_base(BP), SI
+<span id="L119" class="ln">   119</span>		MOVL	(nt_tsc_base+4)(BP), DI
+<span id="L120" class="ln">   120</span>		MOVL	SI, 0(SP)
+<span id="L121" class="ln">   121</span>		MOVL	DI, 4(SP)
+<span id="L122" class="ln">   122</span>		MOVL	nt_scale(BP), SI
+<span id="L123" class="ln">   123</span>		MOVL	SI, 8(SP)
+<span id="L124" class="ln">   124</span>		MOVL	nt_ns_base(BP), SI
+<span id="L125" class="ln">   125</span>		MOVL	(nt_ns_base+4)(BP), DI
+<span id="L126" class="ln">   126</span>		MOVL	SI, 12(SP)
+<span id="L127" class="ln">   127</span>		MOVL	DI, 16(SP)
+<span id="L128" class="ln">   128</span>		CMPL	nt_generation(BP), CX
+<span id="L129" class="ln">   129</span>		JNE	timeloop
+<span id="L130" class="ln">   130</span>		MOVL	gtod_ns_base(BP), SI
+<span id="L131" class="ln">   131</span>		MOVL	(gtod_ns_base+4)(BP), DI
+<span id="L132" class="ln">   132</span>		MOVL	SI, 20(SP)
+<span id="L133" class="ln">   133</span>		MOVL	DI, 24(SP)
+<span id="L134" class="ln">   134</span>		MOVL	gtod_sec_base(BP), SI
+<span id="L135" class="ln">   135</span>		MOVL	(gtod_sec_base+4)(BP), DI
+<span id="L136" class="ln">   136</span>		MOVL	SI, 28(SP)
+<span id="L137" class="ln">   137</span>		MOVL	DI, 32(SP)
+<span id="L138" class="ln">   138</span>		CMPL	gtod_generation(BP), BX
+<span id="L139" class="ln">   139</span>		JNE	timeloop
+<span id="L140" class="ln">   140</span>	
+<span id="L141" class="ln">   141</span>		// Gathered all the data we need. Compute time.
+<span id="L142" class="ln">   142</span>		//	((tsc - nt_tsc_base) * nt_scale) &gt;&gt; 32 + nt_ns_base - gtod_ns_base + gtod_sec_base*1e9
+<span id="L143" class="ln">   143</span>		// The multiply and shift extracts the top 64 bits of the 96-bit product.
+<span id="L144" class="ln">   144</span>		SUBL	0(SP), AX // DX:AX = (tsc - nt_tsc_base)
+<span id="L145" class="ln">   145</span>		SBBL	4(SP), DX
+<span id="L146" class="ln">   146</span>	
+<span id="L147" class="ln">   147</span>		// We have x = tsc - nt_tsc_base - DX:AX to be
+<span id="L148" class="ln">   148</span>		// multiplied by y = nt_scale = 8(SP), keeping the top 64 bits of the 96-bit product.
+<span id="L149" class="ln">   149</span>		// x*y = (x&amp;0xffffffff)*y + (x&amp;0xffffffff00000000)*y
+<span id="L150" class="ln">   150</span>		// (x*y)&gt;&gt;32 = ((x&amp;0xffffffff)*y)&gt;&gt;32 + (x&gt;&gt;32)*y
+<span id="L151" class="ln">   151</span>		MOVL	DX, CX // SI = (x&amp;0xffffffff)*y &gt;&gt; 32
+<span id="L152" class="ln">   152</span>		MOVL	$0, DX
+<span id="L153" class="ln">   153</span>		MULL	8(SP)
+<span id="L154" class="ln">   154</span>		MOVL	DX, SI
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>		MOVL	CX, AX // DX:AX = (x&gt;&gt;32)*y
+<span id="L157" class="ln">   157</span>		MOVL	$0, DX
+<span id="L158" class="ln">   158</span>		MULL	8(SP)
+<span id="L159" class="ln">   159</span>	
+<span id="L160" class="ln">   160</span>		ADDL	SI, AX	// DX:AX += (x&amp;0xffffffff)*y &gt;&gt; 32
+<span id="L161" class="ln">   161</span>		ADCL	$0, DX
+<span id="L162" class="ln">   162</span>		
+<span id="L163" class="ln">   163</span>		// DX:AX is now ((tsc - nt_tsc_base) * nt_scale) &gt;&gt; 32.
+<span id="L164" class="ln">   164</span>		ADDL	12(SP), AX	// DX:AX += nt_ns_base
+<span id="L165" class="ln">   165</span>		ADCL	16(SP), DX
+<span id="L166" class="ln">   166</span>		SUBL	20(SP), AX	// DX:AX -= gtod_ns_base
+<span id="L167" class="ln">   167</span>		SBBL	24(SP), DX
+<span id="L168" class="ln">   168</span>		MOVL	AX, SI	// DI:SI = DX:AX
+<span id="L169" class="ln">   169</span>		MOVL	DX, DI
+<span id="L170" class="ln">   170</span>		MOVL	28(SP), AX	// DX:AX = gtod_sec_base*1e9
+<span id="L171" class="ln">   171</span>		MOVL	32(SP), DX
+<span id="L172" class="ln">   172</span>		MOVL	$1000000000, CX
+<span id="L173" class="ln">   173</span>		MULL	CX
+<span id="L174" class="ln">   174</span>		ADDL	SI, AX	// DX:AX += DI:SI
+<span id="L175" class="ln">   175</span>		ADCL	DI, DX
+<span id="L176" class="ln">   176</span>		RET
+<span id="L177" class="ln">   177</span>	
+<span id="L178" class="ln">   178</span>	systime:
+<span id="L179" class="ln">   179</span>		// Fall back to system call (usually first call in this thread)
+<span id="L180" class="ln">   180</span>		LEAL	12(SP), AX	// must be non-nil, unused
+<span id="L181" class="ln">   181</span>		MOVL	AX, 4(SP)
+<span id="L182" class="ln">   182</span>		MOVL	$0, 8(SP)	// time zone pointer
+<span id="L183" class="ln">   183</span>		MOVL	$116, AX
+<span id="L184" class="ln">   184</span>		INT	$0x80
+<span id="L185" class="ln">   185</span>		// sec is in AX, usec in DX
+<span id="L186" class="ln">   186</span>		// convert to DX:AX nsec
+<span id="L187" class="ln">   187</span>		MOVL	DX, BX
+<span id="L188" class="ln">   188</span>		MOVL	$1000000000, CX
+<span id="L189" class="ln">   189</span>		MULL	CX
+<span id="L190" class="ln">   190</span>		IMULL	$1000, BX
+<span id="L191" class="ln">   191</span>		ADDL	BX, AX
+<span id="L192" class="ln">   192</span>		ADCL	$0, DX
+<span id="L193" class="ln">   193</span>		RET
+<span id="L194" class="ln">   194</span>	
+<span id="L195" class="ln">   195</span>	// func now() (sec int64, nsec int32)
+<span id="L196" class="ln">   196</span>	TEXT time·now(SB),NOSPLIT,$0
+<span id="L197" class="ln">   197</span>		CALL	runtime·now(SB)
+<span id="L198" class="ln">   198</span>		MOVL	$1000000000, CX
+<span id="L199" class="ln">   199</span>		DIVL	CX
+<span id="L200" class="ln">   200</span>		MOVL	AX, sec+0(FP)
+<span id="L201" class="ln">   201</span>		MOVL	$0, sec+4(FP)
+<span id="L202" class="ln">   202</span>		MOVL	DX, nsec+8(FP)
+<span id="L203" class="ln">   203</span>		RET
+<span id="L204" class="ln">   204</span>	
+<span id="L205" class="ln">   205</span>	// int64 nanotime(void) so really
+<span id="L206" class="ln">   206</span>	// void nanotime(int64 *nsec)
+<span id="L207" class="ln">   207</span>	TEXT runtime·nanotime(SB),NOSPLIT,$0
+<span id="L208" class="ln">   208</span>		CALL	runtime·now(SB)
+<span id="L209" class="ln">   209</span>		MOVL	ret+0(FP), DI
+<span id="L210" class="ln">   210</span>		MOVL	AX, 0(DI)
+<span id="L211" class="ln">   211</span>		MOVL	DX, 4(DI)
+<span id="L212" class="ln">   212</span>		RET
+<span id="L213" class="ln">   213</span>	
+<span id="L214" class="ln">   214</span>	TEXT runtime·sigprocmask(SB),NOSPLIT,$0
+<span id="L215" class="ln">   215</span>		MOVL	$329, AX  // pthread_sigmask (on OS X, sigprocmask==entire process)
+<span id="L216" class="ln">   216</span>		INT	$0x80
+<span id="L217" class="ln">   217</span>		JAE	2(PC)
+<span id="L218" class="ln">   218</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L219" class="ln">   219</span>		RET
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>	TEXT runtime·sigaction(SB),NOSPLIT,$0
+<span id="L222" class="ln">   222</span>		MOVL	$46, AX
+<span id="L223" class="ln">   223</span>		INT	$0x80
+<span id="L224" class="ln">   224</span>		JAE	2(PC)
+<span id="L225" class="ln">   225</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L226" class="ln">   226</span>		RET
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	// Sigtramp&#39;s job is to call the actual signal handler.
+<span id="L229" class="ln">   229</span>	// It is called with the following arguments on the stack:
+<span id="L230" class="ln">   230</span>	//	0(FP)	&#34;return address&#34; - ignored
+<span id="L231" class="ln">   231</span>	//	4(FP)	actual handler
+<span id="L232" class="ln">   232</span>	//	8(FP)	signal number
+<span id="L233" class="ln">   233</span>	//	12(FP)	siginfo style
+<span id="L234" class="ln">   234</span>	//	16(FP)	siginfo
+<span id="L235" class="ln">   235</span>	//	20(FP)	context
+<span id="L236" class="ln">   236</span>	TEXT runtime·sigtramp(SB),NOSPLIT,$40
+<span id="L237" class="ln">   237</span>		get_tls(CX)
+<span id="L238" class="ln">   238</span>		
+<span id="L239" class="ln">   239</span>		// check that m exists
+<span id="L240" class="ln">   240</span>		MOVL	m(CX), BP
+<span id="L241" class="ln">   241</span>		CMPL	BP, $0
+<span id="L242" class="ln">   242</span>		JNE	6(PC)
+<span id="L243" class="ln">   243</span>		MOVL	sig+8(FP), BX
+<span id="L244" class="ln">   244</span>		MOVL	BX, 0(SP)
+<span id="L245" class="ln">   245</span>		MOVL	$runtime·badsignal(SB), AX
+<span id="L246" class="ln">   246</span>		CALL	AX
+<span id="L247" class="ln">   247</span>		JMP 	sigtramp_ret
+<span id="L248" class="ln">   248</span>	
+<span id="L249" class="ln">   249</span>		// save g
+<span id="L250" class="ln">   250</span>		MOVL	g(CX), DI
+<span id="L251" class="ln">   251</span>		MOVL	DI, 20(SP)
+<span id="L252" class="ln">   252</span>	
+<span id="L253" class="ln">   253</span>		// g = m-&gt;gsignal
+<span id="L254" class="ln">   254</span>		MOVL	m_gsignal(BP), BP
+<span id="L255" class="ln">   255</span>		MOVL	BP, g(CX)
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>		// copy arguments to sighandler
+<span id="L258" class="ln">   258</span>		MOVL	sig+8(FP), BX
+<span id="L259" class="ln">   259</span>		MOVL	BX, 0(SP)
+<span id="L260" class="ln">   260</span>		MOVL	info+12(FP), BX
+<span id="L261" class="ln">   261</span>		MOVL	BX, 4(SP)
+<span id="L262" class="ln">   262</span>		MOVL	context+16(FP), BX
+<span id="L263" class="ln">   263</span>		MOVL	BX, 8(SP)
+<span id="L264" class="ln">   264</span>		MOVL	DI, 12(SP)
+<span id="L265" class="ln">   265</span>	
+<span id="L266" class="ln">   266</span>		MOVL	handler+0(FP), BX
+<span id="L267" class="ln">   267</span>		CALL	BX
+<span id="L268" class="ln">   268</span>	
+<span id="L269" class="ln">   269</span>		// restore g
+<span id="L270" class="ln">   270</span>		get_tls(CX)
+<span id="L271" class="ln">   271</span>		MOVL	20(SP), DI
+<span id="L272" class="ln">   272</span>		MOVL	DI, g(CX)
+<span id="L273" class="ln">   273</span>	
+<span id="L274" class="ln">   274</span>	sigtramp_ret:
+<span id="L275" class="ln">   275</span>		// call sigreturn
+<span id="L276" class="ln">   276</span>		MOVL	context+16(FP), CX
+<span id="L277" class="ln">   277</span>		MOVL	style+4(FP), BX
+<span id="L278" class="ln">   278</span>		MOVL	$0, 0(SP)	// &#34;caller PC&#34; - ignored
+<span id="L279" class="ln">   279</span>		MOVL	CX, 4(SP)
+<span id="L280" class="ln">   280</span>		MOVL	BX, 8(SP)
+<span id="L281" class="ln">   281</span>		MOVL	$184, AX	// sigreturn(ucontext, infostyle)
+<span id="L282" class="ln">   282</span>		INT	$0x80
+<span id="L283" class="ln">   283</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L284" class="ln">   284</span>		RET
+<span id="L285" class="ln">   285</span>	
+<span id="L286" class="ln">   286</span>	TEXT runtime·sigaltstack(SB),NOSPLIT,$0
+<span id="L287" class="ln">   287</span>		MOVL	$53, AX
+<span id="L288" class="ln">   288</span>		INT	$0x80
+<span id="L289" class="ln">   289</span>		JAE	2(PC)
+<span id="L290" class="ln">   290</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L291" class="ln">   291</span>		RET
+<span id="L292" class="ln">   292</span>	
+<span id="L293" class="ln">   293</span>	TEXT runtime·usleep(SB),NOSPLIT,$32
+<span id="L294" class="ln">   294</span>		MOVL	$0, DX
+<span id="L295" class="ln">   295</span>		MOVL	usec+0(FP), AX
+<span id="L296" class="ln">   296</span>		MOVL	$1000000, CX
+<span id="L297" class="ln">   297</span>		DIVL	CX
+<span id="L298" class="ln">   298</span>		MOVL	AX, 24(SP)  // sec
+<span id="L299" class="ln">   299</span>		MOVL	DX, 28(SP)  // usec
+<span id="L300" class="ln">   300</span>	
+<span id="L301" class="ln">   301</span>		// select(0, 0, 0, 0, &amp;tv)
+<span id="L302" class="ln">   302</span>		MOVL	$0, 0(SP)  // &#34;return PC&#34; - ignored
+<span id="L303" class="ln">   303</span>		MOVL	$0, 4(SP)
+<span id="L304" class="ln">   304</span>		MOVL	$0, 8(SP)
+<span id="L305" class="ln">   305</span>		MOVL	$0, 12(SP)
+<span id="L306" class="ln">   306</span>		MOVL	$0, 16(SP)
+<span id="L307" class="ln">   307</span>		LEAL	24(SP), AX
+<span id="L308" class="ln">   308</span>		MOVL	AX, 20(SP)
+<span id="L309" class="ln">   309</span>		MOVL	$93, AX
+<span id="L310" class="ln">   310</span>		INT	$0x80
+<span id="L311" class="ln">   311</span>		RET
+<span id="L312" class="ln">   312</span>	
+<span id="L313" class="ln">   313</span>	// void bsdthread_create(void *stk, M *mp, G *gp, void (*fn)(void))
+<span id="L314" class="ln">   314</span>	// System call args are: func arg stack pthread flags.
+<span id="L315" class="ln">   315</span>	TEXT runtime·bsdthread_create(SB),NOSPLIT,$32
+<span id="L316" class="ln">   316</span>		MOVL	$360, AX
+<span id="L317" class="ln">   317</span>		// 0(SP) is where the caller PC would be; kernel skips it
+<span id="L318" class="ln">   318</span>		MOVL	func+12(FP), BX
+<span id="L319" class="ln">   319</span>		MOVL	BX, 4(SP)	// func
+<span id="L320" class="ln">   320</span>		MOVL	mm+4(FP), BX
+<span id="L321" class="ln">   321</span>		MOVL	BX, 8(SP)	// arg
+<span id="L322" class="ln">   322</span>		MOVL	stk+0(FP), BX
+<span id="L323" class="ln">   323</span>		MOVL	BX, 12(SP)	// stack
+<span id="L324" class="ln">   324</span>		MOVL	gg+8(FP), BX
+<span id="L325" class="ln">   325</span>		MOVL	BX, 16(SP)	// pthread
+<span id="L326" class="ln">   326</span>		MOVL	$0x1000000, 20(SP)	// flags = PTHREAD_START_CUSTOM
+<span id="L327" class="ln">   327</span>		INT	$0x80
+<span id="L328" class="ln">   328</span>		JAE	3(PC)
+<span id="L329" class="ln">   329</span>		NEGL	AX
+<span id="L330" class="ln">   330</span>		RET
+<span id="L331" class="ln">   331</span>		MOVL	$0, AX
+<span id="L332" class="ln">   332</span>		RET
+<span id="L333" class="ln">   333</span>	
+<span id="L334" class="ln">   334</span>	// The thread that bsdthread_create creates starts executing here,
+<span id="L335" class="ln">   335</span>	// because we registered this function using bsdthread_register
+<span id="L336" class="ln">   336</span>	// at startup.
+<span id="L337" class="ln">   337</span>	//	AX = &#34;pthread&#34; (= g)
+<span id="L338" class="ln">   338</span>	//	BX = mach thread port
+<span id="L339" class="ln">   339</span>	//	CX = &#34;func&#34; (= fn)
+<span id="L340" class="ln">   340</span>	//	DX = &#34;arg&#34; (= m)
+<span id="L341" class="ln">   341</span>	//	DI = stack top
+<span id="L342" class="ln">   342</span>	//	SI = flags (= 0x1000000)
+<span id="L343" class="ln">   343</span>	//	SP = stack - C_32_STK_ALIGN
+<span id="L344" class="ln">   344</span>	TEXT runtime·bsdthread_start(SB),NOSPLIT,$0
+<span id="L345" class="ln">   345</span>		// set up ldt 7+id to point at m-&gt;tls.
+<span id="L346" class="ln">   346</span>		// m-&gt;tls is at m+40.  newosproc left
+<span id="L347" class="ln">   347</span>		// the m-&gt;id in tls[0].
+<span id="L348" class="ln">   348</span>		LEAL	m_tls(DX), BP
+<span id="L349" class="ln">   349</span>		MOVL	0(BP), DI
+<span id="L350" class="ln">   350</span>		ADDL	$7, DI	// m0 is LDT#7. count up.
+<span id="L351" class="ln">   351</span>		// setldt(tls#, &amp;tls, sizeof tls)
+<span id="L352" class="ln">   352</span>		PUSHAL	// save registers
+<span id="L353" class="ln">   353</span>		PUSHL	$32	// sizeof tls
+<span id="L354" class="ln">   354</span>		PUSHL	BP	// &amp;tls
+<span id="L355" class="ln">   355</span>		PUSHL	DI	// tls #
+<span id="L356" class="ln">   356</span>		CALL	runtime·setldt(SB)
+<span id="L357" class="ln">   357</span>		POPL	AX
+<span id="L358" class="ln">   358</span>		POPL	AX
+<span id="L359" class="ln">   359</span>		POPL	AX
+<span id="L360" class="ln">   360</span>		POPAL
+<span id="L361" class="ln">   361</span>	
+<span id="L362" class="ln">   362</span>		// Now segment is established.  Initialize m, g.
+<span id="L363" class="ln">   363</span>		get_tls(BP)
+<span id="L364" class="ln">   364</span>		MOVL	AX, g(BP)
+<span id="L365" class="ln">   365</span>		MOVL	DX, m(BP)
+<span id="L366" class="ln">   366</span>		MOVL	BX, m_procid(DX)	// m-&gt;procid = thread port (for debuggers)
+<span id="L367" class="ln">   367</span>		CALL	runtime·stackcheck(SB)		// smashes AX
+<span id="L368" class="ln">   368</span>		CALL	CX	// fn()
+<span id="L369" class="ln">   369</span>		CALL	runtime·exit1(SB)
+<span id="L370" class="ln">   370</span>		RET
+<span id="L371" class="ln">   371</span>	
+<span id="L372" class="ln">   372</span>	// void bsdthread_register(void)
+<span id="L373" class="ln">   373</span>	// registers callbacks for threadstart (see bsdthread_create above
+<span id="L374" class="ln">   374</span>	// and wqthread and pthsize (not used).  returns 0 on success.
+<span id="L375" class="ln">   375</span>	TEXT runtime·bsdthread_register(SB),NOSPLIT,$40
+<span id="L376" class="ln">   376</span>		MOVL	$366, AX
+<span id="L377" class="ln">   377</span>		// 0(SP) is where kernel expects caller PC; ignored
+<span id="L378" class="ln">   378</span>		MOVL	$runtime·bsdthread_start(SB), 4(SP)	// threadstart
+<span id="L379" class="ln">   379</span>		MOVL	$0, 8(SP)	// wqthread, not used by us
+<span id="L380" class="ln">   380</span>		MOVL	$0, 12(SP)	// pthsize, not used by us
+<span id="L381" class="ln">   381</span>		MOVL	$0, 16(SP)	// dummy_value [sic]
+<span id="L382" class="ln">   382</span>		MOVL	$0, 20(SP)	// targetconc_ptr
+<span id="L383" class="ln">   383</span>		MOVL	$0, 24(SP)	// dispatchqueue_offset
+<span id="L384" class="ln">   384</span>		INT	$0x80
+<span id="L385" class="ln">   385</span>		JAE	3(PC)
+<span id="L386" class="ln">   386</span>		NEGL	AX
+<span id="L387" class="ln">   387</span>		RET
+<span id="L388" class="ln">   388</span>		MOVL	$0, AX
+<span id="L389" class="ln">   389</span>		RET
+<span id="L390" class="ln">   390</span>	
+<span id="L391" class="ln">   391</span>	// Invoke Mach system call.
+<span id="L392" class="ln">   392</span>	// Assumes system call number in AX,
+<span id="L393" class="ln">   393</span>	// caller PC on stack, caller&#39;s caller PC next,
+<span id="L394" class="ln">   394</span>	// and then the system call arguments.
+<span id="L395" class="ln">   395</span>	//
+<span id="L396" class="ln">   396</span>	// Can be used for BSD too, but we don&#39;t,
+<span id="L397" class="ln">   397</span>	// because if you use this interface the BSD
+<span id="L398" class="ln">   398</span>	// system call numbers need an extra field
+<span id="L399" class="ln">   399</span>	// in the high 16 bits that seems to be the
+<span id="L400" class="ln">   400</span>	// argument count in bytes but is not always.
+<span id="L401" class="ln">   401</span>	// INT $0x80 works fine for those.
+<span id="L402" class="ln">   402</span>	TEXT runtime·sysenter(SB),NOSPLIT,$0
+<span id="L403" class="ln">   403</span>		POPL	DX
+<span id="L404" class="ln">   404</span>		MOVL	SP, CX
+<span id="L405" class="ln">   405</span>		BYTE $0x0F; BYTE $0x34;  // SYSENTER
+<span id="L406" class="ln">   406</span>		// returns to DX with SP set to CX
+<span id="L407" class="ln">   407</span>	
+<span id="L408" class="ln">   408</span>	TEXT runtime·mach_msg_trap(SB),NOSPLIT,$0
+<span id="L409" class="ln">   409</span>		MOVL	$-31, AX
+<span id="L410" class="ln">   410</span>		CALL	runtime·sysenter(SB)
+<span id="L411" class="ln">   411</span>		RET
+<span id="L412" class="ln">   412</span>	
+<span id="L413" class="ln">   413</span>	TEXT runtime·mach_reply_port(SB),NOSPLIT,$0
+<span id="L414" class="ln">   414</span>		MOVL	$-26, AX
+<span id="L415" class="ln">   415</span>		CALL	runtime·sysenter(SB)
+<span id="L416" class="ln">   416</span>		RET
+<span id="L417" class="ln">   417</span>	
+<span id="L418" class="ln">   418</span>	TEXT runtime·mach_task_self(SB),NOSPLIT,$0
+<span id="L419" class="ln">   419</span>		MOVL	$-28, AX
+<span id="L420" class="ln">   420</span>		CALL	runtime·sysenter(SB)
+<span id="L421" class="ln">   421</span>		RET
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>	// Mach provides trap versions of the semaphore ops,
+<span id="L424" class="ln">   424</span>	// instead of requiring the use of RPC.
+<span id="L425" class="ln">   425</span>	
+<span id="L426" class="ln">   426</span>	// uint32 mach_semaphore_wait(uint32)
+<span id="L427" class="ln">   427</span>	TEXT runtime·mach_semaphore_wait(SB),NOSPLIT,$0
+<span id="L428" class="ln">   428</span>		MOVL	$-36, AX
+<span id="L429" class="ln">   429</span>		CALL	runtime·sysenter(SB)
+<span id="L430" class="ln">   430</span>		RET
+<span id="L431" class="ln">   431</span>	
+<span id="L432" class="ln">   432</span>	// uint32 mach_semaphore_timedwait(uint32, uint32, uint32)
+<span id="L433" class="ln">   433</span>	TEXT runtime·mach_semaphore_timedwait(SB),NOSPLIT,$0
+<span id="L434" class="ln">   434</span>		MOVL	$-38, AX
+<span id="L435" class="ln">   435</span>		CALL	runtime·sysenter(SB)
+<span id="L436" class="ln">   436</span>		RET
+<span id="L437" class="ln">   437</span>	
+<span id="L438" class="ln">   438</span>	// uint32 mach_semaphore_signal(uint32)
+<span id="L439" class="ln">   439</span>	TEXT runtime·mach_semaphore_signal(SB),NOSPLIT,$0
+<span id="L440" class="ln">   440</span>		MOVL	$-33, AX
+<span id="L441" class="ln">   441</span>		CALL	runtime·sysenter(SB)
+<span id="L442" class="ln">   442</span>		RET
+<span id="L443" class="ln">   443</span>	
+<span id="L444" class="ln">   444</span>	// uint32 mach_semaphore_signal_all(uint32)
+<span id="L445" class="ln">   445</span>	TEXT runtime·mach_semaphore_signal_all(SB),NOSPLIT,$0
+<span id="L446" class="ln">   446</span>		MOVL	$-34, AX
+<span id="L447" class="ln">   447</span>		CALL	runtime·sysenter(SB)
+<span id="L448" class="ln">   448</span>		RET
+<span id="L449" class="ln">   449</span>	
+<span id="L450" class="ln">   450</span>	// setldt(int entry, int address, int limit)
+<span id="L451" class="ln">   451</span>	// entry and limit are ignored.
+<span id="L452" class="ln">   452</span>	TEXT runtime·setldt(SB),NOSPLIT,$32
+<span id="L453" class="ln">   453</span>		MOVL	address+4(FP), BX	// aka base
+<span id="L454" class="ln">   454</span>	
+<span id="L455" class="ln">   455</span>		/*
+<span id="L456" class="ln">   456</span>		 * When linking against the system libraries,
+<span id="L457" class="ln">   457</span>		 * we use its pthread_create and let it set up %gs
+<span id="L458" class="ln">   458</span>		 * for us.  When we do that, the private storage
+<span id="L459" class="ln">   459</span>		 * we get is not at 0(GS) but at 0x468(GS).
+<span id="L460" class="ln">   460</span>		 * 8l rewrites 0(TLS) into 0x468(GS) for us.
+<span id="L461" class="ln">   461</span>		 * To accommodate that rewrite, we translate the
+<span id="L462" class="ln">   462</span>		 * address and limit here so that 0x468(GS) maps to 0(address).
+<span id="L463" class="ln">   463</span>		 *
+<span id="L464" class="ln">   464</span>		 * See cgo/gcc_darwin_386.c:/468 for the derivation
+<span id="L465" class="ln">   465</span>		 * of the constant.
+<span id="L466" class="ln">   466</span>		 */
+<span id="L467" class="ln">   467</span>		SUBL	$0x468, BX
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>		/*
+<span id="L470" class="ln">   470</span>		 * Must set up as USER_CTHREAD segment because
+<span id="L471" class="ln">   471</span>		 * Darwin forces that value into %gs for signal handlers,
+<span id="L472" class="ln">   472</span>		 * and if we don&#39;t set one up, we&#39;ll get a recursive
+<span id="L473" class="ln">   473</span>		 * fault trying to get into the signal handler.
+<span id="L474" class="ln">   474</span>		 * Since we have to set one up anyway, it might as
+<span id="L475" class="ln">   475</span>		 * well be the value we want.  So don&#39;t bother with
+<span id="L476" class="ln">   476</span>		 * i386_set_ldt.
+<span id="L477" class="ln">   477</span>		 */
+<span id="L478" class="ln">   478</span>		MOVL	BX, 4(SP)
+<span id="L479" class="ln">   479</span>		MOVL	$3, AX	// thread_fast_set_cthread_self - machdep call #3
+<span id="L480" class="ln">   480</span>		INT	$0x82	// sic: 0x82, not 0x80, for machdep call
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>		XORL	AX, AX
+<span id="L483" class="ln">   483</span>		MOVW	GS, AX
+<span id="L484" class="ln">   484</span>		RET
+<span id="L485" class="ln">   485</span>	
+<span id="L486" class="ln">   486</span>	TEXT runtime·sysctl(SB),NOSPLIT,$0
+<span id="L487" class="ln">   487</span>		MOVL	$202, AX
+<span id="L488" class="ln">   488</span>		INT	$0x80
+<span id="L489" class="ln">   489</span>		JAE	3(PC)
+<span id="L490" class="ln">   490</span>		NEGL	AX
+<span id="L491" class="ln">   491</span>		RET
+<span id="L492" class="ln">   492</span>		MOVL	$0, AX
+<span id="L493" class="ln">   493</span>		RET
+<span id="L494" class="ln">   494</span>	
+<span id="L495" class="ln">   495</span>	// int32 runtime·kqueue(void);
+<span id="L496" class="ln">   496</span>	TEXT runtime·kqueue(SB),NOSPLIT,$0
+<span id="L497" class="ln">   497</span>		MOVL	$362, AX
+<span id="L498" class="ln">   498</span>		INT	$0x80
+<span id="L499" class="ln">   499</span>		JAE	2(PC)
+<span id="L500" class="ln">   500</span>		NEGL	AX
+<span id="L501" class="ln">   501</span>		RET
+<span id="L502" class="ln">   502</span>	
+<span id="L503" class="ln">   503</span>	// int32 runtime·kevent(int kq, Kevent *changelist, int nchanges, Kevent *eventlist, int nevents, Timespec *timeout);
+<span id="L504" class="ln">   504</span>	TEXT runtime·kevent(SB),NOSPLIT,$0
+<span id="L505" class="ln">   505</span>		MOVL	$363, AX
+<span id="L506" class="ln">   506</span>		INT	$0x80
+<span id="L507" class="ln">   507</span>		JAE	2(PC)
+<span id="L508" class="ln">   508</span>		NEGL	AX
+<span id="L509" class="ln">   509</span>		RET
+<span id="L510" class="ln">   510</span>	
+<span id="L511" class="ln">   511</span>	// int32 runtime·closeonexec(int32 fd);
+<span id="L512" class="ln">   512</span>	TEXT runtime·closeonexec(SB),NOSPLIT,$32
+<span id="L513" class="ln">   513</span>		MOVL	$92, AX  // fcntl
+<span id="L514" class="ln">   514</span>		// 0(SP) is where the caller PC would be; kernel skips it
+<span id="L515" class="ln">   515</span>		MOVL	fd+0(FP), BX
+<span id="L516" class="ln">   516</span>		MOVL	BX, 4(SP)  // fd
+<span id="L517" class="ln">   517</span>		MOVL	$2, 8(SP)  // F_SETFD
+<span id="L518" class="ln">   518</span>		MOVL	$1, 12(SP)  // FD_CLOEXEC
+<span id="L519" class="ln">   519</span>		INT	$0x80
+<span id="L520" class="ln">   520</span>		JAE	2(PC)
+<span id="L521" class="ln">   521</span>		NEGL	AX
+<span id="L522" class="ln">   522</span>		RET
+</pre><p><a href="http://golang.org/src/pkg/runtime/sys_darwin_386.s?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

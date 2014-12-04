@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/sys_darwin_amd64.s - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/sys_darwin_amd64.s</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	//
+<span id="L6" class="ln">     6</span>	// System calls and other sys.stuff for AMD64, Darwin
+<span id="L7" class="ln">     7</span>	// See http://fxr.watson.org/fxr/source/bsd/kern/syscalls.c?v=xnu-1228
+<span id="L8" class="ln">     8</span>	// or /usr/include/sys/syscall.h (on a Mac) for system call numbers.
+<span id="L9" class="ln">     9</span>	//
+<span id="L10" class="ln">    10</span>	// The low 24 bits are the system call number.
+<span id="L11" class="ln">    11</span>	// The high 8 bits specify the kind of system call: 1=Mach, 2=BSD, 3=Machine-Dependent.
+<span id="L12" class="ln">    12</span>	//
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	#include &#34;zasm_GOOS_GOARCH.h&#34;
+<span id="L15" class="ln">    15</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	// Exit the entire program (like C exit)
+<span id="L18" class="ln">    18</span>	TEXT runtime·exit(SB),NOSPLIT,$0
+<span id="L19" class="ln">    19</span>		MOVL	8(SP), DI		// arg 1 exit status
+<span id="L20" class="ln">    20</span>		MOVL	$(0x2000000+1), AX	// syscall entry
+<span id="L21" class="ln">    21</span>		SYSCALL
+<span id="L22" class="ln">    22</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L23" class="ln">    23</span>		RET
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	// Exit this OS thread (like pthread_exit, which eventually
+<span id="L26" class="ln">    26</span>	// calls __bsdthread_terminate).
+<span id="L27" class="ln">    27</span>	TEXT runtime·exit1(SB),NOSPLIT,$0
+<span id="L28" class="ln">    28</span>		MOVL	8(SP), DI		// arg 1 exit status
+<span id="L29" class="ln">    29</span>		MOVL	$(0x2000000+361), AX	// syscall entry
+<span id="L30" class="ln">    30</span>		SYSCALL
+<span id="L31" class="ln">    31</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L32" class="ln">    32</span>		RET
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	TEXT runtime·open(SB),NOSPLIT,$0
+<span id="L35" class="ln">    35</span>		MOVQ	8(SP), DI		// arg 1 pathname
+<span id="L36" class="ln">    36</span>		MOVL	16(SP), SI		// arg 2 flags
+<span id="L37" class="ln">    37</span>		MOVL	20(SP), DX		// arg 3 mode
+<span id="L38" class="ln">    38</span>		MOVL	$(0x2000000+5), AX	// syscall entry
+<span id="L39" class="ln">    39</span>		SYSCALL
+<span id="L40" class="ln">    40</span>		RET
+<span id="L41" class="ln">    41</span>	
+<span id="L42" class="ln">    42</span>	TEXT runtime·close(SB),NOSPLIT,$0
+<span id="L43" class="ln">    43</span>		MOVL	8(SP), DI		// arg 1 fd
+<span id="L44" class="ln">    44</span>		MOVL	$(0x2000000+6), AX	// syscall entry
+<span id="L45" class="ln">    45</span>		SYSCALL
+<span id="L46" class="ln">    46</span>		RET
+<span id="L47" class="ln">    47</span>	
+<span id="L48" class="ln">    48</span>	TEXT runtime·read(SB),NOSPLIT,$0
+<span id="L49" class="ln">    49</span>		MOVL	8(SP), DI		// arg 1 fd
+<span id="L50" class="ln">    50</span>		MOVQ	16(SP), SI		// arg 2 buf
+<span id="L51" class="ln">    51</span>		MOVL	24(SP), DX		// arg 3 count
+<span id="L52" class="ln">    52</span>		MOVL	$(0x2000000+3), AX	// syscall entry
+<span id="L53" class="ln">    53</span>		SYSCALL
+<span id="L54" class="ln">    54</span>		RET
+<span id="L55" class="ln">    55</span>	
+<span id="L56" class="ln">    56</span>	TEXT runtime·write(SB),NOSPLIT,$0
+<span id="L57" class="ln">    57</span>		MOVL	8(SP), DI		// arg 1 fd
+<span id="L58" class="ln">    58</span>		MOVQ	16(SP), SI		// arg 2 buf
+<span id="L59" class="ln">    59</span>		MOVL	24(SP), DX		// arg 3 count
+<span id="L60" class="ln">    60</span>		MOVL	$(0x2000000+4), AX	// syscall entry
+<span id="L61" class="ln">    61</span>		SYSCALL
+<span id="L62" class="ln">    62</span>		RET
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>	TEXT runtime·raise(SB),NOSPLIT,$24
+<span id="L65" class="ln">    65</span>		MOVL	$(0x2000000+20), AX // getpid
+<span id="L66" class="ln">    66</span>		SYSCALL
+<span id="L67" class="ln">    67</span>		MOVQ	AX, DI	// arg 1 - pid
+<span id="L68" class="ln">    68</span>		MOVL	sig+0(FP), SI	// arg 2 - signal
+<span id="L69" class="ln">    69</span>		MOVL	$1, DX	// arg 3 - posix
+<span id="L70" class="ln">    70</span>		MOVL	$(0x2000000+37), AX // kill
+<span id="L71" class="ln">    71</span>		SYSCALL
+<span id="L72" class="ln">    72</span>		RET
+<span id="L73" class="ln">    73</span>	
+<span id="L74" class="ln">    74</span>	TEXT runtime·setitimer(SB), NOSPLIT, $0
+<span id="L75" class="ln">    75</span>		MOVL	8(SP), DI
+<span id="L76" class="ln">    76</span>		MOVQ	16(SP), SI
+<span id="L77" class="ln">    77</span>		MOVQ	24(SP), DX
+<span id="L78" class="ln">    78</span>		MOVL	$(0x2000000+83), AX	// syscall entry
+<span id="L79" class="ln">    79</span>		SYSCALL
+<span id="L80" class="ln">    80</span>		RET
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>	TEXT runtime·madvise(SB), NOSPLIT, $0
+<span id="L83" class="ln">    83</span>		MOVQ	8(SP), DI		// arg 1 addr
+<span id="L84" class="ln">    84</span>		MOVQ	16(SP), SI		// arg 2 len
+<span id="L85" class="ln">    85</span>		MOVL	24(SP), DX		// arg 3 advice
+<span id="L86" class="ln">    86</span>		MOVL	$(0x2000000+75), AX	// syscall entry madvise
+<span id="L87" class="ln">    87</span>		SYSCALL
+<span id="L88" class="ln">    88</span>		// ignore failure - maybe pages are locked
+<span id="L89" class="ln">    89</span>		RET
+<span id="L90" class="ln">    90</span>	
+<span id="L91" class="ln">    91</span>	// OS X comm page time offsets
+<span id="L92" class="ln">    92</span>	// http://www.opensource.apple.com/source/xnu/xnu-1699.26.8/osfmk/i386/cpu_capabilities.h
+<span id="L93" class="ln">    93</span>	#define	nt_tsc_base	0x50
+<span id="L94" class="ln">    94</span>	#define	nt_scale	0x58
+<span id="L95" class="ln">    95</span>	#define	nt_shift	0x5c
+<span id="L96" class="ln">    96</span>	#define	nt_ns_base	0x60
+<span id="L97" class="ln">    97</span>	#define	nt_generation	0x68
+<span id="L98" class="ln">    98</span>	#define	gtod_generation	0x6c
+<span id="L99" class="ln">    99</span>	#define	gtod_ns_base	0x70
+<span id="L100" class="ln">   100</span>	#define	gtod_sec_base	0x78
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	// int64 nanotime(void)
+<span id="L103" class="ln">   103</span>	TEXT runtime·nanotime(SB), NOSPLIT, $32
+<span id="L104" class="ln">   104</span>		MOVQ	$0x7fffffe00000, BP	/* comm page base */
+<span id="L105" class="ln">   105</span>		// Loop trying to take a consistent snapshot
+<span id="L106" class="ln">   106</span>		// of the time parameters.
+<span id="L107" class="ln">   107</span>	timeloop:
+<span id="L108" class="ln">   108</span>		MOVL	gtod_generation(BP), R8
+<span id="L109" class="ln">   109</span>		TESTL	R8, R8
+<span id="L110" class="ln">   110</span>		JZ	systime
+<span id="L111" class="ln">   111</span>		MOVL	nt_generation(BP), R9
+<span id="L112" class="ln">   112</span>		TESTL	R9, R9
+<span id="L113" class="ln">   113</span>		JZ	timeloop
+<span id="L114" class="ln">   114</span>		RDTSC
+<span id="L115" class="ln">   115</span>		MOVQ	nt_tsc_base(BP), R10
+<span id="L116" class="ln">   116</span>		MOVL	nt_scale(BP), R11
+<span id="L117" class="ln">   117</span>		MOVQ	nt_ns_base(BP), R12
+<span id="L118" class="ln">   118</span>		CMPL	nt_generation(BP), R9
+<span id="L119" class="ln">   119</span>		JNE	timeloop
+<span id="L120" class="ln">   120</span>		MOVQ	gtod_ns_base(BP), R13
+<span id="L121" class="ln">   121</span>		MOVQ	gtod_sec_base(BP), R14
+<span id="L122" class="ln">   122</span>		CMPL	gtod_generation(BP), R8
+<span id="L123" class="ln">   123</span>		JNE	timeloop
+<span id="L124" class="ln">   124</span>	
+<span id="L125" class="ln">   125</span>		// Gathered all the data we need. Compute time.
+<span id="L126" class="ln">   126</span>		//	((tsc - nt_tsc_base) * nt_scale) &gt;&gt; 32 + nt_ns_base - gtod_ns_base + gtod_sec_base*1e9
+<span id="L127" class="ln">   127</span>		// The multiply and shift extracts the top 64 bits of the 96-bit product.
+<span id="L128" class="ln">   128</span>		SHLQ	$32, DX
+<span id="L129" class="ln">   129</span>		ADDQ	DX, AX
+<span id="L130" class="ln">   130</span>		SUBQ	R10, AX
+<span id="L131" class="ln">   131</span>		MULQ	R11
+<span id="L132" class="ln">   132</span>		SHRQ	$32, AX:DX
+<span id="L133" class="ln">   133</span>		ADDQ	R12, AX
+<span id="L134" class="ln">   134</span>		SUBQ	R13, AX
+<span id="L135" class="ln">   135</span>		IMULQ	$1000000000, R14
+<span id="L136" class="ln">   136</span>		ADDQ	R14, AX
+<span id="L137" class="ln">   137</span>		RET
+<span id="L138" class="ln">   138</span>	
+<span id="L139" class="ln">   139</span>	systime:
+<span id="L140" class="ln">   140</span>		// Fall back to system call (usually first call in this thread).
+<span id="L141" class="ln">   141</span>		MOVQ	SP, DI	// must be non-nil, unused
+<span id="L142" class="ln">   142</span>		MOVQ	$0, SI
+<span id="L143" class="ln">   143</span>		MOVL	$(0x2000000+116), AX
+<span id="L144" class="ln">   144</span>		SYSCALL
+<span id="L145" class="ln">   145</span>		// sec is in AX, usec in DX
+<span id="L146" class="ln">   146</span>		// return nsec in AX
+<span id="L147" class="ln">   147</span>		IMULQ	$1000000000, AX
+<span id="L148" class="ln">   148</span>		IMULQ	$1000, DX
+<span id="L149" class="ln">   149</span>		ADDQ	DX, AX
+<span id="L150" class="ln">   150</span>		RET
+<span id="L151" class="ln">   151</span>	
+<span id="L152" class="ln">   152</span>	// func now() (sec int64, nsec int32)
+<span id="L153" class="ln">   153</span>	TEXT time·now(SB),NOSPLIT,$0
+<span id="L154" class="ln">   154</span>		CALL	runtime·nanotime(SB)
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>		// generated code for
+<span id="L157" class="ln">   157</span>		//	func f(x uint64) (uint64, uint64) { return x/1000000000, x%100000000 }
+<span id="L158" class="ln">   158</span>		// adapted to reduce duplication
+<span id="L159" class="ln">   159</span>		MOVQ	AX, CX
+<span id="L160" class="ln">   160</span>		MOVQ	$1360296554856532783, AX
+<span id="L161" class="ln">   161</span>		MULQ	CX
+<span id="L162" class="ln">   162</span>		ADDQ	CX, DX
+<span id="L163" class="ln">   163</span>		RCRQ	$1, DX
+<span id="L164" class="ln">   164</span>		SHRQ	$29, DX
+<span id="L165" class="ln">   165</span>		MOVQ	DX, sec+0(FP)
+<span id="L166" class="ln">   166</span>		IMULQ	$1000000000, DX
+<span id="L167" class="ln">   167</span>		SUBQ	DX, CX
+<span id="L168" class="ln">   168</span>		MOVL	CX, nsec+8(FP)
+<span id="L169" class="ln">   169</span>		RET
+<span id="L170" class="ln">   170</span>	
+<span id="L171" class="ln">   171</span>	TEXT runtime·sigprocmask(SB),NOSPLIT,$0
+<span id="L172" class="ln">   172</span>		MOVL	8(SP), DI
+<span id="L173" class="ln">   173</span>		MOVQ	16(SP), SI
+<span id="L174" class="ln">   174</span>		MOVQ	24(SP), DX
+<span id="L175" class="ln">   175</span>		MOVL	$(0x2000000+329), AX  // pthread_sigmask (on OS X, sigprocmask==entire process)
+<span id="L176" class="ln">   176</span>		SYSCALL
+<span id="L177" class="ln">   177</span>		JCC	2(PC)
+<span id="L178" class="ln">   178</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L179" class="ln">   179</span>		RET
+<span id="L180" class="ln">   180</span>	
+<span id="L181" class="ln">   181</span>	TEXT runtime·sigaction(SB),NOSPLIT,$0
+<span id="L182" class="ln">   182</span>		MOVL	8(SP), DI		// arg 1 sig
+<span id="L183" class="ln">   183</span>		MOVQ	16(SP), SI		// arg 2 act
+<span id="L184" class="ln">   184</span>		MOVQ	24(SP), DX		// arg 3 oact
+<span id="L185" class="ln">   185</span>		MOVQ	24(SP), CX		// arg 3 oact
+<span id="L186" class="ln">   186</span>		MOVQ	24(SP), R10		// arg 3 oact
+<span id="L187" class="ln">   187</span>		MOVL	$(0x2000000+46), AX	// syscall entry
+<span id="L188" class="ln">   188</span>		SYSCALL
+<span id="L189" class="ln">   189</span>		JCC	2(PC)
+<span id="L190" class="ln">   190</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L191" class="ln">   191</span>		RET
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>	TEXT runtime·sigtramp(SB),NOSPLIT,$64
+<span id="L194" class="ln">   194</span>		get_tls(BX)
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>		MOVQ	R8, 32(SP)	// save ucontext
+<span id="L197" class="ln">   197</span>		MOVQ	SI, 40(SP)	// save infostyle
+<span id="L198" class="ln">   198</span>	
+<span id="L199" class="ln">   199</span>		// check that m exists
+<span id="L200" class="ln">   200</span>		MOVQ	m(BX), BP
+<span id="L201" class="ln">   201</span>		CMPQ	BP, $0
+<span id="L202" class="ln">   202</span>		JNE	5(PC)
+<span id="L203" class="ln">   203</span>		MOVL	DX, 0(SP)
+<span id="L204" class="ln">   204</span>		MOVQ	$runtime·badsignal(SB), AX
+<span id="L205" class="ln">   205</span>		CALL	AX
+<span id="L206" class="ln">   206</span>		JMP 	sigtramp_ret
+<span id="L207" class="ln">   207</span>	
+<span id="L208" class="ln">   208</span>		// save g
+<span id="L209" class="ln">   209</span>		MOVQ	g(BX), R10
+<span id="L210" class="ln">   210</span>		MOVQ	R10, 48(SP)
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>		// g = m-&gt;gsignal
+<span id="L213" class="ln">   213</span>		MOVQ	m_gsignal(BP), BP
+<span id="L214" class="ln">   214</span>		MOVQ	BP, g(BX)
+<span id="L215" class="ln">   215</span>	
+<span id="L216" class="ln">   216</span>		MOVL	DX, 0(SP)
+<span id="L217" class="ln">   217</span>		MOVQ	CX, 8(SP)
+<span id="L218" class="ln">   218</span>		MOVQ	R8, 16(SP)
+<span id="L219" class="ln">   219</span>		MOVQ	R10, 24(SP)
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>		CALL	DI
+<span id="L222" class="ln">   222</span>	
+<span id="L223" class="ln">   223</span>		// restore g
+<span id="L224" class="ln">   224</span>		get_tls(BX)
+<span id="L225" class="ln">   225</span>		MOVQ	48(SP), R10
+<span id="L226" class="ln">   226</span>		MOVQ	R10, g(BX)
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	sigtramp_ret:
+<span id="L229" class="ln">   229</span>		// call sigreturn
+<span id="L230" class="ln">   230</span>		MOVL	$(0x2000000+184), AX	// sigreturn(ucontext, infostyle)
+<span id="L231" class="ln">   231</span>		MOVQ	32(SP), DI	// saved ucontext
+<span id="L232" class="ln">   232</span>		MOVQ	40(SP), SI	// saved infostyle
+<span id="L233" class="ln">   233</span>		SYSCALL
+<span id="L234" class="ln">   234</span>		INT $3	// not reached
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	TEXT runtime·mmap(SB),NOSPLIT,$0
+<span id="L237" class="ln">   237</span>		MOVQ	8(SP), DI		// arg 1 addr
+<span id="L238" class="ln">   238</span>		MOVQ	16(SP), SI		// arg 2 len
+<span id="L239" class="ln">   239</span>		MOVL	24(SP), DX		// arg 3 prot
+<span id="L240" class="ln">   240</span>		MOVL	28(SP), R10		// arg 4 flags
+<span id="L241" class="ln">   241</span>		MOVL	32(SP), R8		// arg 5 fid
+<span id="L242" class="ln">   242</span>		MOVL	36(SP), R9		// arg 6 offset
+<span id="L243" class="ln">   243</span>		MOVL	$(0x2000000+197), AX	// syscall entry
+<span id="L244" class="ln">   244</span>		SYSCALL
+<span id="L245" class="ln">   245</span>		RET
+<span id="L246" class="ln">   246</span>	
+<span id="L247" class="ln">   247</span>	TEXT runtime·munmap(SB),NOSPLIT,$0
+<span id="L248" class="ln">   248</span>		MOVQ	8(SP), DI		// arg 1 addr
+<span id="L249" class="ln">   249</span>		MOVQ	16(SP), SI		// arg 2 len
+<span id="L250" class="ln">   250</span>		MOVL	$(0x2000000+73), AX	// syscall entry
+<span id="L251" class="ln">   251</span>		SYSCALL
+<span id="L252" class="ln">   252</span>		JCC	2(PC)
+<span id="L253" class="ln">   253</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L254" class="ln">   254</span>		RET
+<span id="L255" class="ln">   255</span>	
+<span id="L256" class="ln">   256</span>	TEXT runtime·sigaltstack(SB),NOSPLIT,$0
+<span id="L257" class="ln">   257</span>		MOVQ	new+8(SP), DI
+<span id="L258" class="ln">   258</span>		MOVQ	old+16(SP), SI
+<span id="L259" class="ln">   259</span>		MOVQ	$(0x2000000+53), AX
+<span id="L260" class="ln">   260</span>		SYSCALL
+<span id="L261" class="ln">   261</span>		JCC	2(PC)
+<span id="L262" class="ln">   262</span>		MOVL	$0xf1, 0xf1  // crash
+<span id="L263" class="ln">   263</span>		RET
+<span id="L264" class="ln">   264</span>	
+<span id="L265" class="ln">   265</span>	TEXT runtime·usleep(SB),NOSPLIT,$16
+<span id="L266" class="ln">   266</span>		MOVL	$0, DX
+<span id="L267" class="ln">   267</span>		MOVL	usec+0(FP), AX
+<span id="L268" class="ln">   268</span>		MOVL	$1000000, CX
+<span id="L269" class="ln">   269</span>		DIVL	CX
+<span id="L270" class="ln">   270</span>		MOVQ	AX, 0(SP)  // sec
+<span id="L271" class="ln">   271</span>		MOVL	DX, 8(SP)  // usec
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>		// select(0, 0, 0, 0, &amp;tv)
+<span id="L274" class="ln">   274</span>		MOVL	$0, DI
+<span id="L275" class="ln">   275</span>		MOVL	$0, SI
+<span id="L276" class="ln">   276</span>		MOVL	$0, DX
+<span id="L277" class="ln">   277</span>		MOVL	$0, R10
+<span id="L278" class="ln">   278</span>		MOVQ	SP, R8
+<span id="L279" class="ln">   279</span>		MOVL	$(0x2000000+93), AX
+<span id="L280" class="ln">   280</span>		SYSCALL
+<span id="L281" class="ln">   281</span>		RET
+<span id="L282" class="ln">   282</span>	
+<span id="L283" class="ln">   283</span>	// void bsdthread_create(void *stk, M *mp, G *gp, void (*fn)(void))
+<span id="L284" class="ln">   284</span>	TEXT runtime·bsdthread_create(SB),NOSPLIT,$0
+<span id="L285" class="ln">   285</span>		// Set up arguments to bsdthread_create system call.
+<span id="L286" class="ln">   286</span>		// The ones in quotes pass through to the thread callback
+<span id="L287" class="ln">   287</span>		// uninterpreted, so we can put whatever we want there.
+<span id="L288" class="ln">   288</span>		MOVQ	fn+32(SP), DI	// &#34;func&#34;
+<span id="L289" class="ln">   289</span>		MOVQ	mm+16(SP), SI	// &#34;arg&#34;
+<span id="L290" class="ln">   290</span>		MOVQ	stk+8(SP), DX	// stack
+<span id="L291" class="ln">   291</span>		MOVQ	gg+24(SP), R10	// &#34;pthread&#34;
+<span id="L292" class="ln">   292</span>		MOVQ	$0x01000000, R8	// flags = PTHREAD_START_CUSTOM
+<span id="L293" class="ln">   293</span>		MOVQ	$0, R9	// paranoia
+<span id="L294" class="ln">   294</span>		MOVQ	$(0x2000000+360), AX	// bsdthread_create
+<span id="L295" class="ln">   295</span>		SYSCALL
+<span id="L296" class="ln">   296</span>		JCC 3(PC)
+<span id="L297" class="ln">   297</span>		NEGQ	AX
+<span id="L298" class="ln">   298</span>		RET
+<span id="L299" class="ln">   299</span>		MOVL	$0, AX
+<span id="L300" class="ln">   300</span>		RET
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>	// The thread that bsdthread_create creates starts executing here,
+<span id="L303" class="ln">   303</span>	// because we registered this function using bsdthread_register
+<span id="L304" class="ln">   304</span>	// at startup.
+<span id="L305" class="ln">   305</span>	//	DI = &#34;pthread&#34;
+<span id="L306" class="ln">   306</span>	//	SI = mach thread port
+<span id="L307" class="ln">   307</span>	//	DX = &#34;func&#34; (= fn)
+<span id="L308" class="ln">   308</span>	//	CX = &#34;arg&#34; (= m)
+<span id="L309" class="ln">   309</span>	//	R8 = stack
+<span id="L310" class="ln">   310</span>	//	R9 = flags (= 0)
+<span id="L311" class="ln">   311</span>	//	SP = stack - C_64_REDZONE_LEN (= stack - 128)
+<span id="L312" class="ln">   312</span>	TEXT runtime·bsdthread_start(SB),NOSPLIT,$0
+<span id="L313" class="ln">   313</span>		MOVQ	R8, SP		// empirically, SP is very wrong but R8 is right
+<span id="L314" class="ln">   314</span>	
+<span id="L315" class="ln">   315</span>		PUSHQ	DX
+<span id="L316" class="ln">   316</span>		PUSHQ	CX
+<span id="L317" class="ln">   317</span>		PUSHQ	SI
+<span id="L318" class="ln">   318</span>	
+<span id="L319" class="ln">   319</span>		// set up thread local storage pointing at m-&gt;tls.
+<span id="L320" class="ln">   320</span>		LEAQ	m_tls(CX), DI
+<span id="L321" class="ln">   321</span>		CALL	runtime·settls(SB)
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>		POPQ	SI
+<span id="L324" class="ln">   324</span>		POPQ	CX
+<span id="L325" class="ln">   325</span>		POPQ	DX
+<span id="L326" class="ln">   326</span>	
+<span id="L327" class="ln">   327</span>		get_tls(BX)
+<span id="L328" class="ln">   328</span>		MOVQ	CX, m(BX)
+<span id="L329" class="ln">   329</span>		MOVQ	SI, m_procid(CX)	// thread port is m-&gt;procid
+<span id="L330" class="ln">   330</span>		MOVQ	m_g0(CX), AX
+<span id="L331" class="ln">   331</span>		MOVQ	AX, g(BX)
+<span id="L332" class="ln">   332</span>		CALL	runtime·stackcheck(SB)	// smashes AX, CX
+<span id="L333" class="ln">   333</span>		CALL	DX	// fn
+<span id="L334" class="ln">   334</span>		CALL	runtime·exit1(SB)
+<span id="L335" class="ln">   335</span>		RET
+<span id="L336" class="ln">   336</span>	
+<span id="L337" class="ln">   337</span>	// void bsdthread_register(void)
+<span id="L338" class="ln">   338</span>	// registers callbacks for threadstart (see bsdthread_create above
+<span id="L339" class="ln">   339</span>	// and wqthread and pthsize (not used).  returns 0 on success.
+<span id="L340" class="ln">   340</span>	TEXT runtime·bsdthread_register(SB),NOSPLIT,$0
+<span id="L341" class="ln">   341</span>		MOVQ	$runtime·bsdthread_start(SB), DI	// threadstart
+<span id="L342" class="ln">   342</span>		MOVQ	$0, SI	// wqthread, not used by us
+<span id="L343" class="ln">   343</span>		MOVQ	$0, DX	// pthsize, not used by us
+<span id="L344" class="ln">   344</span>		MOVQ	$0, R10	// dummy_value [sic]
+<span id="L345" class="ln">   345</span>		MOVQ	$0, R8	// targetconc_ptr
+<span id="L346" class="ln">   346</span>		MOVQ	$0, R9	// dispatchqueue_offset
+<span id="L347" class="ln">   347</span>		MOVQ	$(0x2000000+366), AX	// bsdthread_register
+<span id="L348" class="ln">   348</span>		SYSCALL
+<span id="L349" class="ln">   349</span>		JCC 3(PC)
+<span id="L350" class="ln">   350</span>		NEGQ	AX
+<span id="L351" class="ln">   351</span>		RET
+<span id="L352" class="ln">   352</span>		MOVL	$0, AX
+<span id="L353" class="ln">   353</span>		RET
+<span id="L354" class="ln">   354</span>	
+<span id="L355" class="ln">   355</span>	// Mach system calls use 0x1000000 instead of the BSD&#39;s 0x2000000.
+<span id="L356" class="ln">   356</span>	
+<span id="L357" class="ln">   357</span>	// uint32 mach_msg_trap(void*, uint32, uint32, uint32, uint32, uint32, uint32)
+<span id="L358" class="ln">   358</span>	TEXT runtime·mach_msg_trap(SB),NOSPLIT,$0
+<span id="L359" class="ln">   359</span>		MOVQ	8(SP), DI
+<span id="L360" class="ln">   360</span>		MOVL	16(SP), SI
+<span id="L361" class="ln">   361</span>		MOVL	20(SP), DX
+<span id="L362" class="ln">   362</span>		MOVL	24(SP), R10
+<span id="L363" class="ln">   363</span>		MOVL	28(SP), R8
+<span id="L364" class="ln">   364</span>		MOVL	32(SP), R9
+<span id="L365" class="ln">   365</span>		MOVL	36(SP), R11
+<span id="L366" class="ln">   366</span>		PUSHQ	R11	// seventh arg, on stack
+<span id="L367" class="ln">   367</span>		MOVL	$(0x1000000+31), AX	// mach_msg_trap
+<span id="L368" class="ln">   368</span>		SYSCALL
+<span id="L369" class="ln">   369</span>		POPQ	R11
+<span id="L370" class="ln">   370</span>		RET
+<span id="L371" class="ln">   371</span>	
+<span id="L372" class="ln">   372</span>	TEXT runtime·mach_task_self(SB),NOSPLIT,$0
+<span id="L373" class="ln">   373</span>		MOVL	$(0x1000000+28), AX	// task_self_trap
+<span id="L374" class="ln">   374</span>		SYSCALL
+<span id="L375" class="ln">   375</span>		RET
+<span id="L376" class="ln">   376</span>	
+<span id="L377" class="ln">   377</span>	TEXT runtime·mach_thread_self(SB),NOSPLIT,$0
+<span id="L378" class="ln">   378</span>		MOVL	$(0x1000000+27), AX	// thread_self_trap
+<span id="L379" class="ln">   379</span>		SYSCALL
+<span id="L380" class="ln">   380</span>		RET
+<span id="L381" class="ln">   381</span>	
+<span id="L382" class="ln">   382</span>	TEXT runtime·mach_reply_port(SB),NOSPLIT,$0
+<span id="L383" class="ln">   383</span>		MOVL	$(0x1000000+26), AX	// mach_reply_port
+<span id="L384" class="ln">   384</span>		SYSCALL
+<span id="L385" class="ln">   385</span>		RET
+<span id="L386" class="ln">   386</span>	
+<span id="L387" class="ln">   387</span>	// Mach provides trap versions of the semaphore ops,
+<span id="L388" class="ln">   388</span>	// instead of requiring the use of RPC.
+<span id="L389" class="ln">   389</span>	
+<span id="L390" class="ln">   390</span>	// uint32 mach_semaphore_wait(uint32)
+<span id="L391" class="ln">   391</span>	TEXT runtime·mach_semaphore_wait(SB),NOSPLIT,$0
+<span id="L392" class="ln">   392</span>		MOVL	8(SP), DI
+<span id="L393" class="ln">   393</span>		MOVL	$(0x1000000+36), AX	// semaphore_wait_trap
+<span id="L394" class="ln">   394</span>		SYSCALL
+<span id="L395" class="ln">   395</span>		RET
+<span id="L396" class="ln">   396</span>	
+<span id="L397" class="ln">   397</span>	// uint32 mach_semaphore_timedwait(uint32, uint32, uint32)
+<span id="L398" class="ln">   398</span>	TEXT runtime·mach_semaphore_timedwait(SB),NOSPLIT,$0
+<span id="L399" class="ln">   399</span>		MOVL	8(SP), DI
+<span id="L400" class="ln">   400</span>		MOVL	12(SP), SI
+<span id="L401" class="ln">   401</span>		MOVL	16(SP), DX
+<span id="L402" class="ln">   402</span>		MOVL	$(0x1000000+38), AX	// semaphore_timedwait_trap
+<span id="L403" class="ln">   403</span>		SYSCALL
+<span id="L404" class="ln">   404</span>		RET
+<span id="L405" class="ln">   405</span>	
+<span id="L406" class="ln">   406</span>	// uint32 mach_semaphore_signal(uint32)
+<span id="L407" class="ln">   407</span>	TEXT runtime·mach_semaphore_signal(SB),NOSPLIT,$0
+<span id="L408" class="ln">   408</span>		MOVL	8(SP), DI
+<span id="L409" class="ln">   409</span>		MOVL	$(0x1000000+33), AX	// semaphore_signal_trap
+<span id="L410" class="ln">   410</span>		SYSCALL
+<span id="L411" class="ln">   411</span>		RET
+<span id="L412" class="ln">   412</span>	
+<span id="L413" class="ln">   413</span>	// uint32 mach_semaphore_signal_all(uint32)
+<span id="L414" class="ln">   414</span>	TEXT runtime·mach_semaphore_signal_all(SB),NOSPLIT,$0
+<span id="L415" class="ln">   415</span>		MOVL	8(SP), DI
+<span id="L416" class="ln">   416</span>		MOVL	$(0x1000000+34), AX	// semaphore_signal_all_trap
+<span id="L417" class="ln">   417</span>		SYSCALL
+<span id="L418" class="ln">   418</span>		RET
+<span id="L419" class="ln">   419</span>	
+<span id="L420" class="ln">   420</span>	// set tls base to DI
+<span id="L421" class="ln">   421</span>	TEXT runtime·settls(SB),NOSPLIT,$32
+<span id="L422" class="ln">   422</span>		/*
+<span id="L423" class="ln">   423</span>		* Same as in sys_darwin_386.s:/ugliness, different constant.
+<span id="L424" class="ln">   424</span>		* See cgo/gcc_darwin_amd64.c for the derivation
+<span id="L425" class="ln">   425</span>		* of the constant.
+<span id="L426" class="ln">   426</span>		*/
+<span id="L427" class="ln">   427</span>		SUBQ $0x8a0, DI
+<span id="L428" class="ln">   428</span>	
+<span id="L429" class="ln">   429</span>		MOVL	$(0x3000000+3), AX	// thread_fast_set_cthread_self - machdep call #3
+<span id="L430" class="ln">   430</span>		SYSCALL
+<span id="L431" class="ln">   431</span>		RET
+<span id="L432" class="ln">   432</span>	
+<span id="L433" class="ln">   433</span>	TEXT runtime·sysctl(SB),NOSPLIT,$0
+<span id="L434" class="ln">   434</span>		MOVQ	8(SP), DI
+<span id="L435" class="ln">   435</span>		MOVL	16(SP), SI
+<span id="L436" class="ln">   436</span>		MOVQ	24(SP), DX
+<span id="L437" class="ln">   437</span>		MOVQ	32(SP), R10
+<span id="L438" class="ln">   438</span>		MOVQ	40(SP), R8
+<span id="L439" class="ln">   439</span>		MOVQ	48(SP), R9
+<span id="L440" class="ln">   440</span>		MOVL	$(0x2000000+202), AX	// syscall entry
+<span id="L441" class="ln">   441</span>		SYSCALL
+<span id="L442" class="ln">   442</span>		JCC 3(PC)
+<span id="L443" class="ln">   443</span>		NEGQ	AX
+<span id="L444" class="ln">   444</span>		RET
+<span id="L445" class="ln">   445</span>		MOVL	$0, AX
+<span id="L446" class="ln">   446</span>		RET
+<span id="L447" class="ln">   447</span>	
+<span id="L448" class="ln">   448</span>	// int32 runtime·kqueue(void);
+<span id="L449" class="ln">   449</span>	TEXT runtime·kqueue(SB),NOSPLIT,$0
+<span id="L450" class="ln">   450</span>		MOVQ    $0, DI
+<span id="L451" class="ln">   451</span>		MOVQ    $0, SI
+<span id="L452" class="ln">   452</span>		MOVQ    $0, DX
+<span id="L453" class="ln">   453</span>		MOVL	$(0x2000000+362), AX
+<span id="L454" class="ln">   454</span>		SYSCALL
+<span id="L455" class="ln">   455</span>		JCC	2(PC)
+<span id="L456" class="ln">   456</span>		NEGQ	AX
+<span id="L457" class="ln">   457</span>		RET
+<span id="L458" class="ln">   458</span>	
+<span id="L459" class="ln">   459</span>	// int32 runtime·kevent(int kq, Kevent *changelist, int nchanges, Kevent *eventlist, int nevents, Timespec *timeout);
+<span id="L460" class="ln">   460</span>	TEXT runtime·kevent(SB),NOSPLIT,$0
+<span id="L461" class="ln">   461</span>		MOVL    8(SP), DI
+<span id="L462" class="ln">   462</span>		MOVQ    16(SP), SI
+<span id="L463" class="ln">   463</span>		MOVL    24(SP), DX
+<span id="L464" class="ln">   464</span>		MOVQ    32(SP), R10
+<span id="L465" class="ln">   465</span>		MOVL    40(SP), R8
+<span id="L466" class="ln">   466</span>		MOVQ    48(SP), R9
+<span id="L467" class="ln">   467</span>		MOVL	$(0x2000000+363), AX
+<span id="L468" class="ln">   468</span>		SYSCALL
+<span id="L469" class="ln">   469</span>		JCC	2(PC)
+<span id="L470" class="ln">   470</span>		NEGQ	AX
+<span id="L471" class="ln">   471</span>		RET
+<span id="L472" class="ln">   472</span>	
+<span id="L473" class="ln">   473</span>	// void runtime·closeonexec(int32 fd);
+<span id="L474" class="ln">   474</span>	TEXT runtime·closeonexec(SB),NOSPLIT,$0
+<span id="L475" class="ln">   475</span>		MOVL    8(SP), DI  // fd
+<span id="L476" class="ln">   476</span>		MOVQ    $2, SI  // F_SETFD
+<span id="L477" class="ln">   477</span>		MOVQ    $1, DX  // FD_CLOEXEC
+<span id="L478" class="ln">   478</span>		MOVL	$(0x2000000+92), AX  // fcntl
+<span id="L479" class="ln">   479</span>		SYSCALL
+<span id="L480" class="ln">   480</span>		RET
+</pre><p><a href="http://golang.org/src/pkg/runtime/sys_darwin_amd64.s?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

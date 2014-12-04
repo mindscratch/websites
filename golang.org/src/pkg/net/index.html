@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/net/ - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Directory src/pkg/net/</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+<p>
+<table class="layout">
+<tr>
+	<th align="left">File</th>
+	<td width="25">&nbsp;</td>
+	<th align="right">Bytes</th>
+	<td width="25">&nbsp;</td>
+	<th align="left">Modified</th>
+</tr>
+<tr>
+	<td><a href="../index.html">..</a></td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_bsd.go.html">cgo_bsd.go</a></td>
+	<td></td>
+	<td align="right">370</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_linux.go.html">cgo_linux.go</a></td>
+	<td></td>
+	<td align="right">650</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_netbsd.go.html">cgo_netbsd.go</a></td>
+	<td></td>
+	<td align="right">290</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_openbsd.go.html">cgo_openbsd.go</a></td>
+	<td></td>
+	<td align="right">290</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_stub.go.html">cgo_stub.go</a></td>
+	<td></td>
+	<td align="right">688</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_unix.go.html">cgo_unix.go</a></td>
+	<td></td>
+	<td align="right">4096</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="cgo_unix_test.go.html">cgo_unix_test.go</a></td>
+	<td></td>
+	<td align="right">578</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="conn_test.go.html">conn_test.go</a></td>
+	<td></td>
+	<td align="right">3115</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dial.go.html">dial.go</a></td>
+	<td></td>
+	<td align="right">9300</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dial_gen.go.html">dial_gen.go</a></td>
+	<td></td>
+	<td align="right">1122</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dial_gen_test.go.html">dial_gen_test.go</a></td>
+	<td></td>
+	<td align="right">240</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dial_test.go.html">dial_test.go</a></td>
+	<td></td>
+	<td align="right">13483</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dialgoogle_test.go.html">dialgoogle_test.go</a></td>
+	<td></td>
+	<td align="right">5474</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsclient.go.html">dnsclient.go</a></td>
+	<td></td>
+	<td align="right">6073</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsclient_test.go.html">dnsclient_test.go</a></td>
+	<td></td>
+	<td align="right">1574</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsclient_unix.go.html">dnsclient_unix.go</a></td>
+	<td></td>
+	<td align="right">9067</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsclient_unix_test.go.html">dnsclient_unix_test.go</a></td>
+	<td></td>
+	<td align="right">3802</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsconfig_unix.go.html">dnsconfig_unix.go</a></td>
+	<td></td>
+	<td align="right">2731</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsconfig_unix_test.go.html">dnsconfig_unix_test.go</a></td>
+	<td></td>
+	<td align="right">1277</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsmsg.go.html">dnsmsg.go</a></td>
+	<td></td>
+	<td align="right">21458</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsmsg_test.go.html">dnsmsg_test.go</a></td>
+	<td></td>
+	<td align="right">3801</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="dnsname_test.go.html">dnsname_test.go</a></td>
+	<td></td>
+	<td align="right">1737</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="empty.c.html">empty.c</a></td>
+	<td></td>
+	<td align="right">346</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="example_test.go.html">example_test.go</a></td>
+	<td></td>
+	<td align="right">756</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_mutex.go.html">fd_mutex.go</a></td>
+	<td></td>
+	<td align="right">4770</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_mutex_test.go.html">fd_mutex_test.go</a></td>
+	<td></td>
+	<td align="right">3531</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_plan9.go.html">fd_plan9.go</a></td>
+	<td></td>
+	<td align="right">4765</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_poll_nacl.go.html">fd_poll_nacl.go</a></td>
+	<td></td>
+	<td align="right">1870</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_poll_runtime.go.html">fd_poll_runtime.go</a></td>
+	<td></td>
+	<td align="right">3010</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_unix.go.html">fd_unix.go</a></td>
+	<td></td>
+	<td align="right">12412</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_unix_test.go.html">fd_unix_test.go</a></td>
+	<td></td>
+	<td align="right">2109</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fd_windows.go.html">fd_windows.go</a></td>
+	<td></td>
+	<td align="right">17479</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="file_plan9.go.html">file_plan9.go</a></td>
+	<td></td>
+	<td align="right">3639</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="file_test.go.html">file_test.go</a></td>
+	<td></td>
+	<td align="right">4921</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="file_unix.go.html">file_unix.go</a></td>
+	<td></td>
+	<td align="right">3464</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="file_windows.go.html">file_windows.go</a></td>
+	<td></td>
+	<td align="right">1320</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="hosts.go.html">hosts.go</a></td>
+	<td></td>
+	<td align="right">1873</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="hosts_test.go.html">hosts_test.go</a></td>
+	<td></td>
+	<td align="right">1756</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="http/index.html">http/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface.go.html">interface.go</a></td>
+	<td></td>
+	<td align="right">3353</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_bsd.go.html">interface_bsd.go</a></td>
+	<td></td>
+	<td align="right">4606</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_bsd_test.go.html">interface_bsd_test.go</a></td>
+	<td></td>
+	<td align="right">1305</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_darwin.go.html">interface_darwin.go</a></td>
+	<td></td>
+	<td align="right">1811</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_dragonfly.go.html">interface_dragonfly.go</a></td>
+	<td></td>
+	<td align="right">392</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_freebsd.go.html">interface_freebsd.go</a></td>
+	<td></td>
+	<td align="right">1812</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_linux.go.html">interface_linux.go</a></td>
+	<td></td>
+	<td align="right">7233</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_linux_test.go.html">interface_linux_test.go</a></td>
+	<td></td>
+	<td align="right">2749</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_netbsd.go.html">interface_netbsd.go</a></td>
+	<td></td>
+	<td align="right">392</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_openbsd.go.html">interface_openbsd.go</a></td>
+	<td></td>
+	<td align="right">392</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_stub.go.html">interface_stub.go</a></td>
+	<td></td>
+	<td align="right">822</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_test.go.html">interface_test.go</a></td>
+	<td></td>
+	<td align="right">5281</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_unix_test.go.html">interface_unix_test.go</a></td>
+	<td></td>
+	<td align="right">3380</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="interface_windows.go.html">interface_windows.go</a></td>
+	<td></td>
+	<td align="right">4067</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ip.go.html">ip.go</a></td>
+	<td></td>
+	<td align="right">15295</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ip_test.go.html">ip_test.go</a></td>
+	<td></td>
+	<td align="right">16971</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ipraw_test.go.html">ipraw_test.go</a></td>
+	<td></td>
+	<td align="right">7411</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="iprawsock.go.html">iprawsock.go</a></td>
+	<td></td>
+	<td align="right">1254</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="iprawsock_plan9.go.html">iprawsock_plan9.go</a></td>
+	<td></td>
+	<td align="right">2874</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="iprawsock_posix.go.html">iprawsock_posix.go</a></td>
+	<td></td>
+	<td align="right">7148</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ipsock.go.html">ipsock.go</a></td>
+	<td></td>
+	<td align="right">8229</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ipsock_plan9.go.html">ipsock_plan9.go</a></td>
+	<td></td>
+	<td align="right">5228</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ipsock_posix.go.html">ipsock_posix.go</a></td>
+	<td></td>
+	<td align="right">5691</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="ipsock_test.go.html">ipsock_test.go</a></td>
+	<td></td>
+	<td align="right">3411</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="lookup.go.html">lookup.go</a></td>
+	<td></td>
+	<td align="right">4154</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="lookup_plan9.go.html">lookup_plan9.go</a></td>
+	<td></td>
+	<td align="right">6079</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="lookup_test.go.html">lookup_test.go</a></td>
+	<td></td>
+	<td align="right">3814</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="lookup_unix.go.html">lookup_unix.go</a></td>
+	<td></td>
+	<td align="right">3643</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="lookup_windows.go.html">lookup_windows.go</a></td>
+	<td></td>
+	<td align="right">9151</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mac.go.html">mac.go</a></td>
+	<td></td>
+	<td align="right">1722</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mac_test.go.html">mac_test.go</a></td>
+	<td></td>
+	<td align="right">2214</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mail/index.html">mail/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mockicmp_test.go.html">mockicmp_test.go</a></td>
+	<td></td>
+	<td align="right">2804</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mockserver_test.go.html">mockserver_test.go</a></td>
+	<td></td>
+	<td align="right">1687</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="multicast_test.go.html">multicast_test.go</a></td>
+	<td></td>
+	<td align="right">5279</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="net.go.html">net.go</a></td>
+	<td></td>
+	<td align="right">11750</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="net_test.go.html">net_test.go</a></td>
+	<td></td>
+	<td align="right">5312</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="net_windows_test.go.html">net_windows_test.go</a></td>
+	<td></td>
+	<td align="right">3230</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="netgo_unix_test.go.html">netgo_unix_test.go</a></td>
+	<td></td>
+	<td align="right">580</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="packetconn_test.go.html">packetconn_test.go</a></td>
+	<td></td>
+	<td align="right">4717</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="parse.go.html">parse.go</a></td>
+	<td></td>
+	<td align="right">4553</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="parse_test.go.html">parse_test.go</a></td>
+	<td></td>
+	<td align="right">1103</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="pipe.go.html">pipe.go</a></td>
+	<td></td>
+	<td align="right">1338</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="pipe_test.go.html">pipe_test.go</a></td>
+	<td></td>
+	<td align="right">1324</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="port.go.html">port.go</a></td>
+	<td></td>
+	<td align="right">581</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="port_test.go.html">port_test.go</a></td>
+	<td></td>
+	<td align="right">1248</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="port_unix.go.html">port_unix.go</a></td>
+	<td></td>
+	<td align="right">1772</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="protoconn_test.go.html">protoconn_test.go</a></td>
+	<td></td>
+	<td align="right">9654</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="race.go.html">race.go</a></td>
+	<td></td>
+	<td align="right">594</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="race0.go.html">race0.go</a></td>
+	<td></td>
+	<td align="right">457</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="rpc/index.html">rpc/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sendfile_dragonfly.go.html">sendfile_dragonfly.go</a></td>
+	<td></td>
+	<td align="right">2428</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sendfile_freebsd.go.html">sendfile_freebsd.go</a></td>
+	<td></td>
+	<td align="right">2424</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sendfile_linux.go.html">sendfile_linux.go</a></td>
+	<td></td>
+	<td align="right">1650</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sendfile_stub.go.html">sendfile_stub.go</a></td>
+	<td></td>
+	<td align="right">331</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sendfile_windows.go.html">sendfile_windows.go</a></td>
+	<td></td>
+	<td align="right">1270</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="server_test.go.html">server_test.go</a></td>
+	<td></td>
+	<td align="right">14367</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="singleflight.go.html">singleflight.go</a></td>
+	<td></td>
+	<td align="right">1362</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="smtp/index.html">smtp/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_bsd.go.html">sock_bsd.go</a></td>
+	<td></td>
+	<td align="right">840</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_cloexec.go.html">sock_cloexec.go</a></td>
+	<td></td>
+	<td align="right">2699</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_linux.go.html">sock_linux.go</a></td>
+	<td></td>
+	<td align="right">648</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_plan9.go.html">sock_plan9.go</a></td>
+	<td></td>
+	<td align="right">263</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_posix.go.html">sock_posix.go</a></td>
+	<td></td>
+	<td align="right">5413</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_solaris.go.html">sock_solaris.go</a></td>
+	<td></td>
+	<td align="right">348</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sock_windows.go.html">sock_windows.go</a></td>
+	<td></td>
+	<td align="right">615</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_bsd.go.html">sockopt_bsd.go</a></td>
+	<td></td>
+	<td align="right">2123</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_linux.go.html">sockopt_linux.go</a></td>
+	<td></td>
+	<td align="right">1172</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_plan9.go.html">sockopt_plan9.go</a></td>
+	<td></td>
+	<td align="right">320</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_posix.go.html">sockopt_posix.go</a></td>
+	<td></td>
+	<td align="right">2903</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_solaris.go.html">sockopt_solaris.go</a></td>
+	<td></td>
+	<td align="right">1172</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockopt_windows.go.html">sockopt_windows.go</a></td>
+	<td></td>
+	<td align="right">1375</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockoptip_bsd.go.html">sockoptip_bsd.go</a></td>
+	<td></td>
+	<td align="right">940</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockoptip_linux.go.html">sockoptip_linux.go</a></td>
+	<td></td>
+	<td align="right">831</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockoptip_posix.go.html">sockoptip_posix.go</a></td>
+	<td></td>
+	<td align="right">1652</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockoptip_stub.go.html">sockoptip_stub.go</a></td>
+	<td></td>
+	<td align="right">920</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sockoptip_windows.go.html">sockoptip_windows.go</a></td>
+	<td></td>
+	<td align="right">910</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="sys_cloexec.go.html">sys_cloexec.go</a></td>
+	<td></td>
+	<td align="right">1641</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcp_test.go.html">tcp_test.go</a></td>
+	<td></td>
+	<td align="right">14049</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsock.go.html">tcpsock.go</a></td>
+	<td></td>
+	<td align="right">1434</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsock_plan9.go.html">tcpsock_plan9.go</a></td>
+	<td></td>
+	<td align="right">5752</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsock_posix.go.html">tcpsock_posix.go</a></td>
+	<td></td>
+	<td align="right">9667</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_darwin.go.html">tcpsockopt_darwin.go</a></td>
+	<td></td>
+	<td align="right">659</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_dragonfly.go.html">tcpsockopt_dragonfly.go</a></td>
+	<td></td>
+	<td align="right">837</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_openbsd.go.html">tcpsockopt_openbsd.go</a></td>
+	<td></td>
+	<td align="right">659</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_plan9.go.html">tcpsockopt_plan9.go</a></td>
+	<td></td>
+	<td align="right">422</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_posix.go.html">tcpsockopt_posix.go</a></td>
+	<td></td>
+	<td align="right">538</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_solaris.go.html">tcpsockopt_solaris.go</a></td>
+	<td></td>
+	<td align="right">658</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_unix.go.html">tcpsockopt_unix.go</a></td>
+	<td></td>
+	<td align="right">818</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="tcpsockopt_windows.go.html">tcpsockopt_windows.go</a></td>
+	<td></td>
+	<td align="right">850</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="testdata/index.html">testdata/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="textproto/index.html">textproto/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="timeout_test.go.html">timeout_test.go</a></td>
+	<td></td>
+	<td align="right">17218</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="udp_test.go.html">udp_test.go</a></td>
+	<td></td>
+	<td align="right">6929</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="udpsock.go.html">udpsock.go</a></td>
+	<td></td>
+	<td align="right">1434</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="udpsock_plan9.go.html">udpsock_plan9.go</a></td>
+	<td></td>
+	<td align="right">6018</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="udpsock_posix.go.html">udpsock_posix.go</a></td>
+	<td></td>
+	<td align="right">8252</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unicast_posix_test.go.html">unicast_posix_test.go</a></td>
+	<td></td>
+	<td align="right">15151</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unix_test.go.html">unix_test.go</a></td>
+	<td></td>
+	<td align="right">8348</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unixsock.go.html">unixsock.go</a></td>
+	<td></td>
+	<td align="right">965</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unixsock_plan9.go.html">unixsock_plan9.go</a></td>
+	<td></td>
+	<td align="right">5052</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="unixsock_posix.go.html">unixsock_posix.go</a></td>
+	<td></td>
+	<td align="right">10832</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="url/index.html">url/</a></td>
+	<td></td>
+	<td align="right">0</td>
+	<td></td>
+	<td align="left">0001-01-01 00:00:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="z_last_test.go.html">z_last_test.go</a></td>
+	<td></td>
+	<td align="right">774</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+
+</table>
+</p>
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

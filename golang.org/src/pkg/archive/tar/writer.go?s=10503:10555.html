@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/archive/tar/writer.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/archive/tar/writer.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package tar
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">// TODO(dsymonds):</span>
+<span id="L8" class="ln">     8</span>	<span class="comment">// - catch more errors (no first header, etc.)</span>
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	import (
+<span id="L11" class="ln">    11</span>		&#34;bytes&#34;
+<span id="L12" class="ln">    12</span>		&#34;errors&#34;
+<span id="L13" class="ln">    13</span>		&#34;fmt&#34;
+<span id="L14" class="ln">    14</span>		&#34;io&#34;
+<span id="L15" class="ln">    15</span>		&#34;os&#34;
+<span id="L16" class="ln">    16</span>		&#34;path&#34;
+<span id="L17" class="ln">    17</span>		&#34;strconv&#34;
+<span id="L18" class="ln">    18</span>		&#34;strings&#34;
+<span id="L19" class="ln">    19</span>		&#34;time&#34;
+<span id="L20" class="ln">    20</span>	)
+<span id="L21" class="ln">    21</span>	
+<span id="L22" class="ln">    22</span>	var (
+<span id="L23" class="ln">    23</span>		ErrWriteTooLong    = errors.New(&#34;archive/tar: write too long&#34;)
+<span id="L24" class="ln">    24</span>		ErrFieldTooLong    = errors.New(&#34;archive/tar: header field too long&#34;)
+<span id="L25" class="ln">    25</span>		ErrWriteAfterClose = errors.New(&#34;archive/tar: write after close&#34;)
+<span id="L26" class="ln">    26</span>		errNameTooLong     = errors.New(&#34;archive/tar: name too long&#34;)
+<span id="L27" class="ln">    27</span>		errInvalidHeader   = errors.New(&#34;archive/tar: header field too long or contains invalid values&#34;)
+<span id="L28" class="ln">    28</span>	)
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	<span class="comment">// A Writer provides sequential writing of a tar archive in POSIX.1 format.</span>
+<span id="L31" class="ln">    31</span>	<span class="comment">// A tar archive consists of a sequence of files.</span>
+<span id="L32" class="ln">    32</span>	<span class="comment">// Call WriteHeader to begin a new file, and then call Write to supply that file&#39;s data,</span>
+<span id="L33" class="ln">    33</span>	<span class="comment">// writing at most hdr.Size bytes in total.</span>
+<span id="L34" class="ln">    34</span>	type Writer struct {
+<span id="L35" class="ln">    35</span>		w          io.Writer
+<span id="L36" class="ln">    36</span>		err        error
+<span id="L37" class="ln">    37</span>		nb         int64 <span class="comment">// number of unwritten bytes for current file entry</span>
+<span id="L38" class="ln">    38</span>		pad        int64 <span class="comment">// amount of padding to write after current file entry</span>
+<span id="L39" class="ln">    39</span>		closed     bool
+<span id="L40" class="ln">    40</span>		usedBinary bool <span class="comment">// whether the binary numeric field extension was used</span>
+<span id="L41" class="ln">    41</span>		preferPax  bool <span class="comment">// use pax header instead of binary numeric header</span>
+<span id="L42" class="ln">    42</span>	}
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>	<span class="comment">// NewWriter creates a new Writer writing to w.</span>
+<span id="L45" class="ln">    45</span>	func NewWriter(w io.Writer) *Writer { return &amp;Writer{w: w} }
+<span id="L46" class="ln">    46</span>	
+<span id="L47" class="ln">    47</span>	<span class="comment">// Flush finishes writing the current file (optional).</span>
+<span id="L48" class="ln">    48</span>	func (tw *Writer) Flush() error {
+<span id="L49" class="ln">    49</span>		if tw.nb &gt; 0 {
+<span id="L50" class="ln">    50</span>			tw.err = fmt.Errorf(&#34;archive/tar: missed writing %d bytes&#34;, tw.nb)
+<span id="L51" class="ln">    51</span>			return tw.err
+<span id="L52" class="ln">    52</span>		}
+<span id="L53" class="ln">    53</span>	
+<span id="L54" class="ln">    54</span>		n := tw.nb + tw.pad
+<span id="L55" class="ln">    55</span>		for n &gt; 0 &amp;&amp; tw.err == nil {
+<span id="L56" class="ln">    56</span>			nr := n
+<span id="L57" class="ln">    57</span>			if nr &gt; blockSize {
+<span id="L58" class="ln">    58</span>				nr = blockSize
+<span id="L59" class="ln">    59</span>			}
+<span id="L60" class="ln">    60</span>			var nw int
+<span id="L61" class="ln">    61</span>			nw, tw.err = tw.w.Write(zeroBlock[0:nr])
+<span id="L62" class="ln">    62</span>			n -= int64(nw)
+<span id="L63" class="ln">    63</span>		}
+<span id="L64" class="ln">    64</span>		tw.nb = 0
+<span id="L65" class="ln">    65</span>		tw.pad = 0
+<span id="L66" class="ln">    66</span>		return tw.err
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	<span class="comment">// Write s into b, terminating it with a NUL if there is room.</span>
+<span id="L70" class="ln">    70</span>	<span class="comment">// If the value is too long for the field and allowPax is true add a paxheader record instead</span>
+<span id="L71" class="ln">    71</span>	func (tw *Writer) cString(b []byte, s string, allowPax bool, paxKeyword string, paxHeaders map[string]string) {
+<span id="L72" class="ln">    72</span>		needsPaxHeader := allowPax &amp;&amp; len(s) &gt; len(b) || !isASCII(s)
+<span id="L73" class="ln">    73</span>		if needsPaxHeader {
+<span id="L74" class="ln">    74</span>			paxHeaders[paxKeyword] = s
+<span id="L75" class="ln">    75</span>			return
+<span id="L76" class="ln">    76</span>		}
+<span id="L77" class="ln">    77</span>		if len(s) &gt; len(b) {
+<span id="L78" class="ln">    78</span>			if tw.err == nil {
+<span id="L79" class="ln">    79</span>				tw.err = ErrFieldTooLong
+<span id="L80" class="ln">    80</span>			}
+<span id="L81" class="ln">    81</span>			return
+<span id="L82" class="ln">    82</span>		}
+<span id="L83" class="ln">    83</span>		ascii := toASCII(s)
+<span id="L84" class="ln">    84</span>		copy(b, ascii)
+<span id="L85" class="ln">    85</span>		if len(ascii) &lt; len(b) {
+<span id="L86" class="ln">    86</span>			b[len(ascii)] = 0
+<span id="L87" class="ln">    87</span>		}
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	<span class="comment">// Encode x as an octal ASCII string and write it into b with leading zeros.</span>
+<span id="L91" class="ln">    91</span>	func (tw *Writer) octal(b []byte, x int64) {
+<span id="L92" class="ln">    92</span>		s := strconv.FormatInt(x, 8)
+<span id="L93" class="ln">    93</span>		<span class="comment">// leading zeros, but leave room for a NUL.</span>
+<span id="L94" class="ln">    94</span>		for len(s)+1 &lt; len(b) {
+<span id="L95" class="ln">    95</span>			s = &#34;0&#34; + s
+<span id="L96" class="ln">    96</span>		}
+<span id="L97" class="ln">    97</span>		tw.cString(b, s, false, paxNone, nil)
+<span id="L98" class="ln">    98</span>	}
+<span id="L99" class="ln">    99</span>	
+<span id="L100" class="ln">   100</span>	<span class="comment">// Write x into b, either as octal or as binary (GNUtar/star extension).</span>
+<span id="L101" class="ln">   101</span>	<span class="comment">// If the value is too long for the field and writingPax is enabled both for the field and the add a paxheader record instead</span>
+<span id="L102" class="ln">   102</span>	func (tw *Writer) numeric(b []byte, x int64, allowPax bool, paxKeyword string, paxHeaders map[string]string) {
+<span id="L103" class="ln">   103</span>		<span class="comment">// Try octal first.</span>
+<span id="L104" class="ln">   104</span>		s := strconv.FormatInt(x, 8)
+<span id="L105" class="ln">   105</span>		if len(s) &lt; len(b) {
+<span id="L106" class="ln">   106</span>			tw.octal(b, x)
+<span id="L107" class="ln">   107</span>			return
+<span id="L108" class="ln">   108</span>		}
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>		<span class="comment">// If it is too long for octal, and pax is preferred, use a pax header</span>
+<span id="L111" class="ln">   111</span>		if allowPax &amp;&amp; tw.preferPax {
+<span id="L112" class="ln">   112</span>			tw.octal(b, 0)
+<span id="L113" class="ln">   113</span>			s := strconv.FormatInt(x, 10)
+<span id="L114" class="ln">   114</span>			paxHeaders[paxKeyword] = s
+<span id="L115" class="ln">   115</span>			return
+<span id="L116" class="ln">   116</span>		}
+<span id="L117" class="ln">   117</span>	
+<span id="L118" class="ln">   118</span>		<span class="comment">// Too big: use binary (big-endian).</span>
+<span id="L119" class="ln">   119</span>		tw.usedBinary = true
+<span id="L120" class="ln">   120</span>		for i := len(b) - 1; x &gt; 0 &amp;&amp; i &gt;= 0; i-- {
+<span id="L121" class="ln">   121</span>			b[i] = byte(x)
+<span id="L122" class="ln">   122</span>			x &gt;&gt;= 8
+<span id="L123" class="ln">   123</span>		}
+<span id="L124" class="ln">   124</span>		b[0] |= 0x80 <span class="comment">// highest bit indicates binary format</span>
+<span id="L125" class="ln">   125</span>	}
+<span id="L126" class="ln">   126</span>	
+<span id="L127" class="ln">   127</span>	var (
+<span id="L128" class="ln">   128</span>		minTime = time.Unix(0, 0)
+<span id="L129" class="ln">   129</span>		<span class="comment">// There is room for 11 octal digits (33 bits) of mtime.</span>
+<span id="L130" class="ln">   130</span>		maxTime = minTime.Add((1&lt;&lt;33 - 1) * time.Second)
+<span id="L131" class="ln">   131</span>	)
+<span id="L132" class="ln">   132</span>	
+<span id="L133" class="ln">   133</span>	<span class="comment">// WriteHeader writes hdr and prepares to accept the file&#39;s contents.</span>
+<span id="L134" class="ln">   134</span>	<span class="comment">// WriteHeader calls Flush if it is not the first header.</span>
+<span id="L135" class="ln">   135</span>	<span class="comment">// Calling after a Close will return ErrWriteAfterClose.</span>
+<span id="L136" class="ln">   136</span>	func (tw *Writer) WriteHeader(hdr *Header) error {
+<span id="L137" class="ln">   137</span>		return tw.writeHeader(hdr, true)
+<span id="L138" class="ln">   138</span>	}
+<span id="L139" class="ln">   139</span>	
+<span id="L140" class="ln">   140</span>	<span class="comment">// WriteHeader writes hdr and prepares to accept the file&#39;s contents.</span>
+<span id="L141" class="ln">   141</span>	<span class="comment">// WriteHeader calls Flush if it is not the first header.</span>
+<span id="L142" class="ln">   142</span>	<span class="comment">// Calling after a Close will return ErrWriteAfterClose.</span>
+<span id="L143" class="ln">   143</span>	<span class="comment">// As this method is called internally by writePax header to allow it to</span>
+<span id="L144" class="ln">   144</span>	<span class="comment">// suppress writing the pax header.</span>
+<span id="L145" class="ln">   145</span>	func (tw *Writer) writeHeader(hdr *Header, allowPax bool) error {
+<span id="L146" class="ln">   146</span>		if tw.closed {
+<span id="L147" class="ln">   147</span>			return ErrWriteAfterClose
+<span id="L148" class="ln">   148</span>		}
+<span id="L149" class="ln">   149</span>		if tw.err == nil {
+<span id="L150" class="ln">   150</span>			tw.Flush()
+<span id="L151" class="ln">   151</span>		}
+<span id="L152" class="ln">   152</span>		if tw.err != nil {
+<span id="L153" class="ln">   153</span>			return tw.err
+<span id="L154" class="ln">   154</span>		}
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>		<span class="comment">// a map to hold pax header records, if any are needed</span>
+<span id="L157" class="ln">   157</span>		paxHeaders := make(map[string]string)
+<span id="L158" class="ln">   158</span>	
+<span id="L159" class="ln">   159</span>		<span class="comment">// TODO(shanemhansen): we might want to use PAX headers for</span>
+<span id="L160" class="ln">   160</span>		<span class="comment">// subsecond time resolution, but for now let&#39;s just capture</span>
+<span id="L161" class="ln">   161</span>		<span class="comment">// too long fields or non ascii characters</span>
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>		header := make([]byte, blockSize)
+<span id="L164" class="ln">   164</span>		s := slicer(header)
+<span id="L165" class="ln">   165</span>	
+<span id="L166" class="ln">   166</span>		<span class="comment">// keep a reference to the filename to allow to overwrite it later if we detect that we can use ustar longnames instead of pax</span>
+<span id="L167" class="ln">   167</span>		pathHeaderBytes := s.next(fileNameSize)
+<span id="L168" class="ln">   168</span>	
+<span id="L169" class="ln">   169</span>		tw.cString(pathHeaderBytes, hdr.Name, true, paxPath, paxHeaders)
+<span id="L170" class="ln">   170</span>	
+<span id="L171" class="ln">   171</span>		<span class="comment">// Handle out of range ModTime carefully.</span>
+<span id="L172" class="ln">   172</span>		var modTime int64
+<span id="L173" class="ln">   173</span>		if !hdr.ModTime.Before(minTime) &amp;&amp; !hdr.ModTime.After(maxTime) {
+<span id="L174" class="ln">   174</span>			modTime = hdr.ModTime.Unix()
+<span id="L175" class="ln">   175</span>		}
+<span id="L176" class="ln">   176</span>	
+<span id="L177" class="ln">   177</span>		tw.octal(s.next(8), hdr.Mode)                                   <span class="comment">// 100:108</span>
+<span id="L178" class="ln">   178</span>		tw.numeric(s.next(8), int64(hdr.Uid), true, paxUid, paxHeaders) <span class="comment">// 108:116</span>
+<span id="L179" class="ln">   179</span>		tw.numeric(s.next(8), int64(hdr.Gid), true, paxGid, paxHeaders) <span class="comment">// 116:124</span>
+<span id="L180" class="ln">   180</span>		tw.numeric(s.next(12), hdr.Size, true, paxSize, paxHeaders)     <span class="comment">// 124:136</span>
+<span id="L181" class="ln">   181</span>		tw.numeric(s.next(12), modTime, false, paxNone, nil)            <span class="comment">// 136:148 --- consider using pax for finer granularity</span>
+<span id="L182" class="ln">   182</span>		s.next(8)                                                       <span class="comment">// chksum (148:156)</span>
+<span id="L183" class="ln">   183</span>		s.next(1)[0] = hdr.Typeflag                                     <span class="comment">// 156:157</span>
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>		tw.cString(s.next(100), hdr.Linkname, true, paxLinkpath, paxHeaders)
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>		copy(s.next(8), []byte(&#34;ustar\x0000&#34;))                        <span class="comment">// 257:265</span>
+<span id="L188" class="ln">   188</span>		tw.cString(s.next(32), hdr.Uname, true, paxUname, paxHeaders) <span class="comment">// 265:297</span>
+<span id="L189" class="ln">   189</span>		tw.cString(s.next(32), hdr.Gname, true, paxGname, paxHeaders) <span class="comment">// 297:329</span>
+<span id="L190" class="ln">   190</span>		tw.numeric(s.next(8), hdr.Devmajor, false, paxNone, nil)      <span class="comment">// 329:337</span>
+<span id="L191" class="ln">   191</span>		tw.numeric(s.next(8), hdr.Devminor, false, paxNone, nil)      <span class="comment">// 337:345</span>
+<span id="L192" class="ln">   192</span>	
+<span id="L193" class="ln">   193</span>		<span class="comment">// keep a reference to the prefix to allow to overwrite it later if we detect that we can use ustar longnames instead of pax</span>
+<span id="L194" class="ln">   194</span>		prefixHeaderBytes := s.next(155)
+<span id="L195" class="ln">   195</span>		tw.cString(prefixHeaderBytes, &#34;&#34;, false, paxNone, nil) <span class="comment">// 345:500  prefix</span>
+<span id="L196" class="ln">   196</span>	
+<span id="L197" class="ln">   197</span>		<span class="comment">// Use the GNU magic instead of POSIX magic if we used any GNU extensions.</span>
+<span id="L198" class="ln">   198</span>		if tw.usedBinary {
+<span id="L199" class="ln">   199</span>			copy(header[257:265], []byte(&#34;ustar  \x00&#34;))
+<span id="L200" class="ln">   200</span>		}
+<span id="L201" class="ln">   201</span>	
+<span id="L202" class="ln">   202</span>		_, paxPathUsed := paxHeaders[paxPath]
+<span id="L203" class="ln">   203</span>		<span class="comment">// try to use a ustar header when only the name is too long</span>
+<span id="L204" class="ln">   204</span>		if !tw.preferPax &amp;&amp; len(paxHeaders) == 1 &amp;&amp; paxPathUsed {
+<span id="L205" class="ln">   205</span>			suffix := hdr.Name
+<span id="L206" class="ln">   206</span>			prefix := &#34;&#34;
+<span id="L207" class="ln">   207</span>			if len(hdr.Name) &gt; fileNameSize &amp;&amp; isASCII(hdr.Name) {
+<span id="L208" class="ln">   208</span>				var err error
+<span id="L209" class="ln">   209</span>				prefix, suffix, err = tw.splitUSTARLongName(hdr.Name)
+<span id="L210" class="ln">   210</span>				if err == nil {
+<span id="L211" class="ln">   211</span>					<span class="comment">// ok we can use a ustar long name instead of pax, now correct the fields</span>
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>					<span class="comment">// remove the path field from the pax header. this will suppress the pax header</span>
+<span id="L214" class="ln">   214</span>					delete(paxHeaders, paxPath)
+<span id="L215" class="ln">   215</span>	
+<span id="L216" class="ln">   216</span>					<span class="comment">// update the path fields</span>
+<span id="L217" class="ln">   217</span>					tw.cString(pathHeaderBytes, suffix, false, paxNone, nil)
+<span id="L218" class="ln">   218</span>					tw.cString(prefixHeaderBytes, prefix, false, paxNone, nil)
+<span id="L219" class="ln">   219</span>	
+<span id="L220" class="ln">   220</span>					<span class="comment">// Use the ustar magic if we used ustar long names.</span>
+<span id="L221" class="ln">   221</span>					if len(prefix) &gt; 0 &amp;&amp; !tw.usedBinary {
+<span id="L222" class="ln">   222</span>						copy(header[257:265], []byte(&#34;ustar\x00&#34;))
+<span id="L223" class="ln">   223</span>					}
+<span id="L224" class="ln">   224</span>				}
+<span id="L225" class="ln">   225</span>			}
+<span id="L226" class="ln">   226</span>		}
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>		<span class="comment">// The chksum field is terminated by a NUL and a space.</span>
+<span id="L229" class="ln">   229</span>		<span class="comment">// This is different from the other octal fields.</span>
+<span id="L230" class="ln">   230</span>		chksum, _ := checksum(header)
+<span id="L231" class="ln">   231</span>		tw.octal(header[148:155], chksum)
+<span id="L232" class="ln">   232</span>		header[155] = &#39; &#39;
+<span id="L233" class="ln">   233</span>	
+<span id="L234" class="ln">   234</span>		if tw.err != nil {
+<span id="L235" class="ln">   235</span>			<span class="comment">// problem with header; probably integer too big for a field.</span>
+<span id="L236" class="ln">   236</span>			return tw.err
+<span id="L237" class="ln">   237</span>		}
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		if allowPax {
+<span id="L240" class="ln">   240</span>			for k, v := range hdr.Xattrs {
+<span id="L241" class="ln">   241</span>				paxHeaders[paxXattr+k] = v
+<span id="L242" class="ln">   242</span>			}
+<span id="L243" class="ln">   243</span>		}
+<span id="L244" class="ln">   244</span>	
+<span id="L245" class="ln">   245</span>		if len(paxHeaders) &gt; 0 {
+<span id="L246" class="ln">   246</span>			if !allowPax {
+<span id="L247" class="ln">   247</span>				return errInvalidHeader
+<span id="L248" class="ln">   248</span>			}
+<span id="L249" class="ln">   249</span>			if err := tw.writePAXHeader(hdr, paxHeaders); err != nil {
+<span id="L250" class="ln">   250</span>				return err
+<span id="L251" class="ln">   251</span>			}
+<span id="L252" class="ln">   252</span>		}
+<span id="L253" class="ln">   253</span>		tw.nb = int64(hdr.Size)
+<span id="L254" class="ln">   254</span>		tw.pad = (blockSize - (tw.nb % blockSize)) % blockSize
+<span id="L255" class="ln">   255</span>	
+<span id="L256" class="ln">   256</span>		_, tw.err = tw.w.Write(header)
+<span id="L257" class="ln">   257</span>		return tw.err
+<span id="L258" class="ln">   258</span>	}
+<span id="L259" class="ln">   259</span>	
+<span id="L260" class="ln">   260</span>	<span class="comment">// writeUSTARLongName splits a USTAR long name hdr.Name.</span>
+<span id="L261" class="ln">   261</span>	<span class="comment">// name must be &lt; 256 characters. errNameTooLong is returned</span>
+<span id="L262" class="ln">   262</span>	<span class="comment">// if hdr.Name can&#39;t be split. The splitting heuristic</span>
+<span id="L263" class="ln">   263</span>	<span class="comment">// is compatible with gnu tar.</span>
+<span id="L264" class="ln">   264</span>	func (tw *Writer) splitUSTARLongName(name string) (prefix, suffix string, err error) {
+<span id="L265" class="ln">   265</span>		length := len(name)
+<span id="L266" class="ln">   266</span>		if length &gt; fileNamePrefixSize+1 {
+<span id="L267" class="ln">   267</span>			length = fileNamePrefixSize + 1
+<span id="L268" class="ln">   268</span>		} else if name[length-1] == &#39;/&#39; {
+<span id="L269" class="ln">   269</span>			length--
+<span id="L270" class="ln">   270</span>		}
+<span id="L271" class="ln">   271</span>		i := strings.LastIndex(name[:length], &#34;/&#34;)
+<span id="L272" class="ln">   272</span>		<span class="comment">// nlen contains the resulting length in the name field.</span>
+<span id="L273" class="ln">   273</span>		<span class="comment">// plen contains the resulting length in the prefix field.</span>
+<span id="L274" class="ln">   274</span>		nlen := len(name) - i - 1
+<span id="L275" class="ln">   275</span>		plen := i
+<span id="L276" class="ln">   276</span>		if i &lt;= 0 || nlen &gt; fileNameSize || nlen == 0 || plen &gt; fileNamePrefixSize {
+<span id="L277" class="ln">   277</span>			err = errNameTooLong
+<span id="L278" class="ln">   278</span>			return
+<span id="L279" class="ln">   279</span>		}
+<span id="L280" class="ln">   280</span>		prefix, suffix = name[:i], name[i+1:]
+<span id="L281" class="ln">   281</span>		return
+<span id="L282" class="ln">   282</span>	}
+<span id="L283" class="ln">   283</span>	
+<span id="L284" class="ln">   284</span>	<span class="comment">// writePaxHeader writes an extended pax header to the</span>
+<span id="L285" class="ln">   285</span>	<span class="comment">// archive.</span>
+<span id="L286" class="ln">   286</span>	func (tw *Writer) writePAXHeader(hdr *Header, paxHeaders map[string]string) error {
+<span id="L287" class="ln">   287</span>		<span class="comment">// Prepare extended header</span>
+<span id="L288" class="ln">   288</span>		ext := new(Header)
+<span id="L289" class="ln">   289</span>		ext.Typeflag = TypeXHeader
+<span id="L290" class="ln">   290</span>		<span class="comment">// Setting ModTime is required for reader parsing to</span>
+<span id="L291" class="ln">   291</span>		<span class="comment">// succeed, and seems harmless enough.</span>
+<span id="L292" class="ln">   292</span>		ext.ModTime = hdr.ModTime
+<span id="L293" class="ln">   293</span>		<span class="comment">// The spec asks that we namespace our pseudo files</span>
+<span id="L294" class="ln">   294</span>		<span class="comment">// with the current pid.</span>
+<span id="L295" class="ln">   295</span>		pid := os.Getpid()
+<span id="L296" class="ln">   296</span>		dir, file := path.Split(hdr.Name)
+<span id="L297" class="ln">   297</span>		fullName := path.Join(dir,
+<span id="L298" class="ln">   298</span>			fmt.Sprintf(&#34;PaxHeaders.%d&#34;, pid), file)
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>		ascii := toASCII(fullName)
+<span id="L301" class="ln">   301</span>		if len(ascii) &gt; 100 {
+<span id="L302" class="ln">   302</span>			ascii = ascii[:100]
+<span id="L303" class="ln">   303</span>		}
+<span id="L304" class="ln">   304</span>		ext.Name = ascii
+<span id="L305" class="ln">   305</span>		<span class="comment">// Construct the body</span>
+<span id="L306" class="ln">   306</span>		var buf bytes.Buffer
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>		for k, v := range paxHeaders {
+<span id="L309" class="ln">   309</span>			fmt.Fprint(&amp;buf, paxHeader(k+&#34;=&#34;+v))
+<span id="L310" class="ln">   310</span>		}
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>		ext.Size = int64(len(buf.Bytes()))
+<span id="L313" class="ln">   313</span>		if err := tw.writeHeader(ext, false); err != nil {
+<span id="L314" class="ln">   314</span>			return err
+<span id="L315" class="ln">   315</span>		}
+<span id="L316" class="ln">   316</span>		if _, err := tw.Write(buf.Bytes()); err != nil {
+<span id="L317" class="ln">   317</span>			return err
+<span id="L318" class="ln">   318</span>		}
+<span id="L319" class="ln">   319</span>		if err := tw.Flush(); err != nil {
+<span id="L320" class="ln">   320</span>			return err
+<span id="L321" class="ln">   321</span>		}
+<span id="L322" class="ln">   322</span>		return nil
+<span id="L323" class="ln">   323</span>	}
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>	<span class="comment">// paxHeader formats a single pax record, prefixing it with the appropriate length</span>
+<span id="L326" class="ln">   326</span>	func paxHeader(msg string) string {
+<span id="L327" class="ln">   327</span>		const padding = 2 <span class="comment">// Extra padding for space and newline</span>
+<span id="L328" class="ln">   328</span>		size := len(msg) + padding
+<span id="L329" class="ln">   329</span>		size += len(strconv.Itoa(size))
+<span id="L330" class="ln">   330</span>		record := fmt.Sprintf(&#34;%d %s\n&#34;, size, msg)
+<span id="L331" class="ln">   331</span>		if len(record) != size {
+<span id="L332" class="ln">   332</span>			<span class="comment">// Final adjustment if adding size increased</span>
+<span id="L333" class="ln">   333</span>			<span class="comment">// the number of digits in size</span>
+<span id="L334" class="ln">   334</span>			size = len(record)
+<span id="L335" class="ln">   335</span>			record = fmt.Sprintf(&#34;%d %s\n&#34;, size, msg)
+<span id="L336" class="ln">   336</span>		}
+<span id="L337" class="ln">   337</span>		return record
+<span id="L338" class="ln">   338</span>	}
+<span id="L339" class="ln">   339</span>	
+<span id="L340" class="ln">   340</span>	<span class="comment">// Write writes to the current entry in the tar archive.</span>
+<span id="L341" class="ln">   341</span>	<span class="comment">// Write returns the error ErrWriteTooLong if more than</span>
+<span id="L342" class="ln">   342</span>	<span class="comment">// hdr.Size bytes are written after WriteHeader.</span>
+<span id="L343" class="ln">   343</span>	<span class="selection">func (tw *Writer) Write(b []byte) (n int, err error)</span> {
+<span id="L344" class="ln">   344</span>		if tw.closed {
+<span id="L345" class="ln">   345</span>			err = ErrWriteTooLong
+<span id="L346" class="ln">   346</span>			return
+<span id="L347" class="ln">   347</span>		}
+<span id="L348" class="ln">   348</span>		overwrite := false
+<span id="L349" class="ln">   349</span>		if int64(len(b)) &gt; tw.nb {
+<span id="L350" class="ln">   350</span>			b = b[0:tw.nb]
+<span id="L351" class="ln">   351</span>			overwrite = true
+<span id="L352" class="ln">   352</span>		}
+<span id="L353" class="ln">   353</span>		n, err = tw.w.Write(b)
+<span id="L354" class="ln">   354</span>		tw.nb -= int64(n)
+<span id="L355" class="ln">   355</span>		if err == nil &amp;&amp; overwrite {
+<span id="L356" class="ln">   356</span>			err = ErrWriteTooLong
+<span id="L357" class="ln">   357</span>			return
+<span id="L358" class="ln">   358</span>		}
+<span id="L359" class="ln">   359</span>		tw.err = err
+<span id="L360" class="ln">   360</span>		return
+<span id="L361" class="ln">   361</span>	}
+<span id="L362" class="ln">   362</span>	
+<span id="L363" class="ln">   363</span>	<span class="comment">// Close closes the tar archive, flushing any unwritten</span>
+<span id="L364" class="ln">   364</span>	<span class="comment">// data to the underlying writer.</span>
+<span id="L365" class="ln">   365</span>	func (tw *Writer) Close() error {
+<span id="L366" class="ln">   366</span>		if tw.err != nil || tw.closed {
+<span id="L367" class="ln">   367</span>			return tw.err
+<span id="L368" class="ln">   368</span>		}
+<span id="L369" class="ln">   369</span>		tw.Flush()
+<span id="L370" class="ln">   370</span>		tw.closed = true
+<span id="L371" class="ln">   371</span>		if tw.err != nil {
+<span id="L372" class="ln">   372</span>			return tw.err
+<span id="L373" class="ln">   373</span>		}
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>		<span class="comment">// trailer: two zero blocks</span>
+<span id="L376" class="ln">   376</span>		for i := 0; i &lt; 2; i++ {
+<span id="L377" class="ln">   377</span>			_, tw.err = tw.w.Write(zeroBlock)
+<span id="L378" class="ln">   378</span>			if tw.err != nil {
+<span id="L379" class="ln">   379</span>				break
+<span id="L380" class="ln">   380</span>			}
+<span id="L381" class="ln">   381</span>		}
+<span id="L382" class="ln">   382</span>		return tw.err
+<span id="L383" class="ln">   383</span>	}
+<span id="L384" class="ln">   384</span>	
+</pre><p><a href="writer.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

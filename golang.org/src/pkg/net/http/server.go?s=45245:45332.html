@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/net/http/server.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/net/http/server.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// HTTP server.  See RFC 2616.</span>
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	package http
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	import (
+<span id="L10" class="ln">    10</span>		&#34;bufio&#34;
+<span id="L11" class="ln">    11</span>		&#34;crypto/tls&#34;
+<span id="L12" class="ln">    12</span>		&#34;errors&#34;
+<span id="L13" class="ln">    13</span>		&#34;fmt&#34;
+<span id="L14" class="ln">    14</span>		&#34;io&#34;
+<span id="L15" class="ln">    15</span>		&#34;io/ioutil&#34;
+<span id="L16" class="ln">    16</span>		&#34;log&#34;
+<span id="L17" class="ln">    17</span>		&#34;net&#34;
+<span id="L18" class="ln">    18</span>		&#34;net/url&#34;
+<span id="L19" class="ln">    19</span>		&#34;os&#34;
+<span id="L20" class="ln">    20</span>		&#34;path&#34;
+<span id="L21" class="ln">    21</span>		&#34;runtime&#34;
+<span id="L22" class="ln">    22</span>		&#34;strconv&#34;
+<span id="L23" class="ln">    23</span>		&#34;strings&#34;
+<span id="L24" class="ln">    24</span>		&#34;sync&#34;
+<span id="L25" class="ln">    25</span>		&#34;sync/atomic&#34;
+<span id="L26" class="ln">    26</span>		&#34;time&#34;
+<span id="L27" class="ln">    27</span>	)
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>	<span class="comment">// Errors introduced by the HTTP server.</span>
+<span id="L30" class="ln">    30</span>	var (
+<span id="L31" class="ln">    31</span>		ErrWriteAfterFlush = errors.New(&#34;Conn.Write called after Flush&#34;)
+<span id="L32" class="ln">    32</span>		ErrBodyNotAllowed  = errors.New(&#34;http: request method or response status code does not allow body&#34;)
+<span id="L33" class="ln">    33</span>		ErrHijacked        = errors.New(&#34;Conn has been hijacked&#34;)
+<span id="L34" class="ln">    34</span>		ErrContentLength   = errors.New(&#34;Conn.Write wrote more than the declared Content-Length&#34;)
+<span id="L35" class="ln">    35</span>	)
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	<span class="comment">// Objects implementing the Handler interface can be</span>
+<span id="L38" class="ln">    38</span>	<span class="comment">// registered to serve a particular path or subtree</span>
+<span id="L39" class="ln">    39</span>	<span class="comment">// in the HTTP server.</span>
+<span id="L40" class="ln">    40</span>	<span class="comment">//</span>
+<span id="L41" class="ln">    41</span>	<span class="comment">// ServeHTTP should write reply headers and data to the ResponseWriter</span>
+<span id="L42" class="ln">    42</span>	<span class="comment">// and then return.  Returning signals that the request is finished</span>
+<span id="L43" class="ln">    43</span>	<span class="comment">// and that the HTTP server can move on to the next request on</span>
+<span id="L44" class="ln">    44</span>	<span class="comment">// the connection.</span>
+<span id="L45" class="ln">    45</span>	type Handler interface {
+<span id="L46" class="ln">    46</span>		ServeHTTP(ResponseWriter, *Request)
+<span id="L47" class="ln">    47</span>	}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	<span class="comment">// A ResponseWriter interface is used by an HTTP handler to</span>
+<span id="L50" class="ln">    50</span>	<span class="comment">// construct an HTTP response.</span>
+<span id="L51" class="ln">    51</span>	type ResponseWriter interface {
+<span id="L52" class="ln">    52</span>		<span class="comment">// Header returns the header map that will be sent by WriteHeader.</span>
+<span id="L53" class="ln">    53</span>		<span class="comment">// Changing the header after a call to WriteHeader (or Write) has</span>
+<span id="L54" class="ln">    54</span>		<span class="comment">// no effect.</span>
+<span id="L55" class="ln">    55</span>		Header() Header
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>		<span class="comment">// Write writes the data to the connection as part of an HTTP reply.</span>
+<span id="L58" class="ln">    58</span>		<span class="comment">// If WriteHeader has not yet been called, Write calls WriteHeader(http.StatusOK)</span>
+<span id="L59" class="ln">    59</span>		<span class="comment">// before writing the data.  If the Header does not contain a</span>
+<span id="L60" class="ln">    60</span>		<span class="comment">// Content-Type line, Write adds a Content-Type set to the result of passing</span>
+<span id="L61" class="ln">    61</span>		<span class="comment">// the initial 512 bytes of written data to DetectContentType.</span>
+<span id="L62" class="ln">    62</span>		Write([]byte) (int, error)
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>		<span class="comment">// WriteHeader sends an HTTP response header with status code.</span>
+<span id="L65" class="ln">    65</span>		<span class="comment">// If WriteHeader is not called explicitly, the first call to Write</span>
+<span id="L66" class="ln">    66</span>		<span class="comment">// will trigger an implicit WriteHeader(http.StatusOK).</span>
+<span id="L67" class="ln">    67</span>		<span class="comment">// Thus explicit calls to WriteHeader are mainly used to</span>
+<span id="L68" class="ln">    68</span>		<span class="comment">// send error codes.</span>
+<span id="L69" class="ln">    69</span>		WriteHeader(int)
+<span id="L70" class="ln">    70</span>	}
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>	<span class="comment">// The Flusher interface is implemented by ResponseWriters that allow</span>
+<span id="L73" class="ln">    73</span>	<span class="comment">// an HTTP handler to flush buffered data to the client.</span>
+<span id="L74" class="ln">    74</span>	<span class="comment">//</span>
+<span id="L75" class="ln">    75</span>	<span class="comment">// Note that even for ResponseWriters that support Flush,</span>
+<span id="L76" class="ln">    76</span>	<span class="comment">// if the client is connected through an HTTP proxy,</span>
+<span id="L77" class="ln">    77</span>	<span class="comment">// the buffered data may not reach the client until the response</span>
+<span id="L78" class="ln">    78</span>	<span class="comment">// completes.</span>
+<span id="L79" class="ln">    79</span>	type Flusher interface {
+<span id="L80" class="ln">    80</span>		<span class="comment">// Flush sends any buffered data to the client.</span>
+<span id="L81" class="ln">    81</span>		Flush()
+<span id="L82" class="ln">    82</span>	}
+<span id="L83" class="ln">    83</span>	
+<span id="L84" class="ln">    84</span>	<span class="comment">// The Hijacker interface is implemented by ResponseWriters that allow</span>
+<span id="L85" class="ln">    85</span>	<span class="comment">// an HTTP handler to take over the connection.</span>
+<span id="L86" class="ln">    86</span>	type Hijacker interface {
+<span id="L87" class="ln">    87</span>		<span class="comment">// Hijack lets the caller take over the connection.</span>
+<span id="L88" class="ln">    88</span>		<span class="comment">// After a call to Hijack(), the HTTP server library</span>
+<span id="L89" class="ln">    89</span>		<span class="comment">// will not do anything else with the connection.</span>
+<span id="L90" class="ln">    90</span>		<span class="comment">// It becomes the caller&#39;s responsibility to manage</span>
+<span id="L91" class="ln">    91</span>		<span class="comment">// and close the connection.</span>
+<span id="L92" class="ln">    92</span>		Hijack() (net.Conn, *bufio.ReadWriter, error)
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	<span class="comment">// The CloseNotifier interface is implemented by ResponseWriters which</span>
+<span id="L96" class="ln">    96</span>	<span class="comment">// allow detecting when the underlying connection has gone away.</span>
+<span id="L97" class="ln">    97</span>	<span class="comment">//</span>
+<span id="L98" class="ln">    98</span>	<span class="comment">// This mechanism can be used to cancel long operations on the server</span>
+<span id="L99" class="ln">    99</span>	<span class="comment">// if the client has disconnected before the response is ready.</span>
+<span id="L100" class="ln">   100</span>	type CloseNotifier interface {
+<span id="L101" class="ln">   101</span>		<span class="comment">// CloseNotify returns a channel that receives a single value</span>
+<span id="L102" class="ln">   102</span>		<span class="comment">// when the client connection has gone away.</span>
+<span id="L103" class="ln">   103</span>		CloseNotify() &lt;-chan bool
+<span id="L104" class="ln">   104</span>	}
+<span id="L105" class="ln">   105</span>	
+<span id="L106" class="ln">   106</span>	<span class="comment">// A conn represents the server side of an HTTP connection.</span>
+<span id="L107" class="ln">   107</span>	type conn struct {
+<span id="L108" class="ln">   108</span>		remoteAddr string               <span class="comment">// network address of remote side</span>
+<span id="L109" class="ln">   109</span>		server     *Server              <span class="comment">// the Server on which the connection arrived</span>
+<span id="L110" class="ln">   110</span>		rwc        net.Conn             <span class="comment">// i/o connection</span>
+<span id="L111" class="ln">   111</span>		sr         liveSwitchReader     <span class="comment">// where the LimitReader reads from; usually the rwc</span>
+<span id="L112" class="ln">   112</span>		lr         *io.LimitedReader    <span class="comment">// io.LimitReader(sr)</span>
+<span id="L113" class="ln">   113</span>		buf        *bufio.ReadWriter    <span class="comment">// buffered(lr,rwc), reading from bufio-&gt;limitReader-&gt;sr-&gt;rwc</span>
+<span id="L114" class="ln">   114</span>		tlsState   *tls.ConnectionState <span class="comment">// or nil when not using TLS</span>
+<span id="L115" class="ln">   115</span>	
+<span id="L116" class="ln">   116</span>		mu           sync.Mutex <span class="comment">// guards the following</span>
+<span id="L117" class="ln">   117</span>		clientGone   bool       <span class="comment">// if client has disconnected mid-request</span>
+<span id="L118" class="ln">   118</span>		closeNotifyc chan bool  <span class="comment">// made lazily</span>
+<span id="L119" class="ln">   119</span>		hijackedv    bool       <span class="comment">// connection has been hijacked by handler</span>
+<span id="L120" class="ln">   120</span>	}
+<span id="L121" class="ln">   121</span>	
+<span id="L122" class="ln">   122</span>	func (c *conn) hijacked() bool {
+<span id="L123" class="ln">   123</span>		c.mu.Lock()
+<span id="L124" class="ln">   124</span>		defer c.mu.Unlock()
+<span id="L125" class="ln">   125</span>		return c.hijackedv
+<span id="L126" class="ln">   126</span>	}
+<span id="L127" class="ln">   127</span>	
+<span id="L128" class="ln">   128</span>	func (c *conn) hijack() (rwc net.Conn, buf *bufio.ReadWriter, err error) {
+<span id="L129" class="ln">   129</span>		c.mu.Lock()
+<span id="L130" class="ln">   130</span>		defer c.mu.Unlock()
+<span id="L131" class="ln">   131</span>		if c.hijackedv {
+<span id="L132" class="ln">   132</span>			return nil, nil, ErrHijacked
+<span id="L133" class="ln">   133</span>		}
+<span id="L134" class="ln">   134</span>		if c.closeNotifyc != nil {
+<span id="L135" class="ln">   135</span>			return nil, nil, errors.New(&#34;http: Hijack is incompatible with use of CloseNotifier&#34;)
+<span id="L136" class="ln">   136</span>		}
+<span id="L137" class="ln">   137</span>		c.hijackedv = true
+<span id="L138" class="ln">   138</span>		rwc = c.rwc
+<span id="L139" class="ln">   139</span>		buf = c.buf
+<span id="L140" class="ln">   140</span>		c.rwc = nil
+<span id="L141" class="ln">   141</span>		c.buf = nil
+<span id="L142" class="ln">   142</span>		c.setState(rwc, StateHijacked)
+<span id="L143" class="ln">   143</span>		return
+<span id="L144" class="ln">   144</span>	}
+<span id="L145" class="ln">   145</span>	
+<span id="L146" class="ln">   146</span>	func (c *conn) closeNotify() &lt;-chan bool {
+<span id="L147" class="ln">   147</span>		c.mu.Lock()
+<span id="L148" class="ln">   148</span>		defer c.mu.Unlock()
+<span id="L149" class="ln">   149</span>		if c.closeNotifyc == nil {
+<span id="L150" class="ln">   150</span>			c.closeNotifyc = make(chan bool, 1)
+<span id="L151" class="ln">   151</span>			if c.hijackedv {
+<span id="L152" class="ln">   152</span>				<span class="comment">// to obey the function signature, even though</span>
+<span id="L153" class="ln">   153</span>				<span class="comment">// it&#39;ll never receive a value.</span>
+<span id="L154" class="ln">   154</span>				return c.closeNotifyc
+<span id="L155" class="ln">   155</span>			}
+<span id="L156" class="ln">   156</span>			pr, pw := io.Pipe()
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>			readSource := c.sr.r
+<span id="L159" class="ln">   159</span>			c.sr.Lock()
+<span id="L160" class="ln">   160</span>			c.sr.r = pr
+<span id="L161" class="ln">   161</span>			c.sr.Unlock()
+<span id="L162" class="ln">   162</span>			go func() {
+<span id="L163" class="ln">   163</span>				_, err := io.Copy(pw, readSource)
+<span id="L164" class="ln">   164</span>				if err == nil {
+<span id="L165" class="ln">   165</span>					err = io.EOF
+<span id="L166" class="ln">   166</span>				}
+<span id="L167" class="ln">   167</span>				pw.CloseWithError(err)
+<span id="L168" class="ln">   168</span>				c.noteClientGone()
+<span id="L169" class="ln">   169</span>			}()
+<span id="L170" class="ln">   170</span>		}
+<span id="L171" class="ln">   171</span>		return c.closeNotifyc
+<span id="L172" class="ln">   172</span>	}
+<span id="L173" class="ln">   173</span>	
+<span id="L174" class="ln">   174</span>	func (c *conn) noteClientGone() {
+<span id="L175" class="ln">   175</span>		c.mu.Lock()
+<span id="L176" class="ln">   176</span>		defer c.mu.Unlock()
+<span id="L177" class="ln">   177</span>		if c.closeNotifyc != nil &amp;&amp; !c.clientGone {
+<span id="L178" class="ln">   178</span>			c.closeNotifyc &lt;- true
+<span id="L179" class="ln">   179</span>		}
+<span id="L180" class="ln">   180</span>		c.clientGone = true
+<span id="L181" class="ln">   181</span>	}
+<span id="L182" class="ln">   182</span>	
+<span id="L183" class="ln">   183</span>	<span class="comment">// A switchReader can have its Reader changed at runtime.</span>
+<span id="L184" class="ln">   184</span>	<span class="comment">// It&#39;s not safe for concurrent Reads and switches.</span>
+<span id="L185" class="ln">   185</span>	type switchReader struct {
+<span id="L186" class="ln">   186</span>		io.Reader
+<span id="L187" class="ln">   187</span>	}
+<span id="L188" class="ln">   188</span>	
+<span id="L189" class="ln">   189</span>	<span class="comment">// A switchWriter can have its Writer changed at runtime.</span>
+<span id="L190" class="ln">   190</span>	<span class="comment">// It&#39;s not safe for concurrent Writes and switches.</span>
+<span id="L191" class="ln">   191</span>	type switchWriter struct {
+<span id="L192" class="ln">   192</span>		io.Writer
+<span id="L193" class="ln">   193</span>	}
+<span id="L194" class="ln">   194</span>	
+<span id="L195" class="ln">   195</span>	<span class="comment">// A liveSwitchReader is a switchReader that&#39;s safe for concurrent</span>
+<span id="L196" class="ln">   196</span>	<span class="comment">// reads and switches, if its mutex is held.</span>
+<span id="L197" class="ln">   197</span>	type liveSwitchReader struct {
+<span id="L198" class="ln">   198</span>		sync.Mutex
+<span id="L199" class="ln">   199</span>		r io.Reader
+<span id="L200" class="ln">   200</span>	}
+<span id="L201" class="ln">   201</span>	
+<span id="L202" class="ln">   202</span>	func (sr *liveSwitchReader) Read(p []byte) (n int, err error) {
+<span id="L203" class="ln">   203</span>		sr.Lock()
+<span id="L204" class="ln">   204</span>		r := sr.r
+<span id="L205" class="ln">   205</span>		sr.Unlock()
+<span id="L206" class="ln">   206</span>		return r.Read(p)
+<span id="L207" class="ln">   207</span>	}
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	<span class="comment">// This should be &gt;= 512 bytes for DetectContentType,</span>
+<span id="L210" class="ln">   210</span>	<span class="comment">// but otherwise it&#39;s somewhat arbitrary.</span>
+<span id="L211" class="ln">   211</span>	const bufferBeforeChunkingSize = 2048
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	<span class="comment">// chunkWriter writes to a response&#39;s conn buffer, and is the writer</span>
+<span id="L214" class="ln">   214</span>	<span class="comment">// wrapped by the response.bufw buffered writer.</span>
+<span id="L215" class="ln">   215</span>	<span class="comment">//</span>
+<span id="L216" class="ln">   216</span>	<span class="comment">// chunkWriter also is responsible for finalizing the Header, including</span>
+<span id="L217" class="ln">   217</span>	<span class="comment">// conditionally setting the Content-Type and setting a Content-Length</span>
+<span id="L218" class="ln">   218</span>	<span class="comment">// in cases where the handler&#39;s final output is smaller than the buffer</span>
+<span id="L219" class="ln">   219</span>	<span class="comment">// size. It also conditionally adds chunk headers, when in chunking mode.</span>
+<span id="L220" class="ln">   220</span>	<span class="comment">//</span>
+<span id="L221" class="ln">   221</span>	<span class="comment">// See the comment above (*response).Write for the entire write flow.</span>
+<span id="L222" class="ln">   222</span>	type chunkWriter struct {
+<span id="L223" class="ln">   223</span>		res *response
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>		<span class="comment">// header is either nil or a deep clone of res.handlerHeader</span>
+<span id="L226" class="ln">   226</span>		<span class="comment">// at the time of res.WriteHeader, if res.WriteHeader is</span>
+<span id="L227" class="ln">   227</span>		<span class="comment">// called and extra buffering is being done to calculate</span>
+<span id="L228" class="ln">   228</span>		<span class="comment">// Content-Type and/or Content-Length.</span>
+<span id="L229" class="ln">   229</span>		header Header
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>		<span class="comment">// wroteHeader tells whether the header&#39;s been written to &#34;the</span>
+<span id="L232" class="ln">   232</span>		<span class="comment">// wire&#34; (or rather: w.conn.buf). this is unlike</span>
+<span id="L233" class="ln">   233</span>		<span class="comment">// (*response).wroteHeader, which tells only whether it was</span>
+<span id="L234" class="ln">   234</span>		<span class="comment">// logically written.</span>
+<span id="L235" class="ln">   235</span>		wroteHeader bool
+<span id="L236" class="ln">   236</span>	
+<span id="L237" class="ln">   237</span>		<span class="comment">// set by the writeHeader method:</span>
+<span id="L238" class="ln">   238</span>		chunking bool <span class="comment">// using chunked transfer encoding for reply body</span>
+<span id="L239" class="ln">   239</span>	}
+<span id="L240" class="ln">   240</span>	
+<span id="L241" class="ln">   241</span>	var (
+<span id="L242" class="ln">   242</span>		crlf       = []byte(&#34;\r\n&#34;)
+<span id="L243" class="ln">   243</span>		colonSpace = []byte(&#34;: &#34;)
+<span id="L244" class="ln">   244</span>	)
+<span id="L245" class="ln">   245</span>	
+<span id="L246" class="ln">   246</span>	func (cw *chunkWriter) Write(p []byte) (n int, err error) {
+<span id="L247" class="ln">   247</span>		if !cw.wroteHeader {
+<span id="L248" class="ln">   248</span>			cw.writeHeader(p)
+<span id="L249" class="ln">   249</span>		}
+<span id="L250" class="ln">   250</span>		if cw.res.req.Method == &#34;HEAD&#34; {
+<span id="L251" class="ln">   251</span>			<span class="comment">// Eat writes.</span>
+<span id="L252" class="ln">   252</span>			return len(p), nil
+<span id="L253" class="ln">   253</span>		}
+<span id="L254" class="ln">   254</span>		if cw.chunking {
+<span id="L255" class="ln">   255</span>			_, err = fmt.Fprintf(cw.res.conn.buf, &#34;%x\r\n&#34;, len(p))
+<span id="L256" class="ln">   256</span>			if err != nil {
+<span id="L257" class="ln">   257</span>				cw.res.conn.rwc.Close()
+<span id="L258" class="ln">   258</span>				return
+<span id="L259" class="ln">   259</span>			}
+<span id="L260" class="ln">   260</span>		}
+<span id="L261" class="ln">   261</span>		n, err = cw.res.conn.buf.Write(p)
+<span id="L262" class="ln">   262</span>		if cw.chunking &amp;&amp; err == nil {
+<span id="L263" class="ln">   263</span>			_, err = cw.res.conn.buf.Write(crlf)
+<span id="L264" class="ln">   264</span>		}
+<span id="L265" class="ln">   265</span>		if err != nil {
+<span id="L266" class="ln">   266</span>			cw.res.conn.rwc.Close()
+<span id="L267" class="ln">   267</span>		}
+<span id="L268" class="ln">   268</span>		return
+<span id="L269" class="ln">   269</span>	}
+<span id="L270" class="ln">   270</span>	
+<span id="L271" class="ln">   271</span>	func (cw *chunkWriter) flush() {
+<span id="L272" class="ln">   272</span>		if !cw.wroteHeader {
+<span id="L273" class="ln">   273</span>			cw.writeHeader(nil)
+<span id="L274" class="ln">   274</span>		}
+<span id="L275" class="ln">   275</span>		cw.res.conn.buf.Flush()
+<span id="L276" class="ln">   276</span>	}
+<span id="L277" class="ln">   277</span>	
+<span id="L278" class="ln">   278</span>	func (cw *chunkWriter) close() {
+<span id="L279" class="ln">   279</span>		if !cw.wroteHeader {
+<span id="L280" class="ln">   280</span>			cw.writeHeader(nil)
+<span id="L281" class="ln">   281</span>		}
+<span id="L282" class="ln">   282</span>		if cw.chunking {
+<span id="L283" class="ln">   283</span>			<span class="comment">// zero EOF chunk, trailer key/value pairs (currently</span>
+<span id="L284" class="ln">   284</span>			<span class="comment">// unsupported in Go&#39;s server), followed by a blank</span>
+<span id="L285" class="ln">   285</span>			<span class="comment">// line.</span>
+<span id="L286" class="ln">   286</span>			cw.res.conn.buf.WriteString(&#34;0\r\n\r\n&#34;)
+<span id="L287" class="ln">   287</span>		}
+<span id="L288" class="ln">   288</span>	}
+<span id="L289" class="ln">   289</span>	
+<span id="L290" class="ln">   290</span>	<span class="comment">// A response represents the server side of an HTTP response.</span>
+<span id="L291" class="ln">   291</span>	type response struct {
+<span id="L292" class="ln">   292</span>		conn          *conn
+<span id="L293" class="ln">   293</span>		req           *Request <span class="comment">// request for this response</span>
+<span id="L294" class="ln">   294</span>		wroteHeader   bool     <span class="comment">// reply header has been (logically) written</span>
+<span id="L295" class="ln">   295</span>		wroteContinue bool     <span class="comment">// 100 Continue response was written</span>
+<span id="L296" class="ln">   296</span>	
+<span id="L297" class="ln">   297</span>		w  *bufio.Writer <span class="comment">// buffers output in chunks to chunkWriter</span>
+<span id="L298" class="ln">   298</span>		cw chunkWriter
+<span id="L299" class="ln">   299</span>		sw *switchWriter <span class="comment">// of the bufio.Writer, for return to putBufioWriter</span>
+<span id="L300" class="ln">   300</span>	
+<span id="L301" class="ln">   301</span>		<span class="comment">// handlerHeader is the Header that Handlers get access to,</span>
+<span id="L302" class="ln">   302</span>		<span class="comment">// which may be retained and mutated even after WriteHeader.</span>
+<span id="L303" class="ln">   303</span>		<span class="comment">// handlerHeader is copied into cw.header at WriteHeader</span>
+<span id="L304" class="ln">   304</span>		<span class="comment">// time, and privately mutated thereafter.</span>
+<span id="L305" class="ln">   305</span>		handlerHeader Header
+<span id="L306" class="ln">   306</span>		calledHeader  bool <span class="comment">// handler accessed handlerHeader via Header</span>
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>		written       int64 <span class="comment">// number of bytes written in body</span>
+<span id="L309" class="ln">   309</span>		contentLength int64 <span class="comment">// explicitly-declared Content-Length; or -1</span>
+<span id="L310" class="ln">   310</span>		status        int   <span class="comment">// status code passed to WriteHeader</span>
+<span id="L311" class="ln">   311</span>	
+<span id="L312" class="ln">   312</span>		<span class="comment">// close connection after this reply.  set on request and</span>
+<span id="L313" class="ln">   313</span>		<span class="comment">// updated after response from handler if there&#39;s a</span>
+<span id="L314" class="ln">   314</span>		<span class="comment">// &#34;Connection: keep-alive&#34; response header and a</span>
+<span id="L315" class="ln">   315</span>		<span class="comment">// Content-Length.</span>
+<span id="L316" class="ln">   316</span>		closeAfterReply bool
+<span id="L317" class="ln">   317</span>	
+<span id="L318" class="ln">   318</span>		<span class="comment">// requestBodyLimitHit is set by requestTooLarge when</span>
+<span id="L319" class="ln">   319</span>		<span class="comment">// maxBytesReader hits its max size. It is checked in</span>
+<span id="L320" class="ln">   320</span>		<span class="comment">// WriteHeader, to make sure we don&#39;t consume the</span>
+<span id="L321" class="ln">   321</span>		<span class="comment">// remaining request body to try to advance to the next HTTP</span>
+<span id="L322" class="ln">   322</span>		<span class="comment">// request. Instead, when this is set, we stop reading</span>
+<span id="L323" class="ln">   323</span>		<span class="comment">// subsequent requests on this connection and stop reading</span>
+<span id="L324" class="ln">   324</span>		<span class="comment">// input from it.</span>
+<span id="L325" class="ln">   325</span>		requestBodyLimitHit bool
+<span id="L326" class="ln">   326</span>	
+<span id="L327" class="ln">   327</span>		handlerDone bool <span class="comment">// set true when the handler exits</span>
+<span id="L328" class="ln">   328</span>	
+<span id="L329" class="ln">   329</span>		<span class="comment">// Buffers for Date and Content-Length</span>
+<span id="L330" class="ln">   330</span>		dateBuf [len(TimeFormat)]byte
+<span id="L331" class="ln">   331</span>		clenBuf [10]byte
+<span id="L332" class="ln">   332</span>	}
+<span id="L333" class="ln">   333</span>	
+<span id="L334" class="ln">   334</span>	<span class="comment">// requestTooLarge is called by maxBytesReader when too much input has</span>
+<span id="L335" class="ln">   335</span>	<span class="comment">// been read from the client.</span>
+<span id="L336" class="ln">   336</span>	func (w *response) requestTooLarge() {
+<span id="L337" class="ln">   337</span>		w.closeAfterReply = true
+<span id="L338" class="ln">   338</span>		w.requestBodyLimitHit = true
+<span id="L339" class="ln">   339</span>		if !w.wroteHeader {
+<span id="L340" class="ln">   340</span>			w.Header().Set(&#34;Connection&#34;, &#34;close&#34;)
+<span id="L341" class="ln">   341</span>		}
+<span id="L342" class="ln">   342</span>	}
+<span id="L343" class="ln">   343</span>	
+<span id="L344" class="ln">   344</span>	<span class="comment">// needsSniff reports whether a Content-Type still needs to be sniffed.</span>
+<span id="L345" class="ln">   345</span>	func (w *response) needsSniff() bool {
+<span id="L346" class="ln">   346</span>		_, haveType := w.handlerHeader[&#34;Content-Type&#34;]
+<span id="L347" class="ln">   347</span>		return !w.cw.wroteHeader &amp;&amp; !haveType &amp;&amp; w.written &lt; sniffLen
+<span id="L348" class="ln">   348</span>	}
+<span id="L349" class="ln">   349</span>	
+<span id="L350" class="ln">   350</span>	<span class="comment">// writerOnly hides an io.Writer value&#39;s optional ReadFrom method</span>
+<span id="L351" class="ln">   351</span>	<span class="comment">// from io.Copy.</span>
+<span id="L352" class="ln">   352</span>	type writerOnly struct {
+<span id="L353" class="ln">   353</span>		io.Writer
+<span id="L354" class="ln">   354</span>	}
+<span id="L355" class="ln">   355</span>	
+<span id="L356" class="ln">   356</span>	func srcIsRegularFile(src io.Reader) (isRegular bool, err error) {
+<span id="L357" class="ln">   357</span>		switch v := src.(type) {
+<span id="L358" class="ln">   358</span>		case *os.File:
+<span id="L359" class="ln">   359</span>			fi, err := v.Stat()
+<span id="L360" class="ln">   360</span>			if err != nil {
+<span id="L361" class="ln">   361</span>				return false, err
+<span id="L362" class="ln">   362</span>			}
+<span id="L363" class="ln">   363</span>			return fi.Mode().IsRegular(), nil
+<span id="L364" class="ln">   364</span>		case *io.LimitedReader:
+<span id="L365" class="ln">   365</span>			return srcIsRegularFile(v.R)
+<span id="L366" class="ln">   366</span>		default:
+<span id="L367" class="ln">   367</span>			return
+<span id="L368" class="ln">   368</span>		}
+<span id="L369" class="ln">   369</span>	}
+<span id="L370" class="ln">   370</span>	
+<span id="L371" class="ln">   371</span>	<span class="comment">// ReadFrom is here to optimize copying from an *os.File regular file</span>
+<span id="L372" class="ln">   372</span>	<span class="comment">// to a *net.TCPConn with sendfile.</span>
+<span id="L373" class="ln">   373</span>	func (w *response) ReadFrom(src io.Reader) (n int64, err error) {
+<span id="L374" class="ln">   374</span>		<span class="comment">// Our underlying w.conn.rwc is usually a *TCPConn (with its</span>
+<span id="L375" class="ln">   375</span>		<span class="comment">// own ReadFrom method). If not, or if our src isn&#39;t a regular</span>
+<span id="L376" class="ln">   376</span>		<span class="comment">// file, just fall back to the normal copy method.</span>
+<span id="L377" class="ln">   377</span>		rf, ok := w.conn.rwc.(io.ReaderFrom)
+<span id="L378" class="ln">   378</span>		regFile, err := srcIsRegularFile(src)
+<span id="L379" class="ln">   379</span>		if err != nil {
+<span id="L380" class="ln">   380</span>			return 0, err
+<span id="L381" class="ln">   381</span>		}
+<span id="L382" class="ln">   382</span>		if !ok || !regFile {
+<span id="L383" class="ln">   383</span>			return io.Copy(writerOnly{w}, src)
+<span id="L384" class="ln">   384</span>		}
+<span id="L385" class="ln">   385</span>	
+<span id="L386" class="ln">   386</span>		<span class="comment">// sendfile path:</span>
+<span id="L387" class="ln">   387</span>	
+<span id="L388" class="ln">   388</span>		if !w.wroteHeader {
+<span id="L389" class="ln">   389</span>			w.WriteHeader(StatusOK)
+<span id="L390" class="ln">   390</span>		}
+<span id="L391" class="ln">   391</span>	
+<span id="L392" class="ln">   392</span>		if w.needsSniff() {
+<span id="L393" class="ln">   393</span>			n0, err := io.Copy(writerOnly{w}, io.LimitReader(src, sniffLen))
+<span id="L394" class="ln">   394</span>			n += n0
+<span id="L395" class="ln">   395</span>			if err != nil {
+<span id="L396" class="ln">   396</span>				return n, err
+<span id="L397" class="ln">   397</span>			}
+<span id="L398" class="ln">   398</span>		}
+<span id="L399" class="ln">   399</span>	
+<span id="L400" class="ln">   400</span>		w.w.Flush()  <span class="comment">// get rid of any previous writes</span>
+<span id="L401" class="ln">   401</span>		w.cw.flush() <span class="comment">// make sure Header is written; flush data to rwc</span>
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>		<span class="comment">// Now that cw has been flushed, its chunking field is guaranteed initialized.</span>
+<span id="L404" class="ln">   404</span>		if !w.cw.chunking &amp;&amp; w.bodyAllowed() {
+<span id="L405" class="ln">   405</span>			n0, err := rf.ReadFrom(src)
+<span id="L406" class="ln">   406</span>			n += n0
+<span id="L407" class="ln">   407</span>			w.written += n0
+<span id="L408" class="ln">   408</span>			return n, err
+<span id="L409" class="ln">   409</span>		}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>		n0, err := io.Copy(writerOnly{w}, src)
+<span id="L412" class="ln">   412</span>		n += n0
+<span id="L413" class="ln">   413</span>		return n, err
+<span id="L414" class="ln">   414</span>	}
+<span id="L415" class="ln">   415</span>	
+<span id="L416" class="ln">   416</span>	<span class="comment">// noLimit is an effective infinite upper bound for io.LimitedReader</span>
+<span id="L417" class="ln">   417</span>	const noLimit int64 = (1 &lt;&lt; 63) - 1
+<span id="L418" class="ln">   418</span>	
+<span id="L419" class="ln">   419</span>	<span class="comment">// debugServerConnections controls whether all server connections are wrapped</span>
+<span id="L420" class="ln">   420</span>	<span class="comment">// with a verbose logging wrapper.</span>
+<span id="L421" class="ln">   421</span>	const debugServerConnections = false
+<span id="L422" class="ln">   422</span>	
+<span id="L423" class="ln">   423</span>	<span class="comment">// Create new connection from rwc.</span>
+<span id="L424" class="ln">   424</span>	func (srv *Server) newConn(rwc net.Conn) (c *conn, err error) {
+<span id="L425" class="ln">   425</span>		c = new(conn)
+<span id="L426" class="ln">   426</span>		c.remoteAddr = rwc.RemoteAddr().String()
+<span id="L427" class="ln">   427</span>		c.server = srv
+<span id="L428" class="ln">   428</span>		c.rwc = rwc
+<span id="L429" class="ln">   429</span>		if debugServerConnections {
+<span id="L430" class="ln">   430</span>			c.rwc = newLoggingConn(&#34;server&#34;, c.rwc)
+<span id="L431" class="ln">   431</span>		}
+<span id="L432" class="ln">   432</span>		c.sr = liveSwitchReader{r: c.rwc}
+<span id="L433" class="ln">   433</span>		c.lr = io.LimitReader(&amp;c.sr, noLimit).(*io.LimitedReader)
+<span id="L434" class="ln">   434</span>		br := newBufioReader(c.lr)
+<span id="L435" class="ln">   435</span>		bw := newBufioWriterSize(c.rwc, 4&lt;&lt;10)
+<span id="L436" class="ln">   436</span>		c.buf = bufio.NewReadWriter(br, bw)
+<span id="L437" class="ln">   437</span>		return c, nil
+<span id="L438" class="ln">   438</span>	}
+<span id="L439" class="ln">   439</span>	
+<span id="L440" class="ln">   440</span>	var (
+<span id="L441" class="ln">   441</span>		bufioReaderPool   sync.Pool
+<span id="L442" class="ln">   442</span>		bufioWriter2kPool sync.Pool
+<span id="L443" class="ln">   443</span>		bufioWriter4kPool sync.Pool
+<span id="L444" class="ln">   444</span>	)
+<span id="L445" class="ln">   445</span>	
+<span id="L446" class="ln">   446</span>	func bufioWriterPool(size int) *sync.Pool {
+<span id="L447" class="ln">   447</span>		switch size {
+<span id="L448" class="ln">   448</span>		case 2 &lt;&lt; 10:
+<span id="L449" class="ln">   449</span>			return &amp;bufioWriter2kPool
+<span id="L450" class="ln">   450</span>		case 4 &lt;&lt; 10:
+<span id="L451" class="ln">   451</span>			return &amp;bufioWriter4kPool
+<span id="L452" class="ln">   452</span>		}
+<span id="L453" class="ln">   453</span>		return nil
+<span id="L454" class="ln">   454</span>	}
+<span id="L455" class="ln">   455</span>	
+<span id="L456" class="ln">   456</span>	func newBufioReader(r io.Reader) *bufio.Reader {
+<span id="L457" class="ln">   457</span>		if v := bufioReaderPool.Get(); v != nil {
+<span id="L458" class="ln">   458</span>			br := v.(*bufio.Reader)
+<span id="L459" class="ln">   459</span>			br.Reset(r)
+<span id="L460" class="ln">   460</span>			return br
+<span id="L461" class="ln">   461</span>		}
+<span id="L462" class="ln">   462</span>		return bufio.NewReader(r)
+<span id="L463" class="ln">   463</span>	}
+<span id="L464" class="ln">   464</span>	
+<span id="L465" class="ln">   465</span>	func putBufioReader(br *bufio.Reader) {
+<span id="L466" class="ln">   466</span>		br.Reset(nil)
+<span id="L467" class="ln">   467</span>		bufioReaderPool.Put(br)
+<span id="L468" class="ln">   468</span>	}
+<span id="L469" class="ln">   469</span>	
+<span id="L470" class="ln">   470</span>	func newBufioWriterSize(w io.Writer, size int) *bufio.Writer {
+<span id="L471" class="ln">   471</span>		pool := bufioWriterPool(size)
+<span id="L472" class="ln">   472</span>		if pool != nil {
+<span id="L473" class="ln">   473</span>			if v := pool.Get(); v != nil {
+<span id="L474" class="ln">   474</span>				bw := v.(*bufio.Writer)
+<span id="L475" class="ln">   475</span>				bw.Reset(w)
+<span id="L476" class="ln">   476</span>				return bw
+<span id="L477" class="ln">   477</span>			}
+<span id="L478" class="ln">   478</span>		}
+<span id="L479" class="ln">   479</span>		return bufio.NewWriterSize(w, size)
+<span id="L480" class="ln">   480</span>	}
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>	func putBufioWriter(bw *bufio.Writer) {
+<span id="L483" class="ln">   483</span>		bw.Reset(nil)
+<span id="L484" class="ln">   484</span>		if pool := bufioWriterPool(bw.Available()); pool != nil {
+<span id="L485" class="ln">   485</span>			pool.Put(bw)
+<span id="L486" class="ln">   486</span>		}
+<span id="L487" class="ln">   487</span>	}
+<span id="L488" class="ln">   488</span>	
+<span id="L489" class="ln">   489</span>	<span class="comment">// DefaultMaxHeaderBytes is the maximum permitted size of the headers</span>
+<span id="L490" class="ln">   490</span>	<span class="comment">// in an HTTP request.</span>
+<span id="L491" class="ln">   491</span>	<span class="comment">// This can be overridden by setting Server.MaxHeaderBytes.</span>
+<span id="L492" class="ln">   492</span>	const DefaultMaxHeaderBytes = 1 &lt;&lt; 20 <span class="comment">// 1 MB</span>
+<span id="L493" class="ln">   493</span>	
+<span id="L494" class="ln">   494</span>	func (srv *Server) maxHeaderBytes() int {
+<span id="L495" class="ln">   495</span>		if srv.MaxHeaderBytes &gt; 0 {
+<span id="L496" class="ln">   496</span>			return srv.MaxHeaderBytes
+<span id="L497" class="ln">   497</span>		}
+<span id="L498" class="ln">   498</span>		return DefaultMaxHeaderBytes
+<span id="L499" class="ln">   499</span>	}
+<span id="L500" class="ln">   500</span>	
+<span id="L501" class="ln">   501</span>	func (srv *Server) initialLimitedReaderSize() int64 {
+<span id="L502" class="ln">   502</span>		return int64(srv.maxHeaderBytes()) + 4096 <span class="comment">// bufio slop</span>
+<span id="L503" class="ln">   503</span>	}
+<span id="L504" class="ln">   504</span>	
+<span id="L505" class="ln">   505</span>	<span class="comment">// wrapper around io.ReaderCloser which on first read, sends an</span>
+<span id="L506" class="ln">   506</span>	<span class="comment">// HTTP/1.1 100 Continue header</span>
+<span id="L507" class="ln">   507</span>	type expectContinueReader struct {
+<span id="L508" class="ln">   508</span>		resp       *response
+<span id="L509" class="ln">   509</span>		readCloser io.ReadCloser
+<span id="L510" class="ln">   510</span>		closed     bool
+<span id="L511" class="ln">   511</span>	}
+<span id="L512" class="ln">   512</span>	
+<span id="L513" class="ln">   513</span>	func (ecr *expectContinueReader) Read(p []byte) (n int, err error) {
+<span id="L514" class="ln">   514</span>		if ecr.closed {
+<span id="L515" class="ln">   515</span>			return 0, ErrBodyReadAfterClose
+<span id="L516" class="ln">   516</span>		}
+<span id="L517" class="ln">   517</span>		if !ecr.resp.wroteContinue &amp;&amp; !ecr.resp.conn.hijacked() {
+<span id="L518" class="ln">   518</span>			ecr.resp.wroteContinue = true
+<span id="L519" class="ln">   519</span>			ecr.resp.conn.buf.WriteString(&#34;HTTP/1.1 100 Continue\r\n\r\n&#34;)
+<span id="L520" class="ln">   520</span>			ecr.resp.conn.buf.Flush()
+<span id="L521" class="ln">   521</span>		}
+<span id="L522" class="ln">   522</span>		return ecr.readCloser.Read(p)
+<span id="L523" class="ln">   523</span>	}
+<span id="L524" class="ln">   524</span>	
+<span id="L525" class="ln">   525</span>	func (ecr *expectContinueReader) Close() error {
+<span id="L526" class="ln">   526</span>		ecr.closed = true
+<span id="L527" class="ln">   527</span>		return ecr.readCloser.Close()
+<span id="L528" class="ln">   528</span>	}
+<span id="L529" class="ln">   529</span>	
+<span id="L530" class="ln">   530</span>	<span class="comment">// TimeFormat is the time format to use with</span>
+<span id="L531" class="ln">   531</span>	<span class="comment">// time.Parse and time.Time.Format when parsing</span>
+<span id="L532" class="ln">   532</span>	<span class="comment">// or generating times in HTTP headers.</span>
+<span id="L533" class="ln">   533</span>	<span class="comment">// It is like time.RFC1123 but hard codes GMT as the time zone.</span>
+<span id="L534" class="ln">   534</span>	const TimeFormat = &#34;Mon, 02 Jan 2006 15:04:05 GMT&#34;
+<span id="L535" class="ln">   535</span>	
+<span id="L536" class="ln">   536</span>	<span class="comment">// appendTime is a non-allocating version of []byte(t.UTC().Format(TimeFormat))</span>
+<span id="L537" class="ln">   537</span>	func appendTime(b []byte, t time.Time) []byte {
+<span id="L538" class="ln">   538</span>		const days = &#34;SunMonTueWedThuFriSat&#34;
+<span id="L539" class="ln">   539</span>		const months = &#34;JanFebMarAprMayJunJulAugSepOctNovDec&#34;
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>		t = t.UTC()
+<span id="L542" class="ln">   542</span>		yy, mm, dd := t.Date()
+<span id="L543" class="ln">   543</span>		hh, mn, ss := t.Clock()
+<span id="L544" class="ln">   544</span>		day := days[3*t.Weekday():]
+<span id="L545" class="ln">   545</span>		mon := months[3*(mm-1):]
+<span id="L546" class="ln">   546</span>	
+<span id="L547" class="ln">   547</span>		return append(b,
+<span id="L548" class="ln">   548</span>			day[0], day[1], day[2], &#39;,&#39;, &#39; &#39;,
+<span id="L549" class="ln">   549</span>			byte(&#39;0&#39;+dd/10), byte(&#39;0&#39;+dd%10), &#39; &#39;,
+<span id="L550" class="ln">   550</span>			mon[0], mon[1], mon[2], &#39; &#39;,
+<span id="L551" class="ln">   551</span>			byte(&#39;0&#39;+yy/1000), byte(&#39;0&#39;+(yy/100)%10), byte(&#39;0&#39;+(yy/10)%10), byte(&#39;0&#39;+yy%10), &#39; &#39;,
+<span id="L552" class="ln">   552</span>			byte(&#39;0&#39;+hh/10), byte(&#39;0&#39;+hh%10), &#39;:&#39;,
+<span id="L553" class="ln">   553</span>			byte(&#39;0&#39;+mn/10), byte(&#39;0&#39;+mn%10), &#39;:&#39;,
+<span id="L554" class="ln">   554</span>			byte(&#39;0&#39;+ss/10), byte(&#39;0&#39;+ss%10), &#39; &#39;,
+<span id="L555" class="ln">   555</span>			&#39;G&#39;, &#39;M&#39;, &#39;T&#39;)
+<span id="L556" class="ln">   556</span>	}
+<span id="L557" class="ln">   557</span>	
+<span id="L558" class="ln">   558</span>	var errTooLarge = errors.New(&#34;http: request too large&#34;)
+<span id="L559" class="ln">   559</span>	
+<span id="L560" class="ln">   560</span>	<span class="comment">// Read next request from connection.</span>
+<span id="L561" class="ln">   561</span>	func (c *conn) readRequest() (w *response, err error) {
+<span id="L562" class="ln">   562</span>		if c.hijacked() {
+<span id="L563" class="ln">   563</span>			return nil, ErrHijacked
+<span id="L564" class="ln">   564</span>		}
+<span id="L565" class="ln">   565</span>	
+<span id="L566" class="ln">   566</span>		if d := c.server.ReadTimeout; d != 0 {
+<span id="L567" class="ln">   567</span>			c.rwc.SetReadDeadline(time.Now().Add(d))
+<span id="L568" class="ln">   568</span>		}
+<span id="L569" class="ln">   569</span>		if d := c.server.WriteTimeout; d != 0 {
+<span id="L570" class="ln">   570</span>			defer func() {
+<span id="L571" class="ln">   571</span>				c.rwc.SetWriteDeadline(time.Now().Add(d))
+<span id="L572" class="ln">   572</span>			}()
+<span id="L573" class="ln">   573</span>		}
+<span id="L574" class="ln">   574</span>	
+<span id="L575" class="ln">   575</span>		c.lr.N = c.server.initialLimitedReaderSize()
+<span id="L576" class="ln">   576</span>		var req *Request
+<span id="L577" class="ln">   577</span>		if req, err = ReadRequest(c.buf.Reader); err != nil {
+<span id="L578" class="ln">   578</span>			if c.lr.N == 0 {
+<span id="L579" class="ln">   579</span>				return nil, errTooLarge
+<span id="L580" class="ln">   580</span>			}
+<span id="L581" class="ln">   581</span>			return nil, err
+<span id="L582" class="ln">   582</span>		}
+<span id="L583" class="ln">   583</span>		c.lr.N = noLimit
+<span id="L584" class="ln">   584</span>	
+<span id="L585" class="ln">   585</span>		req.RemoteAddr = c.remoteAddr
+<span id="L586" class="ln">   586</span>		req.TLS = c.tlsState
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>		w = &amp;response{
+<span id="L589" class="ln">   589</span>			conn:          c,
+<span id="L590" class="ln">   590</span>			req:           req,
+<span id="L591" class="ln">   591</span>			handlerHeader: make(Header),
+<span id="L592" class="ln">   592</span>			contentLength: -1,
+<span id="L593" class="ln">   593</span>		}
+<span id="L594" class="ln">   594</span>		w.cw.res = w
+<span id="L595" class="ln">   595</span>		w.w = newBufioWriterSize(&amp;w.cw, bufferBeforeChunkingSize)
+<span id="L596" class="ln">   596</span>		return w, nil
+<span id="L597" class="ln">   597</span>	}
+<span id="L598" class="ln">   598</span>	
+<span id="L599" class="ln">   599</span>	func (w *response) Header() Header {
+<span id="L600" class="ln">   600</span>		if w.cw.header == nil &amp;&amp; w.wroteHeader &amp;&amp; !w.cw.wroteHeader {
+<span id="L601" class="ln">   601</span>			<span class="comment">// Accessing the header between logically writing it</span>
+<span id="L602" class="ln">   602</span>			<span class="comment">// and physically writing it means we need to allocate</span>
+<span id="L603" class="ln">   603</span>			<span class="comment">// a clone to snapshot the logically written state.</span>
+<span id="L604" class="ln">   604</span>			w.cw.header = w.handlerHeader.clone()
+<span id="L605" class="ln">   605</span>		}
+<span id="L606" class="ln">   606</span>		w.calledHeader = true
+<span id="L607" class="ln">   607</span>		return w.handlerHeader
+<span id="L608" class="ln">   608</span>	}
+<span id="L609" class="ln">   609</span>	
+<span id="L610" class="ln">   610</span>	<span class="comment">// maxPostHandlerReadBytes is the max number of Request.Body bytes not</span>
+<span id="L611" class="ln">   611</span>	<span class="comment">// consumed by a handler that the server will read from the client</span>
+<span id="L612" class="ln">   612</span>	<span class="comment">// in order to keep a connection alive.  If there are more bytes than</span>
+<span id="L613" class="ln">   613</span>	<span class="comment">// this then the server to be paranoid instead sends a &#34;Connection:</span>
+<span id="L614" class="ln">   614</span>	<span class="comment">// close&#34; response.</span>
+<span id="L615" class="ln">   615</span>	<span class="comment">//</span>
+<span id="L616" class="ln">   616</span>	<span class="comment">// This number is approximately what a typical machine&#39;s TCP buffer</span>
+<span id="L617" class="ln">   617</span>	<span class="comment">// size is anyway.  (if we have the bytes on the machine, we might as</span>
+<span id="L618" class="ln">   618</span>	<span class="comment">// well read them)</span>
+<span id="L619" class="ln">   619</span>	const maxPostHandlerReadBytes = 256 &lt;&lt; 10
+<span id="L620" class="ln">   620</span>	
+<span id="L621" class="ln">   621</span>	func (w *response) WriteHeader(code int) {
+<span id="L622" class="ln">   622</span>		if w.conn.hijacked() {
+<span id="L623" class="ln">   623</span>			w.conn.server.logf(&#34;http: response.WriteHeader on hijacked connection&#34;)
+<span id="L624" class="ln">   624</span>			return
+<span id="L625" class="ln">   625</span>		}
+<span id="L626" class="ln">   626</span>		if w.wroteHeader {
+<span id="L627" class="ln">   627</span>			w.conn.server.logf(&#34;http: multiple response.WriteHeader calls&#34;)
+<span id="L628" class="ln">   628</span>			return
+<span id="L629" class="ln">   629</span>		}
+<span id="L630" class="ln">   630</span>		w.wroteHeader = true
+<span id="L631" class="ln">   631</span>		w.status = code
+<span id="L632" class="ln">   632</span>	
+<span id="L633" class="ln">   633</span>		if w.calledHeader &amp;&amp; w.cw.header == nil {
+<span id="L634" class="ln">   634</span>			w.cw.header = w.handlerHeader.clone()
+<span id="L635" class="ln">   635</span>		}
+<span id="L636" class="ln">   636</span>	
+<span id="L637" class="ln">   637</span>		if cl := w.handlerHeader.get(&#34;Content-Length&#34;); cl != &#34;&#34; {
+<span id="L638" class="ln">   638</span>			v, err := strconv.ParseInt(cl, 10, 64)
+<span id="L639" class="ln">   639</span>			if err == nil &amp;&amp; v &gt;= 0 {
+<span id="L640" class="ln">   640</span>				w.contentLength = v
+<span id="L641" class="ln">   641</span>			} else {
+<span id="L642" class="ln">   642</span>				w.conn.server.logf(&#34;http: invalid Content-Length of %q&#34;, cl)
+<span id="L643" class="ln">   643</span>				w.handlerHeader.Del(&#34;Content-Length&#34;)
+<span id="L644" class="ln">   644</span>			}
+<span id="L645" class="ln">   645</span>		}
+<span id="L646" class="ln">   646</span>	}
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>	<span class="comment">// extraHeader is the set of headers sometimes added by chunkWriter.writeHeader.</span>
+<span id="L649" class="ln">   649</span>	<span class="comment">// This type is used to avoid extra allocations from cloning and/or populating</span>
+<span id="L650" class="ln">   650</span>	<span class="comment">// the response Header map and all its 1-element slices.</span>
+<span id="L651" class="ln">   651</span>	type extraHeader struct {
+<span id="L652" class="ln">   652</span>		contentType      string
+<span id="L653" class="ln">   653</span>		connection       string
+<span id="L654" class="ln">   654</span>		transferEncoding string
+<span id="L655" class="ln">   655</span>		date             []byte <span class="comment">// written if not nil</span>
+<span id="L656" class="ln">   656</span>		contentLength    []byte <span class="comment">// written if not nil</span>
+<span id="L657" class="ln">   657</span>	}
+<span id="L658" class="ln">   658</span>	
+<span id="L659" class="ln">   659</span>	<span class="comment">// Sorted the same as extraHeader.Write&#39;s loop.</span>
+<span id="L660" class="ln">   660</span>	var extraHeaderKeys = [][]byte{
+<span id="L661" class="ln">   661</span>		[]byte(&#34;Content-Type&#34;),
+<span id="L662" class="ln">   662</span>		[]byte(&#34;Connection&#34;),
+<span id="L663" class="ln">   663</span>		[]byte(&#34;Transfer-Encoding&#34;),
+<span id="L664" class="ln">   664</span>	}
+<span id="L665" class="ln">   665</span>	
+<span id="L666" class="ln">   666</span>	var (
+<span id="L667" class="ln">   667</span>		headerContentLength = []byte(&#34;Content-Length: &#34;)
+<span id="L668" class="ln">   668</span>		headerDate          = []byte(&#34;Date: &#34;)
+<span id="L669" class="ln">   669</span>	)
+<span id="L670" class="ln">   670</span>	
+<span id="L671" class="ln">   671</span>	<span class="comment">// Write writes the headers described in h to w.</span>
+<span id="L672" class="ln">   672</span>	<span class="comment">//</span>
+<span id="L673" class="ln">   673</span>	<span class="comment">// This method has a value receiver, despite the somewhat large size</span>
+<span id="L674" class="ln">   674</span>	<span class="comment">// of h, because it prevents an allocation. The escape analysis isn&#39;t</span>
+<span id="L675" class="ln">   675</span>	<span class="comment">// smart enough to realize this function doesn&#39;t mutate h.</span>
+<span id="L676" class="ln">   676</span>	func (h extraHeader) Write(w *bufio.Writer) {
+<span id="L677" class="ln">   677</span>		if h.date != nil {
+<span id="L678" class="ln">   678</span>			w.Write(headerDate)
+<span id="L679" class="ln">   679</span>			w.Write(h.date)
+<span id="L680" class="ln">   680</span>			w.Write(crlf)
+<span id="L681" class="ln">   681</span>		}
+<span id="L682" class="ln">   682</span>		if h.contentLength != nil {
+<span id="L683" class="ln">   683</span>			w.Write(headerContentLength)
+<span id="L684" class="ln">   684</span>			w.Write(h.contentLength)
+<span id="L685" class="ln">   685</span>			w.Write(crlf)
+<span id="L686" class="ln">   686</span>		}
+<span id="L687" class="ln">   687</span>		for i, v := range []string{h.contentType, h.connection, h.transferEncoding} {
+<span id="L688" class="ln">   688</span>			if v != &#34;&#34; {
+<span id="L689" class="ln">   689</span>				w.Write(extraHeaderKeys[i])
+<span id="L690" class="ln">   690</span>				w.Write(colonSpace)
+<span id="L691" class="ln">   691</span>				w.WriteString(v)
+<span id="L692" class="ln">   692</span>				w.Write(crlf)
+<span id="L693" class="ln">   693</span>			}
+<span id="L694" class="ln">   694</span>		}
+<span id="L695" class="ln">   695</span>	}
+<span id="L696" class="ln">   696</span>	
+<span id="L697" class="ln">   697</span>	<span class="comment">// writeHeader finalizes the header sent to the client and writes it</span>
+<span id="L698" class="ln">   698</span>	<span class="comment">// to cw.res.conn.buf.</span>
+<span id="L699" class="ln">   699</span>	<span class="comment">//</span>
+<span id="L700" class="ln">   700</span>	<span class="comment">// p is not written by writeHeader, but is the first chunk of the body</span>
+<span id="L701" class="ln">   701</span>	<span class="comment">// that will be written.  It is sniffed for a Content-Type if none is</span>
+<span id="L702" class="ln">   702</span>	<span class="comment">// set explicitly.  It&#39;s also used to set the Content-Length, if the</span>
+<span id="L703" class="ln">   703</span>	<span class="comment">// total body size was small and the handler has already finished</span>
+<span id="L704" class="ln">   704</span>	<span class="comment">// running.</span>
+<span id="L705" class="ln">   705</span>	func (cw *chunkWriter) writeHeader(p []byte) {
+<span id="L706" class="ln">   706</span>		if cw.wroteHeader {
+<span id="L707" class="ln">   707</span>			return
+<span id="L708" class="ln">   708</span>		}
+<span id="L709" class="ln">   709</span>		cw.wroteHeader = true
+<span id="L710" class="ln">   710</span>	
+<span id="L711" class="ln">   711</span>		w := cw.res
+<span id="L712" class="ln">   712</span>		keepAlivesEnabled := w.conn.server.doKeepAlives()
+<span id="L713" class="ln">   713</span>		isHEAD := w.req.Method == &#34;HEAD&#34;
+<span id="L714" class="ln">   714</span>	
+<span id="L715" class="ln">   715</span>		<span class="comment">// header is written out to w.conn.buf below. Depending on the</span>
+<span id="L716" class="ln">   716</span>		<span class="comment">// state of the handler, we either own the map or not. If we</span>
+<span id="L717" class="ln">   717</span>		<span class="comment">// don&#39;t own it, the exclude map is created lazily for</span>
+<span id="L718" class="ln">   718</span>		<span class="comment">// WriteSubset to remove headers. The setHeader struct holds</span>
+<span id="L719" class="ln">   719</span>		<span class="comment">// headers we need to add.</span>
+<span id="L720" class="ln">   720</span>		header := cw.header
+<span id="L721" class="ln">   721</span>		owned := header != nil
+<span id="L722" class="ln">   722</span>		if !owned {
+<span id="L723" class="ln">   723</span>			header = w.handlerHeader
+<span id="L724" class="ln">   724</span>		}
+<span id="L725" class="ln">   725</span>		var excludeHeader map[string]bool
+<span id="L726" class="ln">   726</span>		delHeader := func(key string) {
+<span id="L727" class="ln">   727</span>			if owned {
+<span id="L728" class="ln">   728</span>				header.Del(key)
+<span id="L729" class="ln">   729</span>				return
+<span id="L730" class="ln">   730</span>			}
+<span id="L731" class="ln">   731</span>			if _, ok := header[key]; !ok {
+<span id="L732" class="ln">   732</span>				return
+<span id="L733" class="ln">   733</span>			}
+<span id="L734" class="ln">   734</span>			if excludeHeader == nil {
+<span id="L735" class="ln">   735</span>				excludeHeader = make(map[string]bool)
+<span id="L736" class="ln">   736</span>			}
+<span id="L737" class="ln">   737</span>			excludeHeader[key] = true
+<span id="L738" class="ln">   738</span>		}
+<span id="L739" class="ln">   739</span>		var setHeader extraHeader
+<span id="L740" class="ln">   740</span>	
+<span id="L741" class="ln">   741</span>		<span class="comment">// If the handler is done but never sent a Content-Length</span>
+<span id="L742" class="ln">   742</span>		<span class="comment">// response header and this is our first (and last) write, set</span>
+<span id="L743" class="ln">   743</span>		<span class="comment">// it, even to zero. This helps HTTP/1.0 clients keep their</span>
+<span id="L744" class="ln">   744</span>		<span class="comment">// &#34;keep-alive&#34; connections alive.</span>
+<span id="L745" class="ln">   745</span>		<span class="comment">// Exceptions: 304/204/1xx responses never get Content-Length, and if</span>
+<span id="L746" class="ln">   746</span>		<span class="comment">// it was a HEAD request, we don&#39;t know the difference between</span>
+<span id="L747" class="ln">   747</span>		<span class="comment">// 0 actual bytes and 0 bytes because the handler noticed it</span>
+<span id="L748" class="ln">   748</span>		<span class="comment">// was a HEAD request and chose not to write anything.  So for</span>
+<span id="L749" class="ln">   749</span>		<span class="comment">// HEAD, the handler should either write the Content-Length or</span>
+<span id="L750" class="ln">   750</span>		<span class="comment">// write non-zero bytes.  If it&#39;s actually 0 bytes and the</span>
+<span id="L751" class="ln">   751</span>		<span class="comment">// handler never looked at the Request.Method, we just don&#39;t</span>
+<span id="L752" class="ln">   752</span>		<span class="comment">// send a Content-Length header.</span>
+<span id="L753" class="ln">   753</span>		if w.handlerDone &amp;&amp; bodyAllowedForStatus(w.status) &amp;&amp; header.get(&#34;Content-Length&#34;) == &#34;&#34; &amp;&amp; (!isHEAD || len(p) &gt; 0) {
+<span id="L754" class="ln">   754</span>			w.contentLength = int64(len(p))
+<span id="L755" class="ln">   755</span>			setHeader.contentLength = strconv.AppendInt(cw.res.clenBuf[:0], int64(len(p)), 10)
+<span id="L756" class="ln">   756</span>		}
+<span id="L757" class="ln">   757</span>	
+<span id="L758" class="ln">   758</span>		<span class="comment">// If this was an HTTP/1.0 request with keep-alive and we sent a</span>
+<span id="L759" class="ln">   759</span>		<span class="comment">// Content-Length back, we can make this a keep-alive response ...</span>
+<span id="L760" class="ln">   760</span>		if w.req.wantsHttp10KeepAlive() &amp;&amp; keepAlivesEnabled {
+<span id="L761" class="ln">   761</span>			sentLength := header.get(&#34;Content-Length&#34;) != &#34;&#34;
+<span id="L762" class="ln">   762</span>			if sentLength &amp;&amp; header.get(&#34;Connection&#34;) == &#34;keep-alive&#34; {
+<span id="L763" class="ln">   763</span>				w.closeAfterReply = false
+<span id="L764" class="ln">   764</span>			}
+<span id="L765" class="ln">   765</span>		}
+<span id="L766" class="ln">   766</span>	
+<span id="L767" class="ln">   767</span>		<span class="comment">// Check for a explicit (and valid) Content-Length header.</span>
+<span id="L768" class="ln">   768</span>		hasCL := w.contentLength != -1
+<span id="L769" class="ln">   769</span>	
+<span id="L770" class="ln">   770</span>		if w.req.wantsHttp10KeepAlive() &amp;&amp; (isHEAD || hasCL) {
+<span id="L771" class="ln">   771</span>			_, connectionHeaderSet := header[&#34;Connection&#34;]
+<span id="L772" class="ln">   772</span>			if !connectionHeaderSet {
+<span id="L773" class="ln">   773</span>				setHeader.connection = &#34;keep-alive&#34;
+<span id="L774" class="ln">   774</span>			}
+<span id="L775" class="ln">   775</span>		} else if !w.req.ProtoAtLeast(1, 1) || w.req.wantsClose() {
+<span id="L776" class="ln">   776</span>			w.closeAfterReply = true
+<span id="L777" class="ln">   777</span>		}
+<span id="L778" class="ln">   778</span>	
+<span id="L779" class="ln">   779</span>		if header.get(&#34;Connection&#34;) == &#34;close&#34; || !keepAlivesEnabled {
+<span id="L780" class="ln">   780</span>			w.closeAfterReply = true
+<span id="L781" class="ln">   781</span>		}
+<span id="L782" class="ln">   782</span>	
+<span id="L783" class="ln">   783</span>		<span class="comment">// Per RFC 2616, we should consume the request body before</span>
+<span id="L784" class="ln">   784</span>		<span class="comment">// replying, if the handler hasn&#39;t already done so.  But we</span>
+<span id="L785" class="ln">   785</span>		<span class="comment">// don&#39;t want to do an unbounded amount of reading here for</span>
+<span id="L786" class="ln">   786</span>		<span class="comment">// DoS reasons, so we only try up to a threshold.</span>
+<span id="L787" class="ln">   787</span>		if w.req.ContentLength != 0 &amp;&amp; !w.closeAfterReply {
+<span id="L788" class="ln">   788</span>			ecr, isExpecter := w.req.Body.(*expectContinueReader)
+<span id="L789" class="ln">   789</span>			if !isExpecter || ecr.resp.wroteContinue {
+<span id="L790" class="ln">   790</span>				n, _ := io.CopyN(ioutil.Discard, w.req.Body, maxPostHandlerReadBytes+1)
+<span id="L791" class="ln">   791</span>				if n &gt;= maxPostHandlerReadBytes {
+<span id="L792" class="ln">   792</span>					w.requestTooLarge()
+<span id="L793" class="ln">   793</span>					delHeader(&#34;Connection&#34;)
+<span id="L794" class="ln">   794</span>					setHeader.connection = &#34;close&#34;
+<span id="L795" class="ln">   795</span>				} else {
+<span id="L796" class="ln">   796</span>					w.req.Body.Close()
+<span id="L797" class="ln">   797</span>				}
+<span id="L798" class="ln">   798</span>			}
+<span id="L799" class="ln">   799</span>		}
+<span id="L800" class="ln">   800</span>	
+<span id="L801" class="ln">   801</span>		code := w.status
+<span id="L802" class="ln">   802</span>		if bodyAllowedForStatus(code) {
+<span id="L803" class="ln">   803</span>			<span class="comment">// If no content type, apply sniffing algorithm to body.</span>
+<span id="L804" class="ln">   804</span>			_, haveType := header[&#34;Content-Type&#34;]
+<span id="L805" class="ln">   805</span>			if !haveType {
+<span id="L806" class="ln">   806</span>				setHeader.contentType = DetectContentType(p)
+<span id="L807" class="ln">   807</span>			}
+<span id="L808" class="ln">   808</span>		} else {
+<span id="L809" class="ln">   809</span>			for _, k := range suppressedHeaders(code) {
+<span id="L810" class="ln">   810</span>				delHeader(k)
+<span id="L811" class="ln">   811</span>			}
+<span id="L812" class="ln">   812</span>		}
+<span id="L813" class="ln">   813</span>	
+<span id="L814" class="ln">   814</span>		if _, ok := header[&#34;Date&#34;]; !ok {
+<span id="L815" class="ln">   815</span>			setHeader.date = appendTime(cw.res.dateBuf[:0], time.Now())
+<span id="L816" class="ln">   816</span>		}
+<span id="L817" class="ln">   817</span>	
+<span id="L818" class="ln">   818</span>		te := header.get(&#34;Transfer-Encoding&#34;)
+<span id="L819" class="ln">   819</span>		hasTE := te != &#34;&#34;
+<span id="L820" class="ln">   820</span>		if hasCL &amp;&amp; hasTE &amp;&amp; te != &#34;identity&#34; {
+<span id="L821" class="ln">   821</span>			<span class="comment">// TODO: return an error if WriteHeader gets a return parameter</span>
+<span id="L822" class="ln">   822</span>			<span class="comment">// For now just ignore the Content-Length.</span>
+<span id="L823" class="ln">   823</span>			w.conn.server.logf(&#34;http: WriteHeader called with both Transfer-Encoding of %q and a Content-Length of %d&#34;,
+<span id="L824" class="ln">   824</span>				te, w.contentLength)
+<span id="L825" class="ln">   825</span>			delHeader(&#34;Content-Length&#34;)
+<span id="L826" class="ln">   826</span>			hasCL = false
+<span id="L827" class="ln">   827</span>		}
+<span id="L828" class="ln">   828</span>	
+<span id="L829" class="ln">   829</span>		if w.req.Method == &#34;HEAD&#34; || !bodyAllowedForStatus(code) {
+<span id="L830" class="ln">   830</span>			<span class="comment">// do nothing</span>
+<span id="L831" class="ln">   831</span>		} else if code == StatusNoContent {
+<span id="L832" class="ln">   832</span>			delHeader(&#34;Transfer-Encoding&#34;)
+<span id="L833" class="ln">   833</span>		} else if hasCL {
+<span id="L834" class="ln">   834</span>			delHeader(&#34;Transfer-Encoding&#34;)
+<span id="L835" class="ln">   835</span>		} else if w.req.ProtoAtLeast(1, 1) {
+<span id="L836" class="ln">   836</span>			<span class="comment">// HTTP/1.1 or greater: use chunked transfer encoding</span>
+<span id="L837" class="ln">   837</span>			<span class="comment">// to avoid closing the connection at EOF.</span>
+<span id="L838" class="ln">   838</span>			<span class="comment">// TODO: this blows away any custom or stacked Transfer-Encoding they</span>
+<span id="L839" class="ln">   839</span>			<span class="comment">// might have set.  Deal with that as need arises once we have a valid</span>
+<span id="L840" class="ln">   840</span>			<span class="comment">// use case.</span>
+<span id="L841" class="ln">   841</span>			cw.chunking = true
+<span id="L842" class="ln">   842</span>			setHeader.transferEncoding = &#34;chunked&#34;
+<span id="L843" class="ln">   843</span>		} else {
+<span id="L844" class="ln">   844</span>			<span class="comment">// HTTP version &lt; 1.1: cannot do chunked transfer</span>
+<span id="L845" class="ln">   845</span>			<span class="comment">// encoding and we don&#39;t know the Content-Length so</span>
+<span id="L846" class="ln">   846</span>			<span class="comment">// signal EOF by closing connection.</span>
+<span id="L847" class="ln">   847</span>			w.closeAfterReply = true
+<span id="L848" class="ln">   848</span>			delHeader(&#34;Transfer-Encoding&#34;) <span class="comment">// in case already set</span>
+<span id="L849" class="ln">   849</span>		}
+<span id="L850" class="ln">   850</span>	
+<span id="L851" class="ln">   851</span>		<span class="comment">// Cannot use Content-Length with non-identity Transfer-Encoding.</span>
+<span id="L852" class="ln">   852</span>		if cw.chunking {
+<span id="L853" class="ln">   853</span>			delHeader(&#34;Content-Length&#34;)
+<span id="L854" class="ln">   854</span>		}
+<span id="L855" class="ln">   855</span>		if !w.req.ProtoAtLeast(1, 0) {
+<span id="L856" class="ln">   856</span>			return
+<span id="L857" class="ln">   857</span>		}
+<span id="L858" class="ln">   858</span>	
+<span id="L859" class="ln">   859</span>		if w.closeAfterReply &amp;&amp; (!keepAlivesEnabled || !hasToken(cw.header.get(&#34;Connection&#34;), &#34;close&#34;)) {
+<span id="L860" class="ln">   860</span>			delHeader(&#34;Connection&#34;)
+<span id="L861" class="ln">   861</span>			if w.req.ProtoAtLeast(1, 1) {
+<span id="L862" class="ln">   862</span>				setHeader.connection = &#34;close&#34;
+<span id="L863" class="ln">   863</span>			}
+<span id="L864" class="ln">   864</span>		}
+<span id="L865" class="ln">   865</span>	
+<span id="L866" class="ln">   866</span>		w.conn.buf.WriteString(statusLine(w.req, code))
+<span id="L867" class="ln">   867</span>		cw.header.WriteSubset(w.conn.buf, excludeHeader)
+<span id="L868" class="ln">   868</span>		setHeader.Write(w.conn.buf.Writer)
+<span id="L869" class="ln">   869</span>		w.conn.buf.Write(crlf)
+<span id="L870" class="ln">   870</span>	}
+<span id="L871" class="ln">   871</span>	
+<span id="L872" class="ln">   872</span>	<span class="comment">// statusLines is a cache of Status-Line strings, keyed by code (for</span>
+<span id="L873" class="ln">   873</span>	<span class="comment">// HTTP/1.1) or negative code (for HTTP/1.0). This is faster than a</span>
+<span id="L874" class="ln">   874</span>	<span class="comment">// map keyed by struct of two fields. This map&#39;s max size is bounded</span>
+<span id="L875" class="ln">   875</span>	<span class="comment">// by 2*len(statusText), two protocol types for each known official</span>
+<span id="L876" class="ln">   876</span>	<span class="comment">// status code in the statusText map.</span>
+<span id="L877" class="ln">   877</span>	var (
+<span id="L878" class="ln">   878</span>		statusMu    sync.RWMutex
+<span id="L879" class="ln">   879</span>		statusLines = make(map[int]string)
+<span id="L880" class="ln">   880</span>	)
+<span id="L881" class="ln">   881</span>	
+<span id="L882" class="ln">   882</span>	<span class="comment">// statusLine returns a response Status-Line (RFC 2616 Section 6.1)</span>
+<span id="L883" class="ln">   883</span>	<span class="comment">// for the given request and response status code.</span>
+<span id="L884" class="ln">   884</span>	func statusLine(req *Request, code int) string {
+<span id="L885" class="ln">   885</span>		<span class="comment">// Fast path:</span>
+<span id="L886" class="ln">   886</span>		key := code
+<span id="L887" class="ln">   887</span>		proto11 := req.ProtoAtLeast(1, 1)
+<span id="L888" class="ln">   888</span>		if !proto11 {
+<span id="L889" class="ln">   889</span>			key = -key
+<span id="L890" class="ln">   890</span>		}
+<span id="L891" class="ln">   891</span>		statusMu.RLock()
+<span id="L892" class="ln">   892</span>		line, ok := statusLines[key]
+<span id="L893" class="ln">   893</span>		statusMu.RUnlock()
+<span id="L894" class="ln">   894</span>		if ok {
+<span id="L895" class="ln">   895</span>			return line
+<span id="L896" class="ln">   896</span>		}
+<span id="L897" class="ln">   897</span>	
+<span id="L898" class="ln">   898</span>		<span class="comment">// Slow path:</span>
+<span id="L899" class="ln">   899</span>		proto := &#34;HTTP/1.0&#34;
+<span id="L900" class="ln">   900</span>		if proto11 {
+<span id="L901" class="ln">   901</span>			proto = &#34;HTTP/1.1&#34;
+<span id="L902" class="ln">   902</span>		}
+<span id="L903" class="ln">   903</span>		codestring := strconv.Itoa(code)
+<span id="L904" class="ln">   904</span>		text, ok := statusText[code]
+<span id="L905" class="ln">   905</span>		if !ok {
+<span id="L906" class="ln">   906</span>			text = &#34;status code &#34; + codestring
+<span id="L907" class="ln">   907</span>		}
+<span id="L908" class="ln">   908</span>		line = proto + &#34; &#34; + codestring + &#34; &#34; + text + &#34;\r\n&#34;
+<span id="L909" class="ln">   909</span>		if ok {
+<span id="L910" class="ln">   910</span>			statusMu.Lock()
+<span id="L911" class="ln">   911</span>			defer statusMu.Unlock()
+<span id="L912" class="ln">   912</span>			statusLines[key] = line
+<span id="L913" class="ln">   913</span>		}
+<span id="L914" class="ln">   914</span>		return line
+<span id="L915" class="ln">   915</span>	}
+<span id="L916" class="ln">   916</span>	
+<span id="L917" class="ln">   917</span>	<span class="comment">// bodyAllowed returns true if a Write is allowed for this response type.</span>
+<span id="L918" class="ln">   918</span>	<span class="comment">// It&#39;s illegal to call this before the header has been flushed.</span>
+<span id="L919" class="ln">   919</span>	func (w *response) bodyAllowed() bool {
+<span id="L920" class="ln">   920</span>		if !w.wroteHeader {
+<span id="L921" class="ln">   921</span>			panic(&#34;&#34;)
+<span id="L922" class="ln">   922</span>		}
+<span id="L923" class="ln">   923</span>		return bodyAllowedForStatus(w.status)
+<span id="L924" class="ln">   924</span>	}
+<span id="L925" class="ln">   925</span>	
+<span id="L926" class="ln">   926</span>	<span class="comment">// The Life Of A Write is like this:</span>
+<span id="L927" class="ln">   927</span>	<span class="comment">//</span>
+<span id="L928" class="ln">   928</span>	<span class="comment">// Handler starts. No header has been sent. The handler can either</span>
+<span id="L929" class="ln">   929</span>	<span class="comment">// write a header, or just start writing.  Writing before sending a header</span>
+<span id="L930" class="ln">   930</span>	<span class="comment">// sends an implicitly empty 200 OK header.</span>
+<span id="L931" class="ln">   931</span>	<span class="comment">//</span>
+<span id="L932" class="ln">   932</span>	<span class="comment">// If the handler didn&#39;t declare a Content-Length up front, we either</span>
+<span id="L933" class="ln">   933</span>	<span class="comment">// go into chunking mode or, if the handler finishes running before</span>
+<span id="L934" class="ln">   934</span>	<span class="comment">// the chunking buffer size, we compute a Content-Length and send that</span>
+<span id="L935" class="ln">   935</span>	<span class="comment">// in the header instead.</span>
+<span id="L936" class="ln">   936</span>	<span class="comment">//</span>
+<span id="L937" class="ln">   937</span>	<span class="comment">// Likewise, if the handler didn&#39;t set a Content-Type, we sniff that</span>
+<span id="L938" class="ln">   938</span>	<span class="comment">// from the initial chunk of output.</span>
+<span id="L939" class="ln">   939</span>	<span class="comment">//</span>
+<span id="L940" class="ln">   940</span>	<span class="comment">// The Writers are wired together like:</span>
+<span id="L941" class="ln">   941</span>	<span class="comment">//</span>
+<span id="L942" class="ln">   942</span>	<span class="comment">// 1. *response (the ResponseWriter) -&gt;</span>
+<span id="L943" class="ln">   943</span>	<span class="comment">// 2. (*response).w, a *bufio.Writer of bufferBeforeChunkingSize bytes</span>
+<span id="L944" class="ln">   944</span>	<span class="comment">// 3. chunkWriter.Writer (whose writeHeader finalizes Content-Length/Type)</span>
+<span id="L945" class="ln">   945</span>	<span class="comment">//    and which writes the chunk headers, if needed.</span>
+<span id="L946" class="ln">   946</span>	<span class="comment">// 4. conn.buf, a bufio.Writer of default (4kB) bytes</span>
+<span id="L947" class="ln">   947</span>	<span class="comment">// 5. the rwc, the net.Conn.</span>
+<span id="L948" class="ln">   948</span>	<span class="comment">//</span>
+<span id="L949" class="ln">   949</span>	<span class="comment">// TODO(bradfitz): short-circuit some of the buffering when the</span>
+<span id="L950" class="ln">   950</span>	<span class="comment">// initial header contains both a Content-Type and Content-Length.</span>
+<span id="L951" class="ln">   951</span>	<span class="comment">// Also short-circuit in (1) when the header&#39;s been sent and not in</span>
+<span id="L952" class="ln">   952</span>	<span class="comment">// chunking mode, writing directly to (4) instead, if (2) has no</span>
+<span id="L953" class="ln">   953</span>	<span class="comment">// buffered data.  More generally, we could short-circuit from (1) to</span>
+<span id="L954" class="ln">   954</span>	<span class="comment">// (3) even in chunking mode if the write size from (1) is over some</span>
+<span id="L955" class="ln">   955</span>	<span class="comment">// threshold and nothing is in (2).  The answer might be mostly making</span>
+<span id="L956" class="ln">   956</span>	<span class="comment">// bufferBeforeChunkingSize smaller and having bufio&#39;s fast-paths deal</span>
+<span id="L957" class="ln">   957</span>	<span class="comment">// with this instead.</span>
+<span id="L958" class="ln">   958</span>	func (w *response) Write(data []byte) (n int, err error) {
+<span id="L959" class="ln">   959</span>		return w.write(len(data), data, &#34;&#34;)
+<span id="L960" class="ln">   960</span>	}
+<span id="L961" class="ln">   961</span>	
+<span id="L962" class="ln">   962</span>	func (w *response) WriteString(data string) (n int, err error) {
+<span id="L963" class="ln">   963</span>		return w.write(len(data), nil, data)
+<span id="L964" class="ln">   964</span>	}
+<span id="L965" class="ln">   965</span>	
+<span id="L966" class="ln">   966</span>	<span class="comment">// either dataB or dataS is non-zero.</span>
+<span id="L967" class="ln">   967</span>	func (w *response) write(lenData int, dataB []byte, dataS string) (n int, err error) {
+<span id="L968" class="ln">   968</span>		if w.conn.hijacked() {
+<span id="L969" class="ln">   969</span>			w.conn.server.logf(&#34;http: response.Write on hijacked connection&#34;)
+<span id="L970" class="ln">   970</span>			return 0, ErrHijacked
+<span id="L971" class="ln">   971</span>		}
+<span id="L972" class="ln">   972</span>		if !w.wroteHeader {
+<span id="L973" class="ln">   973</span>			w.WriteHeader(StatusOK)
+<span id="L974" class="ln">   974</span>		}
+<span id="L975" class="ln">   975</span>		if lenData == 0 {
+<span id="L976" class="ln">   976</span>			return 0, nil
+<span id="L977" class="ln">   977</span>		}
+<span id="L978" class="ln">   978</span>		if !w.bodyAllowed() {
+<span id="L979" class="ln">   979</span>			return 0, ErrBodyNotAllowed
+<span id="L980" class="ln">   980</span>		}
+<span id="L981" class="ln">   981</span>	
+<span id="L982" class="ln">   982</span>		w.written += int64(lenData) <span class="comment">// ignoring errors, for errorKludge</span>
+<span id="L983" class="ln">   983</span>		if w.contentLength != -1 &amp;&amp; w.written &gt; w.contentLength {
+<span id="L984" class="ln">   984</span>			return 0, ErrContentLength
+<span id="L985" class="ln">   985</span>		}
+<span id="L986" class="ln">   986</span>		if dataB != nil {
+<span id="L987" class="ln">   987</span>			return w.w.Write(dataB)
+<span id="L988" class="ln">   988</span>		} else {
+<span id="L989" class="ln">   989</span>			return w.w.WriteString(dataS)
+<span id="L990" class="ln">   990</span>		}
+<span id="L991" class="ln">   991</span>	}
+<span id="L992" class="ln">   992</span>	
+<span id="L993" class="ln">   993</span>	func (w *response) finishRequest() {
+<span id="L994" class="ln">   994</span>		w.handlerDone = true
+<span id="L995" class="ln">   995</span>	
+<span id="L996" class="ln">   996</span>		if !w.wroteHeader {
+<span id="L997" class="ln">   997</span>			w.WriteHeader(StatusOK)
+<span id="L998" class="ln">   998</span>		}
+<span id="L999" class="ln">   999</span>	
+<span id="L1000" class="ln">  1000</span>		w.w.Flush()
+<span id="L1001" class="ln">  1001</span>		putBufioWriter(w.w)
+<span id="L1002" class="ln">  1002</span>		w.cw.close()
+<span id="L1003" class="ln">  1003</span>		w.conn.buf.Flush()
+<span id="L1004" class="ln">  1004</span>	
+<span id="L1005" class="ln">  1005</span>		<span class="comment">// Close the body (regardless of w.closeAfterReply) so we can</span>
+<span id="L1006" class="ln">  1006</span>		<span class="comment">// re-use its bufio.Reader later safely.</span>
+<span id="L1007" class="ln">  1007</span>		w.req.Body.Close()
+<span id="L1008" class="ln">  1008</span>	
+<span id="L1009" class="ln">  1009</span>		if w.req.MultipartForm != nil {
+<span id="L1010" class="ln">  1010</span>			w.req.MultipartForm.RemoveAll()
+<span id="L1011" class="ln">  1011</span>		}
+<span id="L1012" class="ln">  1012</span>	
+<span id="L1013" class="ln">  1013</span>		if w.req.Method != &#34;HEAD&#34; &amp;&amp; w.contentLength != -1 &amp;&amp; w.bodyAllowed() &amp;&amp; w.contentLength != w.written {
+<span id="L1014" class="ln">  1014</span>			<span class="comment">// Did not write enough. Avoid getting out of sync.</span>
+<span id="L1015" class="ln">  1015</span>			w.closeAfterReply = true
+<span id="L1016" class="ln">  1016</span>		}
+<span id="L1017" class="ln">  1017</span>	}
+<span id="L1018" class="ln">  1018</span>	
+<span id="L1019" class="ln">  1019</span>	func (w *response) Flush() {
+<span id="L1020" class="ln">  1020</span>		if !w.wroteHeader {
+<span id="L1021" class="ln">  1021</span>			w.WriteHeader(StatusOK)
+<span id="L1022" class="ln">  1022</span>		}
+<span id="L1023" class="ln">  1023</span>		w.w.Flush()
+<span id="L1024" class="ln">  1024</span>		w.cw.flush()
+<span id="L1025" class="ln">  1025</span>	}
+<span id="L1026" class="ln">  1026</span>	
+<span id="L1027" class="ln">  1027</span>	func (c *conn) finalFlush() {
+<span id="L1028" class="ln">  1028</span>		if c.buf != nil {
+<span id="L1029" class="ln">  1029</span>			c.buf.Flush()
+<span id="L1030" class="ln">  1030</span>	
+<span id="L1031" class="ln">  1031</span>			<span class="comment">// Steal the bufio.Reader (~4KB worth of memory) and its associated</span>
+<span id="L1032" class="ln">  1032</span>			<span class="comment">// reader for a future connection.</span>
+<span id="L1033" class="ln">  1033</span>			putBufioReader(c.buf.Reader)
+<span id="L1034" class="ln">  1034</span>	
+<span id="L1035" class="ln">  1035</span>			<span class="comment">// Steal the bufio.Writer (~4KB worth of memory) and its associated</span>
+<span id="L1036" class="ln">  1036</span>			<span class="comment">// writer for a future connection.</span>
+<span id="L1037" class="ln">  1037</span>			putBufioWriter(c.buf.Writer)
+<span id="L1038" class="ln">  1038</span>	
+<span id="L1039" class="ln">  1039</span>			c.buf = nil
+<span id="L1040" class="ln">  1040</span>		}
+<span id="L1041" class="ln">  1041</span>	}
+<span id="L1042" class="ln">  1042</span>	
+<span id="L1043" class="ln">  1043</span>	<span class="comment">// Close the connection.</span>
+<span id="L1044" class="ln">  1044</span>	func (c *conn) close() {
+<span id="L1045" class="ln">  1045</span>		c.finalFlush()
+<span id="L1046" class="ln">  1046</span>		if c.rwc != nil {
+<span id="L1047" class="ln">  1047</span>			c.rwc.Close()
+<span id="L1048" class="ln">  1048</span>			c.rwc = nil
+<span id="L1049" class="ln">  1049</span>		}
+<span id="L1050" class="ln">  1050</span>	}
+<span id="L1051" class="ln">  1051</span>	
+<span id="L1052" class="ln">  1052</span>	<span class="comment">// rstAvoidanceDelay is the amount of time we sleep after closing the</span>
+<span id="L1053" class="ln">  1053</span>	<span class="comment">// write side of a TCP connection before closing the entire socket.</span>
+<span id="L1054" class="ln">  1054</span>	<span class="comment">// By sleeping, we increase the chances that the client sees our FIN</span>
+<span id="L1055" class="ln">  1055</span>	<span class="comment">// and processes its final data before they process the subsequent RST</span>
+<span id="L1056" class="ln">  1056</span>	<span class="comment">// from closing a connection with known unread data.</span>
+<span id="L1057" class="ln">  1057</span>	<span class="comment">// This RST seems to occur mostly on BSD systems. (And Windows?)</span>
+<span id="L1058" class="ln">  1058</span>	<span class="comment">// This timeout is somewhat arbitrary (~latency around the planet).</span>
+<span id="L1059" class="ln">  1059</span>	const rstAvoidanceDelay = 500 * time.Millisecond
+<span id="L1060" class="ln">  1060</span>	
+<span id="L1061" class="ln">  1061</span>	<span class="comment">// closeWrite flushes any outstanding data and sends a FIN packet (if</span>
+<span id="L1062" class="ln">  1062</span>	<span class="comment">// client is connected via TCP), signalling that we&#39;re done.  We then</span>
+<span id="L1063" class="ln">  1063</span>	<span class="comment">// pause for a bit, hoping the client processes it before `any</span>
+<span id="L1064" class="ln">  1064</span>	<span class="comment">// subsequent RST.</span>
+<span id="L1065" class="ln">  1065</span>	<span class="comment">//</span>
+<span id="L1066" class="ln">  1066</span>	<span class="comment">// See http://golang.org/issue/3595</span>
+<span id="L1067" class="ln">  1067</span>	func (c *conn) closeWriteAndWait() {
+<span id="L1068" class="ln">  1068</span>		c.finalFlush()
+<span id="L1069" class="ln">  1069</span>		if tcp, ok := c.rwc.(*net.TCPConn); ok {
+<span id="L1070" class="ln">  1070</span>			tcp.CloseWrite()
+<span id="L1071" class="ln">  1071</span>		}
+<span id="L1072" class="ln">  1072</span>		time.Sleep(rstAvoidanceDelay)
+<span id="L1073" class="ln">  1073</span>	}
+<span id="L1074" class="ln">  1074</span>	
+<span id="L1075" class="ln">  1075</span>	<span class="comment">// validNPN reports whether the proto is not a blacklisted Next</span>
+<span id="L1076" class="ln">  1076</span>	<span class="comment">// Protocol Negotiation protocol.  Empty and built-in protocol types</span>
+<span id="L1077" class="ln">  1077</span>	<span class="comment">// are blacklisted and can&#39;t be overridden with alternate</span>
+<span id="L1078" class="ln">  1078</span>	<span class="comment">// implementations.</span>
+<span id="L1079" class="ln">  1079</span>	func validNPN(proto string) bool {
+<span id="L1080" class="ln">  1080</span>		switch proto {
+<span id="L1081" class="ln">  1081</span>		case &#34;&#34;, &#34;http/1.1&#34;, &#34;http/1.0&#34;:
+<span id="L1082" class="ln">  1082</span>			return false
+<span id="L1083" class="ln">  1083</span>		}
+<span id="L1084" class="ln">  1084</span>		return true
+<span id="L1085" class="ln">  1085</span>	}
+<span id="L1086" class="ln">  1086</span>	
+<span id="L1087" class="ln">  1087</span>	func (c *conn) setState(nc net.Conn, state ConnState) {
+<span id="L1088" class="ln">  1088</span>		if hook := c.server.ConnState; hook != nil {
+<span id="L1089" class="ln">  1089</span>			hook(nc, state)
+<span id="L1090" class="ln">  1090</span>		}
+<span id="L1091" class="ln">  1091</span>	}
+<span id="L1092" class="ln">  1092</span>	
+<span id="L1093" class="ln">  1093</span>	<span class="comment">// Serve a new connection.</span>
+<span id="L1094" class="ln">  1094</span>	func (c *conn) serve() {
+<span id="L1095" class="ln">  1095</span>		origConn := c.rwc <span class="comment">// copy it before it&#39;s set nil on Close or Hijack</span>
+<span id="L1096" class="ln">  1096</span>		defer func() {
+<span id="L1097" class="ln">  1097</span>			if err := recover(); err != nil {
+<span id="L1098" class="ln">  1098</span>				const size = 64 &lt;&lt; 10
+<span id="L1099" class="ln">  1099</span>				buf := make([]byte, size)
+<span id="L1100" class="ln">  1100</span>				buf = buf[:runtime.Stack(buf, false)]
+<span id="L1101" class="ln">  1101</span>				c.server.logf(&#34;http: panic serving %v: %v\n%s&#34;, c.remoteAddr, err, buf)
+<span id="L1102" class="ln">  1102</span>			}
+<span id="L1103" class="ln">  1103</span>			if !c.hijacked() {
+<span id="L1104" class="ln">  1104</span>				c.close()
+<span id="L1105" class="ln">  1105</span>				c.setState(origConn, StateClosed)
+<span id="L1106" class="ln">  1106</span>			}
+<span id="L1107" class="ln">  1107</span>		}()
+<span id="L1108" class="ln">  1108</span>	
+<span id="L1109" class="ln">  1109</span>		if tlsConn, ok := c.rwc.(*tls.Conn); ok {
+<span id="L1110" class="ln">  1110</span>			if d := c.server.ReadTimeout; d != 0 {
+<span id="L1111" class="ln">  1111</span>				c.rwc.SetReadDeadline(time.Now().Add(d))
+<span id="L1112" class="ln">  1112</span>			}
+<span id="L1113" class="ln">  1113</span>			if d := c.server.WriteTimeout; d != 0 {
+<span id="L1114" class="ln">  1114</span>				c.rwc.SetWriteDeadline(time.Now().Add(d))
+<span id="L1115" class="ln">  1115</span>			}
+<span id="L1116" class="ln">  1116</span>			if err := tlsConn.Handshake(); err != nil {
+<span id="L1117" class="ln">  1117</span>				c.server.logf(&#34;http: TLS handshake error from %s: %v&#34;, c.rwc.RemoteAddr(), err)
+<span id="L1118" class="ln">  1118</span>				return
+<span id="L1119" class="ln">  1119</span>			}
+<span id="L1120" class="ln">  1120</span>			c.tlsState = new(tls.ConnectionState)
+<span id="L1121" class="ln">  1121</span>			*c.tlsState = tlsConn.ConnectionState()
+<span id="L1122" class="ln">  1122</span>			if proto := c.tlsState.NegotiatedProtocol; validNPN(proto) {
+<span id="L1123" class="ln">  1123</span>				if fn := c.server.TLSNextProto[proto]; fn != nil {
+<span id="L1124" class="ln">  1124</span>					h := initNPNRequest{tlsConn, serverHandler{c.server}}
+<span id="L1125" class="ln">  1125</span>					fn(c.server, tlsConn, h)
+<span id="L1126" class="ln">  1126</span>				}
+<span id="L1127" class="ln">  1127</span>				return
+<span id="L1128" class="ln">  1128</span>			}
+<span id="L1129" class="ln">  1129</span>		}
+<span id="L1130" class="ln">  1130</span>	
+<span id="L1131" class="ln">  1131</span>		for {
+<span id="L1132" class="ln">  1132</span>			w, err := c.readRequest()
+<span id="L1133" class="ln">  1133</span>			if c.lr.N != c.server.initialLimitedReaderSize() {
+<span id="L1134" class="ln">  1134</span>				<span class="comment">// If we read any bytes off the wire, we&#39;re active.</span>
+<span id="L1135" class="ln">  1135</span>				c.setState(c.rwc, StateActive)
+<span id="L1136" class="ln">  1136</span>			}
+<span id="L1137" class="ln">  1137</span>			if err != nil {
+<span id="L1138" class="ln">  1138</span>				if err == errTooLarge {
+<span id="L1139" class="ln">  1139</span>					<span class="comment">// Their HTTP client may or may not be</span>
+<span id="L1140" class="ln">  1140</span>					<span class="comment">// able to read this if we&#39;re</span>
+<span id="L1141" class="ln">  1141</span>					<span class="comment">// responding to them and hanging up</span>
+<span id="L1142" class="ln">  1142</span>					<span class="comment">// while they&#39;re still writing their</span>
+<span id="L1143" class="ln">  1143</span>					<span class="comment">// request.  Undefined behavior.</span>
+<span id="L1144" class="ln">  1144</span>					io.WriteString(c.rwc, &#34;HTTP/1.1 413 Request Entity Too Large\r\n\r\n&#34;)
+<span id="L1145" class="ln">  1145</span>					c.closeWriteAndWait()
+<span id="L1146" class="ln">  1146</span>					break
+<span id="L1147" class="ln">  1147</span>				} else if err == io.EOF {
+<span id="L1148" class="ln">  1148</span>					break <span class="comment">// Don&#39;t reply</span>
+<span id="L1149" class="ln">  1149</span>				} else if neterr, ok := err.(net.Error); ok &amp;&amp; neterr.Timeout() {
+<span id="L1150" class="ln">  1150</span>					break <span class="comment">// Don&#39;t reply</span>
+<span id="L1151" class="ln">  1151</span>				}
+<span id="L1152" class="ln">  1152</span>				io.WriteString(c.rwc, &#34;HTTP/1.1 400 Bad Request\r\n\r\n&#34;)
+<span id="L1153" class="ln">  1153</span>				break
+<span id="L1154" class="ln">  1154</span>			}
+<span id="L1155" class="ln">  1155</span>	
+<span id="L1156" class="ln">  1156</span>			<span class="comment">// Expect 100 Continue support</span>
+<span id="L1157" class="ln">  1157</span>			req := w.req
+<span id="L1158" class="ln">  1158</span>			if req.expectsContinue() {
+<span id="L1159" class="ln">  1159</span>				if req.ProtoAtLeast(1, 1) &amp;&amp; req.ContentLength != 0 {
+<span id="L1160" class="ln">  1160</span>					<span class="comment">// Wrap the Body reader with one that replies on the connection</span>
+<span id="L1161" class="ln">  1161</span>					req.Body = &amp;expectContinueReader{readCloser: req.Body, resp: w}
+<span id="L1162" class="ln">  1162</span>				}
+<span id="L1163" class="ln">  1163</span>				req.Header.Del(&#34;Expect&#34;)
+<span id="L1164" class="ln">  1164</span>			} else if req.Header.get(&#34;Expect&#34;) != &#34;&#34; {
+<span id="L1165" class="ln">  1165</span>				w.sendExpectationFailed()
+<span id="L1166" class="ln">  1166</span>				break
+<span id="L1167" class="ln">  1167</span>			}
+<span id="L1168" class="ln">  1168</span>	
+<span id="L1169" class="ln">  1169</span>			<span class="comment">// HTTP cannot have multiple simultaneous active requests.[*]</span>
+<span id="L1170" class="ln">  1170</span>			<span class="comment">// Until the server replies to this request, it can&#39;t read another,</span>
+<span id="L1171" class="ln">  1171</span>			<span class="comment">// so we might as well run the handler in this goroutine.</span>
+<span id="L1172" class="ln">  1172</span>			<span class="comment">// [*] Not strictly true: HTTP pipelining.  We could let them all process</span>
+<span id="L1173" class="ln">  1173</span>			<span class="comment">// in parallel even if their responses need to be serialized.</span>
+<span id="L1174" class="ln">  1174</span>			serverHandler{c.server}.ServeHTTP(w, w.req)
+<span id="L1175" class="ln">  1175</span>			if c.hijacked() {
+<span id="L1176" class="ln">  1176</span>				return
+<span id="L1177" class="ln">  1177</span>			}
+<span id="L1178" class="ln">  1178</span>			w.finishRequest()
+<span id="L1179" class="ln">  1179</span>			if w.closeAfterReply {
+<span id="L1180" class="ln">  1180</span>				if w.requestBodyLimitHit {
+<span id="L1181" class="ln">  1181</span>					c.closeWriteAndWait()
+<span id="L1182" class="ln">  1182</span>				}
+<span id="L1183" class="ln">  1183</span>				break
+<span id="L1184" class="ln">  1184</span>			}
+<span id="L1185" class="ln">  1185</span>			c.setState(c.rwc, StateIdle)
+<span id="L1186" class="ln">  1186</span>		}
+<span id="L1187" class="ln">  1187</span>	}
+<span id="L1188" class="ln">  1188</span>	
+<span id="L1189" class="ln">  1189</span>	func (w *response) sendExpectationFailed() {
+<span id="L1190" class="ln">  1190</span>		<span class="comment">// TODO(bradfitz): let ServeHTTP handlers handle</span>
+<span id="L1191" class="ln">  1191</span>		<span class="comment">// requests with non-standard expectation[s]? Seems</span>
+<span id="L1192" class="ln">  1192</span>		<span class="comment">// theoretical at best, and doesn&#39;t fit into the</span>
+<span id="L1193" class="ln">  1193</span>		<span class="comment">// current ServeHTTP model anyway.  We&#39;d need to</span>
+<span id="L1194" class="ln">  1194</span>		<span class="comment">// make the ResponseWriter an optional</span>
+<span id="L1195" class="ln">  1195</span>		<span class="comment">// &#34;ExpectReplier&#34; interface or something.</span>
+<span id="L1196" class="ln">  1196</span>		<span class="comment">//</span>
+<span id="L1197" class="ln">  1197</span>		<span class="comment">// For now we&#39;ll just obey RFC 2616 14.20 which says</span>
+<span id="L1198" class="ln">  1198</span>		<span class="comment">// &#34;If a server receives a request containing an</span>
+<span id="L1199" class="ln">  1199</span>		<span class="comment">// Expect field that includes an expectation-</span>
+<span id="L1200" class="ln">  1200</span>		<span class="comment">// extension that it does not support, it MUST</span>
+<span id="L1201" class="ln">  1201</span>		<span class="comment">// respond with a 417 (Expectation Failed) status.&#34;</span>
+<span id="L1202" class="ln">  1202</span>		w.Header().Set(&#34;Connection&#34;, &#34;close&#34;)
+<span id="L1203" class="ln">  1203</span>		w.WriteHeader(StatusExpectationFailed)
+<span id="L1204" class="ln">  1204</span>		w.finishRequest()
+<span id="L1205" class="ln">  1205</span>	}
+<span id="L1206" class="ln">  1206</span>	
+<span id="L1207" class="ln">  1207</span>	<span class="comment">// Hijack implements the Hijacker.Hijack method. Our response is both a ResponseWriter</span>
+<span id="L1208" class="ln">  1208</span>	<span class="comment">// and a Hijacker.</span>
+<span id="L1209" class="ln">  1209</span>	func (w *response) Hijack() (rwc net.Conn, buf *bufio.ReadWriter, err error) {
+<span id="L1210" class="ln">  1210</span>		if w.wroteHeader {
+<span id="L1211" class="ln">  1211</span>			w.cw.flush()
+<span id="L1212" class="ln">  1212</span>		}
+<span id="L1213" class="ln">  1213</span>		<span class="comment">// Release the bufioWriter that writes to the chunk writer, it is not</span>
+<span id="L1214" class="ln">  1214</span>		<span class="comment">// used after a connection has been hijacked.</span>
+<span id="L1215" class="ln">  1215</span>		rwc, buf, err = w.conn.hijack()
+<span id="L1216" class="ln">  1216</span>		if err == nil {
+<span id="L1217" class="ln">  1217</span>			putBufioWriter(w.w)
+<span id="L1218" class="ln">  1218</span>			w.w = nil
+<span id="L1219" class="ln">  1219</span>		}
+<span id="L1220" class="ln">  1220</span>		return rwc, buf, err
+<span id="L1221" class="ln">  1221</span>	}
+<span id="L1222" class="ln">  1222</span>	
+<span id="L1223" class="ln">  1223</span>	func (w *response) CloseNotify() &lt;-chan bool {
+<span id="L1224" class="ln">  1224</span>		return w.conn.closeNotify()
+<span id="L1225" class="ln">  1225</span>	}
+<span id="L1226" class="ln">  1226</span>	
+<span id="L1227" class="ln">  1227</span>	<span class="comment">// The HandlerFunc type is an adapter to allow the use of</span>
+<span id="L1228" class="ln">  1228</span>	<span class="comment">// ordinary functions as HTTP handlers.  If f is a function</span>
+<span id="L1229" class="ln">  1229</span>	<span class="comment">// with the appropriate signature, HandlerFunc(f) is a</span>
+<span id="L1230" class="ln">  1230</span>	<span class="comment">// Handler object that calls f.</span>
+<span id="L1231" class="ln">  1231</span>	type HandlerFunc func(ResponseWriter, *Request)
+<span id="L1232" class="ln">  1232</span>	
+<span id="L1233" class="ln">  1233</span>	<span class="comment">// ServeHTTP calls f(w, r).</span>
+<span id="L1234" class="ln">  1234</span>	func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+<span id="L1235" class="ln">  1235</span>		f(w, r)
+<span id="L1236" class="ln">  1236</span>	}
+<span id="L1237" class="ln">  1237</span>	
+<span id="L1238" class="ln">  1238</span>	<span class="comment">// Helper handlers</span>
+<span id="L1239" class="ln">  1239</span>	
+<span id="L1240" class="ln">  1240</span>	<span class="comment">// Error replies to the request with the specified error message and HTTP code.</span>
+<span id="L1241" class="ln">  1241</span>	<span class="comment">// The error message should be plain text.</span>
+<span id="L1242" class="ln">  1242</span>	func Error(w ResponseWriter, error string, code int) {
+<span id="L1243" class="ln">  1243</span>		w.Header().Set(&#34;Content-Type&#34;, &#34;text/plain; charset=utf-8&#34;)
+<span id="L1244" class="ln">  1244</span>		w.WriteHeader(code)
+<span id="L1245" class="ln">  1245</span>		fmt.Fprintln(w, error)
+<span id="L1246" class="ln">  1246</span>	}
+<span id="L1247" class="ln">  1247</span>	
+<span id="L1248" class="ln">  1248</span>	<span class="comment">// NotFound replies to the request with an HTTP 404 not found error.</span>
+<span id="L1249" class="ln">  1249</span>	func NotFound(w ResponseWriter, r *Request) { Error(w, &#34;404 page not found&#34;, StatusNotFound) }
+<span id="L1250" class="ln">  1250</span>	
+<span id="L1251" class="ln">  1251</span>	<span class="comment">// NotFoundHandler returns a simple request handler</span>
+<span id="L1252" class="ln">  1252</span>	<span class="comment">// that replies to each request with a ``404 page not found&#39;&#39; reply.</span>
+<span id="L1253" class="ln">  1253</span>	func NotFoundHandler() Handler { return HandlerFunc(NotFound) }
+<span id="L1254" class="ln">  1254</span>	
+<span id="L1255" class="ln">  1255</span>	<span class="comment">// StripPrefix returns a handler that serves HTTP requests</span>
+<span id="L1256" class="ln">  1256</span>	<span class="comment">// by removing the given prefix from the request URL&#39;s Path</span>
+<span id="L1257" class="ln">  1257</span>	<span class="comment">// and invoking the handler h. StripPrefix handles a</span>
+<span id="L1258" class="ln">  1258</span>	<span class="comment">// request for a path that doesn&#39;t begin with prefix by</span>
+<span id="L1259" class="ln">  1259</span>	<span class="comment">// replying with an HTTP 404 not found error.</span>
+<span id="L1260" class="ln">  1260</span>	func StripPrefix(prefix string, h Handler) Handler {
+<span id="L1261" class="ln">  1261</span>		if prefix == &#34;&#34; {
+<span id="L1262" class="ln">  1262</span>			return h
+<span id="L1263" class="ln">  1263</span>		}
+<span id="L1264" class="ln">  1264</span>		return HandlerFunc(func(w ResponseWriter, r *Request) {
+<span id="L1265" class="ln">  1265</span>			if p := strings.TrimPrefix(r.URL.Path, prefix); len(p) &lt; len(r.URL.Path) {
+<span id="L1266" class="ln">  1266</span>				r.URL.Path = p
+<span id="L1267" class="ln">  1267</span>				h.ServeHTTP(w, r)
+<span id="L1268" class="ln">  1268</span>			} else {
+<span id="L1269" class="ln">  1269</span>				NotFound(w, r)
+<span id="L1270" class="ln">  1270</span>			}
+<span id="L1271" class="ln">  1271</span>		})
+<span id="L1272" class="ln">  1272</span>	}
+<span id="L1273" class="ln">  1273</span>	
+<span id="L1274" class="ln">  1274</span>	<span class="comment">// Redirect replies to the request with a redirect to url,</span>
+<span id="L1275" class="ln">  1275</span>	<span class="comment">// which may be a path relative to the request path.</span>
+<span id="L1276" class="ln">  1276</span>	func Redirect(w ResponseWriter, r *Request, urlStr string, code int) {
+<span id="L1277" class="ln">  1277</span>		if u, err := url.Parse(urlStr); err == nil {
+<span id="L1278" class="ln">  1278</span>			<span class="comment">// If url was relative, make absolute by</span>
+<span id="L1279" class="ln">  1279</span>			<span class="comment">// combining with request path.</span>
+<span id="L1280" class="ln">  1280</span>			<span class="comment">// The browser would probably do this for us,</span>
+<span id="L1281" class="ln">  1281</span>			<span class="comment">// but doing it ourselves is more reliable.</span>
+<span id="L1282" class="ln">  1282</span>	
+<span id="L1283" class="ln">  1283</span>			<span class="comment">// NOTE(rsc): RFC 2616 says that the Location</span>
+<span id="L1284" class="ln">  1284</span>			<span class="comment">// line must be an absolute URI, like</span>
+<span id="L1285" class="ln">  1285</span>			<span class="comment">// &#34;http://www.google.com/redirect/&#34;,</span>
+<span id="L1286" class="ln">  1286</span>			<span class="comment">// not a path like &#34;/redirect/&#34;.</span>
+<span id="L1287" class="ln">  1287</span>			<span class="comment">// Unfortunately, we don&#39;t know what to</span>
+<span id="L1288" class="ln">  1288</span>			<span class="comment">// put in the host name section to get the</span>
+<span id="L1289" class="ln">  1289</span>			<span class="comment">// client to connect to us again, so we can&#39;t</span>
+<span id="L1290" class="ln">  1290</span>			<span class="comment">// know the right absolute URI to send back.</span>
+<span id="L1291" class="ln">  1291</span>			<span class="comment">// Because of this problem, no one pays attention</span>
+<span id="L1292" class="ln">  1292</span>			<span class="comment">// to the RFC; they all send back just a new path.</span>
+<span id="L1293" class="ln">  1293</span>			<span class="comment">// So do we.</span>
+<span id="L1294" class="ln">  1294</span>			oldpath := r.URL.Path
+<span id="L1295" class="ln">  1295</span>			if oldpath == &#34;&#34; { <span class="comment">// should not happen, but avoid a crash if it does</span>
+<span id="L1296" class="ln">  1296</span>				oldpath = &#34;/&#34;
+<span id="L1297" class="ln">  1297</span>			}
+<span id="L1298" class="ln">  1298</span>			if u.Scheme == &#34;&#34; {
+<span id="L1299" class="ln">  1299</span>				<span class="comment">// no leading http://server</span>
+<span id="L1300" class="ln">  1300</span>				if urlStr == &#34;&#34; || urlStr[0] != &#39;/&#39; {
+<span id="L1301" class="ln">  1301</span>					<span class="comment">// make relative path absolute</span>
+<span id="L1302" class="ln">  1302</span>					olddir, _ := path.Split(oldpath)
+<span id="L1303" class="ln">  1303</span>					urlStr = olddir + urlStr
+<span id="L1304" class="ln">  1304</span>				}
+<span id="L1305" class="ln">  1305</span>	
+<span id="L1306" class="ln">  1306</span>				var query string
+<span id="L1307" class="ln">  1307</span>				if i := strings.Index(urlStr, &#34;?&#34;); i != -1 {
+<span id="L1308" class="ln">  1308</span>					urlStr, query = urlStr[:i], urlStr[i:]
+<span id="L1309" class="ln">  1309</span>				}
+<span id="L1310" class="ln">  1310</span>	
+<span id="L1311" class="ln">  1311</span>				<span class="comment">// clean up but preserve trailing slash</span>
+<span id="L1312" class="ln">  1312</span>				trailing := strings.HasSuffix(urlStr, &#34;/&#34;)
+<span id="L1313" class="ln">  1313</span>				urlStr = path.Clean(urlStr)
+<span id="L1314" class="ln">  1314</span>				if trailing &amp;&amp; !strings.HasSuffix(urlStr, &#34;/&#34;) {
+<span id="L1315" class="ln">  1315</span>					urlStr += &#34;/&#34;
+<span id="L1316" class="ln">  1316</span>				}
+<span id="L1317" class="ln">  1317</span>				urlStr += query
+<span id="L1318" class="ln">  1318</span>			}
+<span id="L1319" class="ln">  1319</span>		}
+<span id="L1320" class="ln">  1320</span>	
+<span id="L1321" class="ln">  1321</span>		w.Header().Set(&#34;Location&#34;, urlStr)
+<span id="L1322" class="ln">  1322</span>		w.WriteHeader(code)
+<span id="L1323" class="ln">  1323</span>	
+<span id="L1324" class="ln">  1324</span>		<span class="comment">// RFC2616 recommends that a short note &#34;SHOULD&#34; be included in the</span>
+<span id="L1325" class="ln">  1325</span>		<span class="comment">// response because older user agents may not understand 301/307.</span>
+<span id="L1326" class="ln">  1326</span>		<span class="comment">// Shouldn&#39;t send the response for POST or HEAD; that leaves GET.</span>
+<span id="L1327" class="ln">  1327</span>		if r.Method == &#34;GET&#34; {
+<span id="L1328" class="ln">  1328</span>			note := &#34;&lt;a href=\&#34;&#34; + htmlEscape(urlStr) + &#34;\&#34;&gt;&#34; + statusText[code] + &#34;&lt;/a&gt;.\n&#34;
+<span id="L1329" class="ln">  1329</span>			fmt.Fprintln(w, note)
+<span id="L1330" class="ln">  1330</span>		}
+<span id="L1331" class="ln">  1331</span>	}
+<span id="L1332" class="ln">  1332</span>	
+<span id="L1333" class="ln">  1333</span>	var htmlReplacer = strings.NewReplacer(
+<span id="L1334" class="ln">  1334</span>		&#34;&amp;&#34;, &#34;&amp;amp;&#34;,
+<span id="L1335" class="ln">  1335</span>		&#34;&lt;&#34;, &#34;&amp;lt;&#34;,
+<span id="L1336" class="ln">  1336</span>		&#34;&gt;&#34;, &#34;&amp;gt;&#34;,
+<span id="L1337" class="ln">  1337</span>		<span class="comment">// &#34;&amp;#34;&#34; is shorter than &#34;&amp;quot;&#34;.</span>
+<span id="L1338" class="ln">  1338</span>		`&#34;`, &#34;&amp;#34;&#34;,
+<span id="L1339" class="ln">  1339</span>		<span class="comment">// &#34;&amp;#39;&#34; is shorter than &#34;&amp;apos;&#34; and apos was not in HTML until HTML5.</span>
+<span id="L1340" class="ln">  1340</span>		&#34;&#39;&#34;, &#34;&amp;#39;&#34;,
+<span id="L1341" class="ln">  1341</span>	)
+<span id="L1342" class="ln">  1342</span>	
+<span id="L1343" class="ln">  1343</span>	func htmlEscape(s string) string {
+<span id="L1344" class="ln">  1344</span>		return htmlReplacer.Replace(s)
+<span id="L1345" class="ln">  1345</span>	}
+<span id="L1346" class="ln">  1346</span>	
+<span id="L1347" class="ln">  1347</span>	<span class="comment">// Redirect to a fixed URL</span>
+<span id="L1348" class="ln">  1348</span>	type redirectHandler struct {
+<span id="L1349" class="ln">  1349</span>		url  string
+<span id="L1350" class="ln">  1350</span>		code int
+<span id="L1351" class="ln">  1351</span>	}
+<span id="L1352" class="ln">  1352</span>	
+<span id="L1353" class="ln">  1353</span>	func (rh *redirectHandler) ServeHTTP(w ResponseWriter, r *Request) {
+<span id="L1354" class="ln">  1354</span>		Redirect(w, r, rh.url, rh.code)
+<span id="L1355" class="ln">  1355</span>	}
+<span id="L1356" class="ln">  1356</span>	
+<span id="L1357" class="ln">  1357</span>	<span class="comment">// RedirectHandler returns a request handler that redirects</span>
+<span id="L1358" class="ln">  1358</span>	<span class="comment">// each request it receives to the given url using the given</span>
+<span id="L1359" class="ln">  1359</span>	<span class="comment">// status code.</span>
+<span id="L1360" class="ln">  1360</span>	func RedirectHandler(url string, code int) Handler {
+<span id="L1361" class="ln">  1361</span>		return &amp;redirectHandler{url, code}
+<span id="L1362" class="ln">  1362</span>	}
+<span id="L1363" class="ln">  1363</span>	
+<span id="L1364" class="ln">  1364</span>	<span class="comment">// ServeMux is an HTTP request multiplexer.</span>
+<span id="L1365" class="ln">  1365</span>	<span class="comment">// It matches the URL of each incoming request against a list of registered</span>
+<span id="L1366" class="ln">  1366</span>	<span class="comment">// patterns and calls the handler for the pattern that</span>
+<span id="L1367" class="ln">  1367</span>	<span class="comment">// most closely matches the URL.</span>
+<span id="L1368" class="ln">  1368</span>	<span class="comment">//</span>
+<span id="L1369" class="ln">  1369</span>	<span class="comment">// Patterns name fixed, rooted paths, like &#34;/favicon.ico&#34;,</span>
+<span id="L1370" class="ln">  1370</span>	<span class="comment">// or rooted subtrees, like &#34;/images/&#34; (note the trailing slash).</span>
+<span id="L1371" class="ln">  1371</span>	<span class="comment">// Longer patterns take precedence over shorter ones, so that</span>
+<span id="L1372" class="ln">  1372</span>	<span class="comment">// if there are handlers registered for both &#34;/images/&#34;</span>
+<span id="L1373" class="ln">  1373</span>	<span class="comment">// and &#34;/images/thumbnails/&#34;, the latter handler will be</span>
+<span id="L1374" class="ln">  1374</span>	<span class="comment">// called for paths beginning &#34;/images/thumbnails/&#34; and the</span>
+<span id="L1375" class="ln">  1375</span>	<span class="comment">// former will receive requests for any other paths in the</span>
+<span id="L1376" class="ln">  1376</span>	<span class="comment">// &#34;/images/&#34; subtree.</span>
+<span id="L1377" class="ln">  1377</span>	<span class="comment">//</span>
+<span id="L1378" class="ln">  1378</span>	<span class="comment">// Note that since a pattern ending in a slash names a rooted subtree,</span>
+<span id="L1379" class="ln">  1379</span>	<span class="comment">// the pattern &#34;/&#34; matches all paths not matched by other registered</span>
+<span id="L1380" class="ln">  1380</span>	<span class="comment">// patterns, not just the URL with Path == &#34;/&#34;.</span>
+<span id="L1381" class="ln">  1381</span>	<span class="comment">//</span>
+<span id="L1382" class="ln">  1382</span>	<span class="comment">// Patterns may optionally begin with a host name, restricting matches to</span>
+<span id="L1383" class="ln">  1383</span>	<span class="comment">// URLs on that host only.  Host-specific patterns take precedence over</span>
+<span id="L1384" class="ln">  1384</span>	<span class="comment">// general patterns, so that a handler might register for the two patterns</span>
+<span id="L1385" class="ln">  1385</span>	<span class="comment">// &#34;/codesearch&#34; and &#34;codesearch.google.com/&#34; without also taking over</span>
+<span id="L1386" class="ln">  1386</span>	<span class="comment">// requests for &#34;http://www.google.com/&#34;.</span>
+<span id="L1387" class="ln">  1387</span>	<span class="comment">//</span>
+<span id="L1388" class="ln">  1388</span>	<span class="comment">// ServeMux also takes care of sanitizing the URL request path,</span>
+<span id="L1389" class="ln">  1389</span>	<span class="comment">// redirecting any request containing . or .. elements to an</span>
+<span id="L1390" class="ln">  1390</span>	<span class="comment">// equivalent .- and ..-free URL.</span>
+<span id="L1391" class="ln">  1391</span>	type ServeMux struct {
+<span id="L1392" class="ln">  1392</span>		mu    sync.RWMutex
+<span id="L1393" class="ln">  1393</span>		m     map[string]muxEntry
+<span id="L1394" class="ln">  1394</span>		hosts bool <span class="comment">// whether any patterns contain hostnames</span>
+<span id="L1395" class="ln">  1395</span>	}
+<span id="L1396" class="ln">  1396</span>	
+<span id="L1397" class="ln">  1397</span>	type muxEntry struct {
+<span id="L1398" class="ln">  1398</span>		explicit bool
+<span id="L1399" class="ln">  1399</span>		h        Handler
+<span id="L1400" class="ln">  1400</span>		pattern  string
+<span id="L1401" class="ln">  1401</span>	}
+<span id="L1402" class="ln">  1402</span>	
+<span id="L1403" class="ln">  1403</span>	<span class="comment">// NewServeMux allocates and returns a new ServeMux.</span>
+<span id="L1404" class="ln">  1404</span>	func NewServeMux() *ServeMux { return &amp;ServeMux{m: make(map[string]muxEntry)} }
+<span id="L1405" class="ln">  1405</span>	
+<span id="L1406" class="ln">  1406</span>	<span class="comment">// DefaultServeMux is the default ServeMux used by Serve.</span>
+<span id="L1407" class="ln">  1407</span>	var DefaultServeMux = NewServeMux()
+<span id="L1408" class="ln">  1408</span>	
+<span id="L1409" class="ln">  1409</span>	<span class="comment">// Does path match pattern?</span>
+<span id="L1410" class="ln">  1410</span>	func pathMatch(pattern, path string) bool {
+<span id="L1411" class="ln">  1411</span>		if len(pattern) == 0 {
+<span id="L1412" class="ln">  1412</span>			<span class="comment">// should not happen</span>
+<span id="L1413" class="ln">  1413</span>			return false
+<span id="L1414" class="ln">  1414</span>		}
+<span id="L1415" class="ln">  1415</span>		n := len(pattern)
+<span id="L1416" class="ln">  1416</span>		if pattern[n-1] != &#39;/&#39; {
+<span id="L1417" class="ln">  1417</span>			return pattern == path
+<span id="L1418" class="ln">  1418</span>		}
+<span id="L1419" class="ln">  1419</span>		return len(path) &gt;= n &amp;&amp; path[0:n] == pattern
+<span id="L1420" class="ln">  1420</span>	}
+<span id="L1421" class="ln">  1421</span>	
+<span id="L1422" class="ln">  1422</span>	<span class="comment">// Return the canonical path for p, eliminating . and .. elements.</span>
+<span id="L1423" class="ln">  1423</span>	func cleanPath(p string) string {
+<span id="L1424" class="ln">  1424</span>		if p == &#34;&#34; {
+<span id="L1425" class="ln">  1425</span>			return &#34;/&#34;
+<span id="L1426" class="ln">  1426</span>		}
+<span id="L1427" class="ln">  1427</span>		if p[0] != &#39;/&#39; {
+<span id="L1428" class="ln">  1428</span>			p = &#34;/&#34; + p
+<span id="L1429" class="ln">  1429</span>		}
+<span id="L1430" class="ln">  1430</span>		np := path.Clean(p)
+<span id="L1431" class="ln">  1431</span>		<span class="comment">// path.Clean removes trailing slash except for root;</span>
+<span id="L1432" class="ln">  1432</span>		<span class="comment">// put the trailing slash back if necessary.</span>
+<span id="L1433" class="ln">  1433</span>		if p[len(p)-1] == &#39;/&#39; &amp;&amp; np != &#34;/&#34; {
+<span id="L1434" class="ln">  1434</span>			np += &#34;/&#34;
+<span id="L1435" class="ln">  1435</span>		}
+<span id="L1436" class="ln">  1436</span>		return np
+<span id="L1437" class="ln">  1437</span>	}
+<span id="L1438" class="ln">  1438</span>	
+<span id="L1439" class="ln">  1439</span>	<span class="comment">// Find a handler on a handler map given a path string</span>
+<span id="L1440" class="ln">  1440</span>	<span class="comment">// Most-specific (longest) pattern wins</span>
+<span id="L1441" class="ln">  1441</span>	func (mux *ServeMux) match(path string) (h Handler, pattern string) {
+<span id="L1442" class="ln">  1442</span>		var n = 0
+<span id="L1443" class="ln">  1443</span>		for k, v := range mux.m {
+<span id="L1444" class="ln">  1444</span>			if !pathMatch(k, path) {
+<span id="L1445" class="ln">  1445</span>				continue
+<span id="L1446" class="ln">  1446</span>			}
+<span id="L1447" class="ln">  1447</span>			if h == nil || len(k) &gt; n {
+<span id="L1448" class="ln">  1448</span>				n = len(k)
+<span id="L1449" class="ln">  1449</span>				h = v.h
+<span id="L1450" class="ln">  1450</span>				pattern = v.pattern
+<span id="L1451" class="ln">  1451</span>			}
+<span id="L1452" class="ln">  1452</span>		}
+<span id="L1453" class="ln">  1453</span>		return
+<span id="L1454" class="ln">  1454</span>	}
+<span id="L1455" class="ln">  1455</span>	
+<span id="L1456" class="ln">  1456</span>	<span class="comment">// Handler returns the handler to use for the given request,</span>
+<span id="L1457" class="ln">  1457</span>	<span class="comment">// consulting r.Method, r.Host, and r.URL.Path. It always returns</span>
+<span id="L1458" class="ln">  1458</span>	<span class="comment">// a non-nil handler. If the path is not in its canonical form, the</span>
+<span id="L1459" class="ln">  1459</span>	<span class="comment">// handler will be an internally-generated handler that redirects</span>
+<span id="L1460" class="ln">  1460</span>	<span class="comment">// to the canonical path.</span>
+<span id="L1461" class="ln">  1461</span>	<span class="comment">//</span>
+<span id="L1462" class="ln">  1462</span>	<span class="comment">// Handler also returns the registered pattern that matches the</span>
+<span id="L1463" class="ln">  1463</span>	<span class="comment">// request or, in the case of internally-generated redirects,</span>
+<span id="L1464" class="ln">  1464</span>	<span class="comment">// the pattern that will match after following the redirect.</span>
+<span id="L1465" class="ln">  1465</span>	<span class="comment">//</span>
+<span id="L1466" class="ln">  1466</span>	<span class="comment">// If there is no registered handler that applies to the request,</span>
+<span id="L1467" class="ln">  1467</span>	<span class="comment">// Handler returns a ``page not found&#39;&#39; handler and an empty pattern.</span>
+<span id="L1468" class="ln">  1468</span>	func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
+<span id="L1469" class="ln">  1469</span>		if r.Method != &#34;CONNECT&#34; {
+<span id="L1470" class="ln">  1470</span>			if p := cleanPath(r.URL.Path); p != r.URL.Path {
+<span id="L1471" class="ln">  1471</span>				_, pattern = mux.handler(r.Host, p)
+<span id="L1472" class="ln">  1472</span>				url := *r.URL
+<span id="L1473" class="ln">  1473</span>				url.Path = p
+<span id="L1474" class="ln">  1474</span>				return RedirectHandler(url.String(), StatusMovedPermanently), pattern
+<span id="L1475" class="ln">  1475</span>			}
+<span id="L1476" class="ln">  1476</span>		}
+<span id="L1477" class="ln">  1477</span>	
+<span id="L1478" class="ln">  1478</span>		return mux.handler(r.Host, r.URL.Path)
+<span id="L1479" class="ln">  1479</span>	}
+<span id="L1480" class="ln">  1480</span>	
+<span id="L1481" class="ln">  1481</span>	<span class="comment">// handler is the main implementation of Handler.</span>
+<span id="L1482" class="ln">  1482</span>	<span class="comment">// The path is known to be in canonical form, except for CONNECT methods.</span>
+<span id="L1483" class="ln">  1483</span>	func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
+<span id="L1484" class="ln">  1484</span>		mux.mu.RLock()
+<span id="L1485" class="ln">  1485</span>		defer mux.mu.RUnlock()
+<span id="L1486" class="ln">  1486</span>	
+<span id="L1487" class="ln">  1487</span>		<span class="comment">// Host-specific pattern takes precedence over generic ones</span>
+<span id="L1488" class="ln">  1488</span>		if mux.hosts {
+<span id="L1489" class="ln">  1489</span>			h, pattern = mux.match(host + path)
+<span id="L1490" class="ln">  1490</span>		}
+<span id="L1491" class="ln">  1491</span>		if h == nil {
+<span id="L1492" class="ln">  1492</span>			h, pattern = mux.match(path)
+<span id="L1493" class="ln">  1493</span>		}
+<span id="L1494" class="ln">  1494</span>		if h == nil {
+<span id="L1495" class="ln">  1495</span>			h, pattern = NotFoundHandler(), &#34;&#34;
+<span id="L1496" class="ln">  1496</span>		}
+<span id="L1497" class="ln">  1497</span>		return
+<span id="L1498" class="ln">  1498</span>	}
+<span id="L1499" class="ln">  1499</span>	
+<span id="L1500" class="ln">  1500</span>	<span class="comment">// ServeHTTP dispatches the request to the handler whose</span>
+<span id="L1501" class="ln">  1501</span>	<span class="comment">// pattern most closely matches the request URL.</span>
+<span id="L1502" class="ln">  1502</span>	func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
+<span id="L1503" class="ln">  1503</span>		if r.RequestURI == &#34;*&#34; {
+<span id="L1504" class="ln">  1504</span>			if r.ProtoAtLeast(1, 1) {
+<span id="L1505" class="ln">  1505</span>				w.Header().Set(&#34;Connection&#34;, &#34;close&#34;)
+<span id="L1506" class="ln">  1506</span>			}
+<span id="L1507" class="ln">  1507</span>			w.WriteHeader(StatusBadRequest)
+<span id="L1508" class="ln">  1508</span>			return
+<span id="L1509" class="ln">  1509</span>		}
+<span id="L1510" class="ln">  1510</span>		h, _ := mux.Handler(r)
+<span id="L1511" class="ln">  1511</span>		h.ServeHTTP(w, r)
+<span id="L1512" class="ln">  1512</span>	}
+<span id="L1513" class="ln">  1513</span>	
+<span id="L1514" class="ln">  1514</span>	<span class="comment">// Handle registers the handler for the given pattern.</span>
+<span id="L1515" class="ln">  1515</span>	<span class="comment">// If a handler already exists for pattern, Handle panics.</span>
+<span id="L1516" class="ln">  1516</span>	func (mux *ServeMux) Handle(pattern string, handler Handler) {
+<span id="L1517" class="ln">  1517</span>		mux.mu.Lock()
+<span id="L1518" class="ln">  1518</span>		defer mux.mu.Unlock()
+<span id="L1519" class="ln">  1519</span>	
+<span id="L1520" class="ln">  1520</span>		if pattern == &#34;&#34; {
+<span id="L1521" class="ln">  1521</span>			panic(&#34;http: invalid pattern &#34; + pattern)
+<span id="L1522" class="ln">  1522</span>		}
+<span id="L1523" class="ln">  1523</span>		if handler == nil {
+<span id="L1524" class="ln">  1524</span>			panic(&#34;http: nil handler&#34;)
+<span id="L1525" class="ln">  1525</span>		}
+<span id="L1526" class="ln">  1526</span>		if mux.m[pattern].explicit {
+<span id="L1527" class="ln">  1527</span>			panic(&#34;http: multiple registrations for &#34; + pattern)
+<span id="L1528" class="ln">  1528</span>		}
+<span id="L1529" class="ln">  1529</span>	
+<span id="L1530" class="ln">  1530</span>		mux.m[pattern] = muxEntry{explicit: true, h: handler, pattern: pattern}
+<span id="L1531" class="ln">  1531</span>	
+<span id="L1532" class="ln">  1532</span>		if pattern[0] != &#39;/&#39; {
+<span id="L1533" class="ln">  1533</span>			mux.hosts = true
+<span id="L1534" class="ln">  1534</span>		}
+<span id="L1535" class="ln">  1535</span>	
+<span id="L1536" class="ln">  1536</span>		<span class="comment">// Helpful behavior:</span>
+<span id="L1537" class="ln">  1537</span>		<span class="comment">// If pattern is /tree/, insert an implicit permanent redirect for /tree.</span>
+<span id="L1538" class="ln">  1538</span>		<span class="comment">// It can be overridden by an explicit registration.</span>
+<span id="L1539" class="ln">  1539</span>		n := len(pattern)
+<span id="L1540" class="ln">  1540</span>		if n &gt; 0 &amp;&amp; pattern[n-1] == &#39;/&#39; &amp;&amp; !mux.m[pattern[0:n-1]].explicit {
+<span id="L1541" class="ln">  1541</span>			<span class="comment">// If pattern contains a host name, strip it and use remaining</span>
+<span id="L1542" class="ln">  1542</span>			<span class="comment">// path for redirect.</span>
+<span id="L1543" class="ln">  1543</span>			path := pattern
+<span id="L1544" class="ln">  1544</span>			if pattern[0] != &#39;/&#39; {
+<span id="L1545" class="ln">  1545</span>				<span class="comment">// In pattern, at least the last character is a &#39;/&#39;, so</span>
+<span id="L1546" class="ln">  1546</span>				<span class="comment">// strings.Index can&#39;t be -1.</span>
+<span id="L1547" class="ln">  1547</span>				path = pattern[strings.Index(pattern, &#34;/&#34;):]
+<span id="L1548" class="ln">  1548</span>			}
+<span id="L1549" class="ln">  1549</span>			mux.m[pattern[0:n-1]] = muxEntry{h: RedirectHandler(path, StatusMovedPermanently), pattern: pattern}
+<span id="L1550" class="ln">  1550</span>		}
+<span id="L1551" class="ln">  1551</span>	}
+<span id="L1552" class="ln">  1552</span>	
+<span id="L1553" class="ln">  1553</span>	<span class="comment">// HandleFunc registers the handler function for the given pattern.</span>
+<span id="L1554" class="ln">  1554</span>	<span class="selection">func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request))</span> {
+<span id="L1555" class="ln">  1555</span>		mux.Handle(pattern, HandlerFunc(handler))
+<span id="L1556" class="ln">  1556</span>	}
+<span id="L1557" class="ln">  1557</span>	
+<span id="L1558" class="ln">  1558</span>	<span class="comment">// Handle registers the handler for the given pattern</span>
+<span id="L1559" class="ln">  1559</span>	<span class="comment">// in the DefaultServeMux.</span>
+<span id="L1560" class="ln">  1560</span>	<span class="comment">// The documentation for ServeMux explains how patterns are matched.</span>
+<span id="L1561" class="ln">  1561</span>	func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
+<span id="L1562" class="ln">  1562</span>	
+<span id="L1563" class="ln">  1563</span>	<span class="comment">// HandleFunc registers the handler function for the given pattern</span>
+<span id="L1564" class="ln">  1564</span>	<span class="comment">// in the DefaultServeMux.</span>
+<span id="L1565" class="ln">  1565</span>	<span class="comment">// The documentation for ServeMux explains how patterns are matched.</span>
+<span id="L1566" class="ln">  1566</span>	func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+<span id="L1567" class="ln">  1567</span>		DefaultServeMux.HandleFunc(pattern, handler)
+<span id="L1568" class="ln">  1568</span>	}
+<span id="L1569" class="ln">  1569</span>	
+<span id="L1570" class="ln">  1570</span>	<span class="comment">// Serve accepts incoming HTTP connections on the listener l,</span>
+<span id="L1571" class="ln">  1571</span>	<span class="comment">// creating a new service goroutine for each.  The service goroutines</span>
+<span id="L1572" class="ln">  1572</span>	<span class="comment">// read requests and then call handler to reply to them.</span>
+<span id="L1573" class="ln">  1573</span>	<span class="comment">// Handler is typically nil, in which case the DefaultServeMux is used.</span>
+<span id="L1574" class="ln">  1574</span>	func Serve(l net.Listener, handler Handler) error {
+<span id="L1575" class="ln">  1575</span>		srv := &amp;Server{Handler: handler}
+<span id="L1576" class="ln">  1576</span>		return srv.Serve(l)
+<span id="L1577" class="ln">  1577</span>	}
+<span id="L1578" class="ln">  1578</span>	
+<span id="L1579" class="ln">  1579</span>	<span class="comment">// A Server defines parameters for running an HTTP server.</span>
+<span id="L1580" class="ln">  1580</span>	<span class="comment">// The zero value for Server is a valid configuration.</span>
+<span id="L1581" class="ln">  1581</span>	type Server struct {
+<span id="L1582" class="ln">  1582</span>		Addr           string        <span class="comment">// TCP address to listen on, &#34;:http&#34; if empty</span>
+<span id="L1583" class="ln">  1583</span>		Handler        Handler       <span class="comment">// handler to invoke, http.DefaultServeMux if nil</span>
+<span id="L1584" class="ln">  1584</span>		ReadTimeout    time.Duration <span class="comment">// maximum duration before timing out read of the request</span>
+<span id="L1585" class="ln">  1585</span>		WriteTimeout   time.Duration <span class="comment">// maximum duration before timing out write of the response</span>
+<span id="L1586" class="ln">  1586</span>		MaxHeaderBytes int           <span class="comment">// maximum size of request headers, DefaultMaxHeaderBytes if 0</span>
+<span id="L1587" class="ln">  1587</span>		TLSConfig      *tls.Config   <span class="comment">// optional TLS config, used by ListenAndServeTLS</span>
+<span id="L1588" class="ln">  1588</span>	
+<span id="L1589" class="ln">  1589</span>		<span class="comment">// TLSNextProto optionally specifies a function to take over</span>
+<span id="L1590" class="ln">  1590</span>		<span class="comment">// ownership of the provided TLS connection when an NPN</span>
+<span id="L1591" class="ln">  1591</span>		<span class="comment">// protocol upgrade has occurred.  The map key is the protocol</span>
+<span id="L1592" class="ln">  1592</span>		<span class="comment">// name negotiated. The Handler argument should be used to</span>
+<span id="L1593" class="ln">  1593</span>		<span class="comment">// handle HTTP requests and will initialize the Request&#39;s TLS</span>
+<span id="L1594" class="ln">  1594</span>		<span class="comment">// and RemoteAddr if not already set.  The connection is</span>
+<span id="L1595" class="ln">  1595</span>		<span class="comment">// automatically closed when the function returns.</span>
+<span id="L1596" class="ln">  1596</span>		TLSNextProto map[string]func(*Server, *tls.Conn, Handler)
+<span id="L1597" class="ln">  1597</span>	
+<span id="L1598" class="ln">  1598</span>		<span class="comment">// ConnState specifies an optional callback function that is</span>
+<span id="L1599" class="ln">  1599</span>		<span class="comment">// called when a client connection changes state. See the</span>
+<span id="L1600" class="ln">  1600</span>		<span class="comment">// ConnState type and associated constants for details.</span>
+<span id="L1601" class="ln">  1601</span>		ConnState func(net.Conn, ConnState)
+<span id="L1602" class="ln">  1602</span>	
+<span id="L1603" class="ln">  1603</span>		<span class="comment">// ErrorLog specifies an optional logger for errors accepting</span>
+<span id="L1604" class="ln">  1604</span>		<span class="comment">// connections and unexpected behavior from handlers.</span>
+<span id="L1605" class="ln">  1605</span>		<span class="comment">// If nil, logging goes to os.Stderr via the log package&#39;s</span>
+<span id="L1606" class="ln">  1606</span>		<span class="comment">// standard logger.</span>
+<span id="L1607" class="ln">  1607</span>		ErrorLog *log.Logger
+<span id="L1608" class="ln">  1608</span>	
+<span id="L1609" class="ln">  1609</span>		disableKeepAlives int32 <span class="comment">// accessed atomically.</span>
+<span id="L1610" class="ln">  1610</span>	}
+<span id="L1611" class="ln">  1611</span>	
+<span id="L1612" class="ln">  1612</span>	<span class="comment">// A ConnState represents the state of a client connection to a server.</span>
+<span id="L1613" class="ln">  1613</span>	<span class="comment">// It&#39;s used by the optional Server.ConnState hook.</span>
+<span id="L1614" class="ln">  1614</span>	type ConnState int
+<span id="L1615" class="ln">  1615</span>	
+<span id="L1616" class="ln">  1616</span>	const (
+<span id="L1617" class="ln">  1617</span>		<span class="comment">// StateNew represents a new connection that is expected to</span>
+<span id="L1618" class="ln">  1618</span>		<span class="comment">// send a request immediately. Connections begin at this</span>
+<span id="L1619" class="ln">  1619</span>		<span class="comment">// state and then transition to either StateActive or</span>
+<span id="L1620" class="ln">  1620</span>		<span class="comment">// StateClosed.</span>
+<span id="L1621" class="ln">  1621</span>		StateNew ConnState = iota
+<span id="L1622" class="ln">  1622</span>	
+<span id="L1623" class="ln">  1623</span>		<span class="comment">// StateActive represents a connection that has read 1 or more</span>
+<span id="L1624" class="ln">  1624</span>		<span class="comment">// bytes of a request. The Server.ConnState hook for</span>
+<span id="L1625" class="ln">  1625</span>		<span class="comment">// StateActive fires before the request has entered a handler</span>
+<span id="L1626" class="ln">  1626</span>		<span class="comment">// and doesn&#39;t fire again until the request has been</span>
+<span id="L1627" class="ln">  1627</span>		<span class="comment">// handled. After the request is handled, the state</span>
+<span id="L1628" class="ln">  1628</span>		<span class="comment">// transitions to StateClosed, StateHijacked, or StateIdle.</span>
+<span id="L1629" class="ln">  1629</span>		StateActive
+<span id="L1630" class="ln">  1630</span>	
+<span id="L1631" class="ln">  1631</span>		<span class="comment">// StateIdle represents a connection that has finished</span>
+<span id="L1632" class="ln">  1632</span>		<span class="comment">// handling a request and is in the keep-alive state, waiting</span>
+<span id="L1633" class="ln">  1633</span>		<span class="comment">// for a new request. Connections transition from StateIdle</span>
+<span id="L1634" class="ln">  1634</span>		<span class="comment">// to either StateActive or StateClosed.</span>
+<span id="L1635" class="ln">  1635</span>		StateIdle
+<span id="L1636" class="ln">  1636</span>	
+<span id="L1637" class="ln">  1637</span>		<span class="comment">// StateHijacked represents a hijacked connection.</span>
+<span id="L1638" class="ln">  1638</span>		<span class="comment">// This is a terminal state. It does not transition to StateClosed.</span>
+<span id="L1639" class="ln">  1639</span>		StateHijacked
+<span id="L1640" class="ln">  1640</span>	
+<span id="L1641" class="ln">  1641</span>		<span class="comment">// StateClosed represents a closed connection.</span>
+<span id="L1642" class="ln">  1642</span>		<span class="comment">// This is a terminal state. Hijacked connections do not</span>
+<span id="L1643" class="ln">  1643</span>		<span class="comment">// transition to StateClosed.</span>
+<span id="L1644" class="ln">  1644</span>		StateClosed
+<span id="L1645" class="ln">  1645</span>	)
+<span id="L1646" class="ln">  1646</span>	
+<span id="L1647" class="ln">  1647</span>	var stateName = map[ConnState]string{
+<span id="L1648" class="ln">  1648</span>		StateNew:      &#34;new&#34;,
+<span id="L1649" class="ln">  1649</span>		StateActive:   &#34;active&#34;,
+<span id="L1650" class="ln">  1650</span>		StateIdle:     &#34;idle&#34;,
+<span id="L1651" class="ln">  1651</span>		StateHijacked: &#34;hijacked&#34;,
+<span id="L1652" class="ln">  1652</span>		StateClosed:   &#34;closed&#34;,
+<span id="L1653" class="ln">  1653</span>	}
+<span id="L1654" class="ln">  1654</span>	
+<span id="L1655" class="ln">  1655</span>	func (c ConnState) String() string {
+<span id="L1656" class="ln">  1656</span>		return stateName[c]
+<span id="L1657" class="ln">  1657</span>	}
+<span id="L1658" class="ln">  1658</span>	
+<span id="L1659" class="ln">  1659</span>	<span class="comment">// serverHandler delegates to either the server&#39;s Handler or</span>
+<span id="L1660" class="ln">  1660</span>	<span class="comment">// DefaultServeMux and also handles &#34;OPTIONS *&#34; requests.</span>
+<span id="L1661" class="ln">  1661</span>	type serverHandler struct {
+<span id="L1662" class="ln">  1662</span>		srv *Server
+<span id="L1663" class="ln">  1663</span>	}
+<span id="L1664" class="ln">  1664</span>	
+<span id="L1665" class="ln">  1665</span>	func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request) {
+<span id="L1666" class="ln">  1666</span>		handler := sh.srv.Handler
+<span id="L1667" class="ln">  1667</span>		if handler == nil {
+<span id="L1668" class="ln">  1668</span>			handler = DefaultServeMux
+<span id="L1669" class="ln">  1669</span>		}
+<span id="L1670" class="ln">  1670</span>		if req.RequestURI == &#34;*&#34; &amp;&amp; req.Method == &#34;OPTIONS&#34; {
+<span id="L1671" class="ln">  1671</span>			handler = globalOptionsHandler{}
+<span id="L1672" class="ln">  1672</span>		}
+<span id="L1673" class="ln">  1673</span>		handler.ServeHTTP(rw, req)
+<span id="L1674" class="ln">  1674</span>	}
+<span id="L1675" class="ln">  1675</span>	
+<span id="L1676" class="ln">  1676</span>	<span class="comment">// ListenAndServe listens on the TCP network address srv.Addr and then</span>
+<span id="L1677" class="ln">  1677</span>	<span class="comment">// calls Serve to handle requests on incoming connections.  If</span>
+<span id="L1678" class="ln">  1678</span>	<span class="comment">// srv.Addr is blank, &#34;:http&#34; is used.</span>
+<span id="L1679" class="ln">  1679</span>	func (srv *Server) ListenAndServe() error {
+<span id="L1680" class="ln">  1680</span>		addr := srv.Addr
+<span id="L1681" class="ln">  1681</span>		if addr == &#34;&#34; {
+<span id="L1682" class="ln">  1682</span>			addr = &#34;:http&#34;
+<span id="L1683" class="ln">  1683</span>		}
+<span id="L1684" class="ln">  1684</span>		ln, err := net.Listen(&#34;tcp&#34;, addr)
+<span id="L1685" class="ln">  1685</span>		if err != nil {
+<span id="L1686" class="ln">  1686</span>			return err
+<span id="L1687" class="ln">  1687</span>		}
+<span id="L1688" class="ln">  1688</span>		return srv.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
+<span id="L1689" class="ln">  1689</span>	}
+<span id="L1690" class="ln">  1690</span>	
+<span id="L1691" class="ln">  1691</span>	<span class="comment">// Serve accepts incoming connections on the Listener l, creating a</span>
+<span id="L1692" class="ln">  1692</span>	<span class="comment">// new service goroutine for each.  The service goroutines read requests and</span>
+<span id="L1693" class="ln">  1693</span>	<span class="comment">// then call srv.Handler to reply to them.</span>
+<span id="L1694" class="ln">  1694</span>	func (srv *Server) Serve(l net.Listener) error {
+<span id="L1695" class="ln">  1695</span>		defer l.Close()
+<span id="L1696" class="ln">  1696</span>		var tempDelay time.Duration <span class="comment">// how long to sleep on accept failure</span>
+<span id="L1697" class="ln">  1697</span>		for {
+<span id="L1698" class="ln">  1698</span>			rw, e := l.Accept()
+<span id="L1699" class="ln">  1699</span>			if e != nil {
+<span id="L1700" class="ln">  1700</span>				if ne, ok := e.(net.Error); ok &amp;&amp; ne.Temporary() {
+<span id="L1701" class="ln">  1701</span>					if tempDelay == 0 {
+<span id="L1702" class="ln">  1702</span>						tempDelay = 5 * time.Millisecond
+<span id="L1703" class="ln">  1703</span>					} else {
+<span id="L1704" class="ln">  1704</span>						tempDelay *= 2
+<span id="L1705" class="ln">  1705</span>					}
+<span id="L1706" class="ln">  1706</span>					if max := 1 * time.Second; tempDelay &gt; max {
+<span id="L1707" class="ln">  1707</span>						tempDelay = max
+<span id="L1708" class="ln">  1708</span>					}
+<span id="L1709" class="ln">  1709</span>					srv.logf(&#34;http: Accept error: %v; retrying in %v&#34;, e, tempDelay)
+<span id="L1710" class="ln">  1710</span>					time.Sleep(tempDelay)
+<span id="L1711" class="ln">  1711</span>					continue
+<span id="L1712" class="ln">  1712</span>				}
+<span id="L1713" class="ln">  1713</span>				return e
+<span id="L1714" class="ln">  1714</span>			}
+<span id="L1715" class="ln">  1715</span>			tempDelay = 0
+<span id="L1716" class="ln">  1716</span>			c, err := srv.newConn(rw)
+<span id="L1717" class="ln">  1717</span>			if err != nil {
+<span id="L1718" class="ln">  1718</span>				continue
+<span id="L1719" class="ln">  1719</span>			}
+<span id="L1720" class="ln">  1720</span>			c.setState(c.rwc, StateNew) <span class="comment">// before Serve can return</span>
+<span id="L1721" class="ln">  1721</span>			go c.serve()
+<span id="L1722" class="ln">  1722</span>		}
+<span id="L1723" class="ln">  1723</span>	}
+<span id="L1724" class="ln">  1724</span>	
+<span id="L1725" class="ln">  1725</span>	func (s *Server) doKeepAlives() bool {
+<span id="L1726" class="ln">  1726</span>		return atomic.LoadInt32(&amp;s.disableKeepAlives) == 0
+<span id="L1727" class="ln">  1727</span>	}
+<span id="L1728" class="ln">  1728</span>	
+<span id="L1729" class="ln">  1729</span>	<span class="comment">// SetKeepAlivesEnabled controls whether HTTP keep-alives are enabled.</span>
+<span id="L1730" class="ln">  1730</span>	<span class="comment">// By default, keep-alives are always enabled. Only very</span>
+<span id="L1731" class="ln">  1731</span>	<span class="comment">// resource-constrained environments or servers in the process of</span>
+<span id="L1732" class="ln">  1732</span>	<span class="comment">// shutting down should disable them.</span>
+<span id="L1733" class="ln">  1733</span>	func (s *Server) SetKeepAlivesEnabled(v bool) {
+<span id="L1734" class="ln">  1734</span>		if v {
+<span id="L1735" class="ln">  1735</span>			atomic.StoreInt32(&amp;s.disableKeepAlives, 0)
+<span id="L1736" class="ln">  1736</span>		} else {
+<span id="L1737" class="ln">  1737</span>			atomic.StoreInt32(&amp;s.disableKeepAlives, 1)
+<span id="L1738" class="ln">  1738</span>		}
+<span id="L1739" class="ln">  1739</span>	}
+<span id="L1740" class="ln">  1740</span>	
+<span id="L1741" class="ln">  1741</span>	func (s *Server) logf(format string, args ...interface{}) {
+<span id="L1742" class="ln">  1742</span>		if s.ErrorLog != nil {
+<span id="L1743" class="ln">  1743</span>			s.ErrorLog.Printf(format, args...)
+<span id="L1744" class="ln">  1744</span>		} else {
+<span id="L1745" class="ln">  1745</span>			log.Printf(format, args...)
+<span id="L1746" class="ln">  1746</span>		}
+<span id="L1747" class="ln">  1747</span>	}
+<span id="L1748" class="ln">  1748</span>	
+<span id="L1749" class="ln">  1749</span>	<span class="comment">// ListenAndServe listens on the TCP network address addr</span>
+<span id="L1750" class="ln">  1750</span>	<span class="comment">// and then calls Serve with handler to handle requests</span>
+<span id="L1751" class="ln">  1751</span>	<span class="comment">// on incoming connections.  Handler is typically nil,</span>
+<span id="L1752" class="ln">  1752</span>	<span class="comment">// in which case the DefaultServeMux is used.</span>
+<span id="L1753" class="ln">  1753</span>	<span class="comment">//</span>
+<span id="L1754" class="ln">  1754</span>	<span class="comment">// A trivial example server is:</span>
+<span id="L1755" class="ln">  1755</span>	<span class="comment">//</span>
+<span id="L1756" class="ln">  1756</span>	<span class="comment">//	package main</span>
+<span id="L1757" class="ln">  1757</span>	<span class="comment">//</span>
+<span id="L1758" class="ln">  1758</span>	<span class="comment">//	import (</span>
+<span id="L1759" class="ln">  1759</span>	<span class="comment">//		&#34;io&#34;</span>
+<span id="L1760" class="ln">  1760</span>	<span class="comment">//		&#34;net/http&#34;</span>
+<span id="L1761" class="ln">  1761</span>	<span class="comment">//		&#34;log&#34;</span>
+<span id="L1762" class="ln">  1762</span>	<span class="comment">//	)</span>
+<span id="L1763" class="ln">  1763</span>	<span class="comment">//</span>
+<span id="L1764" class="ln">  1764</span>	<span class="comment">//	// hello world, the web server</span>
+<span id="L1765" class="ln">  1765</span>	<span class="comment">//	func HelloServer(w http.ResponseWriter, req *http.Request) {</span>
+<span id="L1766" class="ln">  1766</span>	<span class="comment">//		io.WriteString(w, &#34;hello, world!\n&#34;)</span>
+<span id="L1767" class="ln">  1767</span>	<span class="comment">//	}</span>
+<span id="L1768" class="ln">  1768</span>	<span class="comment">//</span>
+<span id="L1769" class="ln">  1769</span>	<span class="comment">//	func main() {</span>
+<span id="L1770" class="ln">  1770</span>	<span class="comment">//		http.HandleFunc(&#34;/hello&#34;, HelloServer)</span>
+<span id="L1771" class="ln">  1771</span>	<span class="comment">//		err := http.ListenAndServe(&#34;:12345&#34;, nil)</span>
+<span id="L1772" class="ln">  1772</span>	<span class="comment">//		if err != nil {</span>
+<span id="L1773" class="ln">  1773</span>	<span class="comment">//			log.Fatal(&#34;ListenAndServe: &#34;, err)</span>
+<span id="L1774" class="ln">  1774</span>	<span class="comment">//		}</span>
+<span id="L1775" class="ln">  1775</span>	<span class="comment">//	}</span>
+<span id="L1776" class="ln">  1776</span>	func ListenAndServe(addr string, handler Handler) error {
+<span id="L1777" class="ln">  1777</span>		server := &amp;Server{Addr: addr, Handler: handler}
+<span id="L1778" class="ln">  1778</span>		return server.ListenAndServe()
+<span id="L1779" class="ln">  1779</span>	}
+<span id="L1780" class="ln">  1780</span>	
+<span id="L1781" class="ln">  1781</span>	<span class="comment">// ListenAndServeTLS acts identically to ListenAndServe, except that it</span>
+<span id="L1782" class="ln">  1782</span>	<span class="comment">// expects HTTPS connections. Additionally, files containing a certificate and</span>
+<span id="L1783" class="ln">  1783</span>	<span class="comment">// matching private key for the server must be provided. If the certificate</span>
+<span id="L1784" class="ln">  1784</span>	<span class="comment">// is signed by a certificate authority, the certFile should be the concatenation</span>
+<span id="L1785" class="ln">  1785</span>	<span class="comment">// of the server&#39;s certificate followed by the CA&#39;s certificate.</span>
+<span id="L1786" class="ln">  1786</span>	<span class="comment">//</span>
+<span id="L1787" class="ln">  1787</span>	<span class="comment">// A trivial example server is:</span>
+<span id="L1788" class="ln">  1788</span>	<span class="comment">//</span>
+<span id="L1789" class="ln">  1789</span>	<span class="comment">//	import (</span>
+<span id="L1790" class="ln">  1790</span>	<span class="comment">//		&#34;log&#34;</span>
+<span id="L1791" class="ln">  1791</span>	<span class="comment">//		&#34;net/http&#34;</span>
+<span id="L1792" class="ln">  1792</span>	<span class="comment">//	)</span>
+<span id="L1793" class="ln">  1793</span>	<span class="comment">//</span>
+<span id="L1794" class="ln">  1794</span>	<span class="comment">//	func handler(w http.ResponseWriter, req *http.Request) {</span>
+<span id="L1795" class="ln">  1795</span>	<span class="comment">//		w.Header().Set(&#34;Content-Type&#34;, &#34;text/plain&#34;)</span>
+<span id="L1796" class="ln">  1796</span>	<span class="comment">//		w.Write([]byte(&#34;This is an example server.\n&#34;))</span>
+<span id="L1797" class="ln">  1797</span>	<span class="comment">//	}</span>
+<span id="L1798" class="ln">  1798</span>	<span class="comment">//</span>
+<span id="L1799" class="ln">  1799</span>	<span class="comment">//	func main() {</span>
+<span id="L1800" class="ln">  1800</span>	<span class="comment">//		http.HandleFunc(&#34;/&#34;, handler)</span>
+<span id="L1801" class="ln">  1801</span>	<span class="comment">//		log.Printf(&#34;About to listen on 10443. Go to https://127.0.0.1:10443/&#34;)</span>
+<span id="L1802" class="ln">  1802</span>	<span class="comment">//		err := http.ListenAndServeTLS(&#34;:10443&#34;, &#34;cert.pem&#34;, &#34;key.pem&#34;, nil)</span>
+<span id="L1803" class="ln">  1803</span>	<span class="comment">//		if err != nil {</span>
+<span id="L1804" class="ln">  1804</span>	<span class="comment">//			log.Fatal(err)</span>
+<span id="L1805" class="ln">  1805</span>	<span class="comment">//		}</span>
+<span id="L1806" class="ln">  1806</span>	<span class="comment">//	}</span>
+<span id="L1807" class="ln">  1807</span>	<span class="comment">//</span>
+<span id="L1808" class="ln">  1808</span>	<span class="comment">// One can use generate_cert.go in crypto/tls to generate cert.pem and key.pem.</span>
+<span id="L1809" class="ln">  1809</span>	func ListenAndServeTLS(addr string, certFile string, keyFile string, handler Handler) error {
+<span id="L1810" class="ln">  1810</span>		server := &amp;Server{Addr: addr, Handler: handler}
+<span id="L1811" class="ln">  1811</span>		return server.ListenAndServeTLS(certFile, keyFile)
+<span id="L1812" class="ln">  1812</span>	}
+<span id="L1813" class="ln">  1813</span>	
+<span id="L1814" class="ln">  1814</span>	<span class="comment">// ListenAndServeTLS listens on the TCP network address srv.Addr and</span>
+<span id="L1815" class="ln">  1815</span>	<span class="comment">// then calls Serve to handle requests on incoming TLS connections.</span>
+<span id="L1816" class="ln">  1816</span>	<span class="comment">//</span>
+<span id="L1817" class="ln">  1817</span>	<span class="comment">// Filenames containing a certificate and matching private key for</span>
+<span id="L1818" class="ln">  1818</span>	<span class="comment">// the server must be provided. If the certificate is signed by a</span>
+<span id="L1819" class="ln">  1819</span>	<span class="comment">// certificate authority, the certFile should be the concatenation</span>
+<span id="L1820" class="ln">  1820</span>	<span class="comment">// of the server&#39;s certificate followed by the CA&#39;s certificate.</span>
+<span id="L1821" class="ln">  1821</span>	<span class="comment">//</span>
+<span id="L1822" class="ln">  1822</span>	<span class="comment">// If srv.Addr is blank, &#34;:https&#34; is used.</span>
+<span id="L1823" class="ln">  1823</span>	func (srv *Server) ListenAndServeTLS(certFile, keyFile string) error {
+<span id="L1824" class="ln">  1824</span>		addr := srv.Addr
+<span id="L1825" class="ln">  1825</span>		if addr == &#34;&#34; {
+<span id="L1826" class="ln">  1826</span>			addr = &#34;:https&#34;
+<span id="L1827" class="ln">  1827</span>		}
+<span id="L1828" class="ln">  1828</span>		config := &amp;tls.Config{}
+<span id="L1829" class="ln">  1829</span>		if srv.TLSConfig != nil {
+<span id="L1830" class="ln">  1830</span>			*config = *srv.TLSConfig
+<span id="L1831" class="ln">  1831</span>		}
+<span id="L1832" class="ln">  1832</span>		if config.NextProtos == nil {
+<span id="L1833" class="ln">  1833</span>			config.NextProtos = []string{&#34;http/1.1&#34;}
+<span id="L1834" class="ln">  1834</span>		}
+<span id="L1835" class="ln">  1835</span>	
+<span id="L1836" class="ln">  1836</span>		var err error
+<span id="L1837" class="ln">  1837</span>		config.Certificates = make([]tls.Certificate, 1)
+<span id="L1838" class="ln">  1838</span>		config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+<span id="L1839" class="ln">  1839</span>		if err != nil {
+<span id="L1840" class="ln">  1840</span>			return err
+<span id="L1841" class="ln">  1841</span>		}
+<span id="L1842" class="ln">  1842</span>	
+<span id="L1843" class="ln">  1843</span>		ln, err := net.Listen(&#34;tcp&#34;, addr)
+<span id="L1844" class="ln">  1844</span>		if err != nil {
+<span id="L1845" class="ln">  1845</span>			return err
+<span id="L1846" class="ln">  1846</span>		}
+<span id="L1847" class="ln">  1847</span>	
+<span id="L1848" class="ln">  1848</span>		tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, config)
+<span id="L1849" class="ln">  1849</span>		return srv.Serve(tlsListener)
+<span id="L1850" class="ln">  1850</span>	}
+<span id="L1851" class="ln">  1851</span>	
+<span id="L1852" class="ln">  1852</span>	<span class="comment">// TimeoutHandler returns a Handler that runs h with the given time limit.</span>
+<span id="L1853" class="ln">  1853</span>	<span class="comment">//</span>
+<span id="L1854" class="ln">  1854</span>	<span class="comment">// The new Handler calls h.ServeHTTP to handle each request, but if a</span>
+<span id="L1855" class="ln">  1855</span>	<span class="comment">// call runs for longer than its time limit, the handler responds with</span>
+<span id="L1856" class="ln">  1856</span>	<span class="comment">// a 503 Service Unavailable error and the given message in its body.</span>
+<span id="L1857" class="ln">  1857</span>	<span class="comment">// (If msg is empty, a suitable default message will be sent.)</span>
+<span id="L1858" class="ln">  1858</span>	<span class="comment">// After such a timeout, writes by h to its ResponseWriter will return</span>
+<span id="L1859" class="ln">  1859</span>	<span class="comment">// ErrHandlerTimeout.</span>
+<span id="L1860" class="ln">  1860</span>	func TimeoutHandler(h Handler, dt time.Duration, msg string) Handler {
+<span id="L1861" class="ln">  1861</span>		f := func() &lt;-chan time.Time {
+<span id="L1862" class="ln">  1862</span>			return time.After(dt)
+<span id="L1863" class="ln">  1863</span>		}
+<span id="L1864" class="ln">  1864</span>		return &amp;timeoutHandler{h, f, msg}
+<span id="L1865" class="ln">  1865</span>	}
+<span id="L1866" class="ln">  1866</span>	
+<span id="L1867" class="ln">  1867</span>	<span class="comment">// ErrHandlerTimeout is returned on ResponseWriter Write calls</span>
+<span id="L1868" class="ln">  1868</span>	<span class="comment">// in handlers which have timed out.</span>
+<span id="L1869" class="ln">  1869</span>	var ErrHandlerTimeout = errors.New(&#34;http: Handler timeout&#34;)
+<span id="L1870" class="ln">  1870</span>	
+<span id="L1871" class="ln">  1871</span>	type timeoutHandler struct {
+<span id="L1872" class="ln">  1872</span>		handler Handler
+<span id="L1873" class="ln">  1873</span>		timeout func() &lt;-chan time.Time <span class="comment">// returns channel producing a timeout</span>
+<span id="L1874" class="ln">  1874</span>		body    string
+<span id="L1875" class="ln">  1875</span>	}
+<span id="L1876" class="ln">  1876</span>	
+<span id="L1877" class="ln">  1877</span>	func (h *timeoutHandler) errorBody() string {
+<span id="L1878" class="ln">  1878</span>		if h.body != &#34;&#34; {
+<span id="L1879" class="ln">  1879</span>			return h.body
+<span id="L1880" class="ln">  1880</span>		}
+<span id="L1881" class="ln">  1881</span>		return &#34;&lt;html&gt;&lt;head&gt;&lt;title&gt;Timeout&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Timeout&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&#34;
+<span id="L1882" class="ln">  1882</span>	}
+<span id="L1883" class="ln">  1883</span>	
+<span id="L1884" class="ln">  1884</span>	func (h *timeoutHandler) ServeHTTP(w ResponseWriter, r *Request) {
+<span id="L1885" class="ln">  1885</span>		done := make(chan bool, 1)
+<span id="L1886" class="ln">  1886</span>		tw := &amp;timeoutWriter{w: w}
+<span id="L1887" class="ln">  1887</span>		go func() {
+<span id="L1888" class="ln">  1888</span>			h.handler.ServeHTTP(tw, r)
+<span id="L1889" class="ln">  1889</span>			done &lt;- true
+<span id="L1890" class="ln">  1890</span>		}()
+<span id="L1891" class="ln">  1891</span>		select {
+<span id="L1892" class="ln">  1892</span>		case &lt;-done:
+<span id="L1893" class="ln">  1893</span>			return
+<span id="L1894" class="ln">  1894</span>		case &lt;-h.timeout():
+<span id="L1895" class="ln">  1895</span>			tw.mu.Lock()
+<span id="L1896" class="ln">  1896</span>			defer tw.mu.Unlock()
+<span id="L1897" class="ln">  1897</span>			if !tw.wroteHeader {
+<span id="L1898" class="ln">  1898</span>				tw.w.WriteHeader(StatusServiceUnavailable)
+<span id="L1899" class="ln">  1899</span>				tw.w.Write([]byte(h.errorBody()))
+<span id="L1900" class="ln">  1900</span>			}
+<span id="L1901" class="ln">  1901</span>			tw.timedOut = true
+<span id="L1902" class="ln">  1902</span>		}
+<span id="L1903" class="ln">  1903</span>	}
+<span id="L1904" class="ln">  1904</span>	
+<span id="L1905" class="ln">  1905</span>	type timeoutWriter struct {
+<span id="L1906" class="ln">  1906</span>		w ResponseWriter
+<span id="L1907" class="ln">  1907</span>	
+<span id="L1908" class="ln">  1908</span>		mu          sync.Mutex
+<span id="L1909" class="ln">  1909</span>		timedOut    bool
+<span id="L1910" class="ln">  1910</span>		wroteHeader bool
+<span id="L1911" class="ln">  1911</span>	}
+<span id="L1912" class="ln">  1912</span>	
+<span id="L1913" class="ln">  1913</span>	func (tw *timeoutWriter) Header() Header {
+<span id="L1914" class="ln">  1914</span>		return tw.w.Header()
+<span id="L1915" class="ln">  1915</span>	}
+<span id="L1916" class="ln">  1916</span>	
+<span id="L1917" class="ln">  1917</span>	func (tw *timeoutWriter) Write(p []byte) (int, error) {
+<span id="L1918" class="ln">  1918</span>		tw.mu.Lock()
+<span id="L1919" class="ln">  1919</span>		timedOut := tw.timedOut
+<span id="L1920" class="ln">  1920</span>		tw.mu.Unlock()
+<span id="L1921" class="ln">  1921</span>		if timedOut {
+<span id="L1922" class="ln">  1922</span>			return 0, ErrHandlerTimeout
+<span id="L1923" class="ln">  1923</span>		}
+<span id="L1924" class="ln">  1924</span>		return tw.w.Write(p)
+<span id="L1925" class="ln">  1925</span>	}
+<span id="L1926" class="ln">  1926</span>	
+<span id="L1927" class="ln">  1927</span>	func (tw *timeoutWriter) WriteHeader(code int) {
+<span id="L1928" class="ln">  1928</span>		tw.mu.Lock()
+<span id="L1929" class="ln">  1929</span>		if tw.timedOut || tw.wroteHeader {
+<span id="L1930" class="ln">  1930</span>			tw.mu.Unlock()
+<span id="L1931" class="ln">  1931</span>			return
+<span id="L1932" class="ln">  1932</span>		}
+<span id="L1933" class="ln">  1933</span>		tw.wroteHeader = true
+<span id="L1934" class="ln">  1934</span>		tw.mu.Unlock()
+<span id="L1935" class="ln">  1935</span>		tw.w.WriteHeader(code)
+<span id="L1936" class="ln">  1936</span>	}
+<span id="L1937" class="ln">  1937</span>	
+<span id="L1938" class="ln">  1938</span>	<span class="comment">// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted</span>
+<span id="L1939" class="ln">  1939</span>	<span class="comment">// connections. It&#39;s used by ListenAndServe and ListenAndServeTLS so</span>
+<span id="L1940" class="ln">  1940</span>	<span class="comment">// dead TCP connections (e.g. closing laptop mid-download) eventually</span>
+<span id="L1941" class="ln">  1941</span>	<span class="comment">// go away.</span>
+<span id="L1942" class="ln">  1942</span>	type tcpKeepAliveListener struct {
+<span id="L1943" class="ln">  1943</span>		*net.TCPListener
+<span id="L1944" class="ln">  1944</span>	}
+<span id="L1945" class="ln">  1945</span>	
+<span id="L1946" class="ln">  1946</span>	func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+<span id="L1947" class="ln">  1947</span>		tc, err := ln.AcceptTCP()
+<span id="L1948" class="ln">  1948</span>		if err != nil {
+<span id="L1949" class="ln">  1949</span>			return
+<span id="L1950" class="ln">  1950</span>		}
+<span id="L1951" class="ln">  1951</span>		tc.SetKeepAlive(true)
+<span id="L1952" class="ln">  1952</span>		tc.SetKeepAlivePeriod(3 * time.Minute)
+<span id="L1953" class="ln">  1953</span>		return tc, nil
+<span id="L1954" class="ln">  1954</span>	}
+<span id="L1955" class="ln">  1955</span>	
+<span id="L1956" class="ln">  1956</span>	<span class="comment">// globalOptionsHandler responds to &#34;OPTIONS *&#34; requests.</span>
+<span id="L1957" class="ln">  1957</span>	type globalOptionsHandler struct{}
+<span id="L1958" class="ln">  1958</span>	
+<span id="L1959" class="ln">  1959</span>	func (globalOptionsHandler) ServeHTTP(w ResponseWriter, r *Request) {
+<span id="L1960" class="ln">  1960</span>		w.Header().Set(&#34;Content-Length&#34;, &#34;0&#34;)
+<span id="L1961" class="ln">  1961</span>		if r.ContentLength != 0 {
+<span id="L1962" class="ln">  1962</span>			<span class="comment">// Read up to 4KB of OPTIONS body (as mentioned in the</span>
+<span id="L1963" class="ln">  1963</span>			<span class="comment">// spec as being reserved for future use), but anything</span>
+<span id="L1964" class="ln">  1964</span>			<span class="comment">// over that is considered a waste of server resources</span>
+<span id="L1965" class="ln">  1965</span>			<span class="comment">// (or an attack) and we abort and close the connection,</span>
+<span id="L1966" class="ln">  1966</span>			<span class="comment">// courtesy of MaxBytesReader&#39;s EOF behavior.</span>
+<span id="L1967" class="ln">  1967</span>			mb := MaxBytesReader(w, r.Body, 4&lt;&lt;10)
+<span id="L1968" class="ln">  1968</span>			io.Copy(ioutil.Discard, mb)
+<span id="L1969" class="ln">  1969</span>		}
+<span id="L1970" class="ln">  1970</span>	}
+<span id="L1971" class="ln">  1971</span>	
+<span id="L1972" class="ln">  1972</span>	type eofReaderWithWriteTo struct{}
+<span id="L1973" class="ln">  1973</span>	
+<span id="L1974" class="ln">  1974</span>	func (eofReaderWithWriteTo) WriteTo(io.Writer) (int64, error) { return 0, nil }
+<span id="L1975" class="ln">  1975</span>	func (eofReaderWithWriteTo) Read([]byte) (int, error)         { return 0, io.EOF }
+<span id="L1976" class="ln">  1976</span>	
+<span id="L1977" class="ln">  1977</span>	<span class="comment">// eofReader is a non-nil io.ReadCloser that always returns EOF.</span>
+<span id="L1978" class="ln">  1978</span>	<span class="comment">// It has a WriteTo method so io.Copy won&#39;t need a buffer.</span>
+<span id="L1979" class="ln">  1979</span>	var eofReader = &amp;struct {
+<span id="L1980" class="ln">  1980</span>		eofReaderWithWriteTo
+<span id="L1981" class="ln">  1981</span>		io.Closer
+<span id="L1982" class="ln">  1982</span>	}{
+<span id="L1983" class="ln">  1983</span>		eofReaderWithWriteTo{},
+<span id="L1984" class="ln">  1984</span>		ioutil.NopCloser(nil),
+<span id="L1985" class="ln">  1985</span>	}
+<span id="L1986" class="ln">  1986</span>	
+<span id="L1987" class="ln">  1987</span>	<span class="comment">// Verify that an io.Copy from an eofReader won&#39;t require a buffer.</span>
+<span id="L1988" class="ln">  1988</span>	var _ io.WriterTo = eofReader
+<span id="L1989" class="ln">  1989</span>	
+<span id="L1990" class="ln">  1990</span>	<span class="comment">// initNPNRequest is an HTTP handler that initializes certain</span>
+<span id="L1991" class="ln">  1991</span>	<span class="comment">// uninitialized fields in its *Request. Such partially-initialized</span>
+<span id="L1992" class="ln">  1992</span>	<span class="comment">// Requests come from NPN protocol handlers.</span>
+<span id="L1993" class="ln">  1993</span>	type initNPNRequest struct {
+<span id="L1994" class="ln">  1994</span>		c *tls.Conn
+<span id="L1995" class="ln">  1995</span>		h serverHandler
+<span id="L1996" class="ln">  1996</span>	}
+<span id="L1997" class="ln">  1997</span>	
+<span id="L1998" class="ln">  1998</span>	func (h initNPNRequest) ServeHTTP(rw ResponseWriter, req *Request) {
+<span id="L1999" class="ln">  1999</span>		if req.TLS == nil {
+<span id="L2000" class="ln">  2000</span>			req.TLS = &amp;tls.ConnectionState{}
+<span id="L2001" class="ln">  2001</span>			*req.TLS = h.c.ConnectionState()
+<span id="L2002" class="ln">  2002</span>		}
+<span id="L2003" class="ln">  2003</span>		if req.Body == nil {
+<span id="L2004" class="ln">  2004</span>			req.Body = eofReader
+<span id="L2005" class="ln">  2005</span>		}
+<span id="L2006" class="ln">  2006</span>		if req.RemoteAddr == &#34;&#34; {
+<span id="L2007" class="ln">  2007</span>			req.RemoteAddr = h.c.RemoteAddr().String()
+<span id="L2008" class="ln">  2008</span>		}
+<span id="L2009" class="ln">  2009</span>		h.h.ServeHTTP(rw, req)
+<span id="L2010" class="ln">  2010</span>	}
+<span id="L2011" class="ln">  2011</span>	
+<span id="L2012" class="ln">  2012</span>	<span class="comment">// loggingConn is used for debugging.</span>
+<span id="L2013" class="ln">  2013</span>	type loggingConn struct {
+<span id="L2014" class="ln">  2014</span>		name string
+<span id="L2015" class="ln">  2015</span>		net.Conn
+<span id="L2016" class="ln">  2016</span>	}
+<span id="L2017" class="ln">  2017</span>	
+<span id="L2018" class="ln">  2018</span>	var (
+<span id="L2019" class="ln">  2019</span>		uniqNameMu   sync.Mutex
+<span id="L2020" class="ln">  2020</span>		uniqNameNext = make(map[string]int)
+<span id="L2021" class="ln">  2021</span>	)
+<span id="L2022" class="ln">  2022</span>	
+<span id="L2023" class="ln">  2023</span>	func newLoggingConn(baseName string, c net.Conn) net.Conn {
+<span id="L2024" class="ln">  2024</span>		uniqNameMu.Lock()
+<span id="L2025" class="ln">  2025</span>		defer uniqNameMu.Unlock()
+<span id="L2026" class="ln">  2026</span>		uniqNameNext[baseName]++
+<span id="L2027" class="ln">  2027</span>		return &amp;loggingConn{
+<span id="L2028" class="ln">  2028</span>			name: fmt.Sprintf(&#34;%s-%d&#34;, baseName, uniqNameNext[baseName]),
+<span id="L2029" class="ln">  2029</span>			Conn: c,
+<span id="L2030" class="ln">  2030</span>		}
+<span id="L2031" class="ln">  2031</span>	}
+<span id="L2032" class="ln">  2032</span>	
+<span id="L2033" class="ln">  2033</span>	func (c *loggingConn) Write(p []byte) (n int, err error) {
+<span id="L2034" class="ln">  2034</span>		log.Printf(&#34;%s.Write(%d) = ....&#34;, c.name, len(p))
+<span id="L2035" class="ln">  2035</span>		n, err = c.Conn.Write(p)
+<span id="L2036" class="ln">  2036</span>		log.Printf(&#34;%s.Write(%d) = %d, %v&#34;, c.name, len(p), n, err)
+<span id="L2037" class="ln">  2037</span>		return
+<span id="L2038" class="ln">  2038</span>	}
+<span id="L2039" class="ln">  2039</span>	
+<span id="L2040" class="ln">  2040</span>	func (c *loggingConn) Read(p []byte) (n int, err error) {
+<span id="L2041" class="ln">  2041</span>		log.Printf(&#34;%s.Read(%d) = ....&#34;, c.name, len(p))
+<span id="L2042" class="ln">  2042</span>		n, err = c.Conn.Read(p)
+<span id="L2043" class="ln">  2043</span>		log.Printf(&#34;%s.Read(%d) = %d, %v&#34;, c.name, len(p), n, err)
+<span id="L2044" class="ln">  2044</span>		return
+<span id="L2045" class="ln">  2045</span>	}
+<span id="L2046" class="ln">  2046</span>	
+<span id="L2047" class="ln">  2047</span>	func (c *loggingConn) Close() (err error) {
+<span id="L2048" class="ln">  2048</span>		log.Printf(&#34;%s.Close() = ...&#34;, c.name)
+<span id="L2049" class="ln">  2049</span>		err = c.Conn.Close()
+<span id="L2050" class="ln">  2050</span>		log.Printf(&#34;%s.Close() = %v&#34;, c.name, err)
+<span id="L2051" class="ln">  2051</span>		return
+<span id="L2052" class="ln">  2052</span>	}
+<span id="L2053" class="ln">  2053</span>	
+</pre><p><a href="server.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

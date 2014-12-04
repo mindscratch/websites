@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/crypto/elliptic/p256.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/crypto/elliptic/p256.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2013 The Go Authors.  All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package elliptic
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">// This file contains a constant-time, 32-bit implementation of P256.</span>
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	import (
+<span id="L10" class="ln">    10</span>		&#34;math/big&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	type p256Curve struct {
+<span id="L14" class="ln">    14</span>		*CurveParams
+<span id="L15" class="ln">    15</span>	}
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	var (
+<span id="L18" class="ln">    18</span>		p256 p256Curve
+<span id="L19" class="ln">    19</span>		<span class="comment">// RInverse contains 1/R mod p - the inverse of the Montgomery constant</span>
+<span id="L20" class="ln">    20</span>		<span class="comment">// (2**257).</span>
+<span id="L21" class="ln">    21</span>		p256RInverse *big.Int
+<span id="L22" class="ln">    22</span>	)
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	func initP256() {
+<span id="L25" class="ln">    25</span>		<span class="comment">// See FIPS 186-3, section D.2.3</span>
+<span id="L26" class="ln">    26</span>		p256.CurveParams = new(CurveParams)
+<span id="L27" class="ln">    27</span>		p256.P, _ = new(big.Int).SetString(&#34;115792089210356248762697446949407573530086143415290314195533631308867097853951&#34;, 10)
+<span id="L28" class="ln">    28</span>		p256.N, _ = new(big.Int).SetString(&#34;115792089210356248762697446949407573529996955224135760342422259061068512044369&#34;, 10)
+<span id="L29" class="ln">    29</span>		p256.B, _ = new(big.Int).SetString(&#34;5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b&#34;, 16)
+<span id="L30" class="ln">    30</span>		p256.Gx, _ = new(big.Int).SetString(&#34;6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296&#34;, 16)
+<span id="L31" class="ln">    31</span>		p256.Gy, _ = new(big.Int).SetString(&#34;4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5&#34;, 16)
+<span id="L32" class="ln">    32</span>		p256.BitSize = 256
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>		p256RInverse, _ = new(big.Int).SetString(&#34;7fffffff00000001fffffffe8000000100000000ffffffff0000000180000000&#34;, 16)
+<span id="L35" class="ln">    35</span>	}
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	func (curve p256Curve) Params() *CurveParams {
+<span id="L38" class="ln">    38</span>		return curve.CurveParams
+<span id="L39" class="ln">    39</span>	}
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>	<span class="comment">// p256GetScalar endian-swaps the big-endian scalar value from in and writes it</span>
+<span id="L42" class="ln">    42</span>	<span class="comment">// to out. If the scalar is equal or greater than the order of the group, it&#39;s</span>
+<span id="L43" class="ln">    43</span>	<span class="comment">// reduced modulo that order.</span>
+<span id="L44" class="ln">    44</span>	func p256GetScalar(out *[32]byte, in []byte) {
+<span id="L45" class="ln">    45</span>		n := new(big.Int).SetBytes(in)
+<span id="L46" class="ln">    46</span>		var scalarBytes []byte
+<span id="L47" class="ln">    47</span>	
+<span id="L48" class="ln">    48</span>		if n.Cmp(p256.N) &gt;= 0 {
+<span id="L49" class="ln">    49</span>			n.Mod(n, p256.N)
+<span id="L50" class="ln">    50</span>			scalarBytes = n.Bytes()
+<span id="L51" class="ln">    51</span>		} else {
+<span id="L52" class="ln">    52</span>			scalarBytes = in
+<span id="L53" class="ln">    53</span>		}
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>		for i, v := range scalarBytes {
+<span id="L56" class="ln">    56</span>			out[len(scalarBytes)-(1+i)] = v
+<span id="L57" class="ln">    57</span>		}
+<span id="L58" class="ln">    58</span>	}
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>	func (p256Curve) ScalarBaseMult(scalar []byte) (x, y *big.Int) {
+<span id="L61" class="ln">    61</span>		var scalarReversed [32]byte
+<span id="L62" class="ln">    62</span>		p256GetScalar(&amp;scalarReversed, scalar)
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>		var x1, y1, z1 [p256Limbs]uint32
+<span id="L65" class="ln">    65</span>		p256ScalarBaseMult(&amp;x1, &amp;y1, &amp;z1, &amp;scalarReversed)
+<span id="L66" class="ln">    66</span>		return p256ToAffine(&amp;x1, &amp;y1, &amp;z1)
+<span id="L67" class="ln">    67</span>	}
+<span id="L68" class="ln">    68</span>	
+<span id="L69" class="ln">    69</span>	func (p256Curve) ScalarMult(bigX, bigY *big.Int, scalar []byte) (x, y *big.Int) {
+<span id="L70" class="ln">    70</span>		var scalarReversed [32]byte
+<span id="L71" class="ln">    71</span>		p256GetScalar(&amp;scalarReversed, scalar)
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>		var px, py, x1, y1, z1 [p256Limbs]uint32
+<span id="L74" class="ln">    74</span>		p256FromBig(&amp;px, bigX)
+<span id="L75" class="ln">    75</span>		p256FromBig(&amp;py, bigY)
+<span id="L76" class="ln">    76</span>		p256ScalarMult(&amp;x1, &amp;y1, &amp;z1, &amp;px, &amp;py, &amp;scalarReversed)
+<span id="L77" class="ln">    77</span>		return p256ToAffine(&amp;x1, &amp;y1, &amp;z1)
+<span id="L78" class="ln">    78</span>	}
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>	<span class="comment">// Field elements are represented as nine, unsigned 32-bit words.</span>
+<span id="L81" class="ln">    81</span>	<span class="comment">//</span>
+<span id="L82" class="ln">    82</span>	<span class="comment">// The value of an field element is:</span>
+<span id="L83" class="ln">    83</span>	<span class="comment">//   x[0] + (x[1] * 2**29) + (x[2] * 2**57) + ... + (x[8] * 2**228)</span>
+<span id="L84" class="ln">    84</span>	<span class="comment">//</span>
+<span id="L85" class="ln">    85</span>	<span class="comment">// That is, each limb is alternately 29 or 28-bits wide in little-endian</span>
+<span id="L86" class="ln">    86</span>	<span class="comment">// order.</span>
+<span id="L87" class="ln">    87</span>	<span class="comment">//</span>
+<span id="L88" class="ln">    88</span>	<span class="comment">// This means that a field element hits 2**257, rather than 2**256 as we would</span>
+<span id="L89" class="ln">    89</span>	<span class="comment">// like. A 28, 29, ... pattern would cause us to hit 2**256, but that causes</span>
+<span id="L90" class="ln">    90</span>	<span class="comment">// problems when multiplying as terms end up one bit short of a limb which</span>
+<span id="L91" class="ln">    91</span>	<span class="comment">// would require much bit-shifting to correct.</span>
+<span id="L92" class="ln">    92</span>	<span class="comment">//</span>
+<span id="L93" class="ln">    93</span>	<span class="comment">// Finally, the values stored in a field element are in Montgomery form. So the</span>
+<span id="L94" class="ln">    94</span>	<span class="comment">// value |y| is stored as (y*R) mod p, where p is the P-256 prime and R is</span>
+<span id="L95" class="ln">    95</span>	<span class="comment">// 2**257.</span>
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>	const (
+<span id="L98" class="ln">    98</span>		p256Limbs    = 9
+<span id="L99" class="ln">    99</span>		bottom29Bits = 0x1fffffff
+<span id="L100" class="ln">   100</span>	)
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	var (
+<span id="L103" class="ln">   103</span>		<span class="comment">// p256One is the number 1 as a field element.</span>
+<span id="L104" class="ln">   104</span>		p256One  = [p256Limbs]uint32{2, 0, 0, 0xffff800, 0x1fffffff, 0xfffffff, 0x1fbfffff, 0x1ffffff, 0}
+<span id="L105" class="ln">   105</span>		p256Zero = [p256Limbs]uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+<span id="L106" class="ln">   106</span>		<span class="comment">// p256P is the prime modulus as a field element.</span>
+<span id="L107" class="ln">   107</span>		p256P = [p256Limbs]uint32{0x1fffffff, 0xfffffff, 0x1fffffff, 0x3ff, 0, 0, 0x200000, 0xf000000, 0xfffffff}
+<span id="L108" class="ln">   108</span>		<span class="comment">// p2562P is the twice prime modulus as a field element.</span>
+<span id="L109" class="ln">   109</span>		p2562P = [p256Limbs]uint32{0x1ffffffe, 0xfffffff, 0x1fffffff, 0x7ff, 0, 0, 0x400000, 0xe000000, 0x1fffffff}
+<span id="L110" class="ln">   110</span>	)
+<span id="L111" class="ln">   111</span>	
+<span id="L112" class="ln">   112</span>	<span class="comment">// p256Precomputed contains precomputed values to aid the calculation of scalar</span>
+<span id="L113" class="ln">   113</span>	<span class="comment">// multiples of the base point, G. It&#39;s actually two, equal length, tables</span>
+<span id="L114" class="ln">   114</span>	<span class="comment">// concatenated.</span>
+<span id="L115" class="ln">   115</span>	<span class="comment">//</span>
+<span id="L116" class="ln">   116</span>	<span class="comment">// The first table contains (x,y) field element pairs for 16 multiples of the</span>
+<span id="L117" class="ln">   117</span>	<span class="comment">// base point, G.</span>
+<span id="L118" class="ln">   118</span>	<span class="comment">//</span>
+<span id="L119" class="ln">   119</span>	<span class="comment">//   Index  |  Index (binary) | Value</span>
+<span id="L120" class="ln">   120</span>	<span class="comment">//       0  |           0000  | 0G (all zeros, omitted)</span>
+<span id="L121" class="ln">   121</span>	<span class="comment">//       1  |           0001  | G</span>
+<span id="L122" class="ln">   122</span>	<span class="comment">//       2  |           0010  | 2**64G</span>
+<span id="L123" class="ln">   123</span>	<span class="comment">//       3  |           0011  | 2**64G + G</span>
+<span id="L124" class="ln">   124</span>	<span class="comment">//       4  |           0100  | 2**128G</span>
+<span id="L125" class="ln">   125</span>	<span class="comment">//       5  |           0101  | 2**128G + G</span>
+<span id="L126" class="ln">   126</span>	<span class="comment">//       6  |           0110  | 2**128G + 2**64G</span>
+<span id="L127" class="ln">   127</span>	<span class="comment">//       7  |           0111  | 2**128G + 2**64G + G</span>
+<span id="L128" class="ln">   128</span>	<span class="comment">//       8  |           1000  | 2**192G</span>
+<span id="L129" class="ln">   129</span>	<span class="comment">//       9  |           1001  | 2**192G + G</span>
+<span id="L130" class="ln">   130</span>	<span class="comment">//      10  |           1010  | 2**192G + 2**64G</span>
+<span id="L131" class="ln">   131</span>	<span class="comment">//      11  |           1011  | 2**192G + 2**64G + G</span>
+<span id="L132" class="ln">   132</span>	<span class="comment">//      12  |           1100  | 2**192G + 2**128G</span>
+<span id="L133" class="ln">   133</span>	<span class="comment">//      13  |           1101  | 2**192G + 2**128G + G</span>
+<span id="L134" class="ln">   134</span>	<span class="comment">//      14  |           1110  | 2**192G + 2**128G + 2**64G</span>
+<span id="L135" class="ln">   135</span>	<span class="comment">//      15  |           1111  | 2**192G + 2**128G + 2**64G + G</span>
+<span id="L136" class="ln">   136</span>	<span class="comment">//</span>
+<span id="L137" class="ln">   137</span>	<span class="comment">// The second table follows the same style, but the terms are 2**32G,</span>
+<span id="L138" class="ln">   138</span>	<span class="comment">// 2**96G, 2**160G, 2**224G.</span>
+<span id="L139" class="ln">   139</span>	<span class="comment">//</span>
+<span id="L140" class="ln">   140</span>	<span class="comment">// This is ~2KB of data.</span>
+<span id="L141" class="ln">   141</span>	var p256Precomputed = [p256Limbs * 2 * 15 * 2]uint32{
+<span id="L142" class="ln">   142</span>		0x11522878, 0xe730d41, 0xdb60179, 0x4afe2ff, 0x12883add, 0xcaddd88, 0x119e7edc, 0xd4a6eab, 0x3120bee,
+<span id="L143" class="ln">   143</span>		0x1d2aac15, 0xf25357c, 0x19e45cdd, 0x5c721d0, 0x1992c5a5, 0xa237487, 0x154ba21, 0x14b10bb, 0xae3fe3,
+<span id="L144" class="ln">   144</span>		0xd41a576, 0x922fc51, 0x234994f, 0x60b60d3, 0x164586ae, 0xce95f18, 0x1fe49073, 0x3fa36cc, 0x5ebcd2c,
+<span id="L145" class="ln">   145</span>		0xb402f2f, 0x15c70bf, 0x1561925c, 0x5a26704, 0xda91e90, 0xcdc1c7f, 0x1ea12446, 0xe1ade1e, 0xec91f22,
+<span id="L146" class="ln">   146</span>		0x26f7778, 0x566847e, 0xa0bec9e, 0x234f453, 0x1a31f21a, 0xd85e75c, 0x56c7109, 0xa267a00, 0xb57c050,
+<span id="L147" class="ln">   147</span>		0x98fb57, 0xaa837cc, 0x60c0792, 0xcfa5e19, 0x61bab9e, 0x589e39b, 0xa324c5, 0x7d6dee7, 0x2976e4b,
+<span id="L148" class="ln">   148</span>		0x1fc4124a, 0xa8c244b, 0x1ce86762, 0xcd61c7e, 0x1831c8e0, 0x75774e1, 0x1d96a5a9, 0x843a649, 0xc3ab0fa,
+<span id="L149" class="ln">   149</span>		0x6e2e7d5, 0x7673a2a, 0x178b65e8, 0x4003e9b, 0x1a1f11c2, 0x7816ea, 0xf643e11, 0x58c43df, 0xf423fc2,
+<span id="L150" class="ln">   150</span>		0x19633ffa, 0x891f2b2, 0x123c231c, 0x46add8c, 0x54700dd, 0x59e2b17, 0x172db40f, 0x83e277d, 0xb0dd609,
+<span id="L151" class="ln">   151</span>		0xfd1da12, 0x35c6e52, 0x19ede20c, 0xd19e0c0, 0x97d0f40, 0xb015b19, 0x449e3f5, 0xe10c9e, 0x33ab581,
+<span id="L152" class="ln">   152</span>		0x56a67ab, 0x577734d, 0x1dddc062, 0xc57b10d, 0x149b39d, 0x26a9e7b, 0xc35df9f, 0x48764cd, 0x76dbcca,
+<span id="L153" class="ln">   153</span>		0xca4b366, 0xe9303ab, 0x1a7480e7, 0x57e9e81, 0x1e13eb50, 0xf466cf3, 0x6f16b20, 0x4ba3173, 0xc168c33,
+<span id="L154" class="ln">   154</span>		0x15cb5439, 0x6a38e11, 0x73658bd, 0xb29564f, 0x3f6dc5b, 0x53b97e, 0x1322c4c0, 0x65dd7ff, 0x3a1e4f6,
+<span id="L155" class="ln">   155</span>		0x14e614aa, 0x9246317, 0x1bc83aca, 0xad97eed, 0xd38ce4a, 0xf82b006, 0x341f077, 0xa6add89, 0x4894acd,
+<span id="L156" class="ln">   156</span>		0x9f162d5, 0xf8410ef, 0x1b266a56, 0xd7f223, 0x3e0cb92, 0xe39b672, 0x6a2901a, 0x69a8556, 0x7e7c0,
+<span id="L157" class="ln">   157</span>		0x9b7d8d3, 0x309a80, 0x1ad05f7f, 0xc2fb5dd, 0xcbfd41d, 0x9ceb638, 0x1051825c, 0xda0cf5b, 0x812e881,
+<span id="L158" class="ln">   158</span>		0x6f35669, 0x6a56f2c, 0x1df8d184, 0x345820, 0x1477d477, 0x1645db1, 0xbe80c51, 0xc22be3e, 0xe35e65a,
+<span id="L159" class="ln">   159</span>		0x1aeb7aa0, 0xc375315, 0xf67bc99, 0x7fdd7b9, 0x191fc1be, 0x61235d, 0x2c184e9, 0x1c5a839, 0x47a1e26,
+<span id="L160" class="ln">   160</span>		0xb7cb456, 0x93e225d, 0x14f3c6ed, 0xccc1ac9, 0x17fe37f3, 0x4988989, 0x1a90c502, 0x2f32042, 0xa17769b,
+<span id="L161" class="ln">   161</span>		0xafd8c7c, 0x8191c6e, 0x1dcdb237, 0x16200c0, 0x107b32a1, 0x66c08db, 0x10d06a02, 0x3fc93, 0x5620023,
+<span id="L162" class="ln">   162</span>		0x16722b27, 0x68b5c59, 0x270fcfc, 0xfad0ecc, 0xe5de1c2, 0xeab466b, 0x2fc513c, 0x407f75c, 0xbaab133,
+<span id="L163" class="ln">   163</span>		0x9705fe9, 0xb88b8e7, 0x734c993, 0x1e1ff8f, 0x19156970, 0xabd0f00, 0x10469ea7, 0x3293ac0, 0xcdc98aa,
+<span id="L164" class="ln">   164</span>		0x1d843fd, 0xe14bfe8, 0x15be825f, 0x8b5212, 0xeb3fb67, 0x81cbd29, 0xbc62f16, 0x2b6fcc7, 0xf5a4e29,
+<span id="L165" class="ln">   165</span>		0x13560b66, 0xc0b6ac2, 0x51ae690, 0xd41e271, 0xf3e9bd4, 0x1d70aab, 0x1029f72, 0x73e1c35, 0xee70fbc,
+<span id="L166" class="ln">   166</span>		0xad81baf, 0x9ecc49a, 0x86c741e, 0xfe6be30, 0x176752e7, 0x23d416, 0x1f83de85, 0x27de188, 0x66f70b8,
+<span id="L167" class="ln">   167</span>		0x181cd51f, 0x96b6e4c, 0x188f2335, 0xa5df759, 0x17a77eb6, 0xfeb0e73, 0x154ae914, 0x2f3ec51, 0x3826b59,
+<span id="L168" class="ln">   168</span>		0xb91f17d, 0x1c72949, 0x1362bf0a, 0xe23fddf, 0xa5614b0, 0xf7d8f, 0x79061, 0x823d9d2, 0x8213f39,
+<span id="L169" class="ln">   169</span>		0x1128ae0b, 0xd095d05, 0xb85c0c2, 0x1ecb2ef, 0x24ddc84, 0xe35e901, 0x18411a4a, 0xf5ddc3d, 0x3786689,
+<span id="L170" class="ln">   170</span>		0x52260e8, 0x5ae3564, 0x542b10d, 0x8d93a45, 0x19952aa4, 0x996cc41, 0x1051a729, 0x4be3499, 0x52b23aa,
+<span id="L171" class="ln">   171</span>		0x109f307e, 0x6f5b6bb, 0x1f84e1e7, 0x77a0cfa, 0x10c4df3f, 0x25a02ea, 0xb048035, 0xe31de66, 0xc6ecaa3,
+<span id="L172" class="ln">   172</span>		0x28ea335, 0x2886024, 0x1372f020, 0xf55d35, 0x15e4684c, 0xf2a9e17, 0x1a4a7529, 0xcb7beb1, 0xb2a78a1,
+<span id="L173" class="ln">   173</span>		0x1ab21f1f, 0x6361ccf, 0x6c9179d, 0xb135627, 0x1267b974, 0x4408bad, 0x1cbff658, 0xe3d6511, 0xc7d76f,
+<span id="L174" class="ln">   174</span>		0x1cc7a69, 0xe7ee31b, 0x54fab4f, 0x2b914f, 0x1ad27a30, 0xcd3579e, 0xc50124c, 0x50daa90, 0xb13f72,
+<span id="L175" class="ln">   175</span>		0xb06aa75, 0x70f5cc6, 0x1649e5aa, 0x84a5312, 0x329043c, 0x41c4011, 0x13d32411, 0xb04a838, 0xd760d2d,
+<span id="L176" class="ln">   176</span>		0x1713b532, 0xbaa0c03, 0x84022ab, 0x6bcf5c1, 0x2f45379, 0x18ae070, 0x18c9e11e, 0x20bca9a, 0x66f496b,
+<span id="L177" class="ln">   177</span>		0x3eef294, 0x67500d2, 0xd7f613c, 0x2dbbeb, 0xb741038, 0xe04133f, 0x1582968d, 0xbe985f7, 0x1acbc1a,
+<span id="L178" class="ln">   178</span>		0x1a6a939f, 0x33e50f6, 0xd665ed4, 0xb4b7bd6, 0x1e5a3799, 0x6b33847, 0x17fa56ff, 0x65ef930, 0x21dc4a,
+<span id="L179" class="ln">   179</span>		0x2b37659, 0x450fe17, 0xb357b65, 0xdf5efac, 0x15397bef, 0x9d35a7f, 0x112ac15f, 0x624e62e, 0xa90ae2f,
+<span id="L180" class="ln">   180</span>		0x107eecd2, 0x1f69bbe, 0x77d6bce, 0x5741394, 0x13c684fc, 0x950c910, 0x725522b, 0xdc78583, 0x40eeabb,
+<span id="L181" class="ln">   181</span>		0x1fde328a, 0xbd61d96, 0xd28c387, 0x9e77d89, 0x12550c40, 0x759cb7d, 0x367ef34, 0xae2a960, 0x91b8bdc,
+<span id="L182" class="ln">   182</span>		0x93462a9, 0xf469ef, 0xb2e9aef, 0xd2ca771, 0x54e1f42, 0x7aaa49, 0x6316abb, 0x2413c8e, 0x5425bf9,
+<span id="L183" class="ln">   183</span>		0x1bed3e3a, 0xf272274, 0x1f5e7326, 0x6416517, 0xea27072, 0x9cedea7, 0x6e7633, 0x7c91952, 0xd806dce,
+<span id="L184" class="ln">   184</span>		0x8e2a7e1, 0xe421e1a, 0x418c9e1, 0x1dbc890, 0x1b395c36, 0xa1dc175, 0x1dc4ef73, 0x8956f34, 0xe4b5cf2,
+<span id="L185" class="ln">   185</span>		0x1b0d3a18, 0x3194a36, 0x6c2641f, 0xe44124c, 0xa2f4eaa, 0xa8c25ba, 0xf927ed7, 0x627b614, 0x7371cca,
+<span id="L186" class="ln">   186</span>		0xba16694, 0x417bc03, 0x7c0a7e3, 0x9c35c19, 0x1168a205, 0x8b6b00d, 0x10e3edc9, 0x9c19bf2, 0x5882229,
+<span id="L187" class="ln">   187</span>		0x1b2b4162, 0xa5cef1a, 0x1543622b, 0x9bd433e, 0x364e04d, 0x7480792, 0x5c9b5b3, 0xe85ff25, 0x408ef57,
+<span id="L188" class="ln">   188</span>		0x1814cfa4, 0x121b41b, 0xd248a0f, 0x3b05222, 0x39bb16a, 0xc75966d, 0xa038113, 0xa4a1769, 0x11fbc6c,
+<span id="L189" class="ln">   189</span>		0x917e50e, 0xeec3da8, 0x169d6eac, 0x10c1699, 0xa416153, 0xf724912, 0x15cd60b7, 0x4acbad9, 0x5efc5fa,
+<span id="L190" class="ln">   190</span>		0xf150ed7, 0x122b51, 0x1104b40a, 0xcb7f442, 0xfbb28ff, 0x6ac53ca, 0x196142cc, 0x7bf0fa9, 0x957651,
+<span id="L191" class="ln">   191</span>		0x4e0f215, 0xed439f8, 0x3f46bd5, 0x5ace82f, 0x110916b6, 0x6db078, 0xffd7d57, 0xf2ecaac, 0xca86dec,
+<span id="L192" class="ln">   192</span>		0x15d6b2da, 0x965ecc9, 0x1c92b4c2, 0x1f3811, 0x1cb080f5, 0x2d8b804, 0x19d1c12d, 0xf20bd46, 0x1951fa7,
+<span id="L193" class="ln">   193</span>		0xa3656c3, 0x523a425, 0xfcd0692, 0xd44ddc8, 0x131f0f5b, 0xaf80e4a, 0xcd9fc74, 0x99bb618, 0x2db944c,
+<span id="L194" class="ln">   194</span>		0xa673090, 0x1c210e1, 0x178c8d23, 0x1474383, 0x10b8743d, 0x985a55b, 0x2e74779, 0x576138, 0x9587927,
+<span id="L195" class="ln">   195</span>		0x133130fa, 0xbe05516, 0x9f4d619, 0xbb62570, 0x99ec591, 0xd9468fe, 0x1d07782d, 0xfc72e0b, 0x701b298,
+<span id="L196" class="ln">   196</span>		0x1863863b, 0x85954b8, 0x121a0c36, 0x9e7fedf, 0xf64b429, 0x9b9d71e, 0x14e2f5d8, 0xf858d3a, 0x942eea8,
+<span id="L197" class="ln">   197</span>		0xda5b765, 0x6edafff, 0xa9d18cc, 0xc65e4ba, 0x1c747e86, 0xe4ea915, 0x1981d7a1, 0x8395659, 0x52ed4e2,
+<span id="L198" class="ln">   198</span>		0x87d43b7, 0x37ab11b, 0x19d292ce, 0xf8d4692, 0x18c3053f, 0x8863e13, 0x4c146c0, 0x6bdf55a, 0x4e4457d,
+<span id="L199" class="ln">   199</span>		0x16152289, 0xac78ec2, 0x1a59c5a2, 0x2028b97, 0x71c2d01, 0x295851f, 0x404747b, 0x878558d, 0x7d29aa4,
+<span id="L200" class="ln">   200</span>		0x13d8341f, 0x8daefd7, 0x139c972d, 0x6b7ea75, 0xd4a9dde, 0xff163d8, 0x81d55d7, 0xa5bef68, 0xb7b30d8,
+<span id="L201" class="ln">   201</span>		0xbe73d6f, 0xaa88141, 0xd976c81, 0x7e7a9cc, 0x18beb771, 0xd773cbd, 0x13f51951, 0x9d0c177, 0x1c49a78,
+<span id="L202" class="ln">   202</span>	}
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>	<span class="comment">// Field element operations:</span>
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	<span class="comment">// nonZeroToAllOnes returns:</span>
+<span id="L207" class="ln">   207</span>	<span class="comment">//   0xffffffff for 0 &lt; x &lt;= 2**31</span>
+<span id="L208" class="ln">   208</span>	<span class="comment">//   0 for x == 0 or x &gt; 2**31.</span>
+<span id="L209" class="ln">   209</span>	func nonZeroToAllOnes(x uint32) uint32 {
+<span id="L210" class="ln">   210</span>		return ((x - 1) &gt;&gt; 31) - 1
+<span id="L211" class="ln">   211</span>	}
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	<span class="comment">// p256ReduceCarry adds a multiple of p in order to cancel |carry|,</span>
+<span id="L214" class="ln">   214</span>	<span class="comment">// which is a term at 2**257.</span>
+<span id="L215" class="ln">   215</span>	<span class="comment">//</span>
+<span id="L216" class="ln">   216</span>	<span class="comment">// On entry: carry &lt; 2**3, inout[0,2,...] &lt; 2**29, inout[1,3,...] &lt; 2**28.</span>
+<span id="L217" class="ln">   217</span>	<span class="comment">// On exit: inout[0,2,..] &lt; 2**30, inout[1,3,...] &lt; 2**29.</span>
+<span id="L218" class="ln">   218</span>	func p256ReduceCarry(inout *[p256Limbs]uint32, carry uint32) {
+<span id="L219" class="ln">   219</span>		carry_mask := nonZeroToAllOnes(carry)
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>		inout[0] += carry &lt;&lt; 1
+<span id="L222" class="ln">   222</span>		inout[3] += 0x10000000 &amp; carry_mask
+<span id="L223" class="ln">   223</span>		<span class="comment">// carry &lt; 2**3 thus (carry &lt;&lt; 11) &lt; 2**14 and we added 2**28 in the</span>
+<span id="L224" class="ln">   224</span>		<span class="comment">// previous line therefore this doesn&#39;t underflow.</span>
+<span id="L225" class="ln">   225</span>		inout[3] -= carry &lt;&lt; 11
+<span id="L226" class="ln">   226</span>		inout[4] += (0x20000000 - 1) &amp; carry_mask
+<span id="L227" class="ln">   227</span>		inout[5] += (0x10000000 - 1) &amp; carry_mask
+<span id="L228" class="ln">   228</span>		inout[6] += (0x20000000 - 1) &amp; carry_mask
+<span id="L229" class="ln">   229</span>		inout[6] -= carry &lt;&lt; 22
+<span id="L230" class="ln">   230</span>		<span class="comment">// This may underflow if carry is non-zero but, if so, we&#39;ll fix it in the</span>
+<span id="L231" class="ln">   231</span>		<span class="comment">// next line.</span>
+<span id="L232" class="ln">   232</span>		inout[7] -= 1 &amp; carry_mask
+<span id="L233" class="ln">   233</span>		inout[7] += carry &lt;&lt; 25
+<span id="L234" class="ln">   234</span>	}
+<span id="L235" class="ln">   235</span>	
+<span id="L236" class="ln">   236</span>	<span class="comment">// p256Sum sets out = in+in2.</span>
+<span id="L237" class="ln">   237</span>	<span class="comment">//</span>
+<span id="L238" class="ln">   238</span>	<span class="comment">// On entry, in[i]+in2[i] must not overflow a 32-bit word.</span>
+<span id="L239" class="ln">   239</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29</span>
+<span id="L240" class="ln">   240</span>	func p256Sum(out, in, in2 *[p256Limbs]uint32) {
+<span id="L241" class="ln">   241</span>		carry := uint32(0)
+<span id="L242" class="ln">   242</span>		for i := 0; ; i++ {
+<span id="L243" class="ln">   243</span>			out[i] = in[i] + in2[i]
+<span id="L244" class="ln">   244</span>			out[i] += carry
+<span id="L245" class="ln">   245</span>			carry = out[i] &gt;&gt; 29
+<span id="L246" class="ln">   246</span>			out[i] &amp;= bottom29Bits
+<span id="L247" class="ln">   247</span>	
+<span id="L248" class="ln">   248</span>			i++
+<span id="L249" class="ln">   249</span>			if i == p256Limbs {
+<span id="L250" class="ln">   250</span>				break
+<span id="L251" class="ln">   251</span>			}
+<span id="L252" class="ln">   252</span>	
+<span id="L253" class="ln">   253</span>			out[i] = in[i] + in2[i]
+<span id="L254" class="ln">   254</span>			out[i] += carry
+<span id="L255" class="ln">   255</span>			carry = out[i] &gt;&gt; 28
+<span id="L256" class="ln">   256</span>			out[i] &amp;= bottom28Bits
+<span id="L257" class="ln">   257</span>		}
+<span id="L258" class="ln">   258</span>	
+<span id="L259" class="ln">   259</span>		p256ReduceCarry(out, carry)
+<span id="L260" class="ln">   260</span>	}
+<span id="L261" class="ln">   261</span>	
+<span id="L262" class="ln">   262</span>	const (
+<span id="L263" class="ln">   263</span>		two30m2    = 1&lt;&lt;30 - 1&lt;&lt;2
+<span id="L264" class="ln">   264</span>		two30p13m2 = 1&lt;&lt;30 + 1&lt;&lt;13 - 1&lt;&lt;2
+<span id="L265" class="ln">   265</span>		two31m2    = 1&lt;&lt;31 - 1&lt;&lt;2
+<span id="L266" class="ln">   266</span>		two31p24m2 = 1&lt;&lt;31 + 1&lt;&lt;24 - 1&lt;&lt;2
+<span id="L267" class="ln">   267</span>		two30m27m2 = 1&lt;&lt;30 - 1&lt;&lt;27 - 1&lt;&lt;2
+<span id="L268" class="ln">   268</span>	)
+<span id="L269" class="ln">   269</span>	
+<span id="L270" class="ln">   270</span>	<span class="comment">// p256Zero31 is 0 mod p.</span>
+<span id="L271" class="ln">   271</span>	var p256Zero31 = [p256Limbs]uint32{two31m3, two30m2, two31m2, two30p13m2, two31m2, two30m2, two31p24m2, two30m27m2, two31m2}
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>	<span class="comment">// p256Diff sets out = in-in2.</span>
+<span id="L274" class="ln">   274</span>	<span class="comment">//</span>
+<span id="L275" class="ln">   275</span>	<span class="comment">// On entry: in[0,2,...] &lt; 2**30, in[1,3,...] &lt; 2**29 and</span>
+<span id="L276" class="ln">   276</span>	<span class="comment">//           in2[0,2,...] &lt; 2**30, in2[1,3,...] &lt; 2**29.</span>
+<span id="L277" class="ln">   277</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L278" class="ln">   278</span>	func p256Diff(out, in, in2 *[p256Limbs]uint32) {
+<span id="L279" class="ln">   279</span>		var carry uint32
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>		for i := 0; ; i++ {
+<span id="L282" class="ln">   282</span>			out[i] = in[i] - in2[i]
+<span id="L283" class="ln">   283</span>			out[i] += p256Zero31[i]
+<span id="L284" class="ln">   284</span>			out[i] += carry
+<span id="L285" class="ln">   285</span>			carry = out[i] &gt;&gt; 29
+<span id="L286" class="ln">   286</span>			out[i] &amp;= bottom29Bits
+<span id="L287" class="ln">   287</span>	
+<span id="L288" class="ln">   288</span>			i++
+<span id="L289" class="ln">   289</span>			if i == p256Limbs {
+<span id="L290" class="ln">   290</span>				break
+<span id="L291" class="ln">   291</span>			}
+<span id="L292" class="ln">   292</span>	
+<span id="L293" class="ln">   293</span>			out[i] = in[i] - in2[i]
+<span id="L294" class="ln">   294</span>			out[i] += p256Zero31[i]
+<span id="L295" class="ln">   295</span>			out[i] += carry
+<span id="L296" class="ln">   296</span>			carry = out[i] &gt;&gt; 28
+<span id="L297" class="ln">   297</span>			out[i] &amp;= bottom28Bits
+<span id="L298" class="ln">   298</span>		}
+<span id="L299" class="ln">   299</span>	
+<span id="L300" class="ln">   300</span>		p256ReduceCarry(out, carry)
+<span id="L301" class="ln">   301</span>	}
+<span id="L302" class="ln">   302</span>	
+<span id="L303" class="ln">   303</span>	<span class="comment">// p256ReduceDegree sets out = tmp/R mod p where tmp contains 64-bit words with</span>
+<span id="L304" class="ln">   304</span>	<span class="comment">// the same 29,28,... bit positions as an field element.</span>
+<span id="L305" class="ln">   305</span>	<span class="comment">//</span>
+<span id="L306" class="ln">   306</span>	<span class="comment">// The values in field elements are in Montgomery form: x*R mod p where R =</span>
+<span id="L307" class="ln">   307</span>	<span class="comment">// 2**257. Since we just multiplied two Montgomery values together, the result</span>
+<span id="L308" class="ln">   308</span>	<span class="comment">// is x*y*R*R mod p. We wish to divide by R in order for the result also to be</span>
+<span id="L309" class="ln">   309</span>	<span class="comment">// in Montgomery form.</span>
+<span id="L310" class="ln">   310</span>	<span class="comment">//</span>
+<span id="L311" class="ln">   311</span>	<span class="comment">// On entry: tmp[i] &lt; 2**64</span>
+<span id="L312" class="ln">   312</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29</span>
+<span id="L313" class="ln">   313</span>	func p256ReduceDegree(out *[p256Limbs]uint32, tmp [17]uint64) {
+<span id="L314" class="ln">   314</span>		<span class="comment">// The following table may be helpful when reading this code:</span>
+<span id="L315" class="ln">   315</span>		<span class="comment">//</span>
+<span id="L316" class="ln">   316</span>		<span class="comment">// Limb number:   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10...</span>
+<span id="L317" class="ln">   317</span>		<span class="comment">// Width (bits):  29| 28| 29| 28| 29| 28| 29| 28| 29| 28| 29</span>
+<span id="L318" class="ln">   318</span>		<span class="comment">// Start bit:     0 | 29| 57| 86|114|143|171|200|228|257|285</span>
+<span id="L319" class="ln">   319</span>		<span class="comment">//   (odd phase): 0 | 28| 57| 85|114|142|171|199|228|256|285</span>
+<span id="L320" class="ln">   320</span>		var tmp2 [18]uint32
+<span id="L321" class="ln">   321</span>		var carry, x, xMask uint32
+<span id="L322" class="ln">   322</span>	
+<span id="L323" class="ln">   323</span>		<span class="comment">// tmp contains 64-bit words with the same 29,28,29-bit positions as an</span>
+<span id="L324" class="ln">   324</span>		<span class="comment">// field element. So the top of an element of tmp might overlap with</span>
+<span id="L325" class="ln">   325</span>		<span class="comment">// another element two positions down. The following loop eliminates</span>
+<span id="L326" class="ln">   326</span>		<span class="comment">// this overlap.</span>
+<span id="L327" class="ln">   327</span>		tmp2[0] = uint32(tmp[0]) &amp; bottom29Bits
+<span id="L328" class="ln">   328</span>	
+<span id="L329" class="ln">   329</span>		tmp2[1] = uint32(tmp[0]) &gt;&gt; 29
+<span id="L330" class="ln">   330</span>		tmp2[1] |= (uint32(tmp[0]&gt;&gt;32) &lt;&lt; 3) &amp; bottom28Bits
+<span id="L331" class="ln">   331</span>		tmp2[1] += uint32(tmp[1]) &amp; bottom28Bits
+<span id="L332" class="ln">   332</span>		carry = tmp2[1] &gt;&gt; 28
+<span id="L333" class="ln">   333</span>		tmp2[1] &amp;= bottom28Bits
+<span id="L334" class="ln">   334</span>	
+<span id="L335" class="ln">   335</span>		for i := 2; i &lt; 17; i++ {
+<span id="L336" class="ln">   336</span>			tmp2[i] = (uint32(tmp[i-2] &gt;&gt; 32)) &gt;&gt; 25
+<span id="L337" class="ln">   337</span>			tmp2[i] += (uint32(tmp[i-1])) &gt;&gt; 28
+<span id="L338" class="ln">   338</span>			tmp2[i] += (uint32(tmp[i-1]&gt;&gt;32) &lt;&lt; 4) &amp; bottom29Bits
+<span id="L339" class="ln">   339</span>			tmp2[i] += uint32(tmp[i]) &amp; bottom29Bits
+<span id="L340" class="ln">   340</span>			tmp2[i] += carry
+<span id="L341" class="ln">   341</span>			carry = tmp2[i] &gt;&gt; 29
+<span id="L342" class="ln">   342</span>			tmp2[i] &amp;= bottom29Bits
+<span id="L343" class="ln">   343</span>	
+<span id="L344" class="ln">   344</span>			i++
+<span id="L345" class="ln">   345</span>			if i == 17 {
+<span id="L346" class="ln">   346</span>				break
+<span id="L347" class="ln">   347</span>			}
+<span id="L348" class="ln">   348</span>			tmp2[i] = uint32(tmp[i-2]&gt;&gt;32) &gt;&gt; 25
+<span id="L349" class="ln">   349</span>			tmp2[i] += uint32(tmp[i-1]) &gt;&gt; 29
+<span id="L350" class="ln">   350</span>			tmp2[i] += ((uint32(tmp[i-1] &gt;&gt; 32)) &lt;&lt; 3) &amp; bottom28Bits
+<span id="L351" class="ln">   351</span>			tmp2[i] += uint32(tmp[i]) &amp; bottom28Bits
+<span id="L352" class="ln">   352</span>			tmp2[i] += carry
+<span id="L353" class="ln">   353</span>			carry = tmp2[i] &gt;&gt; 28
+<span id="L354" class="ln">   354</span>			tmp2[i] &amp;= bottom28Bits
+<span id="L355" class="ln">   355</span>		}
+<span id="L356" class="ln">   356</span>	
+<span id="L357" class="ln">   357</span>		tmp2[17] = uint32(tmp[15]&gt;&gt;32) &gt;&gt; 25
+<span id="L358" class="ln">   358</span>		tmp2[17] += uint32(tmp[16]) &gt;&gt; 29
+<span id="L359" class="ln">   359</span>		tmp2[17] += uint32(tmp[16]&gt;&gt;32) &lt;&lt; 3
+<span id="L360" class="ln">   360</span>		tmp2[17] += carry
+<span id="L361" class="ln">   361</span>	
+<span id="L362" class="ln">   362</span>		<span class="comment">// Montgomery elimination of terms:</span>
+<span id="L363" class="ln">   363</span>		<span class="comment">//</span>
+<span id="L364" class="ln">   364</span>		<span class="comment">// Since R is 2**257, we can divide by R with a bitwise shift if we can</span>
+<span id="L365" class="ln">   365</span>		<span class="comment">// ensure that the right-most 257 bits are all zero. We can make that true</span>
+<span id="L366" class="ln">   366</span>		<span class="comment">// by adding multiplies of p without affecting the value.</span>
+<span id="L367" class="ln">   367</span>		<span class="comment">//</span>
+<span id="L368" class="ln">   368</span>		<span class="comment">// So we eliminate limbs from right to left. Since the bottom 29 bits of p</span>
+<span id="L369" class="ln">   369</span>		<span class="comment">// are all ones, then by adding tmp2[0]*p to tmp2 we&#39;ll make tmp2[0] == 0.</span>
+<span id="L370" class="ln">   370</span>		<span class="comment">// We can do that for 8 further limbs and then right shift to eliminate the</span>
+<span id="L371" class="ln">   371</span>		<span class="comment">// extra factor of R.</span>
+<span id="L372" class="ln">   372</span>		for i := 0; ; i += 2 {
+<span id="L373" class="ln">   373</span>			tmp2[i+1] += tmp2[i] &gt;&gt; 29
+<span id="L374" class="ln">   374</span>			x = tmp2[i] &amp; bottom29Bits
+<span id="L375" class="ln">   375</span>			xMask = nonZeroToAllOnes(x)
+<span id="L376" class="ln">   376</span>			tmp2[i] = 0
+<span id="L377" class="ln">   377</span>	
+<span id="L378" class="ln">   378</span>			<span class="comment">// The bounds calculations for this loop are tricky. Each iteration of</span>
+<span id="L379" class="ln">   379</span>			<span class="comment">// the loop eliminates two words by adding values to words to their</span>
+<span id="L380" class="ln">   380</span>			<span class="comment">// right.</span>
+<span id="L381" class="ln">   381</span>			<span class="comment">//</span>
+<span id="L382" class="ln">   382</span>			<span class="comment">// The following table contains the amounts added to each word (as an</span>
+<span id="L383" class="ln">   383</span>			<span class="comment">// offset from the value of i at the top of the loop). The amounts are</span>
+<span id="L384" class="ln">   384</span>			<span class="comment">// accounted for from the first and second half of the loop separately</span>
+<span id="L385" class="ln">   385</span>			<span class="comment">// and are written as, for example, 28 to mean a value &lt;2**28.</span>
+<span id="L386" class="ln">   386</span>			<span class="comment">//</span>
+<span id="L387" class="ln">   387</span>			<span class="comment">// Word:                   3   4   5   6   7   8   9   10</span>
+<span id="L388" class="ln">   388</span>			<span class="comment">// Added in top half:     28  11      29  21  29  28</span>
+<span id="L389" class="ln">   389</span>			<span class="comment">//                                        28  29</span>
+<span id="L390" class="ln">   390</span>			<span class="comment">//                                            29</span>
+<span id="L391" class="ln">   391</span>			<span class="comment">// Added in bottom half:      29  10      28  21  28   28</span>
+<span id="L392" class="ln">   392</span>			<span class="comment">//                                            29</span>
+<span id="L393" class="ln">   393</span>			<span class="comment">//</span>
+<span id="L394" class="ln">   394</span>			<span class="comment">// The value that is currently offset 7 will be offset 5 for the next</span>
+<span id="L395" class="ln">   395</span>			<span class="comment">// iteration and then offset 3 for the iteration after that. Therefore</span>
+<span id="L396" class="ln">   396</span>			<span class="comment">// the total value added will be the values added at 7, 5 and 3.</span>
+<span id="L397" class="ln">   397</span>			<span class="comment">//</span>
+<span id="L398" class="ln">   398</span>			<span class="comment">// The following table accumulates these values. The sums at the bottom</span>
+<span id="L399" class="ln">   399</span>			<span class="comment">// are written as, for example, 29+28, to mean a value &lt; 2**29+2**28.</span>
+<span id="L400" class="ln">   400</span>			<span class="comment">//</span>
+<span id="L401" class="ln">   401</span>			<span class="comment">// Word:                   3   4   5   6   7   8   9  10  11  12  13</span>
+<span id="L402" class="ln">   402</span>			<span class="comment">//                        28  11  10  29  21  29  28  28  28  28  28</span>
+<span id="L403" class="ln">   403</span>			<span class="comment">//                            29  28  11  28  29  28  29  28  29  28</span>
+<span id="L404" class="ln">   404</span>			<span class="comment">//                                    29  28  21  21  29  21  29  21</span>
+<span id="L405" class="ln">   405</span>			<span class="comment">//                                        10  29  28  21  28  21  28</span>
+<span id="L406" class="ln">   406</span>			<span class="comment">//                                        28  29  28  29  28  29  28</span>
+<span id="L407" class="ln">   407</span>			<span class="comment">//                                            11  10  29  10  29  10</span>
+<span id="L408" class="ln">   408</span>			<span class="comment">//                                            29  28  11  28  11</span>
+<span id="L409" class="ln">   409</span>			<span class="comment">//                                                    29      29</span>
+<span id="L410" class="ln">   410</span>			<span class="comment">//                        --------------------------------------------</span>
+<span id="L411" class="ln">   411</span>			<span class="comment">//                                                30+ 31+ 30+ 31+ 30+</span>
+<span id="L412" class="ln">   412</span>			<span class="comment">//                                                28+ 29+ 28+ 29+ 21+</span>
+<span id="L413" class="ln">   413</span>			<span class="comment">//                                                21+ 28+ 21+ 28+ 10</span>
+<span id="L414" class="ln">   414</span>			<span class="comment">//                                                10  21+ 10  21+</span>
+<span id="L415" class="ln">   415</span>			<span class="comment">//                                                    11      11</span>
+<span id="L416" class="ln">   416</span>			<span class="comment">//</span>
+<span id="L417" class="ln">   417</span>			<span class="comment">// So the greatest amount is added to tmp2[10] and tmp2[12]. If</span>
+<span id="L418" class="ln">   418</span>			<span class="comment">// tmp2[10/12] has an initial value of &lt;2**29, then the maximum value</span>
+<span id="L419" class="ln">   419</span>			<span class="comment">// will be &lt; 2**31 + 2**30 + 2**28 + 2**21 + 2**11, which is &lt; 2**32,</span>
+<span id="L420" class="ln">   420</span>			<span class="comment">// as required.</span>
+<span id="L421" class="ln">   421</span>			tmp2[i+3] += (x &lt;&lt; 10) &amp; bottom28Bits
+<span id="L422" class="ln">   422</span>			tmp2[i+4] += (x &gt;&gt; 18)
+<span id="L423" class="ln">   423</span>	
+<span id="L424" class="ln">   424</span>			tmp2[i+6] += (x &lt;&lt; 21) &amp; bottom29Bits
+<span id="L425" class="ln">   425</span>			tmp2[i+7] += x &gt;&gt; 8
+<span id="L426" class="ln">   426</span>	
+<span id="L427" class="ln">   427</span>			<span class="comment">// At position 200, which is the starting bit position for word 7, we</span>
+<span id="L428" class="ln">   428</span>			<span class="comment">// have a factor of 0xf000000 = 2**28 - 2**24.</span>
+<span id="L429" class="ln">   429</span>			tmp2[i+7] += 0x10000000 &amp; xMask
+<span id="L430" class="ln">   430</span>			tmp2[i+8] += (x - 1) &amp; xMask
+<span id="L431" class="ln">   431</span>			tmp2[i+7] -= (x &lt;&lt; 24) &amp; bottom28Bits
+<span id="L432" class="ln">   432</span>			tmp2[i+8] -= x &gt;&gt; 4
+<span id="L433" class="ln">   433</span>	
+<span id="L434" class="ln">   434</span>			tmp2[i+8] += 0x20000000 &amp; xMask
+<span id="L435" class="ln">   435</span>			tmp2[i+8] -= x
+<span id="L436" class="ln">   436</span>			tmp2[i+8] += (x &lt;&lt; 28) &amp; bottom29Bits
+<span id="L437" class="ln">   437</span>			tmp2[i+9] += ((x &gt;&gt; 1) - 1) &amp; xMask
+<span id="L438" class="ln">   438</span>	
+<span id="L439" class="ln">   439</span>			if i+1 == p256Limbs {
+<span id="L440" class="ln">   440</span>				break
+<span id="L441" class="ln">   441</span>			}
+<span id="L442" class="ln">   442</span>			tmp2[i+2] += tmp2[i+1] &gt;&gt; 28
+<span id="L443" class="ln">   443</span>			x = tmp2[i+1] &amp; bottom28Bits
+<span id="L444" class="ln">   444</span>			xMask = nonZeroToAllOnes(x)
+<span id="L445" class="ln">   445</span>			tmp2[i+1] = 0
+<span id="L446" class="ln">   446</span>	
+<span id="L447" class="ln">   447</span>			tmp2[i+4] += (x &lt;&lt; 11) &amp; bottom29Bits
+<span id="L448" class="ln">   448</span>			tmp2[i+5] += (x &gt;&gt; 18)
+<span id="L449" class="ln">   449</span>	
+<span id="L450" class="ln">   450</span>			tmp2[i+7] += (x &lt;&lt; 21) &amp; bottom28Bits
+<span id="L451" class="ln">   451</span>			tmp2[i+8] += x &gt;&gt; 7
+<span id="L452" class="ln">   452</span>	
+<span id="L453" class="ln">   453</span>			<span class="comment">// At position 199, which is the starting bit of the 8th word when</span>
+<span id="L454" class="ln">   454</span>			<span class="comment">// dealing with a context starting on an odd word, we have a factor of</span>
+<span id="L455" class="ln">   455</span>			<span class="comment">// 0x1e000000 = 2**29 - 2**25. Since we have not updated i, the 8th</span>
+<span id="L456" class="ln">   456</span>			<span class="comment">// word from i+1 is i+8.</span>
+<span id="L457" class="ln">   457</span>			tmp2[i+8] += 0x20000000 &amp; xMask
+<span id="L458" class="ln">   458</span>			tmp2[i+9] += (x - 1) &amp; xMask
+<span id="L459" class="ln">   459</span>			tmp2[i+8] -= (x &lt;&lt; 25) &amp; bottom29Bits
+<span id="L460" class="ln">   460</span>			tmp2[i+9] -= x &gt;&gt; 4
+<span id="L461" class="ln">   461</span>	
+<span id="L462" class="ln">   462</span>			tmp2[i+9] += 0x10000000 &amp; xMask
+<span id="L463" class="ln">   463</span>			tmp2[i+9] -= x
+<span id="L464" class="ln">   464</span>			tmp2[i+10] += (x - 1) &amp; xMask
+<span id="L465" class="ln">   465</span>		}
+<span id="L466" class="ln">   466</span>	
+<span id="L467" class="ln">   467</span>		<span class="comment">// We merge the right shift with a carry chain. The words above 2**257 have</span>
+<span id="L468" class="ln">   468</span>		<span class="comment">// widths of 28,29,... which we need to correct when copying them down.</span>
+<span id="L469" class="ln">   469</span>		carry = 0
+<span id="L470" class="ln">   470</span>		for i := 0; i &lt; 8; i++ {
+<span id="L471" class="ln">   471</span>			<span class="comment">// The maximum value of tmp2[i + 9] occurs on the first iteration and</span>
+<span id="L472" class="ln">   472</span>			<span class="comment">// is &lt; 2**30+2**29+2**28. Adding 2**29 (from tmp2[i + 10]) is</span>
+<span id="L473" class="ln">   473</span>			<span class="comment">// therefore safe.</span>
+<span id="L474" class="ln">   474</span>			out[i] = tmp2[i+9]
+<span id="L475" class="ln">   475</span>			out[i] += carry
+<span id="L476" class="ln">   476</span>			out[i] += (tmp2[i+10] &lt;&lt; 28) &amp; bottom29Bits
+<span id="L477" class="ln">   477</span>			carry = out[i] &gt;&gt; 29
+<span id="L478" class="ln">   478</span>			out[i] &amp;= bottom29Bits
+<span id="L479" class="ln">   479</span>	
+<span id="L480" class="ln">   480</span>			i++
+<span id="L481" class="ln">   481</span>			out[i] = tmp2[i+9] &gt;&gt; 1
+<span id="L482" class="ln">   482</span>			out[i] += carry
+<span id="L483" class="ln">   483</span>			carry = out[i] &gt;&gt; 28
+<span id="L484" class="ln">   484</span>			out[i] &amp;= bottom28Bits
+<span id="L485" class="ln">   485</span>		}
+<span id="L486" class="ln">   486</span>	
+<span id="L487" class="ln">   487</span>		out[8] = tmp2[17]
+<span id="L488" class="ln">   488</span>		out[8] += carry
+<span id="L489" class="ln">   489</span>		carry = out[8] &gt;&gt; 29
+<span id="L490" class="ln">   490</span>		out[8] &amp;= bottom29Bits
+<span id="L491" class="ln">   491</span>	
+<span id="L492" class="ln">   492</span>		p256ReduceCarry(out, carry)
+<span id="L493" class="ln">   493</span>	}
+<span id="L494" class="ln">   494</span>	
+<span id="L495" class="ln">   495</span>	<span class="comment">// p256Square sets out=in*in.</span>
+<span id="L496" class="ln">   496</span>	<span class="comment">//</span>
+<span id="L497" class="ln">   497</span>	<span class="comment">// On entry: in[0,2,...] &lt; 2**30, in[1,3,...] &lt; 2**29.</span>
+<span id="L498" class="ln">   498</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L499" class="ln">   499</span>	func p256Square(out, in *[p256Limbs]uint32) {
+<span id="L500" class="ln">   500</span>		var tmp [17]uint64
+<span id="L501" class="ln">   501</span>	
+<span id="L502" class="ln">   502</span>		tmp[0] = uint64(in[0]) * uint64(in[0])
+<span id="L503" class="ln">   503</span>		tmp[1] = uint64(in[0]) * (uint64(in[1]) &lt;&lt; 1)
+<span id="L504" class="ln">   504</span>		tmp[2] = uint64(in[0])*(uint64(in[2])&lt;&lt;1) +
+<span id="L505" class="ln">   505</span>			uint64(in[1])*(uint64(in[1])&lt;&lt;1)
+<span id="L506" class="ln">   506</span>		tmp[3] = uint64(in[0])*(uint64(in[3])&lt;&lt;1) +
+<span id="L507" class="ln">   507</span>			uint64(in[1])*(uint64(in[2])&lt;&lt;1)
+<span id="L508" class="ln">   508</span>		tmp[4] = uint64(in[0])*(uint64(in[4])&lt;&lt;1) +
+<span id="L509" class="ln">   509</span>			uint64(in[1])*(uint64(in[3])&lt;&lt;2) +
+<span id="L510" class="ln">   510</span>			uint64(in[2])*uint64(in[2])
+<span id="L511" class="ln">   511</span>		tmp[5] = uint64(in[0])*(uint64(in[5])&lt;&lt;1) +
+<span id="L512" class="ln">   512</span>			uint64(in[1])*(uint64(in[4])&lt;&lt;1) +
+<span id="L513" class="ln">   513</span>			uint64(in[2])*(uint64(in[3])&lt;&lt;1)
+<span id="L514" class="ln">   514</span>		tmp[6] = uint64(in[0])*(uint64(in[6])&lt;&lt;1) +
+<span id="L515" class="ln">   515</span>			uint64(in[1])*(uint64(in[5])&lt;&lt;2) +
+<span id="L516" class="ln">   516</span>			uint64(in[2])*(uint64(in[4])&lt;&lt;1) +
+<span id="L517" class="ln">   517</span>			uint64(in[3])*(uint64(in[3])&lt;&lt;1)
+<span id="L518" class="ln">   518</span>		tmp[7] = uint64(in[0])*(uint64(in[7])&lt;&lt;1) +
+<span id="L519" class="ln">   519</span>			uint64(in[1])*(uint64(in[6])&lt;&lt;1) +
+<span id="L520" class="ln">   520</span>			uint64(in[2])*(uint64(in[5])&lt;&lt;1) +
+<span id="L521" class="ln">   521</span>			uint64(in[3])*(uint64(in[4])&lt;&lt;1)
+<span id="L522" class="ln">   522</span>		<span class="comment">// tmp[8] has the greatest value of 2**61 + 2**60 + 2**61 + 2**60 + 2**60,</span>
+<span id="L523" class="ln">   523</span>		<span class="comment">// which is &lt; 2**64 as required.</span>
+<span id="L524" class="ln">   524</span>		tmp[8] = uint64(in[0])*(uint64(in[8])&lt;&lt;1) +
+<span id="L525" class="ln">   525</span>			uint64(in[1])*(uint64(in[7])&lt;&lt;2) +
+<span id="L526" class="ln">   526</span>			uint64(in[2])*(uint64(in[6])&lt;&lt;1) +
+<span id="L527" class="ln">   527</span>			uint64(in[3])*(uint64(in[5])&lt;&lt;2) +
+<span id="L528" class="ln">   528</span>			uint64(in[4])*uint64(in[4])
+<span id="L529" class="ln">   529</span>		tmp[9] = uint64(in[1])*(uint64(in[8])&lt;&lt;1) +
+<span id="L530" class="ln">   530</span>			uint64(in[2])*(uint64(in[7])&lt;&lt;1) +
+<span id="L531" class="ln">   531</span>			uint64(in[3])*(uint64(in[6])&lt;&lt;1) +
+<span id="L532" class="ln">   532</span>			uint64(in[4])*(uint64(in[5])&lt;&lt;1)
+<span id="L533" class="ln">   533</span>		tmp[10] = uint64(in[2])*(uint64(in[8])&lt;&lt;1) +
+<span id="L534" class="ln">   534</span>			uint64(in[3])*(uint64(in[7])&lt;&lt;2) +
+<span id="L535" class="ln">   535</span>			uint64(in[4])*(uint64(in[6])&lt;&lt;1) +
+<span id="L536" class="ln">   536</span>			uint64(in[5])*(uint64(in[5])&lt;&lt;1)
+<span id="L537" class="ln">   537</span>		tmp[11] = uint64(in[3])*(uint64(in[8])&lt;&lt;1) +
+<span id="L538" class="ln">   538</span>			uint64(in[4])*(uint64(in[7])&lt;&lt;1) +
+<span id="L539" class="ln">   539</span>			uint64(in[5])*(uint64(in[6])&lt;&lt;1)
+<span id="L540" class="ln">   540</span>		tmp[12] = uint64(in[4])*(uint64(in[8])&lt;&lt;1) +
+<span id="L541" class="ln">   541</span>			uint64(in[5])*(uint64(in[7])&lt;&lt;2) +
+<span id="L542" class="ln">   542</span>			uint64(in[6])*uint64(in[6])
+<span id="L543" class="ln">   543</span>		tmp[13] = uint64(in[5])*(uint64(in[8])&lt;&lt;1) +
+<span id="L544" class="ln">   544</span>			uint64(in[6])*(uint64(in[7])&lt;&lt;1)
+<span id="L545" class="ln">   545</span>		tmp[14] = uint64(in[6])*(uint64(in[8])&lt;&lt;1) +
+<span id="L546" class="ln">   546</span>			uint64(in[7])*(uint64(in[7])&lt;&lt;1)
+<span id="L547" class="ln">   547</span>		tmp[15] = uint64(in[7]) * (uint64(in[8]) &lt;&lt; 1)
+<span id="L548" class="ln">   548</span>		tmp[16] = uint64(in[8]) * uint64(in[8])
+<span id="L549" class="ln">   549</span>	
+<span id="L550" class="ln">   550</span>		p256ReduceDegree(out, tmp)
+<span id="L551" class="ln">   551</span>	}
+<span id="L552" class="ln">   552</span>	
+<span id="L553" class="ln">   553</span>	<span class="comment">// p256Mul sets out=in*in2.</span>
+<span id="L554" class="ln">   554</span>	<span class="comment">//</span>
+<span id="L555" class="ln">   555</span>	<span class="comment">// On entry: in[0,2,...] &lt; 2**30, in[1,3,...] &lt; 2**29 and</span>
+<span id="L556" class="ln">   556</span>	<span class="comment">//           in2[0,2,...] &lt; 2**30, in2[1,3,...] &lt; 2**29.</span>
+<span id="L557" class="ln">   557</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L558" class="ln">   558</span>	func p256Mul(out, in, in2 *[p256Limbs]uint32) {
+<span id="L559" class="ln">   559</span>		var tmp [17]uint64
+<span id="L560" class="ln">   560</span>	
+<span id="L561" class="ln">   561</span>		tmp[0] = uint64(in[0]) * uint64(in2[0])
+<span id="L562" class="ln">   562</span>		tmp[1] = uint64(in[0])*(uint64(in2[1])&lt;&lt;0) +
+<span id="L563" class="ln">   563</span>			uint64(in[1])*(uint64(in2[0])&lt;&lt;0)
+<span id="L564" class="ln">   564</span>		tmp[2] = uint64(in[0])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L565" class="ln">   565</span>			uint64(in[1])*(uint64(in2[1])&lt;&lt;1) +
+<span id="L566" class="ln">   566</span>			uint64(in[2])*(uint64(in2[0])&lt;&lt;0)
+<span id="L567" class="ln">   567</span>		tmp[3] = uint64(in[0])*(uint64(in2[3])&lt;&lt;0) +
+<span id="L568" class="ln">   568</span>			uint64(in[1])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L569" class="ln">   569</span>			uint64(in[2])*(uint64(in2[1])&lt;&lt;0) +
+<span id="L570" class="ln">   570</span>			uint64(in[3])*(uint64(in2[0])&lt;&lt;0)
+<span id="L571" class="ln">   571</span>		tmp[4] = uint64(in[0])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L572" class="ln">   572</span>			uint64(in[1])*(uint64(in2[3])&lt;&lt;1) +
+<span id="L573" class="ln">   573</span>			uint64(in[2])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L574" class="ln">   574</span>			uint64(in[3])*(uint64(in2[1])&lt;&lt;1) +
+<span id="L575" class="ln">   575</span>			uint64(in[4])*(uint64(in2[0])&lt;&lt;0)
+<span id="L576" class="ln">   576</span>		tmp[5] = uint64(in[0])*(uint64(in2[5])&lt;&lt;0) +
+<span id="L577" class="ln">   577</span>			uint64(in[1])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L578" class="ln">   578</span>			uint64(in[2])*(uint64(in2[3])&lt;&lt;0) +
+<span id="L579" class="ln">   579</span>			uint64(in[3])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L580" class="ln">   580</span>			uint64(in[4])*(uint64(in2[1])&lt;&lt;0) +
+<span id="L581" class="ln">   581</span>			uint64(in[5])*(uint64(in2[0])&lt;&lt;0)
+<span id="L582" class="ln">   582</span>		tmp[6] = uint64(in[0])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L583" class="ln">   583</span>			uint64(in[1])*(uint64(in2[5])&lt;&lt;1) +
+<span id="L584" class="ln">   584</span>			uint64(in[2])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L585" class="ln">   585</span>			uint64(in[3])*(uint64(in2[3])&lt;&lt;1) +
+<span id="L586" class="ln">   586</span>			uint64(in[4])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L587" class="ln">   587</span>			uint64(in[5])*(uint64(in2[1])&lt;&lt;1) +
+<span id="L588" class="ln">   588</span>			uint64(in[6])*(uint64(in2[0])&lt;&lt;0)
+<span id="L589" class="ln">   589</span>		tmp[7] = uint64(in[0])*(uint64(in2[7])&lt;&lt;0) +
+<span id="L590" class="ln">   590</span>			uint64(in[1])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L591" class="ln">   591</span>			uint64(in[2])*(uint64(in2[5])&lt;&lt;0) +
+<span id="L592" class="ln">   592</span>			uint64(in[3])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L593" class="ln">   593</span>			uint64(in[4])*(uint64(in2[3])&lt;&lt;0) +
+<span id="L594" class="ln">   594</span>			uint64(in[5])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L595" class="ln">   595</span>			uint64(in[6])*(uint64(in2[1])&lt;&lt;0) +
+<span id="L596" class="ln">   596</span>			uint64(in[7])*(uint64(in2[0])&lt;&lt;0)
+<span id="L597" class="ln">   597</span>		<span class="comment">// tmp[8] has the greatest value but doesn&#39;t overflow. See logic in</span>
+<span id="L598" class="ln">   598</span>		<span class="comment">// p256Square.</span>
+<span id="L599" class="ln">   599</span>		tmp[8] = uint64(in[0])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L600" class="ln">   600</span>			uint64(in[1])*(uint64(in2[7])&lt;&lt;1) +
+<span id="L601" class="ln">   601</span>			uint64(in[2])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L602" class="ln">   602</span>			uint64(in[3])*(uint64(in2[5])&lt;&lt;1) +
+<span id="L603" class="ln">   603</span>			uint64(in[4])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L604" class="ln">   604</span>			uint64(in[5])*(uint64(in2[3])&lt;&lt;1) +
+<span id="L605" class="ln">   605</span>			uint64(in[6])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L606" class="ln">   606</span>			uint64(in[7])*(uint64(in2[1])&lt;&lt;1) +
+<span id="L607" class="ln">   607</span>			uint64(in[8])*(uint64(in2[0])&lt;&lt;0)
+<span id="L608" class="ln">   608</span>		tmp[9] = uint64(in[1])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L609" class="ln">   609</span>			uint64(in[2])*(uint64(in2[7])&lt;&lt;0) +
+<span id="L610" class="ln">   610</span>			uint64(in[3])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L611" class="ln">   611</span>			uint64(in[4])*(uint64(in2[5])&lt;&lt;0) +
+<span id="L612" class="ln">   612</span>			uint64(in[5])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L613" class="ln">   613</span>			uint64(in[6])*(uint64(in2[3])&lt;&lt;0) +
+<span id="L614" class="ln">   614</span>			uint64(in[7])*(uint64(in2[2])&lt;&lt;0) +
+<span id="L615" class="ln">   615</span>			uint64(in[8])*(uint64(in2[1])&lt;&lt;0)
+<span id="L616" class="ln">   616</span>		tmp[10] = uint64(in[2])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L617" class="ln">   617</span>			uint64(in[3])*(uint64(in2[7])&lt;&lt;1) +
+<span id="L618" class="ln">   618</span>			uint64(in[4])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L619" class="ln">   619</span>			uint64(in[5])*(uint64(in2[5])&lt;&lt;1) +
+<span id="L620" class="ln">   620</span>			uint64(in[6])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L621" class="ln">   621</span>			uint64(in[7])*(uint64(in2[3])&lt;&lt;1) +
+<span id="L622" class="ln">   622</span>			uint64(in[8])*(uint64(in2[2])&lt;&lt;0)
+<span id="L623" class="ln">   623</span>		tmp[11] = uint64(in[3])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L624" class="ln">   624</span>			uint64(in[4])*(uint64(in2[7])&lt;&lt;0) +
+<span id="L625" class="ln">   625</span>			uint64(in[5])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L626" class="ln">   626</span>			uint64(in[6])*(uint64(in2[5])&lt;&lt;0) +
+<span id="L627" class="ln">   627</span>			uint64(in[7])*(uint64(in2[4])&lt;&lt;0) +
+<span id="L628" class="ln">   628</span>			uint64(in[8])*(uint64(in2[3])&lt;&lt;0)
+<span id="L629" class="ln">   629</span>		tmp[12] = uint64(in[4])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L630" class="ln">   630</span>			uint64(in[5])*(uint64(in2[7])&lt;&lt;1) +
+<span id="L631" class="ln">   631</span>			uint64(in[6])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L632" class="ln">   632</span>			uint64(in[7])*(uint64(in2[5])&lt;&lt;1) +
+<span id="L633" class="ln">   633</span>			uint64(in[8])*(uint64(in2[4])&lt;&lt;0)
+<span id="L634" class="ln">   634</span>		tmp[13] = uint64(in[5])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L635" class="ln">   635</span>			uint64(in[6])*(uint64(in2[7])&lt;&lt;0) +
+<span id="L636" class="ln">   636</span>			uint64(in[7])*(uint64(in2[6])&lt;&lt;0) +
+<span id="L637" class="ln">   637</span>			uint64(in[8])*(uint64(in2[5])&lt;&lt;0)
+<span id="L638" class="ln">   638</span>		tmp[14] = uint64(in[6])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L639" class="ln">   639</span>			uint64(in[7])*(uint64(in2[7])&lt;&lt;1) +
+<span id="L640" class="ln">   640</span>			uint64(in[8])*(uint64(in2[6])&lt;&lt;0)
+<span id="L641" class="ln">   641</span>		tmp[15] = uint64(in[7])*(uint64(in2[8])&lt;&lt;0) +
+<span id="L642" class="ln">   642</span>			uint64(in[8])*(uint64(in2[7])&lt;&lt;0)
+<span id="L643" class="ln">   643</span>		tmp[16] = uint64(in[8]) * (uint64(in2[8]) &lt;&lt; 0)
+<span id="L644" class="ln">   644</span>	
+<span id="L645" class="ln">   645</span>		p256ReduceDegree(out, tmp)
+<span id="L646" class="ln">   646</span>	}
+<span id="L647" class="ln">   647</span>	
+<span id="L648" class="ln">   648</span>	func p256Assign(out, in *[p256Limbs]uint32) {
+<span id="L649" class="ln">   649</span>		*out = *in
+<span id="L650" class="ln">   650</span>	}
+<span id="L651" class="ln">   651</span>	
+<span id="L652" class="ln">   652</span>	<span class="comment">// p256Invert calculates |out| = |in|^{-1}</span>
+<span id="L653" class="ln">   653</span>	<span class="comment">//</span>
+<span id="L654" class="ln">   654</span>	<span class="comment">// Based on Fermat&#39;s Little Theorem:</span>
+<span id="L655" class="ln">   655</span>	<span class="comment">//   a^p = a (mod p)</span>
+<span id="L656" class="ln">   656</span>	<span class="comment">//   a^{p-1} = 1 (mod p)</span>
+<span id="L657" class="ln">   657</span>	<span class="comment">//   a^{p-2} = a^{-1} (mod p)</span>
+<span id="L658" class="ln">   658</span>	func p256Invert(out, in *[p256Limbs]uint32) {
+<span id="L659" class="ln">   659</span>		var ftmp, ftmp2 [p256Limbs]uint32
+<span id="L660" class="ln">   660</span>	
+<span id="L661" class="ln">   661</span>		<span class="comment">// each e_I will hold |in|^{2^I - 1}</span>
+<span id="L662" class="ln">   662</span>		var e2, e4, e8, e16, e32, e64 [p256Limbs]uint32
+<span id="L663" class="ln">   663</span>	
+<span id="L664" class="ln">   664</span>		p256Square(&amp;ftmp, in)     <span class="comment">// 2^1</span>
+<span id="L665" class="ln">   665</span>		p256Mul(&amp;ftmp, in, &amp;ftmp) <span class="comment">// 2^2 - 2^0</span>
+<span id="L666" class="ln">   666</span>		p256Assign(&amp;e2, &amp;ftmp)
+<span id="L667" class="ln">   667</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^3 - 2^1</span>
+<span id="L668" class="ln">   668</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^4 - 2^2</span>
+<span id="L669" class="ln">   669</span>		p256Mul(&amp;ftmp, &amp;ftmp, &amp;e2) <span class="comment">// 2^4 - 2^0</span>
+<span id="L670" class="ln">   670</span>		p256Assign(&amp;e4, &amp;ftmp)
+<span id="L671" class="ln">   671</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^5 - 2^1</span>
+<span id="L672" class="ln">   672</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^6 - 2^2</span>
+<span id="L673" class="ln">   673</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^7 - 2^3</span>
+<span id="L674" class="ln">   674</span>		p256Square(&amp;ftmp, &amp;ftmp)   <span class="comment">// 2^8 - 2^4</span>
+<span id="L675" class="ln">   675</span>		p256Mul(&amp;ftmp, &amp;ftmp, &amp;e4) <span class="comment">// 2^8 - 2^0</span>
+<span id="L676" class="ln">   676</span>		p256Assign(&amp;e8, &amp;ftmp)
+<span id="L677" class="ln">   677</span>		for i := 0; i &lt; 8; i++ {
+<span id="L678" class="ln">   678</span>			p256Square(&amp;ftmp, &amp;ftmp)
+<span id="L679" class="ln">   679</span>		} <span class="comment">// 2^16 - 2^8</span>
+<span id="L680" class="ln">   680</span>		p256Mul(&amp;ftmp, &amp;ftmp, &amp;e8) <span class="comment">// 2^16 - 2^0</span>
+<span id="L681" class="ln">   681</span>		p256Assign(&amp;e16, &amp;ftmp)
+<span id="L682" class="ln">   682</span>		for i := 0; i &lt; 16; i++ {
+<span id="L683" class="ln">   683</span>			p256Square(&amp;ftmp, &amp;ftmp)
+<span id="L684" class="ln">   684</span>		} <span class="comment">// 2^32 - 2^16</span>
+<span id="L685" class="ln">   685</span>		p256Mul(&amp;ftmp, &amp;ftmp, &amp;e16) <span class="comment">// 2^32 - 2^0</span>
+<span id="L686" class="ln">   686</span>		p256Assign(&amp;e32, &amp;ftmp)
+<span id="L687" class="ln">   687</span>		for i := 0; i &lt; 32; i++ {
+<span id="L688" class="ln">   688</span>			p256Square(&amp;ftmp, &amp;ftmp)
+<span id="L689" class="ln">   689</span>		} <span class="comment">// 2^64 - 2^32</span>
+<span id="L690" class="ln">   690</span>		p256Assign(&amp;e64, &amp;ftmp)
+<span id="L691" class="ln">   691</span>		p256Mul(&amp;ftmp, &amp;ftmp, in) <span class="comment">// 2^64 - 2^32 + 2^0</span>
+<span id="L692" class="ln">   692</span>		for i := 0; i &lt; 192; i++ {
+<span id="L693" class="ln">   693</span>			p256Square(&amp;ftmp, &amp;ftmp)
+<span id="L694" class="ln">   694</span>		} <span class="comment">// 2^256 - 2^224 + 2^192</span>
+<span id="L695" class="ln">   695</span>	
+<span id="L696" class="ln">   696</span>		p256Mul(&amp;ftmp2, &amp;e64, &amp;e32) <span class="comment">// 2^64 - 2^0</span>
+<span id="L697" class="ln">   697</span>		for i := 0; i &lt; 16; i++ {
+<span id="L698" class="ln">   698</span>			p256Square(&amp;ftmp2, &amp;ftmp2)
+<span id="L699" class="ln">   699</span>		} <span class="comment">// 2^80 - 2^16</span>
+<span id="L700" class="ln">   700</span>		p256Mul(&amp;ftmp2, &amp;ftmp2, &amp;e16) <span class="comment">// 2^80 - 2^0</span>
+<span id="L701" class="ln">   701</span>		for i := 0; i &lt; 8; i++ {
+<span id="L702" class="ln">   702</span>			p256Square(&amp;ftmp2, &amp;ftmp2)
+<span id="L703" class="ln">   703</span>		} <span class="comment">// 2^88 - 2^8</span>
+<span id="L704" class="ln">   704</span>		p256Mul(&amp;ftmp2, &amp;ftmp2, &amp;e8) <span class="comment">// 2^88 - 2^0</span>
+<span id="L705" class="ln">   705</span>		for i := 0; i &lt; 4; i++ {
+<span id="L706" class="ln">   706</span>			p256Square(&amp;ftmp2, &amp;ftmp2)
+<span id="L707" class="ln">   707</span>		} <span class="comment">// 2^92 - 2^4</span>
+<span id="L708" class="ln">   708</span>		p256Mul(&amp;ftmp2, &amp;ftmp2, &amp;e4) <span class="comment">// 2^92 - 2^0</span>
+<span id="L709" class="ln">   709</span>		p256Square(&amp;ftmp2, &amp;ftmp2)   <span class="comment">// 2^93 - 2^1</span>
+<span id="L710" class="ln">   710</span>		p256Square(&amp;ftmp2, &amp;ftmp2)   <span class="comment">// 2^94 - 2^2</span>
+<span id="L711" class="ln">   711</span>		p256Mul(&amp;ftmp2, &amp;ftmp2, &amp;e2) <span class="comment">// 2^94 - 2^0</span>
+<span id="L712" class="ln">   712</span>		p256Square(&amp;ftmp2, &amp;ftmp2)   <span class="comment">// 2^95 - 2^1</span>
+<span id="L713" class="ln">   713</span>		p256Square(&amp;ftmp2, &amp;ftmp2)   <span class="comment">// 2^96 - 2^2</span>
+<span id="L714" class="ln">   714</span>		p256Mul(&amp;ftmp2, &amp;ftmp2, in)  <span class="comment">// 2^96 - 3</span>
+<span id="L715" class="ln">   715</span>	
+<span id="L716" class="ln">   716</span>		p256Mul(out, &amp;ftmp2, &amp;ftmp) <span class="comment">// 2^256 - 2^224 + 2^192 + 2^96 - 3</span>
+<span id="L717" class="ln">   717</span>	}
+<span id="L718" class="ln">   718</span>	
+<span id="L719" class="ln">   719</span>	<span class="comment">// p256Scalar3 sets out=3*out.</span>
+<span id="L720" class="ln">   720</span>	<span class="comment">//</span>
+<span id="L721" class="ln">   721</span>	<span class="comment">// On entry: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L722" class="ln">   722</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L723" class="ln">   723</span>	func p256Scalar3(out *[p256Limbs]uint32) {
+<span id="L724" class="ln">   724</span>		var carry uint32
+<span id="L725" class="ln">   725</span>	
+<span id="L726" class="ln">   726</span>		for i := 0; ; i++ {
+<span id="L727" class="ln">   727</span>			out[i] *= 3
+<span id="L728" class="ln">   728</span>			out[i] += carry
+<span id="L729" class="ln">   729</span>			carry = out[i] &gt;&gt; 29
+<span id="L730" class="ln">   730</span>			out[i] &amp;= bottom29Bits
+<span id="L731" class="ln">   731</span>	
+<span id="L732" class="ln">   732</span>			i++
+<span id="L733" class="ln">   733</span>			if i == p256Limbs {
+<span id="L734" class="ln">   734</span>				break
+<span id="L735" class="ln">   735</span>			}
+<span id="L736" class="ln">   736</span>	
+<span id="L737" class="ln">   737</span>			out[i] *= 3
+<span id="L738" class="ln">   738</span>			out[i] += carry
+<span id="L739" class="ln">   739</span>			carry = out[i] &gt;&gt; 28
+<span id="L740" class="ln">   740</span>			out[i] &amp;= bottom28Bits
+<span id="L741" class="ln">   741</span>		}
+<span id="L742" class="ln">   742</span>	
+<span id="L743" class="ln">   743</span>		p256ReduceCarry(out, carry)
+<span id="L744" class="ln">   744</span>	}
+<span id="L745" class="ln">   745</span>	
+<span id="L746" class="ln">   746</span>	<span class="comment">// p256Scalar4 sets out=4*out.</span>
+<span id="L747" class="ln">   747</span>	<span class="comment">//</span>
+<span id="L748" class="ln">   748</span>	<span class="comment">// On entry: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L749" class="ln">   749</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L750" class="ln">   750</span>	func p256Scalar4(out *[p256Limbs]uint32) {
+<span id="L751" class="ln">   751</span>		var carry, nextCarry uint32
+<span id="L752" class="ln">   752</span>	
+<span id="L753" class="ln">   753</span>		for i := 0; ; i++ {
+<span id="L754" class="ln">   754</span>			nextCarry = out[i] &gt;&gt; 27
+<span id="L755" class="ln">   755</span>			out[i] &lt;&lt;= 2
+<span id="L756" class="ln">   756</span>			out[i] &amp;= bottom29Bits
+<span id="L757" class="ln">   757</span>			out[i] += carry
+<span id="L758" class="ln">   758</span>			carry = nextCarry + (out[i] &gt;&gt; 29)
+<span id="L759" class="ln">   759</span>			out[i] &amp;= bottom29Bits
+<span id="L760" class="ln">   760</span>	
+<span id="L761" class="ln">   761</span>			i++
+<span id="L762" class="ln">   762</span>			if i == p256Limbs {
+<span id="L763" class="ln">   763</span>				break
+<span id="L764" class="ln">   764</span>			}
+<span id="L765" class="ln">   765</span>			nextCarry = out[i] &gt;&gt; 26
+<span id="L766" class="ln">   766</span>			out[i] &lt;&lt;= 2
+<span id="L767" class="ln">   767</span>			out[i] &amp;= bottom28Bits
+<span id="L768" class="ln">   768</span>			out[i] += carry
+<span id="L769" class="ln">   769</span>			carry = nextCarry + (out[i] &gt;&gt; 28)
+<span id="L770" class="ln">   770</span>			out[i] &amp;= bottom28Bits
+<span id="L771" class="ln">   771</span>		}
+<span id="L772" class="ln">   772</span>	
+<span id="L773" class="ln">   773</span>		p256ReduceCarry(out, carry)
+<span id="L774" class="ln">   774</span>	}
+<span id="L775" class="ln">   775</span>	
+<span id="L776" class="ln">   776</span>	<span class="comment">// p256Scalar8 sets out=8*out.</span>
+<span id="L777" class="ln">   777</span>	<span class="comment">//</span>
+<span id="L778" class="ln">   778</span>	<span class="comment">// On entry: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L779" class="ln">   779</span>	<span class="comment">// On exit: out[0,2,...] &lt; 2**30, out[1,3,...] &lt; 2**29.</span>
+<span id="L780" class="ln">   780</span>	func p256Scalar8(out *[p256Limbs]uint32) {
+<span id="L781" class="ln">   781</span>		var carry, nextCarry uint32
+<span id="L782" class="ln">   782</span>	
+<span id="L783" class="ln">   783</span>		for i := 0; ; i++ {
+<span id="L784" class="ln">   784</span>			nextCarry = out[i] &gt;&gt; 26
+<span id="L785" class="ln">   785</span>			out[i] &lt;&lt;= 3
+<span id="L786" class="ln">   786</span>			out[i] &amp;= bottom29Bits
+<span id="L787" class="ln">   787</span>			out[i] += carry
+<span id="L788" class="ln">   788</span>			carry = nextCarry + (out[i] &gt;&gt; 29)
+<span id="L789" class="ln">   789</span>			out[i] &amp;= bottom29Bits
+<span id="L790" class="ln">   790</span>	
+<span id="L791" class="ln">   791</span>			i++
+<span id="L792" class="ln">   792</span>			if i == p256Limbs {
+<span id="L793" class="ln">   793</span>				break
+<span id="L794" class="ln">   794</span>			}
+<span id="L795" class="ln">   795</span>			nextCarry = out[i] &gt;&gt; 25
+<span id="L796" class="ln">   796</span>			out[i] &lt;&lt;= 3
+<span id="L797" class="ln">   797</span>			out[i] &amp;= bottom28Bits
+<span id="L798" class="ln">   798</span>			out[i] += carry
+<span id="L799" class="ln">   799</span>			carry = nextCarry + (out[i] &gt;&gt; 28)
+<span id="L800" class="ln">   800</span>			out[i] &amp;= bottom28Bits
+<span id="L801" class="ln">   801</span>		}
+<span id="L802" class="ln">   802</span>	
+<span id="L803" class="ln">   803</span>		p256ReduceCarry(out, carry)
+<span id="L804" class="ln">   804</span>	}
+<span id="L805" class="ln">   805</span>	
+<span id="L806" class="ln">   806</span>	<span class="comment">// Group operations:</span>
+<span id="L807" class="ln">   807</span>	<span class="comment">//</span>
+<span id="L808" class="ln">   808</span>	<span class="comment">// Elements of the elliptic curve group are represented in Jacobian</span>
+<span id="L809" class="ln">   809</span>	<span class="comment">// coordinates: (x, y, z). An affine point (x&#39;, y&#39;) is x&#39;=x/z**2, y&#39;=y/z**3 in</span>
+<span id="L810" class="ln">   810</span>	<span class="comment">// Jacobian form.</span>
+<span id="L811" class="ln">   811</span>	
+<span id="L812" class="ln">   812</span>	<span class="comment">// p256PointDouble sets {xOut,yOut,zOut} = 2*{x,y,z}.</span>
+<span id="L813" class="ln">   813</span>	<span class="comment">//</span>
+<span id="L814" class="ln">   814</span>	<span class="comment">// See http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l</span>
+<span id="L815" class="ln">   815</span>	func p256PointDouble(xOut, yOut, zOut, x, y, z *[p256Limbs]uint32) {
+<span id="L816" class="ln">   816</span>		var delta, gamma, alpha, beta, tmp, tmp2 [p256Limbs]uint32
+<span id="L817" class="ln">   817</span>	
+<span id="L818" class="ln">   818</span>		p256Square(&amp;delta, z)
+<span id="L819" class="ln">   819</span>		p256Square(&amp;gamma, y)
+<span id="L820" class="ln">   820</span>		p256Mul(&amp;beta, x, &amp;gamma)
+<span id="L821" class="ln">   821</span>	
+<span id="L822" class="ln">   822</span>		p256Sum(&amp;tmp, x, &amp;delta)
+<span id="L823" class="ln">   823</span>		p256Diff(&amp;tmp2, x, &amp;delta)
+<span id="L824" class="ln">   824</span>		p256Mul(&amp;alpha, &amp;tmp, &amp;tmp2)
+<span id="L825" class="ln">   825</span>		p256Scalar3(&amp;alpha)
+<span id="L826" class="ln">   826</span>	
+<span id="L827" class="ln">   827</span>		p256Sum(&amp;tmp, y, z)
+<span id="L828" class="ln">   828</span>		p256Square(&amp;tmp, &amp;tmp)
+<span id="L829" class="ln">   829</span>		p256Diff(&amp;tmp, &amp;tmp, &amp;gamma)
+<span id="L830" class="ln">   830</span>		p256Diff(zOut, &amp;tmp, &amp;delta)
+<span id="L831" class="ln">   831</span>	
+<span id="L832" class="ln">   832</span>		p256Scalar4(&amp;beta)
+<span id="L833" class="ln">   833</span>		p256Square(xOut, &amp;alpha)
+<span id="L834" class="ln">   834</span>		p256Diff(xOut, xOut, &amp;beta)
+<span id="L835" class="ln">   835</span>		p256Diff(xOut, xOut, &amp;beta)
+<span id="L836" class="ln">   836</span>	
+<span id="L837" class="ln">   837</span>		p256Diff(&amp;tmp, &amp;beta, xOut)
+<span id="L838" class="ln">   838</span>		p256Mul(&amp;tmp, &amp;alpha, &amp;tmp)
+<span id="L839" class="ln">   839</span>		p256Square(&amp;tmp2, &amp;gamma)
+<span id="L840" class="ln">   840</span>		p256Scalar8(&amp;tmp2)
+<span id="L841" class="ln">   841</span>		p256Diff(yOut, &amp;tmp, &amp;tmp2)
+<span id="L842" class="ln">   842</span>	}
+<span id="L843" class="ln">   843</span>	
+<span id="L844" class="ln">   844</span>	<span class="comment">// p256PointAddMixed sets {xOut,yOut,zOut} = {x1,y1,z1} + {x2,y2,1}.</span>
+<span id="L845" class="ln">   845</span>	<span class="comment">// (i.e. the second point is affine.)</span>
+<span id="L846" class="ln">   846</span>	<span class="comment">//</span>
+<span id="L847" class="ln">   847</span>	<span class="comment">// See http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl</span>
+<span id="L848" class="ln">   848</span>	<span class="comment">//</span>
+<span id="L849" class="ln">   849</span>	<span class="comment">// Note that this function does not handle P+P, infinity+P nor P+infinity</span>
+<span id="L850" class="ln">   850</span>	<span class="comment">// correctly.</span>
+<span id="L851" class="ln">   851</span>	func p256PointAddMixed(xOut, yOut, zOut, x1, y1, z1, x2, y2 *[p256Limbs]uint32) {
+<span id="L852" class="ln">   852</span>		var z1z1, z1z1z1, s2, u2, h, i, j, r, rr, v, tmp [p256Limbs]uint32
+<span id="L853" class="ln">   853</span>	
+<span id="L854" class="ln">   854</span>		p256Square(&amp;z1z1, z1)
+<span id="L855" class="ln">   855</span>		p256Sum(&amp;tmp, z1, z1)
+<span id="L856" class="ln">   856</span>	
+<span id="L857" class="ln">   857</span>		p256Mul(&amp;u2, x2, &amp;z1z1)
+<span id="L858" class="ln">   858</span>		p256Mul(&amp;z1z1z1, z1, &amp;z1z1)
+<span id="L859" class="ln">   859</span>		p256Mul(&amp;s2, y2, &amp;z1z1z1)
+<span id="L860" class="ln">   860</span>		p256Diff(&amp;h, &amp;u2, x1)
+<span id="L861" class="ln">   861</span>		p256Sum(&amp;i, &amp;h, &amp;h)
+<span id="L862" class="ln">   862</span>		p256Square(&amp;i, &amp;i)
+<span id="L863" class="ln">   863</span>		p256Mul(&amp;j, &amp;h, &amp;i)
+<span id="L864" class="ln">   864</span>		p256Diff(&amp;r, &amp;s2, y1)
+<span id="L865" class="ln">   865</span>		p256Sum(&amp;r, &amp;r, &amp;r)
+<span id="L866" class="ln">   866</span>		p256Mul(&amp;v, x1, &amp;i)
+<span id="L867" class="ln">   867</span>	
+<span id="L868" class="ln">   868</span>		p256Mul(zOut, &amp;tmp, &amp;h)
+<span id="L869" class="ln">   869</span>		p256Square(&amp;rr, &amp;r)
+<span id="L870" class="ln">   870</span>		p256Diff(xOut, &amp;rr, &amp;j)
+<span id="L871" class="ln">   871</span>		p256Diff(xOut, xOut, &amp;v)
+<span id="L872" class="ln">   872</span>		p256Diff(xOut, xOut, &amp;v)
+<span id="L873" class="ln">   873</span>	
+<span id="L874" class="ln">   874</span>		p256Diff(&amp;tmp, &amp;v, xOut)
+<span id="L875" class="ln">   875</span>		p256Mul(yOut, &amp;tmp, &amp;r)
+<span id="L876" class="ln">   876</span>		p256Mul(&amp;tmp, y1, &amp;j)
+<span id="L877" class="ln">   877</span>		p256Diff(yOut, yOut, &amp;tmp)
+<span id="L878" class="ln">   878</span>		p256Diff(yOut, yOut, &amp;tmp)
+<span id="L879" class="ln">   879</span>	}
+<span id="L880" class="ln">   880</span>	
+<span id="L881" class="ln">   881</span>	<span class="comment">// p256PointAdd sets {xOut,yOut,zOut} = {x1,y1,z1} + {x2,y2,z2}.</span>
+<span id="L882" class="ln">   882</span>	<span class="comment">//</span>
+<span id="L883" class="ln">   883</span>	<span class="comment">// See http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl</span>
+<span id="L884" class="ln">   884</span>	<span class="comment">//</span>
+<span id="L885" class="ln">   885</span>	<span class="comment">// Note that this function does not handle P+P, infinity+P nor P+infinity</span>
+<span id="L886" class="ln">   886</span>	<span class="comment">// correctly.</span>
+<span id="L887" class="ln">   887</span>	func p256PointAdd(xOut, yOut, zOut, x1, y1, z1, x2, y2, z2 *[p256Limbs]uint32) {
+<span id="L888" class="ln">   888</span>		var z1z1, z1z1z1, z2z2, z2z2z2, s1, s2, u1, u2, h, i, j, r, rr, v, tmp [p256Limbs]uint32
+<span id="L889" class="ln">   889</span>	
+<span id="L890" class="ln">   890</span>		p256Square(&amp;z1z1, z1)
+<span id="L891" class="ln">   891</span>		p256Square(&amp;z2z2, z2)
+<span id="L892" class="ln">   892</span>		p256Mul(&amp;u1, x1, &amp;z2z2)
+<span id="L893" class="ln">   893</span>	
+<span id="L894" class="ln">   894</span>		p256Sum(&amp;tmp, z1, z2)
+<span id="L895" class="ln">   895</span>		p256Square(&amp;tmp, &amp;tmp)
+<span id="L896" class="ln">   896</span>		p256Diff(&amp;tmp, &amp;tmp, &amp;z1z1)
+<span id="L897" class="ln">   897</span>		p256Diff(&amp;tmp, &amp;tmp, &amp;z2z2)
+<span id="L898" class="ln">   898</span>	
+<span id="L899" class="ln">   899</span>		p256Mul(&amp;z2z2z2, z2, &amp;z2z2)
+<span id="L900" class="ln">   900</span>		p256Mul(&amp;s1, y1, &amp;z2z2z2)
+<span id="L901" class="ln">   901</span>	
+<span id="L902" class="ln">   902</span>		p256Mul(&amp;u2, x2, &amp;z1z1)
+<span id="L903" class="ln">   903</span>		p256Mul(&amp;z1z1z1, z1, &amp;z1z1)
+<span id="L904" class="ln">   904</span>		p256Mul(&amp;s2, y2, &amp;z1z1z1)
+<span id="L905" class="ln">   905</span>		p256Diff(&amp;h, &amp;u2, &amp;u1)
+<span id="L906" class="ln">   906</span>		p256Sum(&amp;i, &amp;h, &amp;h)
+<span id="L907" class="ln">   907</span>		p256Square(&amp;i, &amp;i)
+<span id="L908" class="ln">   908</span>		p256Mul(&amp;j, &amp;h, &amp;i)
+<span id="L909" class="ln">   909</span>		p256Diff(&amp;r, &amp;s2, &amp;s1)
+<span id="L910" class="ln">   910</span>		p256Sum(&amp;r, &amp;r, &amp;r)
+<span id="L911" class="ln">   911</span>		p256Mul(&amp;v, &amp;u1, &amp;i)
+<span id="L912" class="ln">   912</span>	
+<span id="L913" class="ln">   913</span>		p256Mul(zOut, &amp;tmp, &amp;h)
+<span id="L914" class="ln">   914</span>		p256Square(&amp;rr, &amp;r)
+<span id="L915" class="ln">   915</span>		p256Diff(xOut, &amp;rr, &amp;j)
+<span id="L916" class="ln">   916</span>		p256Diff(xOut, xOut, &amp;v)
+<span id="L917" class="ln">   917</span>		p256Diff(xOut, xOut, &amp;v)
+<span id="L918" class="ln">   918</span>	
+<span id="L919" class="ln">   919</span>		p256Diff(&amp;tmp, &amp;v, xOut)
+<span id="L920" class="ln">   920</span>		p256Mul(yOut, &amp;tmp, &amp;r)
+<span id="L921" class="ln">   921</span>		p256Mul(&amp;tmp, &amp;s1, &amp;j)
+<span id="L922" class="ln">   922</span>		p256Diff(yOut, yOut, &amp;tmp)
+<span id="L923" class="ln">   923</span>		p256Diff(yOut, yOut, &amp;tmp)
+<span id="L924" class="ln">   924</span>	}
+<span id="L925" class="ln">   925</span>	
+<span id="L926" class="ln">   926</span>	<span class="comment">// p256CopyConditional sets out=in if mask = 0xffffffff in constant time.</span>
+<span id="L927" class="ln">   927</span>	<span class="comment">//</span>
+<span id="L928" class="ln">   928</span>	<span class="comment">// On entry: mask is either 0 or 0xffffffff.</span>
+<span id="L929" class="ln">   929</span>	func p256CopyConditional(out, in *[p256Limbs]uint32, mask uint32) {
+<span id="L930" class="ln">   930</span>		for i := 0; i &lt; p256Limbs; i++ {
+<span id="L931" class="ln">   931</span>			tmp := mask &amp; (in[i] ^ out[i])
+<span id="L932" class="ln">   932</span>			out[i] ^= tmp
+<span id="L933" class="ln">   933</span>		}
+<span id="L934" class="ln">   934</span>	}
+<span id="L935" class="ln">   935</span>	
+<span id="L936" class="ln">   936</span>	<span class="comment">// p256SelectAffinePoint sets {out_x,out_y} to the index&#39;th entry of table.</span>
+<span id="L937" class="ln">   937</span>	<span class="comment">// On entry: index &lt; 16, table[0] must be zero.</span>
+<span id="L938" class="ln">   938</span>	func p256SelectAffinePoint(xOut, yOut *[p256Limbs]uint32, table []uint32, index uint32) {
+<span id="L939" class="ln">   939</span>		for i := range xOut {
+<span id="L940" class="ln">   940</span>			xOut[i] = 0
+<span id="L941" class="ln">   941</span>		}
+<span id="L942" class="ln">   942</span>		for i := range yOut {
+<span id="L943" class="ln">   943</span>			yOut[i] = 0
+<span id="L944" class="ln">   944</span>		}
+<span id="L945" class="ln">   945</span>	
+<span id="L946" class="ln">   946</span>		for i := uint32(1); i &lt; 16; i++ {
+<span id="L947" class="ln">   947</span>			mask := i ^ index
+<span id="L948" class="ln">   948</span>			mask |= mask &gt;&gt; 2
+<span id="L949" class="ln">   949</span>			mask |= mask &gt;&gt; 1
+<span id="L950" class="ln">   950</span>			mask &amp;= 1
+<span id="L951" class="ln">   951</span>			mask--
+<span id="L952" class="ln">   952</span>			for j := range xOut {
+<span id="L953" class="ln">   953</span>				xOut[j] |= table[0] &amp; mask
+<span id="L954" class="ln">   954</span>				table = table[1:]
+<span id="L955" class="ln">   955</span>			}
+<span id="L956" class="ln">   956</span>			for j := range yOut {
+<span id="L957" class="ln">   957</span>				yOut[j] |= table[0] &amp; mask
+<span id="L958" class="ln">   958</span>				table = table[1:]
+<span id="L959" class="ln">   959</span>			}
+<span id="L960" class="ln">   960</span>		}
+<span id="L961" class="ln">   961</span>	}
+<span id="L962" class="ln">   962</span>	
+<span id="L963" class="ln">   963</span>	<span class="comment">// p256SelectJacobianPoint sets {out_x,out_y,out_z} to the index&#39;th entry of</span>
+<span id="L964" class="ln">   964</span>	<span class="comment">// table.</span>
+<span id="L965" class="ln">   965</span>	<span class="comment">// On entry: index &lt; 16, table[0] must be zero.</span>
+<span id="L966" class="ln">   966</span>	func p256SelectJacobianPoint(xOut, yOut, zOut *[p256Limbs]uint32, table *[16][3][p256Limbs]uint32, index uint32) {
+<span id="L967" class="ln">   967</span>		for i := range xOut {
+<span id="L968" class="ln">   968</span>			xOut[i] = 0
+<span id="L969" class="ln">   969</span>		}
+<span id="L970" class="ln">   970</span>		for i := range yOut {
+<span id="L971" class="ln">   971</span>			yOut[i] = 0
+<span id="L972" class="ln">   972</span>		}
+<span id="L973" class="ln">   973</span>		for i := range zOut {
+<span id="L974" class="ln">   974</span>			zOut[i] = 0
+<span id="L975" class="ln">   975</span>		}
+<span id="L976" class="ln">   976</span>	
+<span id="L977" class="ln">   977</span>		<span class="comment">// The implicit value at index 0 is all zero. We don&#39;t need to perform that</span>
+<span id="L978" class="ln">   978</span>		<span class="comment">// iteration of the loop because we already set out_* to zero.</span>
+<span id="L979" class="ln">   979</span>		for i := uint32(1); i &lt; 16; i++ {
+<span id="L980" class="ln">   980</span>			mask := i ^ index
+<span id="L981" class="ln">   981</span>			mask |= mask &gt;&gt; 2
+<span id="L982" class="ln">   982</span>			mask |= mask &gt;&gt; 1
+<span id="L983" class="ln">   983</span>			mask &amp;= 1
+<span id="L984" class="ln">   984</span>			mask--
+<span id="L985" class="ln">   985</span>			for j := range xOut {
+<span id="L986" class="ln">   986</span>				xOut[j] |= table[i][0][j] &amp; mask
+<span id="L987" class="ln">   987</span>			}
+<span id="L988" class="ln">   988</span>			for j := range yOut {
+<span id="L989" class="ln">   989</span>				yOut[j] |= table[i][1][j] &amp; mask
+<span id="L990" class="ln">   990</span>			}
+<span id="L991" class="ln">   991</span>			for j := range zOut {
+<span id="L992" class="ln">   992</span>				zOut[j] |= table[i][2][j] &amp; mask
+<span id="L993" class="ln">   993</span>			}
+<span id="L994" class="ln">   994</span>		}
+<span id="L995" class="ln">   995</span>	}
+<span id="L996" class="ln">   996</span>	
+<span id="L997" class="ln">   997</span>	<span class="comment">// p256GetBit returns the bit&#39;th bit of scalar.</span>
+<span id="L998" class="ln">   998</span>	func p256GetBit(scalar *[32]uint8, bit uint) uint32 {
+<span id="L999" class="ln">   999</span>		return uint32(((scalar[bit&gt;&gt;3]) &gt;&gt; (bit &amp; 7)) &amp; 1)
+<span id="L1000" class="ln">  1000</span>	}
+<span id="L1001" class="ln">  1001</span>	
+<span id="L1002" class="ln">  1002</span>	<span class="comment">// p256ScalarBaseMult sets {xOut,yOut,zOut} = scalar*G where scalar is a</span>
+<span id="L1003" class="ln">  1003</span>	<span class="comment">// little-endian number. Note that the value of scalar must be less than the</span>
+<span id="L1004" class="ln">  1004</span>	<span class="comment">// order of the group.</span>
+<span id="L1005" class="ln">  1005</span>	func p256ScalarBaseMult(xOut, yOut, zOut *[p256Limbs]uint32, scalar *[32]uint8) {
+<span id="L1006" class="ln">  1006</span>		nIsInfinityMask := ^uint32(0)
+<span id="L1007" class="ln">  1007</span>		var pIsNoninfiniteMask, mask, tableOffset uint32
+<span id="L1008" class="ln">  1008</span>		var px, py, tx, ty, tz [p256Limbs]uint32
+<span id="L1009" class="ln">  1009</span>	
+<span id="L1010" class="ln">  1010</span>		for i := range xOut {
+<span id="L1011" class="ln">  1011</span>			xOut[i] = 0
+<span id="L1012" class="ln">  1012</span>		}
+<span id="L1013" class="ln">  1013</span>		for i := range yOut {
+<span id="L1014" class="ln">  1014</span>			yOut[i] = 0
+<span id="L1015" class="ln">  1015</span>		}
+<span id="L1016" class="ln">  1016</span>		for i := range zOut {
+<span id="L1017" class="ln">  1017</span>			zOut[i] = 0
+<span id="L1018" class="ln">  1018</span>		}
+<span id="L1019" class="ln">  1019</span>	
+<span id="L1020" class="ln">  1020</span>		<span class="comment">// The loop adds bits at positions 0, 64, 128 and 192, followed by</span>
+<span id="L1021" class="ln">  1021</span>		<span class="comment">// positions 32,96,160 and 224 and does this 32 times.</span>
+<span id="L1022" class="ln">  1022</span>		for i := uint(0); i &lt; 32; i++ {
+<span id="L1023" class="ln">  1023</span>			if i != 0 {
+<span id="L1024" class="ln">  1024</span>				p256PointDouble(xOut, yOut, zOut, xOut, yOut, zOut)
+<span id="L1025" class="ln">  1025</span>			}
+<span id="L1026" class="ln">  1026</span>			tableOffset = 0
+<span id="L1027" class="ln">  1027</span>			for j := uint(0); j &lt;= 32; j += 32 {
+<span id="L1028" class="ln">  1028</span>				bit0 := p256GetBit(scalar, 31-i+j)
+<span id="L1029" class="ln">  1029</span>				bit1 := p256GetBit(scalar, 95-i+j)
+<span id="L1030" class="ln">  1030</span>				bit2 := p256GetBit(scalar, 159-i+j)
+<span id="L1031" class="ln">  1031</span>				bit3 := p256GetBit(scalar, 223-i+j)
+<span id="L1032" class="ln">  1032</span>				index := bit0 | (bit1 &lt;&lt; 1) | (bit2 &lt;&lt; 2) | (bit3 &lt;&lt; 3)
+<span id="L1033" class="ln">  1033</span>	
+<span id="L1034" class="ln">  1034</span>				p256SelectAffinePoint(&amp;px, &amp;py, p256Precomputed[tableOffset:], index)
+<span id="L1035" class="ln">  1035</span>				tableOffset += 30 * p256Limbs
+<span id="L1036" class="ln">  1036</span>	
+<span id="L1037" class="ln">  1037</span>				<span class="comment">// Since scalar is less than the order of the group, we know that</span>
+<span id="L1038" class="ln">  1038</span>				<span class="comment">// {xOut,yOut,zOut} != {px,py,1}, unless both are zero, which we handle</span>
+<span id="L1039" class="ln">  1039</span>				<span class="comment">// below.</span>
+<span id="L1040" class="ln">  1040</span>				p256PointAddMixed(&amp;tx, &amp;ty, &amp;tz, xOut, yOut, zOut, &amp;px, &amp;py)
+<span id="L1041" class="ln">  1041</span>				<span class="comment">// The result of pointAddMixed is incorrect if {xOut,yOut,zOut} is zero</span>
+<span id="L1042" class="ln">  1042</span>				<span class="comment">// (a.k.a.  the point at infinity). We handle that situation by</span>
+<span id="L1043" class="ln">  1043</span>				<span class="comment">// copying the point from the table.</span>
+<span id="L1044" class="ln">  1044</span>				p256CopyConditional(xOut, &amp;px, nIsInfinityMask)
+<span id="L1045" class="ln">  1045</span>				p256CopyConditional(yOut, &amp;py, nIsInfinityMask)
+<span id="L1046" class="ln">  1046</span>				p256CopyConditional(zOut, &amp;p256One, nIsInfinityMask)
+<span id="L1047" class="ln">  1047</span>	
+<span id="L1048" class="ln">  1048</span>				<span class="comment">// Equally, the result is also wrong if the point from the table is</span>
+<span id="L1049" class="ln">  1049</span>				<span class="comment">// zero, which happens when the index is zero. We handle that by</span>
+<span id="L1050" class="ln">  1050</span>				<span class="comment">// only copying from {tx,ty,tz} to {xOut,yOut,zOut} if index != 0.</span>
+<span id="L1051" class="ln">  1051</span>				pIsNoninfiniteMask = nonZeroToAllOnes(index)
+<span id="L1052" class="ln">  1052</span>				mask = pIsNoninfiniteMask &amp; ^nIsInfinityMask
+<span id="L1053" class="ln">  1053</span>				p256CopyConditional(xOut, &amp;tx, mask)
+<span id="L1054" class="ln">  1054</span>				p256CopyConditional(yOut, &amp;ty, mask)
+<span id="L1055" class="ln">  1055</span>				p256CopyConditional(zOut, &amp;tz, mask)
+<span id="L1056" class="ln">  1056</span>				<span class="comment">// If p was not zero, then n is now non-zero.</span>
+<span id="L1057" class="ln">  1057</span>				nIsInfinityMask &amp;= ^pIsNoninfiniteMask
+<span id="L1058" class="ln">  1058</span>			}
+<span id="L1059" class="ln">  1059</span>		}
+<span id="L1060" class="ln">  1060</span>	}
+<span id="L1061" class="ln">  1061</span>	
+<span id="L1062" class="ln">  1062</span>	<span class="comment">// p256PointToAffine converts a Jacobian point to an affine point. If the input</span>
+<span id="L1063" class="ln">  1063</span>	<span class="comment">// is the point at infinity then it returns (0, 0) in constant time.</span>
+<span id="L1064" class="ln">  1064</span>	func p256PointToAffine(xOut, yOut, x, y, z *[p256Limbs]uint32) {
+<span id="L1065" class="ln">  1065</span>		var zInv, zInvSq [p256Limbs]uint32
+<span id="L1066" class="ln">  1066</span>	
+<span id="L1067" class="ln">  1067</span>		p256Invert(&amp;zInv, z)
+<span id="L1068" class="ln">  1068</span>		p256Square(&amp;zInvSq, &amp;zInv)
+<span id="L1069" class="ln">  1069</span>		p256Mul(xOut, x, &amp;zInvSq)
+<span id="L1070" class="ln">  1070</span>		p256Mul(&amp;zInv, &amp;zInv, &amp;zInvSq)
+<span id="L1071" class="ln">  1071</span>		p256Mul(yOut, y, &amp;zInv)
+<span id="L1072" class="ln">  1072</span>	}
+<span id="L1073" class="ln">  1073</span>	
+<span id="L1074" class="ln">  1074</span>	<span class="comment">// p256ToAffine returns a pair of *big.Int containing the affine representation</span>
+<span id="L1075" class="ln">  1075</span>	<span class="comment">// of {x,y,z}.</span>
+<span id="L1076" class="ln">  1076</span>	func p256ToAffine(x, y, z *[p256Limbs]uint32) (xOut, yOut *big.Int) {
+<span id="L1077" class="ln">  1077</span>		var xx, yy [p256Limbs]uint32
+<span id="L1078" class="ln">  1078</span>		p256PointToAffine(&amp;xx, &amp;yy, x, y, z)
+<span id="L1079" class="ln">  1079</span>		return p256ToBig(&amp;xx), p256ToBig(&amp;yy)
+<span id="L1080" class="ln">  1080</span>	}
+<span id="L1081" class="ln">  1081</span>	
+<span id="L1082" class="ln">  1082</span>	<span class="comment">// p256ScalarMult sets {xOut,yOut,zOut} = scalar*{x,y}.</span>
+<span id="L1083" class="ln">  1083</span>	func p256ScalarMult(xOut, yOut, zOut, x, y *[p256Limbs]uint32, scalar *[32]uint8) {
+<span id="L1084" class="ln">  1084</span>		var px, py, pz, tx, ty, tz [p256Limbs]uint32
+<span id="L1085" class="ln">  1085</span>		var precomp [16][3][p256Limbs]uint32
+<span id="L1086" class="ln">  1086</span>		var nIsInfinityMask, index, pIsNoninfiniteMask, mask uint32
+<span id="L1087" class="ln">  1087</span>	
+<span id="L1088" class="ln">  1088</span>		<span class="comment">// We precompute 0,1,2,... times {x,y}.</span>
+<span id="L1089" class="ln">  1089</span>		precomp[1][0] = *x
+<span id="L1090" class="ln">  1090</span>		precomp[1][1] = *y
+<span id="L1091" class="ln">  1091</span>		precomp[1][2] = p256One
+<span id="L1092" class="ln">  1092</span>	
+<span id="L1093" class="ln">  1093</span>		for i := 2; i &lt; 16; i += 2 {
+<span id="L1094" class="ln">  1094</span>			p256PointDouble(&amp;precomp[i][0], &amp;precomp[i][1], &amp;precomp[i][2], &amp;precomp[i/2][0], &amp;precomp[i/2][1], &amp;precomp[i/2][2])
+<span id="L1095" class="ln">  1095</span>			p256PointAddMixed(&amp;precomp[i+1][0], &amp;precomp[i+1][1], &amp;precomp[i+1][2], &amp;precomp[i][0], &amp;precomp[i][1], &amp;precomp[i][2], x, y)
+<span id="L1096" class="ln">  1096</span>		}
+<span id="L1097" class="ln">  1097</span>	
+<span id="L1098" class="ln">  1098</span>		for i := range xOut {
+<span id="L1099" class="ln">  1099</span>			xOut[i] = 0
+<span id="L1100" class="ln">  1100</span>		}
+<span id="L1101" class="ln">  1101</span>		for i := range yOut {
+<span id="L1102" class="ln">  1102</span>			yOut[i] = 0
+<span id="L1103" class="ln">  1103</span>		}
+<span id="L1104" class="ln">  1104</span>		for i := range zOut {
+<span id="L1105" class="ln">  1105</span>			zOut[i] = 0
+<span id="L1106" class="ln">  1106</span>		}
+<span id="L1107" class="ln">  1107</span>		nIsInfinityMask = ^uint32(0)
+<span id="L1108" class="ln">  1108</span>	
+<span id="L1109" class="ln">  1109</span>		<span class="comment">// We add in a window of four bits each iteration and do this 64 times.</span>
+<span id="L1110" class="ln">  1110</span>		for i := 0; i &lt; 64; i++ {
+<span id="L1111" class="ln">  1111</span>			if i != 0 {
+<span id="L1112" class="ln">  1112</span>				p256PointDouble(xOut, yOut, zOut, xOut, yOut, zOut)
+<span id="L1113" class="ln">  1113</span>				p256PointDouble(xOut, yOut, zOut, xOut, yOut, zOut)
+<span id="L1114" class="ln">  1114</span>				p256PointDouble(xOut, yOut, zOut, xOut, yOut, zOut)
+<span id="L1115" class="ln">  1115</span>				p256PointDouble(xOut, yOut, zOut, xOut, yOut, zOut)
+<span id="L1116" class="ln">  1116</span>			}
+<span id="L1117" class="ln">  1117</span>	
+<span id="L1118" class="ln">  1118</span>			index = uint32(scalar[31-i/2])
+<span id="L1119" class="ln">  1119</span>			if (i &amp; 1) == 1 {
+<span id="L1120" class="ln">  1120</span>				index &amp;= 15
+<span id="L1121" class="ln">  1121</span>			} else {
+<span id="L1122" class="ln">  1122</span>				index &gt;&gt;= 4
+<span id="L1123" class="ln">  1123</span>			}
+<span id="L1124" class="ln">  1124</span>	
+<span id="L1125" class="ln">  1125</span>			<span class="comment">// See the comments in scalarBaseMult about handling infinities.</span>
+<span id="L1126" class="ln">  1126</span>			p256SelectJacobianPoint(&amp;px, &amp;py, &amp;pz, &amp;precomp, index)
+<span id="L1127" class="ln">  1127</span>			p256PointAdd(&amp;tx, &amp;ty, &amp;tz, xOut, yOut, zOut, &amp;px, &amp;py, &amp;pz)
+<span id="L1128" class="ln">  1128</span>			p256CopyConditional(xOut, &amp;px, nIsInfinityMask)
+<span id="L1129" class="ln">  1129</span>			p256CopyConditional(yOut, &amp;py, nIsInfinityMask)
+<span id="L1130" class="ln">  1130</span>			p256CopyConditional(zOut, &amp;pz, nIsInfinityMask)
+<span id="L1131" class="ln">  1131</span>	
+<span id="L1132" class="ln">  1132</span>			pIsNoninfiniteMask = nonZeroToAllOnes(index)
+<span id="L1133" class="ln">  1133</span>			mask = pIsNoninfiniteMask &amp; ^nIsInfinityMask
+<span id="L1134" class="ln">  1134</span>			p256CopyConditional(xOut, &amp;tx, mask)
+<span id="L1135" class="ln">  1135</span>			p256CopyConditional(yOut, &amp;ty, mask)
+<span id="L1136" class="ln">  1136</span>			p256CopyConditional(zOut, &amp;tz, mask)
+<span id="L1137" class="ln">  1137</span>			nIsInfinityMask &amp;= ^pIsNoninfiniteMask
+<span id="L1138" class="ln">  1138</span>		}
+<span id="L1139" class="ln">  1139</span>	}
+<span id="L1140" class="ln">  1140</span>	
+<span id="L1141" class="ln">  1141</span>	<span class="comment">// p256FromBig sets out = R*in.</span>
+<span id="L1142" class="ln">  1142</span>	func p256FromBig(out *[p256Limbs]uint32, in *big.Int) {
+<span id="L1143" class="ln">  1143</span>		tmp := new(big.Int).Lsh(in, 257)
+<span id="L1144" class="ln">  1144</span>		tmp.Mod(tmp, p256.P)
+<span id="L1145" class="ln">  1145</span>	
+<span id="L1146" class="ln">  1146</span>		for i := 0; i &lt; p256Limbs; i++ {
+<span id="L1147" class="ln">  1147</span>			if bits := tmp.Bits(); len(bits) &gt; 0 {
+<span id="L1148" class="ln">  1148</span>				out[i] = uint32(bits[0]) &amp; bottom29Bits
+<span id="L1149" class="ln">  1149</span>			} else {
+<span id="L1150" class="ln">  1150</span>				out[i] = 0
+<span id="L1151" class="ln">  1151</span>			}
+<span id="L1152" class="ln">  1152</span>			tmp.Rsh(tmp, 29)
+<span id="L1153" class="ln">  1153</span>	
+<span id="L1154" class="ln">  1154</span>			i++
+<span id="L1155" class="ln">  1155</span>			if i == p256Limbs {
+<span id="L1156" class="ln">  1156</span>				break
+<span id="L1157" class="ln">  1157</span>			}
+<span id="L1158" class="ln">  1158</span>	
+<span id="L1159" class="ln">  1159</span>			if bits := tmp.Bits(); len(bits) &gt; 0 {
+<span id="L1160" class="ln">  1160</span>				out[i] = uint32(bits[0]) &amp; bottom28Bits
+<span id="L1161" class="ln">  1161</span>			} else {
+<span id="L1162" class="ln">  1162</span>				out[i] = 0
+<span id="L1163" class="ln">  1163</span>			}
+<span id="L1164" class="ln">  1164</span>			tmp.Rsh(tmp, 28)
+<span id="L1165" class="ln">  1165</span>		}
+<span id="L1166" class="ln">  1166</span>	}
+<span id="L1167" class="ln">  1167</span>	
+<span id="L1168" class="ln">  1168</span>	<span class="comment">// p256ToBig returns a *big.Int containing the value of in.</span>
+<span id="L1169" class="ln">  1169</span>	func p256ToBig(in *[p256Limbs]uint32) *big.Int {
+<span id="L1170" class="ln">  1170</span>		result, tmp := new(big.Int), new(big.Int)
+<span id="L1171" class="ln">  1171</span>	
+<span id="L1172" class="ln">  1172</span>		result.SetInt64(int64(in[p256Limbs-1]))
+<span id="L1173" class="ln">  1173</span>		for i := p256Limbs - 2; i &gt;= 0; i-- {
+<span id="L1174" class="ln">  1174</span>			if (i &amp; 1) == 0 {
+<span id="L1175" class="ln">  1175</span>				result.Lsh(result, 29)
+<span id="L1176" class="ln">  1176</span>			} else {
+<span id="L1177" class="ln">  1177</span>				result.Lsh(result, 28)
+<span id="L1178" class="ln">  1178</span>			}
+<span id="L1179" class="ln">  1179</span>			tmp.SetInt64(int64(in[i]))
+<span id="L1180" class="ln">  1180</span>			result.Add(result, tmp)
+<span id="L1181" class="ln">  1181</span>		}
+<span id="L1182" class="ln">  1182</span>	
+<span id="L1183" class="ln">  1183</span>		result.Mul(result, p256RInverse)
+<span id="L1184" class="ln">  1184</span>		result.Mod(result, p256.P)
+<span id="L1185" class="ln">  1185</span>		return result
+<span id="L1186" class="ln">  1186</span>	}
+<span id="L1187" class="ln">  1187</span>	
+</pre><p><a href="p256.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/asm_386.s - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/asm_386.s</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	#include &#34;zasm_GOOS_GOARCH.h&#34;
+<span id="L6" class="ln">     6</span>	#include &#34;funcdata.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	TEXT _rt0_go(SB),NOSPLIT,$0
+<span id="L10" class="ln">    10</span>		// copy arguments forward on an even stack
+<span id="L11" class="ln">    11</span>		MOVL	argc+0(FP), AX
+<span id="L12" class="ln">    12</span>		MOVL	argv+4(FP), BX
+<span id="L13" class="ln">    13</span>		SUBL	$128, SP		// plenty of scratch
+<span id="L14" class="ln">    14</span>		ANDL	$~15, SP
+<span id="L15" class="ln">    15</span>		MOVL	AX, 120(SP)		// save argc, argv away
+<span id="L16" class="ln">    16</span>		MOVL	BX, 124(SP)
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>		// set default stack bounds.
+<span id="L19" class="ln">    19</span>		// _cgo_init may update stackguard.
+<span id="L20" class="ln">    20</span>		MOVL	$runtime·g0(SB), BP
+<span id="L21" class="ln">    21</span>		LEAL	(-64*1024+104)(SP), BX
+<span id="L22" class="ln">    22</span>		MOVL	BX, g_stackguard(BP)
+<span id="L23" class="ln">    23</span>		MOVL	BX, g_stackguard0(BP)
+<span id="L24" class="ln">    24</span>		MOVL	SP, g_stackbase(BP)
+<span id="L25" class="ln">    25</span>		
+<span id="L26" class="ln">    26</span>		// find out information about the processor we&#39;re on
+<span id="L27" class="ln">    27</span>		MOVL	$0, AX
+<span id="L28" class="ln">    28</span>		CPUID
+<span id="L29" class="ln">    29</span>		CMPL	AX, $0
+<span id="L30" class="ln">    30</span>		JE	nocpuinfo
+<span id="L31" class="ln">    31</span>		MOVL	$1, AX
+<span id="L32" class="ln">    32</span>		CPUID
+<span id="L33" class="ln">    33</span>		MOVL	CX, runtime·cpuid_ecx(SB)
+<span id="L34" class="ln">    34</span>		MOVL	DX, runtime·cpuid_edx(SB)
+<span id="L35" class="ln">    35</span>	nocpuinfo:	
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>		// if there is an _cgo_init, call it to let it
+<span id="L38" class="ln">    38</span>		// initialize and to set up GS.  if not,
+<span id="L39" class="ln">    39</span>		// we set up GS ourselves.
+<span id="L40" class="ln">    40</span>		MOVL	_cgo_init(SB), AX
+<span id="L41" class="ln">    41</span>		TESTL	AX, AX
+<span id="L42" class="ln">    42</span>		JZ	needtls
+<span id="L43" class="ln">    43</span>		MOVL	$setmg_gcc&lt;&gt;(SB), BX
+<span id="L44" class="ln">    44</span>		MOVL	BX, 4(SP)
+<span id="L45" class="ln">    45</span>		MOVL	BP, 0(SP)
+<span id="L46" class="ln">    46</span>		CALL	AX
+<span id="L47" class="ln">    47</span>		// update stackguard after _cgo_init
+<span id="L48" class="ln">    48</span>		MOVL	$runtime·g0(SB), CX
+<span id="L49" class="ln">    49</span>		MOVL	g_stackguard0(CX), AX
+<span id="L50" class="ln">    50</span>		MOVL	AX, g_stackguard(CX)
+<span id="L51" class="ln">    51</span>		// skip runtime·ldt0setup(SB) and tls test after _cgo_init for non-windows
+<span id="L52" class="ln">    52</span>		CMPL runtime·iswindows(SB), $0
+<span id="L53" class="ln">    53</span>		JEQ ok
+<span id="L54" class="ln">    54</span>	needtls:
+<span id="L55" class="ln">    55</span>		// skip runtime·ldt0setup(SB) and tls test on Plan 9 in all cases
+<span id="L56" class="ln">    56</span>		CMPL	runtime·isplan9(SB), $1
+<span id="L57" class="ln">    57</span>		JEQ	ok
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>		// set up %gs
+<span id="L60" class="ln">    60</span>		CALL	runtime·ldt0setup(SB)
+<span id="L61" class="ln">    61</span>	
+<span id="L62" class="ln">    62</span>		// store through it, to make sure it works
+<span id="L63" class="ln">    63</span>		get_tls(BX)
+<span id="L64" class="ln">    64</span>		MOVL	$0x123, g(BX)
+<span id="L65" class="ln">    65</span>		MOVL	runtime·tls0(SB), AX
+<span id="L66" class="ln">    66</span>		CMPL	AX, $0x123
+<span id="L67" class="ln">    67</span>		JEQ	ok
+<span id="L68" class="ln">    68</span>		MOVL	AX, 0	// abort
+<span id="L69" class="ln">    69</span>	ok:
+<span id="L70" class="ln">    70</span>		// set up m and g &#34;registers&#34;
+<span id="L71" class="ln">    71</span>		get_tls(BX)
+<span id="L72" class="ln">    72</span>		LEAL	runtime·g0(SB), CX
+<span id="L73" class="ln">    73</span>		MOVL	CX, g(BX)
+<span id="L74" class="ln">    74</span>		LEAL	runtime·m0(SB), AX
+<span id="L75" class="ln">    75</span>		MOVL	AX, m(BX)
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>		// save m-&gt;g0 = g0
+<span id="L78" class="ln">    78</span>		MOVL	CX, m_g0(AX)
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>		CALL	runtime·emptyfunc(SB)	// fault if stack check is wrong
+<span id="L81" class="ln">    81</span>	
+<span id="L82" class="ln">    82</span>		// convention is D is always cleared
+<span id="L83" class="ln">    83</span>		CLD
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>		CALL	runtime·check(SB)
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>		// saved argc, argv
+<span id="L88" class="ln">    88</span>		MOVL	120(SP), AX
+<span id="L89" class="ln">    89</span>		MOVL	AX, 0(SP)
+<span id="L90" class="ln">    90</span>		MOVL	124(SP), AX
+<span id="L91" class="ln">    91</span>		MOVL	AX, 4(SP)
+<span id="L92" class="ln">    92</span>		CALL	runtime·args(SB)
+<span id="L93" class="ln">    93</span>		CALL	runtime·osinit(SB)
+<span id="L94" class="ln">    94</span>		CALL	runtime·hashinit(SB)
+<span id="L95" class="ln">    95</span>		CALL	runtime·schedinit(SB)
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>		// create a new goroutine to start program
+<span id="L98" class="ln">    98</span>		PUSHL	$runtime·main·f(SB)	// entry
+<span id="L99" class="ln">    99</span>		PUSHL	$0	// arg size
+<span id="L100" class="ln">   100</span>		ARGSIZE(8)
+<span id="L101" class="ln">   101</span>		CALL	runtime·newproc(SB)
+<span id="L102" class="ln">   102</span>		ARGSIZE(-1)
+<span id="L103" class="ln">   103</span>		POPL	AX
+<span id="L104" class="ln">   104</span>		POPL	AX
+<span id="L105" class="ln">   105</span>	
+<span id="L106" class="ln">   106</span>		// start this M
+<span id="L107" class="ln">   107</span>		CALL	runtime·mstart(SB)
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>		INT $3
+<span id="L110" class="ln">   110</span>		RET
+<span id="L111" class="ln">   111</span>	
+<span id="L112" class="ln">   112</span>	DATA	runtime·main·f+0(SB)/4,$runtime·main(SB)
+<span id="L113" class="ln">   113</span>	GLOBL	runtime·main·f(SB),RODATA,$4
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>	TEXT runtime·breakpoint(SB),NOSPLIT,$0-0
+<span id="L116" class="ln">   116</span>		INT $3
+<span id="L117" class="ln">   117</span>		RET
+<span id="L118" class="ln">   118</span>	
+<span id="L119" class="ln">   119</span>	TEXT runtime·asminit(SB),NOSPLIT,$0-0
+<span id="L120" class="ln">   120</span>		// Linux and MinGW start the FPU in extended double precision.
+<span id="L121" class="ln">   121</span>		// Other operating systems use double precision.
+<span id="L122" class="ln">   122</span>		// Change to double precision to match them,
+<span id="L123" class="ln">   123</span>		// and to match other hardware that only has double.
+<span id="L124" class="ln">   124</span>		PUSHL $0x27F
+<span id="L125" class="ln">   125</span>		FLDCW	0(SP)
+<span id="L126" class="ln">   126</span>		POPL AX
+<span id="L127" class="ln">   127</span>		RET
+<span id="L128" class="ln">   128</span>	
+<span id="L129" class="ln">   129</span>	/*
+<span id="L130" class="ln">   130</span>	 *  go-routine
+<span id="L131" class="ln">   131</span>	 */
+<span id="L132" class="ln">   132</span>	
+<span id="L133" class="ln">   133</span>	// void gosave(Gobuf*)
+<span id="L134" class="ln">   134</span>	// save state in Gobuf; setjmp
+<span id="L135" class="ln">   135</span>	TEXT runtime·gosave(SB), NOSPLIT, $0-4
+<span id="L136" class="ln">   136</span>		MOVL	4(SP), AX		// gobuf
+<span id="L137" class="ln">   137</span>		LEAL	4(SP), BX		// caller&#39;s SP
+<span id="L138" class="ln">   138</span>		MOVL	BX, gobuf_sp(AX)
+<span id="L139" class="ln">   139</span>		MOVL	0(SP), BX		// caller&#39;s PC
+<span id="L140" class="ln">   140</span>		MOVL	BX, gobuf_pc(AX)
+<span id="L141" class="ln">   141</span>		MOVL	$0, gobuf_ret(AX)
+<span id="L142" class="ln">   142</span>		MOVL	$0, gobuf_ctxt(AX)
+<span id="L143" class="ln">   143</span>		get_tls(CX)
+<span id="L144" class="ln">   144</span>		MOVL	g(CX), BX
+<span id="L145" class="ln">   145</span>		MOVL	BX, gobuf_g(AX)
+<span id="L146" class="ln">   146</span>		RET
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	// void gogo(Gobuf*)
+<span id="L149" class="ln">   149</span>	// restore state from Gobuf; longjmp
+<span id="L150" class="ln">   150</span>	TEXT runtime·gogo(SB), NOSPLIT, $0-4
+<span id="L151" class="ln">   151</span>		MOVL	4(SP), BX		// gobuf
+<span id="L152" class="ln">   152</span>		MOVL	gobuf_g(BX), DX
+<span id="L153" class="ln">   153</span>		MOVL	0(DX), CX		// make sure g != nil
+<span id="L154" class="ln">   154</span>		get_tls(CX)
+<span id="L155" class="ln">   155</span>		MOVL	DX, g(CX)
+<span id="L156" class="ln">   156</span>		MOVL	gobuf_sp(BX), SP	// restore SP
+<span id="L157" class="ln">   157</span>		MOVL	gobuf_ret(BX), AX
+<span id="L158" class="ln">   158</span>		MOVL	gobuf_ctxt(BX), DX
+<span id="L159" class="ln">   159</span>		MOVL	$0, gobuf_sp(BX)	// clear to help garbage collector
+<span id="L160" class="ln">   160</span>		MOVL	$0, gobuf_ret(BX)
+<span id="L161" class="ln">   161</span>		MOVL	$0, gobuf_ctxt(BX)
+<span id="L162" class="ln">   162</span>		MOVL	gobuf_pc(BX), BX
+<span id="L163" class="ln">   163</span>		JMP	BX
+<span id="L164" class="ln">   164</span>	
+<span id="L165" class="ln">   165</span>	// void mcall(void (*fn)(G*))
+<span id="L166" class="ln">   166</span>	// Switch to m-&gt;g0&#39;s stack, call fn(g).
+<span id="L167" class="ln">   167</span>	// Fn must never return.  It should gogo(&amp;g-&gt;sched)
+<span id="L168" class="ln">   168</span>	// to keep running g.
+<span id="L169" class="ln">   169</span>	TEXT runtime·mcall(SB), NOSPLIT, $0-4
+<span id="L170" class="ln">   170</span>		MOVL	fn+0(FP), DI
+<span id="L171" class="ln">   171</span>		
+<span id="L172" class="ln">   172</span>		get_tls(CX)
+<span id="L173" class="ln">   173</span>		MOVL	g(CX), AX	// save state in g-&gt;sched
+<span id="L174" class="ln">   174</span>		MOVL	0(SP), BX	// caller&#39;s PC
+<span id="L175" class="ln">   175</span>		MOVL	BX, (g_sched+gobuf_pc)(AX)
+<span id="L176" class="ln">   176</span>		LEAL	4(SP), BX	// caller&#39;s SP
+<span id="L177" class="ln">   177</span>		MOVL	BX, (g_sched+gobuf_sp)(AX)
+<span id="L178" class="ln">   178</span>		MOVL	AX, (g_sched+gobuf_g)(AX)
+<span id="L179" class="ln">   179</span>	
+<span id="L180" class="ln">   180</span>		// switch to m-&gt;g0 &amp; its stack, call fn
+<span id="L181" class="ln">   181</span>		MOVL	m(CX), BX
+<span id="L182" class="ln">   182</span>		MOVL	m_g0(BX), SI
+<span id="L183" class="ln">   183</span>		CMPL	SI, AX	// if g == m-&gt;g0 call badmcall
+<span id="L184" class="ln">   184</span>		JNE	3(PC)
+<span id="L185" class="ln">   185</span>		MOVL	$runtime·badmcall(SB), AX
+<span id="L186" class="ln">   186</span>		JMP	AX
+<span id="L187" class="ln">   187</span>		MOVL	SI, g(CX)	// g = m-&gt;g0
+<span id="L188" class="ln">   188</span>		MOVL	(g_sched+gobuf_sp)(SI), SP	// sp = m-&gt;g0-&gt;sched.sp
+<span id="L189" class="ln">   189</span>		PUSHL	AX
+<span id="L190" class="ln">   190</span>		CALL	DI
+<span id="L191" class="ln">   191</span>		POPL	AX
+<span id="L192" class="ln">   192</span>		MOVL	$runtime·badmcall2(SB), AX
+<span id="L193" class="ln">   193</span>		JMP	AX
+<span id="L194" class="ln">   194</span>		RET
+<span id="L195" class="ln">   195</span>	
+<span id="L196" class="ln">   196</span>	/*
+<span id="L197" class="ln">   197</span>	 * support for morestack
+<span id="L198" class="ln">   198</span>	 */
+<span id="L199" class="ln">   199</span>	
+<span id="L200" class="ln">   200</span>	// Called during function prolog when more stack is needed.
+<span id="L201" class="ln">   201</span>	//
+<span id="L202" class="ln">   202</span>	// The traceback routines see morestack on a g0 as being
+<span id="L203" class="ln">   203</span>	// the top of a stack (for example, morestack calling newstack
+<span id="L204" class="ln">   204</span>	// calling the scheduler calling newm calling gc), so we must
+<span id="L205" class="ln">   205</span>	// record an argument size. For that purpose, it has no arguments.
+<span id="L206" class="ln">   206</span>	TEXT runtime·morestack(SB),NOSPLIT,$0-0
+<span id="L207" class="ln">   207</span>		// Cannot grow scheduler stack (m-&gt;g0).
+<span id="L208" class="ln">   208</span>		get_tls(CX)
+<span id="L209" class="ln">   209</span>		MOVL	m(CX), BX
+<span id="L210" class="ln">   210</span>		MOVL	m_g0(BX), SI
+<span id="L211" class="ln">   211</span>		CMPL	g(CX), SI
+<span id="L212" class="ln">   212</span>		JNE	2(PC)
+<span id="L213" class="ln">   213</span>		INT	$3
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>		// frame size in DI
+<span id="L216" class="ln">   216</span>		// arg size in AX
+<span id="L217" class="ln">   217</span>		// Save in m.
+<span id="L218" class="ln">   218</span>		MOVL	DI, m_moreframesize(BX)
+<span id="L219" class="ln">   219</span>		MOVL	AX, m_moreargsize(BX)
+<span id="L220" class="ln">   220</span>	
+<span id="L221" class="ln">   221</span>		// Called from f.
+<span id="L222" class="ln">   222</span>		// Set m-&gt;morebuf to f&#39;s caller.
+<span id="L223" class="ln">   223</span>		MOVL	4(SP), DI	// f&#39;s caller&#39;s PC
+<span id="L224" class="ln">   224</span>		MOVL	DI, (m_morebuf+gobuf_pc)(BX)
+<span id="L225" class="ln">   225</span>		LEAL	8(SP), CX	// f&#39;s caller&#39;s SP
+<span id="L226" class="ln">   226</span>		MOVL	CX, (m_morebuf+gobuf_sp)(BX)
+<span id="L227" class="ln">   227</span>		MOVL	CX, m_moreargp(BX)
+<span id="L228" class="ln">   228</span>		get_tls(CX)
+<span id="L229" class="ln">   229</span>		MOVL	g(CX), SI
+<span id="L230" class="ln">   230</span>		MOVL	SI, (m_morebuf+gobuf_g)(BX)
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>		// Set g-&gt;sched to context in f.
+<span id="L233" class="ln">   233</span>		MOVL	0(SP), AX	// f&#39;s PC
+<span id="L234" class="ln">   234</span>		MOVL	AX, (g_sched+gobuf_pc)(SI)
+<span id="L235" class="ln">   235</span>		MOVL	SI, (g_sched+gobuf_g)(SI)
+<span id="L236" class="ln">   236</span>		LEAL	4(SP), AX	// f&#39;s SP
+<span id="L237" class="ln">   237</span>		MOVL	AX, (g_sched+gobuf_sp)(SI)
+<span id="L238" class="ln">   238</span>		MOVL	DX, (g_sched+gobuf_ctxt)(SI)
+<span id="L239" class="ln">   239</span>	
+<span id="L240" class="ln">   240</span>		// Call newstack on m-&gt;g0&#39;s stack.
+<span id="L241" class="ln">   241</span>		MOVL	m_g0(BX), BP
+<span id="L242" class="ln">   242</span>		MOVL	BP, g(CX)
+<span id="L243" class="ln">   243</span>		MOVL	(g_sched+gobuf_sp)(BP), AX
+<span id="L244" class="ln">   244</span>		MOVL	-4(AX), BX	// fault if CALL would, before smashing SP
+<span id="L245" class="ln">   245</span>		MOVL	AX, SP
+<span id="L246" class="ln">   246</span>		CALL	runtime·newstack(SB)
+<span id="L247" class="ln">   247</span>		MOVL	$0, 0x1003	// crash if newstack returns
+<span id="L248" class="ln">   248</span>		RET
+<span id="L249" class="ln">   249</span>	
+<span id="L250" class="ln">   250</span>	TEXT runtime·morestack_noctxt(SB),NOSPLIT,$0-0
+<span id="L251" class="ln">   251</span>		MOVL	$0, DX
+<span id="L252" class="ln">   252</span>		JMP runtime·morestack(SB)
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>	// Called from panic.  Mimics morestack,
+<span id="L255" class="ln">   255</span>	// reuses stack growth code to create a frame
+<span id="L256" class="ln">   256</span>	// with the desired args running the desired function.
+<span id="L257" class="ln">   257</span>	//
+<span id="L258" class="ln">   258</span>	// func call(fn *byte, arg *byte, argsize uint32).
+<span id="L259" class="ln">   259</span>	TEXT runtime·newstackcall(SB), NOSPLIT, $0-12
+<span id="L260" class="ln">   260</span>		get_tls(CX)
+<span id="L261" class="ln">   261</span>		MOVL	m(CX), BX
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>		// Save our caller&#39;s state as the PC and SP to
+<span id="L264" class="ln">   264</span>		// restore when returning from f.
+<span id="L265" class="ln">   265</span>		MOVL	0(SP), AX	// our caller&#39;s PC
+<span id="L266" class="ln">   266</span>		MOVL	AX, (m_morebuf+gobuf_pc)(BX)
+<span id="L267" class="ln">   267</span>		LEAL	4(SP), AX	// our caller&#39;s SP
+<span id="L268" class="ln">   268</span>		MOVL	AX, (m_morebuf+gobuf_sp)(BX)
+<span id="L269" class="ln">   269</span>		MOVL	g(CX), AX
+<span id="L270" class="ln">   270</span>		MOVL	AX, (m_morebuf+gobuf_g)(BX)
+<span id="L271" class="ln">   271</span>	
+<span id="L272" class="ln">   272</span>		// Save our own state as the PC and SP to restore
+<span id="L273" class="ln">   273</span>		// if this goroutine needs to be restarted.
+<span id="L274" class="ln">   274</span>		MOVL	$runtime·newstackcall(SB), (g_sched+gobuf_pc)(AX)
+<span id="L275" class="ln">   275</span>		MOVL	SP, (g_sched+gobuf_sp)(AX)
+<span id="L276" class="ln">   276</span>	
+<span id="L277" class="ln">   277</span>		// Set up morestack arguments to call f on a new stack.
+<span id="L278" class="ln">   278</span>		// We set f&#39;s frame size to 1, as a hint to newstack
+<span id="L279" class="ln">   279</span>		// that this is a call from runtime·newstackcall.
+<span id="L280" class="ln">   280</span>		// If it turns out that f needs a larger frame than
+<span id="L281" class="ln">   281</span>		// the default stack, f&#39;s usual stack growth prolog will
+<span id="L282" class="ln">   282</span>		// allocate a new segment (and recopy the arguments).
+<span id="L283" class="ln">   283</span>		MOVL	4(SP), AX	// fn
+<span id="L284" class="ln">   284</span>		MOVL	8(SP), DX	// arg frame
+<span id="L285" class="ln">   285</span>		MOVL	12(SP), CX	// arg size
+<span id="L286" class="ln">   286</span>	
+<span id="L287" class="ln">   287</span>		MOVL	AX, m_cret(BX)	// f&#39;s PC
+<span id="L288" class="ln">   288</span>		MOVL	DX, m_moreargp(BX)	// f&#39;s argument pointer
+<span id="L289" class="ln">   289</span>		MOVL	CX, m_moreargsize(BX)	// f&#39;s argument size
+<span id="L290" class="ln">   290</span>		MOVL	$1, m_moreframesize(BX)	// f&#39;s frame size
+<span id="L291" class="ln">   291</span>	
+<span id="L292" class="ln">   292</span>		// Call newstack on m-&gt;g0&#39;s stack.
+<span id="L293" class="ln">   293</span>		MOVL	m_g0(BX), BP
+<span id="L294" class="ln">   294</span>		get_tls(CX)
+<span id="L295" class="ln">   295</span>		MOVL	BP, g(CX)
+<span id="L296" class="ln">   296</span>		MOVL	(g_sched+gobuf_sp)(BP), SP
+<span id="L297" class="ln">   297</span>		CALL	runtime·newstack(SB)
+<span id="L298" class="ln">   298</span>		MOVL	$0, 0x1103	// crash if newstack returns
+<span id="L299" class="ln">   299</span>		RET
+<span id="L300" class="ln">   300</span>	
+<span id="L301" class="ln">   301</span>	// reflect·call: call a function with the given argument list
+<span id="L302" class="ln">   302</span>	// func call(f *FuncVal, arg *byte, argsize uint32).
+<span id="L303" class="ln">   303</span>	// we don&#39;t have variable-sized frames, so we use a small number
+<span id="L304" class="ln">   304</span>	// of constant-sized-frame functions to encode a few bits of size in the pc.
+<span id="L305" class="ln">   305</span>	// Caution: ugly multiline assembly macros in your future!
+<span id="L306" class="ln">   306</span>	
+<span id="L307" class="ln">   307</span>	#define DISPATCH(NAME,MAXSIZE)		\
+<span id="L308" class="ln">   308</span>		CMPL	CX, $MAXSIZE;		\
+<span id="L309" class="ln">   309</span>		JA	3(PC);			\
+<span id="L310" class="ln">   310</span>		MOVL	$runtime·NAME(SB), AX;	\
+<span id="L311" class="ln">   311</span>		JMP	AX
+<span id="L312" class="ln">   312</span>	// Note: can&#39;t just &#34;JMP runtime·NAME(SB)&#34; - bad inlining results.
+<span id="L313" class="ln">   313</span>	
+<span id="L314" class="ln">   314</span>	TEXT reflect·call(SB), NOSPLIT, $0-16
+<span id="L315" class="ln">   315</span>		MOVL	argsize+8(FP), CX
+<span id="L316" class="ln">   316</span>		DISPATCH(call16, 16)
+<span id="L317" class="ln">   317</span>		DISPATCH(call32, 32)
+<span id="L318" class="ln">   318</span>		DISPATCH(call64, 64)
+<span id="L319" class="ln">   319</span>		DISPATCH(call128, 128)
+<span id="L320" class="ln">   320</span>		DISPATCH(call256, 256)
+<span id="L321" class="ln">   321</span>		DISPATCH(call512, 512)
+<span id="L322" class="ln">   322</span>		DISPATCH(call1024, 1024)
+<span id="L323" class="ln">   323</span>		DISPATCH(call2048, 2048)
+<span id="L324" class="ln">   324</span>		DISPATCH(call4096, 4096)
+<span id="L325" class="ln">   325</span>		DISPATCH(call8192, 8192)
+<span id="L326" class="ln">   326</span>		DISPATCH(call16384, 16384)
+<span id="L327" class="ln">   327</span>		DISPATCH(call32768, 32768)
+<span id="L328" class="ln">   328</span>		DISPATCH(call65536, 65536)
+<span id="L329" class="ln">   329</span>		DISPATCH(call131072, 131072)
+<span id="L330" class="ln">   330</span>		DISPATCH(call262144, 262144)
+<span id="L331" class="ln">   331</span>		DISPATCH(call524288, 524288)
+<span id="L332" class="ln">   332</span>		DISPATCH(call1048576, 1048576)
+<span id="L333" class="ln">   333</span>		DISPATCH(call2097152, 2097152)
+<span id="L334" class="ln">   334</span>		DISPATCH(call4194304, 4194304)
+<span id="L335" class="ln">   335</span>		DISPATCH(call8388608, 8388608)
+<span id="L336" class="ln">   336</span>		DISPATCH(call16777216, 16777216)
+<span id="L337" class="ln">   337</span>		DISPATCH(call33554432, 33554432)
+<span id="L338" class="ln">   338</span>		DISPATCH(call67108864, 67108864)
+<span id="L339" class="ln">   339</span>		DISPATCH(call134217728, 134217728)
+<span id="L340" class="ln">   340</span>		DISPATCH(call268435456, 268435456)
+<span id="L341" class="ln">   341</span>		DISPATCH(call536870912, 536870912)
+<span id="L342" class="ln">   342</span>		DISPATCH(call1073741824, 1073741824)
+<span id="L343" class="ln">   343</span>		MOVL	$runtime·badreflectcall(SB), AX
+<span id="L344" class="ln">   344</span>		JMP	AX
+<span id="L345" class="ln">   345</span>	
+<span id="L346" class="ln">   346</span>	// Argument map for the callXX frames.  Each has one
+<span id="L347" class="ln">   347</span>	// stack map (for the single call) with 3 arguments.
+<span id="L348" class="ln">   348</span>	DATA gcargs_reflectcall&lt;&gt;+0x00(SB)/4, $1  // 1 stackmap
+<span id="L349" class="ln">   349</span>	DATA gcargs_reflectcall&lt;&gt;+0x04(SB)/4, $6  // 3 args
+<span id="L350" class="ln">   350</span>	DATA gcargs_reflectcall&lt;&gt;+0x08(SB)/4, $(const_BitsPointer+(const_BitsPointer&lt;&lt;2)+(const_BitsScalar&lt;&lt;4))
+<span id="L351" class="ln">   351</span>	GLOBL gcargs_reflectcall&lt;&gt;(SB),RODATA,$12
+<span id="L352" class="ln">   352</span>	
+<span id="L353" class="ln">   353</span>	// callXX frames have no locals
+<span id="L354" class="ln">   354</span>	DATA gclocals_reflectcall&lt;&gt;+0x00(SB)/4, $1  // 1 stackmap
+<span id="L355" class="ln">   355</span>	DATA gclocals_reflectcall&lt;&gt;+0x04(SB)/4, $0  // 0 locals
+<span id="L356" class="ln">   356</span>	GLOBL gclocals_reflectcall&lt;&gt;(SB),RODATA,$8
+<span id="L357" class="ln">   357</span>	
+<span id="L358" class="ln">   358</span>	#define CALLFN(NAME,MAXSIZE)			\
+<span id="L359" class="ln">   359</span>	TEXT runtime·NAME(SB), WRAPPER, $MAXSIZE-16;	\
+<span id="L360" class="ln">   360</span>		FUNCDATA $FUNCDATA_ArgsPointerMaps,gcargs_reflectcall&lt;&gt;(SB);	\
+<span id="L361" class="ln">   361</span>		FUNCDATA $FUNCDATA_LocalsPointerMaps,gclocals_reflectcall&lt;&gt;(SB);\
+<span id="L362" class="ln">   362</span>		/* copy arguments to stack */		\
+<span id="L363" class="ln">   363</span>		MOVL	argptr+4(FP), SI;		\
+<span id="L364" class="ln">   364</span>		MOVL	argsize+8(FP), CX;		\
+<span id="L365" class="ln">   365</span>		MOVL	SP, DI;				\
+<span id="L366" class="ln">   366</span>		REP;MOVSB;				\
+<span id="L367" class="ln">   367</span>		/* call function */			\
+<span id="L368" class="ln">   368</span>		MOVL	f+0(FP), DX;			\
+<span id="L369" class="ln">   369</span>		MOVL	(DX), AX; 			\
+<span id="L370" class="ln">   370</span>		PCDATA  $PCDATA_StackMapIndex, $0;	\
+<span id="L371" class="ln">   371</span>		CALL	AX;				\
+<span id="L372" class="ln">   372</span>		/* copy return values back */		\
+<span id="L373" class="ln">   373</span>		MOVL	argptr+4(FP), DI;		\
+<span id="L374" class="ln">   374</span>		MOVL	argsize+8(FP), CX;		\
+<span id="L375" class="ln">   375</span>		MOVL	retoffset+12(FP), BX;		\
+<span id="L376" class="ln">   376</span>		MOVL	SP, SI;				\
+<span id="L377" class="ln">   377</span>		ADDL	BX, DI;				\
+<span id="L378" class="ln">   378</span>		ADDL	BX, SI;				\
+<span id="L379" class="ln">   379</span>		SUBL	BX, CX;				\
+<span id="L380" class="ln">   380</span>		REP;MOVSB;				\
+<span id="L381" class="ln">   381</span>		RET
+<span id="L382" class="ln">   382</span>	
+<span id="L383" class="ln">   383</span>	CALLFN(call16, 16)
+<span id="L384" class="ln">   384</span>	CALLFN(call32, 32)
+<span id="L385" class="ln">   385</span>	CALLFN(call64, 64)
+<span id="L386" class="ln">   386</span>	CALLFN(call128, 128)
+<span id="L387" class="ln">   387</span>	CALLFN(call256, 256)
+<span id="L388" class="ln">   388</span>	CALLFN(call512, 512)
+<span id="L389" class="ln">   389</span>	CALLFN(call1024, 1024)
+<span id="L390" class="ln">   390</span>	CALLFN(call2048, 2048)
+<span id="L391" class="ln">   391</span>	CALLFN(call4096, 4096)
+<span id="L392" class="ln">   392</span>	CALLFN(call8192, 8192)
+<span id="L393" class="ln">   393</span>	CALLFN(call16384, 16384)
+<span id="L394" class="ln">   394</span>	CALLFN(call32768, 32768)
+<span id="L395" class="ln">   395</span>	CALLFN(call65536, 65536)
+<span id="L396" class="ln">   396</span>	CALLFN(call131072, 131072)
+<span id="L397" class="ln">   397</span>	CALLFN(call262144, 262144)
+<span id="L398" class="ln">   398</span>	CALLFN(call524288, 524288)
+<span id="L399" class="ln">   399</span>	CALLFN(call1048576, 1048576)
+<span id="L400" class="ln">   400</span>	CALLFN(call2097152, 2097152)
+<span id="L401" class="ln">   401</span>	CALLFN(call4194304, 4194304)
+<span id="L402" class="ln">   402</span>	CALLFN(call8388608, 8388608)
+<span id="L403" class="ln">   403</span>	CALLFN(call16777216, 16777216)
+<span id="L404" class="ln">   404</span>	CALLFN(call33554432, 33554432)
+<span id="L405" class="ln">   405</span>	CALLFN(call67108864, 67108864)
+<span id="L406" class="ln">   406</span>	CALLFN(call134217728, 134217728)
+<span id="L407" class="ln">   407</span>	CALLFN(call268435456, 268435456)
+<span id="L408" class="ln">   408</span>	CALLFN(call536870912, 536870912)
+<span id="L409" class="ln">   409</span>	CALLFN(call1073741824, 1073741824)
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	// Return point when leaving stack.
+<span id="L412" class="ln">   412</span>	//
+<span id="L413" class="ln">   413</span>	// Lessstack can appear in stack traces for the same reason
+<span id="L414" class="ln">   414</span>	// as morestack; in that context, it has 0 arguments.
+<span id="L415" class="ln">   415</span>	TEXT runtime·lessstack(SB), NOSPLIT, $0-0
+<span id="L416" class="ln">   416</span>		// Save return value in m-&gt;cret
+<span id="L417" class="ln">   417</span>		get_tls(CX)
+<span id="L418" class="ln">   418</span>		MOVL	m(CX), BX
+<span id="L419" class="ln">   419</span>		MOVL	AX, m_cret(BX)
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>		// Call oldstack on m-&gt;g0&#39;s stack.
+<span id="L422" class="ln">   422</span>		MOVL	m_g0(BX), BP
+<span id="L423" class="ln">   423</span>		MOVL	BP, g(CX)
+<span id="L424" class="ln">   424</span>		MOVL	(g_sched+gobuf_sp)(BP), SP
+<span id="L425" class="ln">   425</span>		CALL	runtime·oldstack(SB)
+<span id="L426" class="ln">   426</span>		MOVL	$0, 0x1004	// crash if oldstack returns
+<span id="L427" class="ln">   427</span>		RET
+<span id="L428" class="ln">   428</span>	
+<span id="L429" class="ln">   429</span>	
+<span id="L430" class="ln">   430</span>	// bool cas(int32 *val, int32 old, int32 new)
+<span id="L431" class="ln">   431</span>	// Atomically:
+<span id="L432" class="ln">   432</span>	//	if(*val == old){
+<span id="L433" class="ln">   433</span>	//		*val = new;
+<span id="L434" class="ln">   434</span>	//		return 1;
+<span id="L435" class="ln">   435</span>	//	}else
+<span id="L436" class="ln">   436</span>	//		return 0;
+<span id="L437" class="ln">   437</span>	TEXT runtime·cas(SB), NOSPLIT, $0-12
+<span id="L438" class="ln">   438</span>		MOVL	4(SP), BX
+<span id="L439" class="ln">   439</span>		MOVL	8(SP), AX
+<span id="L440" class="ln">   440</span>		MOVL	12(SP), CX
+<span id="L441" class="ln">   441</span>		LOCK
+<span id="L442" class="ln">   442</span>		CMPXCHGL	CX, 0(BX)
+<span id="L443" class="ln">   443</span>		JZ 3(PC)
+<span id="L444" class="ln">   444</span>		MOVL	$0, AX
+<span id="L445" class="ln">   445</span>		RET
+<span id="L446" class="ln">   446</span>		MOVL	$1, AX
+<span id="L447" class="ln">   447</span>		RET
+<span id="L448" class="ln">   448</span>	
+<span id="L449" class="ln">   449</span>	// bool runtime·cas64(uint64 *val, uint64 old, uint64 new)
+<span id="L450" class="ln">   450</span>	// Atomically:
+<span id="L451" class="ln">   451</span>	//	if(*val == *old){
+<span id="L452" class="ln">   452</span>	//		*val = new;
+<span id="L453" class="ln">   453</span>	//		return 1;
+<span id="L454" class="ln">   454</span>	//	} else {
+<span id="L455" class="ln">   455</span>	//		return 0;
+<span id="L456" class="ln">   456</span>	//	}
+<span id="L457" class="ln">   457</span>	TEXT runtime·cas64(SB), NOSPLIT, $0-20
+<span id="L458" class="ln">   458</span>		MOVL	4(SP), BP
+<span id="L459" class="ln">   459</span>		MOVL	8(SP), AX
+<span id="L460" class="ln">   460</span>		MOVL	12(SP), DX
+<span id="L461" class="ln">   461</span>		MOVL	16(SP), BX
+<span id="L462" class="ln">   462</span>		MOVL	20(SP), CX
+<span id="L463" class="ln">   463</span>		LOCK
+<span id="L464" class="ln">   464</span>		CMPXCHG8B	0(BP)
+<span id="L465" class="ln">   465</span>		JNZ	cas64_fail
+<span id="L466" class="ln">   466</span>		MOVL	$1, AX
+<span id="L467" class="ln">   467</span>		RET
+<span id="L468" class="ln">   468</span>	cas64_fail:
+<span id="L469" class="ln">   469</span>		MOVL	$0, AX
+<span id="L470" class="ln">   470</span>		RET
+<span id="L471" class="ln">   471</span>	
+<span id="L472" class="ln">   472</span>	// bool casp(void **p, void *old, void *new)
+<span id="L473" class="ln">   473</span>	// Atomically:
+<span id="L474" class="ln">   474</span>	//	if(*p == old){
+<span id="L475" class="ln">   475</span>	//		*p = new;
+<span id="L476" class="ln">   476</span>	//		return 1;
+<span id="L477" class="ln">   477</span>	//	}else
+<span id="L478" class="ln">   478</span>	//		return 0;
+<span id="L479" class="ln">   479</span>	TEXT runtime·casp(SB), NOSPLIT, $0-12
+<span id="L480" class="ln">   480</span>		MOVL	4(SP), BX
+<span id="L481" class="ln">   481</span>		MOVL	8(SP), AX
+<span id="L482" class="ln">   482</span>		MOVL	12(SP), CX
+<span id="L483" class="ln">   483</span>		LOCK
+<span id="L484" class="ln">   484</span>		CMPXCHGL	CX, 0(BX)
+<span id="L485" class="ln">   485</span>		JZ 3(PC)
+<span id="L486" class="ln">   486</span>		MOVL	$0, AX
+<span id="L487" class="ln">   487</span>		RET
+<span id="L488" class="ln">   488</span>		MOVL	$1, AX
+<span id="L489" class="ln">   489</span>		RET
+<span id="L490" class="ln">   490</span>	
+<span id="L491" class="ln">   491</span>	// uint32 xadd(uint32 volatile *val, int32 delta)
+<span id="L492" class="ln">   492</span>	// Atomically:
+<span id="L493" class="ln">   493</span>	//	*val += delta;
+<span id="L494" class="ln">   494</span>	//	return *val;
+<span id="L495" class="ln">   495</span>	TEXT runtime·xadd(SB), NOSPLIT, $0-8
+<span id="L496" class="ln">   496</span>		MOVL	4(SP), BX
+<span id="L497" class="ln">   497</span>		MOVL	8(SP), AX
+<span id="L498" class="ln">   498</span>		MOVL	AX, CX
+<span id="L499" class="ln">   499</span>		LOCK
+<span id="L500" class="ln">   500</span>		XADDL	AX, 0(BX)
+<span id="L501" class="ln">   501</span>		ADDL	CX, AX
+<span id="L502" class="ln">   502</span>		RET
+<span id="L503" class="ln">   503</span>	
+<span id="L504" class="ln">   504</span>	TEXT runtime·xchg(SB), NOSPLIT, $0-8
+<span id="L505" class="ln">   505</span>		MOVL	4(SP), BX
+<span id="L506" class="ln">   506</span>		MOVL	8(SP), AX
+<span id="L507" class="ln">   507</span>		XCHGL	AX, 0(BX)
+<span id="L508" class="ln">   508</span>		RET
+<span id="L509" class="ln">   509</span>	
+<span id="L510" class="ln">   510</span>	TEXT runtime·xchgp(SB), NOSPLIT, $0-8
+<span id="L511" class="ln">   511</span>		MOVL	4(SP), BX
+<span id="L512" class="ln">   512</span>		MOVL	8(SP), AX
+<span id="L513" class="ln">   513</span>		XCHGL	AX, 0(BX)
+<span id="L514" class="ln">   514</span>		RET
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>	TEXT runtime·procyield(SB),NOSPLIT,$0-0
+<span id="L517" class="ln">   517</span>		MOVL	4(SP), AX
+<span id="L518" class="ln">   518</span>	again:
+<span id="L519" class="ln">   519</span>		PAUSE
+<span id="L520" class="ln">   520</span>		SUBL	$1, AX
+<span id="L521" class="ln">   521</span>		JNZ	again
+<span id="L522" class="ln">   522</span>		RET
+<span id="L523" class="ln">   523</span>	
+<span id="L524" class="ln">   524</span>	TEXT runtime·atomicstorep(SB), NOSPLIT, $0-8
+<span id="L525" class="ln">   525</span>		MOVL	4(SP), BX
+<span id="L526" class="ln">   526</span>		MOVL	8(SP), AX
+<span id="L527" class="ln">   527</span>		XCHGL	AX, 0(BX)
+<span id="L528" class="ln">   528</span>		RET
+<span id="L529" class="ln">   529</span>	
+<span id="L530" class="ln">   530</span>	TEXT runtime·atomicstore(SB), NOSPLIT, $0-8
+<span id="L531" class="ln">   531</span>		MOVL	4(SP), BX
+<span id="L532" class="ln">   532</span>		MOVL	8(SP), AX
+<span id="L533" class="ln">   533</span>		XCHGL	AX, 0(BX)
+<span id="L534" class="ln">   534</span>		RET
+<span id="L535" class="ln">   535</span>	
+<span id="L536" class="ln">   536</span>	// uint64 atomicload64(uint64 volatile* addr);
+<span id="L537" class="ln">   537</span>	// so actually
+<span id="L538" class="ln">   538</span>	// void atomicload64(uint64 *res, uint64 volatile *addr);
+<span id="L539" class="ln">   539</span>	TEXT runtime·atomicload64(SB), NOSPLIT, $0-8
+<span id="L540" class="ln">   540</span>		MOVL	4(SP), BX
+<span id="L541" class="ln">   541</span>		MOVL	8(SP), AX
+<span id="L542" class="ln">   542</span>		// MOVQ (%EAX), %MM0
+<span id="L543" class="ln">   543</span>		BYTE $0x0f; BYTE $0x6f; BYTE $0x00
+<span id="L544" class="ln">   544</span>		// MOVQ %MM0, 0(%EBX)
+<span id="L545" class="ln">   545</span>		BYTE $0x0f; BYTE $0x7f; BYTE $0x03
+<span id="L546" class="ln">   546</span>		// EMMS
+<span id="L547" class="ln">   547</span>		BYTE $0x0F; BYTE $0x77
+<span id="L548" class="ln">   548</span>		RET
+<span id="L549" class="ln">   549</span>	
+<span id="L550" class="ln">   550</span>	// void runtime·atomicstore64(uint64 volatile* addr, uint64 v);
+<span id="L551" class="ln">   551</span>	TEXT runtime·atomicstore64(SB), NOSPLIT, $0-12
+<span id="L552" class="ln">   552</span>		MOVL	4(SP), AX
+<span id="L553" class="ln">   553</span>		// MOVQ and EMMS were introduced on the Pentium MMX.
+<span id="L554" class="ln">   554</span>		// MOVQ 0x8(%ESP), %MM0
+<span id="L555" class="ln">   555</span>		BYTE $0x0f; BYTE $0x6f; BYTE $0x44; BYTE $0x24; BYTE $0x08
+<span id="L556" class="ln">   556</span>		// MOVQ %MM0, (%EAX)
+<span id="L557" class="ln">   557</span>		BYTE $0x0f; BYTE $0x7f; BYTE $0x00 
+<span id="L558" class="ln">   558</span>		// EMMS
+<span id="L559" class="ln">   559</span>		BYTE $0x0F; BYTE $0x77
+<span id="L560" class="ln">   560</span>		// This is essentially a no-op, but it provides required memory fencing.
+<span id="L561" class="ln">   561</span>		// It can be replaced with MFENCE, but MFENCE was introduced only on the Pentium4 (SSE2).
+<span id="L562" class="ln">   562</span>		MOVL	$0, AX
+<span id="L563" class="ln">   563</span>		LOCK
+<span id="L564" class="ln">   564</span>		XADDL	AX, (SP)
+<span id="L565" class="ln">   565</span>		RET
+<span id="L566" class="ln">   566</span>	
+<span id="L567" class="ln">   567</span>	// void jmpdefer(fn, sp);
+<span id="L568" class="ln">   568</span>	// called from deferreturn.
+<span id="L569" class="ln">   569</span>	// 1. pop the caller
+<span id="L570" class="ln">   570</span>	// 2. sub 5 bytes from the callers return
+<span id="L571" class="ln">   571</span>	// 3. jmp to the argument
+<span id="L572" class="ln">   572</span>	TEXT runtime·jmpdefer(SB), NOSPLIT, $0-8
+<span id="L573" class="ln">   573</span>		MOVL	4(SP), DX	// fn
+<span id="L574" class="ln">   574</span>		MOVL	8(SP), BX	// caller sp
+<span id="L575" class="ln">   575</span>		LEAL	-4(BX), SP	// caller sp after CALL
+<span id="L576" class="ln">   576</span>		SUBL	$5, (SP)	// return to CALL again
+<span id="L577" class="ln">   577</span>		MOVL	0(DX), BX
+<span id="L578" class="ln">   578</span>		JMP	BX	// but first run the deferred function
+<span id="L579" class="ln">   579</span>	
+<span id="L580" class="ln">   580</span>	// Save state of caller into g-&gt;sched.
+<span id="L581" class="ln">   581</span>	TEXT gosave&lt;&gt;(SB),NOSPLIT,$0
+<span id="L582" class="ln">   582</span>		PUSHL	AX
+<span id="L583" class="ln">   583</span>		PUSHL	BX
+<span id="L584" class="ln">   584</span>		get_tls(BX)
+<span id="L585" class="ln">   585</span>		MOVL	g(BX), BX
+<span id="L586" class="ln">   586</span>		LEAL	arg+0(FP), AX
+<span id="L587" class="ln">   587</span>		MOVL	AX, (g_sched+gobuf_sp)(BX)
+<span id="L588" class="ln">   588</span>		MOVL	-4(AX), AX
+<span id="L589" class="ln">   589</span>		MOVL	AX, (g_sched+gobuf_pc)(BX)
+<span id="L590" class="ln">   590</span>		MOVL	$0, (g_sched+gobuf_ret)(BX)
+<span id="L591" class="ln">   591</span>		MOVL	$0, (g_sched+gobuf_ctxt)(BX)
+<span id="L592" class="ln">   592</span>		POPL	BX
+<span id="L593" class="ln">   593</span>		POPL	AX
+<span id="L594" class="ln">   594</span>		RET
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>	// asmcgocall(void(*fn)(void*), void *arg)
+<span id="L597" class="ln">   597</span>	// Call fn(arg) on the scheduler stack,
+<span id="L598" class="ln">   598</span>	// aligned appropriately for the gcc ABI.
+<span id="L599" class="ln">   599</span>	// See cgocall.c for more details.
+<span id="L600" class="ln">   600</span>	TEXT runtime·asmcgocall(SB),NOSPLIT,$0-8
+<span id="L601" class="ln">   601</span>		MOVL	fn+0(FP), AX
+<span id="L602" class="ln">   602</span>		MOVL	arg+4(FP), BX
+<span id="L603" class="ln">   603</span>		MOVL	SP, DX
+<span id="L604" class="ln">   604</span>	
+<span id="L605" class="ln">   605</span>		// Figure out if we need to switch to m-&gt;g0 stack.
+<span id="L606" class="ln">   606</span>		// We get called to create new OS threads too, and those
+<span id="L607" class="ln">   607</span>		// come in on the m-&gt;g0 stack already.
+<span id="L608" class="ln">   608</span>		get_tls(CX)
+<span id="L609" class="ln">   609</span>		MOVL	m(CX), BP
+<span id="L610" class="ln">   610</span>		MOVL	m_g0(BP), SI
+<span id="L611" class="ln">   611</span>		MOVL	g(CX), DI
+<span id="L612" class="ln">   612</span>		CMPL	SI, DI
+<span id="L613" class="ln">   613</span>		JEQ	4(PC)
+<span id="L614" class="ln">   614</span>		CALL	gosave&lt;&gt;(SB)
+<span id="L615" class="ln">   615</span>		MOVL	SI, g(CX)
+<span id="L616" class="ln">   616</span>		MOVL	(g_sched+gobuf_sp)(SI), SP
+<span id="L617" class="ln">   617</span>	
+<span id="L618" class="ln">   618</span>		// Now on a scheduling stack (a pthread-created stack).
+<span id="L619" class="ln">   619</span>		SUBL	$32, SP
+<span id="L620" class="ln">   620</span>		ANDL	$~15, SP	// alignment, perhaps unnecessary
+<span id="L621" class="ln">   621</span>		MOVL	DI, 8(SP)	// save g
+<span id="L622" class="ln">   622</span>		MOVL	DX, 4(SP)	// save SP
+<span id="L623" class="ln">   623</span>		MOVL	BX, 0(SP)	// first argument in x86-32 ABI
+<span id="L624" class="ln">   624</span>		CALL	AX
+<span id="L625" class="ln">   625</span>	
+<span id="L626" class="ln">   626</span>		// Restore registers, g, stack pointer.
+<span id="L627" class="ln">   627</span>		get_tls(CX)
+<span id="L628" class="ln">   628</span>		MOVL	8(SP), DI
+<span id="L629" class="ln">   629</span>		MOVL	DI, g(CX)
+<span id="L630" class="ln">   630</span>		MOVL	4(SP), SP
+<span id="L631" class="ln">   631</span>		RET
+<span id="L632" class="ln">   632</span>	
+<span id="L633" class="ln">   633</span>	// cgocallback(void (*fn)(void*), void *frame, uintptr framesize)
+<span id="L634" class="ln">   634</span>	// Turn the fn into a Go func (by taking its address) and call
+<span id="L635" class="ln">   635</span>	// cgocallback_gofunc.
+<span id="L636" class="ln">   636</span>	TEXT runtime·cgocallback(SB),NOSPLIT,$12-12
+<span id="L637" class="ln">   637</span>		LEAL	fn+0(FP), AX
+<span id="L638" class="ln">   638</span>		MOVL	AX, 0(SP)
+<span id="L639" class="ln">   639</span>		MOVL	frame+4(FP), AX
+<span id="L640" class="ln">   640</span>		MOVL	AX, 4(SP)
+<span id="L641" class="ln">   641</span>		MOVL	framesize+8(FP), AX
+<span id="L642" class="ln">   642</span>		MOVL	AX, 8(SP)
+<span id="L643" class="ln">   643</span>		MOVL	$runtime·cgocallback_gofunc(SB), AX
+<span id="L644" class="ln">   644</span>		CALL	AX
+<span id="L645" class="ln">   645</span>		RET
+<span id="L646" class="ln">   646</span>	
+<span id="L647" class="ln">   647</span>	// cgocallback_gofunc(FuncVal*, void *frame, uintptr framesize)
+<span id="L648" class="ln">   648</span>	// See cgocall.c for more details.
+<span id="L649" class="ln">   649</span>	TEXT runtime·cgocallback_gofunc(SB),NOSPLIT,$12-12
+<span id="L650" class="ln">   650</span>		// If m is nil, Go did not create the current thread.
+<span id="L651" class="ln">   651</span>		// Call needm to obtain one for temporary use.
+<span id="L652" class="ln">   652</span>		// In this case, we&#39;re running on the thread stack, so there&#39;s
+<span id="L653" class="ln">   653</span>		// lots of space, but the linker doesn&#39;t know. Hide the call from
+<span id="L654" class="ln">   654</span>		// the linker analysis by using an indirect call through AX.
+<span id="L655" class="ln">   655</span>		get_tls(CX)
+<span id="L656" class="ln">   656</span>	#ifdef GOOS_windows
+<span id="L657" class="ln">   657</span>		MOVL	$0, BP
+<span id="L658" class="ln">   658</span>		CMPL	CX, $0
+<span id="L659" class="ln">   659</span>		JEQ	2(PC)
+<span id="L660" class="ln">   660</span>	#endif
+<span id="L661" class="ln">   661</span>		MOVL	m(CX), BP
+<span id="L662" class="ln">   662</span>		MOVL	BP, DX // saved copy of oldm
+<span id="L663" class="ln">   663</span>		CMPL	BP, $0
+<span id="L664" class="ln">   664</span>		JNE	havem
+<span id="L665" class="ln">   665</span>	needm:
+<span id="L666" class="ln">   666</span>		MOVL	DX, 0(SP)
+<span id="L667" class="ln">   667</span>		MOVL	$runtime·needm(SB), AX
+<span id="L668" class="ln">   668</span>		CALL	AX
+<span id="L669" class="ln">   669</span>		MOVL	0(SP), DX
+<span id="L670" class="ln">   670</span>		get_tls(CX)
+<span id="L671" class="ln">   671</span>		MOVL	m(CX), BP
+<span id="L672" class="ln">   672</span>	
+<span id="L673" class="ln">   673</span>	havem:
+<span id="L674" class="ln">   674</span>		// Now there&#39;s a valid m, and we&#39;re running on its m-&gt;g0.
+<span id="L675" class="ln">   675</span>		// Save current m-&gt;g0-&gt;sched.sp on stack and then set it to SP.
+<span id="L676" class="ln">   676</span>		// Save current sp in m-&gt;g0-&gt;sched.sp in preparation for
+<span id="L677" class="ln">   677</span>		// switch back to m-&gt;curg stack.
+<span id="L678" class="ln">   678</span>		// NOTE: unwindm knows that the saved g-&gt;sched.sp is at 0(SP).
+<span id="L679" class="ln">   679</span>		MOVL	m_g0(BP), SI
+<span id="L680" class="ln">   680</span>		MOVL	(g_sched+gobuf_sp)(SI), AX
+<span id="L681" class="ln">   681</span>		MOVL	AX, 0(SP)
+<span id="L682" class="ln">   682</span>		MOVL	SP, (g_sched+gobuf_sp)(SI)
+<span id="L683" class="ln">   683</span>	
+<span id="L684" class="ln">   684</span>		// Switch to m-&gt;curg stack and call runtime.cgocallbackg.
+<span id="L685" class="ln">   685</span>		// Because we are taking over the execution of m-&gt;curg
+<span id="L686" class="ln">   686</span>		// but *not* resuming what had been running, we need to
+<span id="L687" class="ln">   687</span>		// save that information (m-&gt;curg-&gt;sched) so we can restore it.
+<span id="L688" class="ln">   688</span>		// We can restore m-&gt;curg-&gt;sched.sp easily, because calling
+<span id="L689" class="ln">   689</span>		// runtime.cgocallbackg leaves SP unchanged upon return.
+<span id="L690" class="ln">   690</span>		// To save m-&gt;curg-&gt;sched.pc, we push it onto the stack.
+<span id="L691" class="ln">   691</span>		// This has the added benefit that it looks to the traceback
+<span id="L692" class="ln">   692</span>		// routine like cgocallbackg is going to return to that
+<span id="L693" class="ln">   693</span>		// PC (because the frame we allocate below has the same
+<span id="L694" class="ln">   694</span>		// size as cgocallback_gofunc&#39;s frame declared above)
+<span id="L695" class="ln">   695</span>		// so that the traceback will seamlessly trace back into
+<span id="L696" class="ln">   696</span>		// the earlier calls.
+<span id="L697" class="ln">   697</span>		//
+<span id="L698" class="ln">   698</span>		// In the new goroutine, 0(SP) holds the saved oldm (DX) register.
+<span id="L699" class="ln">   699</span>		// 4(SP) and 8(SP) are unused.
+<span id="L700" class="ln">   700</span>		MOVL	m_curg(BP), SI
+<span id="L701" class="ln">   701</span>		MOVL	SI, g(CX)
+<span id="L702" class="ln">   702</span>		MOVL	(g_sched+gobuf_sp)(SI), DI // prepare stack as DI
+<span id="L703" class="ln">   703</span>		MOVL	(g_sched+gobuf_pc)(SI), BP
+<span id="L704" class="ln">   704</span>		MOVL	BP, -4(DI)
+<span id="L705" class="ln">   705</span>		LEAL	-(4+12)(DI), SP
+<span id="L706" class="ln">   706</span>		MOVL	DX, 0(SP)
+<span id="L707" class="ln">   707</span>		CALL	runtime·cgocallbackg(SB)
+<span id="L708" class="ln">   708</span>		MOVL	0(SP), DX
+<span id="L709" class="ln">   709</span>	
+<span id="L710" class="ln">   710</span>		// Restore g-&gt;sched (== m-&gt;curg-&gt;sched) from saved values.
+<span id="L711" class="ln">   711</span>		get_tls(CX)
+<span id="L712" class="ln">   712</span>		MOVL	g(CX), SI
+<span id="L713" class="ln">   713</span>		MOVL	12(SP), BP
+<span id="L714" class="ln">   714</span>		MOVL	BP, (g_sched+gobuf_pc)(SI)
+<span id="L715" class="ln">   715</span>		LEAL	(12+4)(SP), DI
+<span id="L716" class="ln">   716</span>		MOVL	DI, (g_sched+gobuf_sp)(SI)
+<span id="L717" class="ln">   717</span>	
+<span id="L718" class="ln">   718</span>		// Switch back to m-&gt;g0&#39;s stack and restore m-&gt;g0-&gt;sched.sp.
+<span id="L719" class="ln">   719</span>		// (Unlike m-&gt;curg, the g0 goroutine never uses sched.pc,
+<span id="L720" class="ln">   720</span>		// so we do not have to restore it.)
+<span id="L721" class="ln">   721</span>		MOVL	m(CX), BP
+<span id="L722" class="ln">   722</span>		MOVL	m_g0(BP), SI
+<span id="L723" class="ln">   723</span>		MOVL	SI, g(CX)
+<span id="L724" class="ln">   724</span>		MOVL	(g_sched+gobuf_sp)(SI), SP
+<span id="L725" class="ln">   725</span>		MOVL	0(SP), AX
+<span id="L726" class="ln">   726</span>		MOVL	AX, (g_sched+gobuf_sp)(SI)
+<span id="L727" class="ln">   727</span>		
+<span id="L728" class="ln">   728</span>		// If the m on entry was nil, we called needm above to borrow an m
+<span id="L729" class="ln">   729</span>		// for the duration of the call. Since the call is over, return it with dropm.
+<span id="L730" class="ln">   730</span>		CMPL	DX, $0
+<span id="L731" class="ln">   731</span>		JNE 3(PC)
+<span id="L732" class="ln">   732</span>		MOVL	$runtime·dropm(SB), AX
+<span id="L733" class="ln">   733</span>		CALL	AX
+<span id="L734" class="ln">   734</span>	
+<span id="L735" class="ln">   735</span>		// Done!
+<span id="L736" class="ln">   736</span>		RET
+<span id="L737" class="ln">   737</span>	
+<span id="L738" class="ln">   738</span>	// void setmg(M*, G*); set m and g. for use by needm.
+<span id="L739" class="ln">   739</span>	TEXT runtime·setmg(SB), NOSPLIT, $0-8
+<span id="L740" class="ln">   740</span>	#ifdef GOOS_windows
+<span id="L741" class="ln">   741</span>		MOVL	mm+0(FP), AX
+<span id="L742" class="ln">   742</span>		CMPL	AX, $0
+<span id="L743" class="ln">   743</span>		JNE	settls
+<span id="L744" class="ln">   744</span>		MOVL	$0, 0x14(FS)
+<span id="L745" class="ln">   745</span>		RET
+<span id="L746" class="ln">   746</span>	settls:
+<span id="L747" class="ln">   747</span>		LEAL	m_tls(AX), AX
+<span id="L748" class="ln">   748</span>		MOVL	AX, 0x14(FS)
+<span id="L749" class="ln">   749</span>	#endif
+<span id="L750" class="ln">   750</span>		MOVL	mm+0(FP), AX
+<span id="L751" class="ln">   751</span>		get_tls(CX)
+<span id="L752" class="ln">   752</span>		MOVL	mm+0(FP), AX
+<span id="L753" class="ln">   753</span>		MOVL	AX, m(CX)
+<span id="L754" class="ln">   754</span>		MOVL	gg+4(FP), BX
+<span id="L755" class="ln">   755</span>		MOVL	BX, g(CX)
+<span id="L756" class="ln">   756</span>		RET
+<span id="L757" class="ln">   757</span>	
+<span id="L758" class="ln">   758</span>	// void setmg_gcc(M*, G*); set m and g. for use by gcc
+<span id="L759" class="ln">   759</span>	TEXT setmg_gcc&lt;&gt;(SB), NOSPLIT, $0
+<span id="L760" class="ln">   760</span>		get_tls(AX)
+<span id="L761" class="ln">   761</span>		MOVL	mm+0(FP), DX
+<span id="L762" class="ln">   762</span>		MOVL	DX, m(AX)
+<span id="L763" class="ln">   763</span>		MOVL	gg+4(FP), DX
+<span id="L764" class="ln">   764</span>		MOVL	DX,g (AX)
+<span id="L765" class="ln">   765</span>		RET
+<span id="L766" class="ln">   766</span>	
+<span id="L767" class="ln">   767</span>	// check that SP is in range [g-&gt;stackbase, g-&gt;stackguard)
+<span id="L768" class="ln">   768</span>	TEXT runtime·stackcheck(SB), NOSPLIT, $0-0
+<span id="L769" class="ln">   769</span>		get_tls(CX)
+<span id="L770" class="ln">   770</span>		MOVL	g(CX), AX
+<span id="L771" class="ln">   771</span>		CMPL	g_stackbase(AX), SP
+<span id="L772" class="ln">   772</span>		JHI	2(PC)
+<span id="L773" class="ln">   773</span>		INT	$3
+<span id="L774" class="ln">   774</span>		CMPL	SP, g_stackguard(AX)
+<span id="L775" class="ln">   775</span>		JHI	2(PC)
+<span id="L776" class="ln">   776</span>		INT	$3
+<span id="L777" class="ln">   777</span>		RET
+<span id="L778" class="ln">   778</span>	
+<span id="L779" class="ln">   779</span>	TEXT runtime·getcallerpc(SB),NOSPLIT,$0-4
+<span id="L780" class="ln">   780</span>		MOVL	x+0(FP),AX		// addr of first arg
+<span id="L781" class="ln">   781</span>		MOVL	-4(AX),AX		// get calling pc
+<span id="L782" class="ln">   782</span>		RET
+<span id="L783" class="ln">   783</span>	
+<span id="L784" class="ln">   784</span>	TEXT runtime·setcallerpc(SB),NOSPLIT,$0-8
+<span id="L785" class="ln">   785</span>		MOVL	x+0(FP),AX		// addr of first arg
+<span id="L786" class="ln">   786</span>		MOVL	x+4(FP), BX
+<span id="L787" class="ln">   787</span>		MOVL	BX, -4(AX)		// set calling pc
+<span id="L788" class="ln">   788</span>		RET
+<span id="L789" class="ln">   789</span>	
+<span id="L790" class="ln">   790</span>	TEXT runtime·getcallersp(SB), NOSPLIT, $0-4
+<span id="L791" class="ln">   791</span>		MOVL	sp+0(FP), AX
+<span id="L792" class="ln">   792</span>		RET
+<span id="L793" class="ln">   793</span>	
+<span id="L794" class="ln">   794</span>	// int64 runtime·cputicks(void), so really
+<span id="L795" class="ln">   795</span>	// void runtime·cputicks(int64 *ticks)
+<span id="L796" class="ln">   796</span>	TEXT runtime·cputicks(SB),NOSPLIT,$0-4
+<span id="L797" class="ln">   797</span>		RDTSC
+<span id="L798" class="ln">   798</span>		MOVL	ret+0(FP), DI
+<span id="L799" class="ln">   799</span>		MOVL	AX, 0(DI)
+<span id="L800" class="ln">   800</span>		MOVL	DX, 4(DI)
+<span id="L801" class="ln">   801</span>		RET
+<span id="L802" class="ln">   802</span>	
+<span id="L803" class="ln">   803</span>	TEXT runtime·ldt0setup(SB),NOSPLIT,$16-0
+<span id="L804" class="ln">   804</span>		// set up ldt 7 to point at tls0
+<span id="L805" class="ln">   805</span>		// ldt 1 would be fine on Linux, but on OS X, 7 is as low as we can go.
+<span id="L806" class="ln">   806</span>		// the entry number is just a hint.  setldt will set up GS with what it used.
+<span id="L807" class="ln">   807</span>		MOVL	$7, 0(SP)
+<span id="L808" class="ln">   808</span>		LEAL	runtime·tls0(SB), AX
+<span id="L809" class="ln">   809</span>		MOVL	AX, 4(SP)
+<span id="L810" class="ln">   810</span>		MOVL	$32, 8(SP)	// sizeof(tls array)
+<span id="L811" class="ln">   811</span>		CALL	runtime·setldt(SB)
+<span id="L812" class="ln">   812</span>		RET
+<span id="L813" class="ln">   813</span>	
+<span id="L814" class="ln">   814</span>	TEXT runtime·emptyfunc(SB),0,$0-0
+<span id="L815" class="ln">   815</span>		RET
+<span id="L816" class="ln">   816</span>	
+<span id="L817" class="ln">   817</span>	TEXT runtime·abort(SB),NOSPLIT,$0-0
+<span id="L818" class="ln">   818</span>		INT $0x3
+<span id="L819" class="ln">   819</span>	
+<span id="L820" class="ln">   820</span>	TEXT runtime·stackguard(SB),NOSPLIT,$0-8
+<span id="L821" class="ln">   821</span>		MOVL	SP, DX
+<span id="L822" class="ln">   822</span>		MOVL	DX, sp+0(FP)
+<span id="L823" class="ln">   823</span>		get_tls(CX)
+<span id="L824" class="ln">   824</span>		MOVL	g(CX), BX
+<span id="L825" class="ln">   825</span>		MOVL	g_stackguard(BX), DX
+<span id="L826" class="ln">   826</span>		MOVL	DX, limit+4(FP)
+<span id="L827" class="ln">   827</span>		RET
+<span id="L828" class="ln">   828</span>	
+<span id="L829" class="ln">   829</span>	GLOBL runtime·tls0(SB), $32
+<span id="L830" class="ln">   830</span>	
+<span id="L831" class="ln">   831</span>	// hash function using AES hardware instructions
+<span id="L832" class="ln">   832</span>	TEXT runtime·aeshash(SB),NOSPLIT,$0-12
+<span id="L833" class="ln">   833</span>		MOVL	4(SP), DX	// ptr to hash value
+<span id="L834" class="ln">   834</span>		MOVL	8(SP), CX	// size
+<span id="L835" class="ln">   835</span>		MOVL	12(SP), AX	// ptr to data
+<span id="L836" class="ln">   836</span>		JMP	runtime·aeshashbody(SB)
+<span id="L837" class="ln">   837</span>	
+<span id="L838" class="ln">   838</span>	TEXT runtime·aeshashstr(SB),NOSPLIT,$0-12
+<span id="L839" class="ln">   839</span>		MOVL	4(SP), DX	// ptr to hash value
+<span id="L840" class="ln">   840</span>		MOVL	12(SP), AX	// ptr to string struct
+<span id="L841" class="ln">   841</span>		MOVL	4(AX), CX	// length of string
+<span id="L842" class="ln">   842</span>		MOVL	(AX), AX	// string data
+<span id="L843" class="ln">   843</span>		JMP	runtime·aeshashbody(SB)
+<span id="L844" class="ln">   844</span>	
+<span id="L845" class="ln">   845</span>	// AX: data
+<span id="L846" class="ln">   846</span>	// CX: length
+<span id="L847" class="ln">   847</span>	// DX: ptr to seed input / hash output
+<span id="L848" class="ln">   848</span>	TEXT runtime·aeshashbody(SB),NOSPLIT,$0-12
+<span id="L849" class="ln">   849</span>		MOVL	(DX), X0	// seed to low 32 bits of xmm0
+<span id="L850" class="ln">   850</span>		PINSRD	$1, CX, X0	// size to next 32 bits of xmm0
+<span id="L851" class="ln">   851</span>		MOVO	runtime·aeskeysched+0(SB), X2
+<span id="L852" class="ln">   852</span>		MOVO	runtime·aeskeysched+16(SB), X3
+<span id="L853" class="ln">   853</span>		CMPL	CX, $16
+<span id="L854" class="ln">   854</span>		JB	aessmall
+<span id="L855" class="ln">   855</span>	aesloop:
+<span id="L856" class="ln">   856</span>		CMPL	CX, $16
+<span id="L857" class="ln">   857</span>		JBE	aesloopend
+<span id="L858" class="ln">   858</span>		MOVOU	(AX), X1
+<span id="L859" class="ln">   859</span>		AESENC	X2, X0
+<span id="L860" class="ln">   860</span>		AESENC	X1, X0
+<span id="L861" class="ln">   861</span>		SUBL	$16, CX
+<span id="L862" class="ln">   862</span>		ADDL	$16, AX
+<span id="L863" class="ln">   863</span>		JMP	aesloop
+<span id="L864" class="ln">   864</span>	// 1-16 bytes remaining
+<span id="L865" class="ln">   865</span>	aesloopend:
+<span id="L866" class="ln">   866</span>		// This load may overlap with the previous load above.
+<span id="L867" class="ln">   867</span>		// We&#39;ll hash some bytes twice, but that&#39;s ok.
+<span id="L868" class="ln">   868</span>		MOVOU	-16(AX)(CX*1), X1
+<span id="L869" class="ln">   869</span>		JMP	partial
+<span id="L870" class="ln">   870</span>	// 0-15 bytes
+<span id="L871" class="ln">   871</span>	aessmall:
+<span id="L872" class="ln">   872</span>		TESTL	CX, CX
+<span id="L873" class="ln">   873</span>		JE	finalize	// 0 bytes
+<span id="L874" class="ln">   874</span>	
+<span id="L875" class="ln">   875</span>		CMPB	AX, $0xf0
+<span id="L876" class="ln">   876</span>		JA	highpartial
+<span id="L877" class="ln">   877</span>	
+<span id="L878" class="ln">   878</span>		// 16 bytes loaded at this address won&#39;t cross
+<span id="L879" class="ln">   879</span>		// a page boundary, so we can load it directly.
+<span id="L880" class="ln">   880</span>		MOVOU	(AX), X1
+<span id="L881" class="ln">   881</span>		ADDL	CX, CX
+<span id="L882" class="ln">   882</span>		PAND	masks&lt;&gt;(SB)(CX*8), X1
+<span id="L883" class="ln">   883</span>		JMP	partial
+<span id="L884" class="ln">   884</span>	highpartial:
+<span id="L885" class="ln">   885</span>		// address ends in 1111xxxx.  Might be up against
+<span id="L886" class="ln">   886</span>		// a page boundary, so load ending at last byte.
+<span id="L887" class="ln">   887</span>		// Then shift bytes down using pshufb.
+<span id="L888" class="ln">   888</span>		MOVOU	-16(AX)(CX*1), X1
+<span id="L889" class="ln">   889</span>		ADDL	CX, CX
+<span id="L890" class="ln">   890</span>		PSHUFB	shifts&lt;&gt;(SB)(CX*8), X1
+<span id="L891" class="ln">   891</span>	partial:
+<span id="L892" class="ln">   892</span>		// incorporate partial block into hash
+<span id="L893" class="ln">   893</span>		AESENC	X3, X0
+<span id="L894" class="ln">   894</span>		AESENC	X1, X0
+<span id="L895" class="ln">   895</span>	finalize:	
+<span id="L896" class="ln">   896</span>		// finalize hash
+<span id="L897" class="ln">   897</span>		AESENC	X2, X0
+<span id="L898" class="ln">   898</span>		AESENC	X3, X0
+<span id="L899" class="ln">   899</span>		AESENC	X2, X0
+<span id="L900" class="ln">   900</span>		MOVL	X0, (DX)
+<span id="L901" class="ln">   901</span>		RET
+<span id="L902" class="ln">   902</span>	
+<span id="L903" class="ln">   903</span>	TEXT runtime·aeshash32(SB),NOSPLIT,$0-12
+<span id="L904" class="ln">   904</span>		MOVL	4(SP), DX	// ptr to hash value
+<span id="L905" class="ln">   905</span>		MOVL	12(SP), AX	// ptr to data
+<span id="L906" class="ln">   906</span>		MOVL	(DX), X0	// seed
+<span id="L907" class="ln">   907</span>		PINSRD	$1, (AX), X0	// data
+<span id="L908" class="ln">   908</span>		AESENC	runtime·aeskeysched+0(SB), X0
+<span id="L909" class="ln">   909</span>		AESENC	runtime·aeskeysched+16(SB), X0
+<span id="L910" class="ln">   910</span>		AESENC	runtime·aeskeysched+0(SB), X0
+<span id="L911" class="ln">   911</span>		MOVL	X0, (DX)
+<span id="L912" class="ln">   912</span>		RET
+<span id="L913" class="ln">   913</span>	
+<span id="L914" class="ln">   914</span>	TEXT runtime·aeshash64(SB),NOSPLIT,$0-12
+<span id="L915" class="ln">   915</span>		MOVL	4(SP), DX	// ptr to hash value
+<span id="L916" class="ln">   916</span>		MOVL	12(SP), AX	// ptr to data
+<span id="L917" class="ln">   917</span>		MOVQ	(AX), X0	// data
+<span id="L918" class="ln">   918</span>		PINSRD	$2, (DX), X0	// seed
+<span id="L919" class="ln">   919</span>		AESENC	runtime·aeskeysched+0(SB), X0
+<span id="L920" class="ln">   920</span>		AESENC	runtime·aeskeysched+16(SB), X0
+<span id="L921" class="ln">   921</span>		AESENC	runtime·aeskeysched+0(SB), X0
+<span id="L922" class="ln">   922</span>		MOVL	X0, (DX)
+<span id="L923" class="ln">   923</span>		RET
+<span id="L924" class="ln">   924</span>	
+<span id="L925" class="ln">   925</span>	// simple mask to get rid of data in the high part of the register.
+<span id="L926" class="ln">   926</span>	DATA masks&lt;&gt;+0x00(SB)/4, $0x00000000
+<span id="L927" class="ln">   927</span>	DATA masks&lt;&gt;+0x04(SB)/4, $0x00000000
+<span id="L928" class="ln">   928</span>	DATA masks&lt;&gt;+0x08(SB)/4, $0x00000000
+<span id="L929" class="ln">   929</span>	DATA masks&lt;&gt;+0x0c(SB)/4, $0x00000000
+<span id="L930" class="ln">   930</span>		
+<span id="L931" class="ln">   931</span>	DATA masks&lt;&gt;+0x10(SB)/4, $0x000000ff
+<span id="L932" class="ln">   932</span>	DATA masks&lt;&gt;+0x14(SB)/4, $0x00000000
+<span id="L933" class="ln">   933</span>	DATA masks&lt;&gt;+0x18(SB)/4, $0x00000000
+<span id="L934" class="ln">   934</span>	DATA masks&lt;&gt;+0x1c(SB)/4, $0x00000000
+<span id="L935" class="ln">   935</span>		
+<span id="L936" class="ln">   936</span>	DATA masks&lt;&gt;+0x20(SB)/4, $0x0000ffff
+<span id="L937" class="ln">   937</span>	DATA masks&lt;&gt;+0x24(SB)/4, $0x00000000
+<span id="L938" class="ln">   938</span>	DATA masks&lt;&gt;+0x28(SB)/4, $0x00000000
+<span id="L939" class="ln">   939</span>	DATA masks&lt;&gt;+0x2c(SB)/4, $0x00000000
+<span id="L940" class="ln">   940</span>		
+<span id="L941" class="ln">   941</span>	DATA masks&lt;&gt;+0x30(SB)/4, $0x00ffffff
+<span id="L942" class="ln">   942</span>	DATA masks&lt;&gt;+0x34(SB)/4, $0x00000000
+<span id="L943" class="ln">   943</span>	DATA masks&lt;&gt;+0x38(SB)/4, $0x00000000
+<span id="L944" class="ln">   944</span>	DATA masks&lt;&gt;+0x3c(SB)/4, $0x00000000
+<span id="L945" class="ln">   945</span>		
+<span id="L946" class="ln">   946</span>	DATA masks&lt;&gt;+0x40(SB)/4, $0xffffffff
+<span id="L947" class="ln">   947</span>	DATA masks&lt;&gt;+0x44(SB)/4, $0x00000000
+<span id="L948" class="ln">   948</span>	DATA masks&lt;&gt;+0x48(SB)/4, $0x00000000
+<span id="L949" class="ln">   949</span>	DATA masks&lt;&gt;+0x4c(SB)/4, $0x00000000
+<span id="L950" class="ln">   950</span>		
+<span id="L951" class="ln">   951</span>	DATA masks&lt;&gt;+0x50(SB)/4, $0xffffffff
+<span id="L952" class="ln">   952</span>	DATA masks&lt;&gt;+0x54(SB)/4, $0x000000ff
+<span id="L953" class="ln">   953</span>	DATA masks&lt;&gt;+0x58(SB)/4, $0x00000000
+<span id="L954" class="ln">   954</span>	DATA masks&lt;&gt;+0x5c(SB)/4, $0x00000000
+<span id="L955" class="ln">   955</span>		
+<span id="L956" class="ln">   956</span>	DATA masks&lt;&gt;+0x60(SB)/4, $0xffffffff
+<span id="L957" class="ln">   957</span>	DATA masks&lt;&gt;+0x64(SB)/4, $0x0000ffff
+<span id="L958" class="ln">   958</span>	DATA masks&lt;&gt;+0x68(SB)/4, $0x00000000
+<span id="L959" class="ln">   959</span>	DATA masks&lt;&gt;+0x6c(SB)/4, $0x00000000
+<span id="L960" class="ln">   960</span>		
+<span id="L961" class="ln">   961</span>	DATA masks&lt;&gt;+0x70(SB)/4, $0xffffffff
+<span id="L962" class="ln">   962</span>	DATA masks&lt;&gt;+0x74(SB)/4, $0x00ffffff
+<span id="L963" class="ln">   963</span>	DATA masks&lt;&gt;+0x78(SB)/4, $0x00000000
+<span id="L964" class="ln">   964</span>	DATA masks&lt;&gt;+0x7c(SB)/4, $0x00000000
+<span id="L965" class="ln">   965</span>		
+<span id="L966" class="ln">   966</span>	DATA masks&lt;&gt;+0x80(SB)/4, $0xffffffff
+<span id="L967" class="ln">   967</span>	DATA masks&lt;&gt;+0x84(SB)/4, $0xffffffff
+<span id="L968" class="ln">   968</span>	DATA masks&lt;&gt;+0x88(SB)/4, $0x00000000
+<span id="L969" class="ln">   969</span>	DATA masks&lt;&gt;+0x8c(SB)/4, $0x00000000
+<span id="L970" class="ln">   970</span>		
+<span id="L971" class="ln">   971</span>	DATA masks&lt;&gt;+0x90(SB)/4, $0xffffffff
+<span id="L972" class="ln">   972</span>	DATA masks&lt;&gt;+0x94(SB)/4, $0xffffffff
+<span id="L973" class="ln">   973</span>	DATA masks&lt;&gt;+0x98(SB)/4, $0x000000ff
+<span id="L974" class="ln">   974</span>	DATA masks&lt;&gt;+0x9c(SB)/4, $0x00000000
+<span id="L975" class="ln">   975</span>		
+<span id="L976" class="ln">   976</span>	DATA masks&lt;&gt;+0xa0(SB)/4, $0xffffffff
+<span id="L977" class="ln">   977</span>	DATA masks&lt;&gt;+0xa4(SB)/4, $0xffffffff
+<span id="L978" class="ln">   978</span>	DATA masks&lt;&gt;+0xa8(SB)/4, $0x0000ffff
+<span id="L979" class="ln">   979</span>	DATA masks&lt;&gt;+0xac(SB)/4, $0x00000000
+<span id="L980" class="ln">   980</span>		
+<span id="L981" class="ln">   981</span>	DATA masks&lt;&gt;+0xb0(SB)/4, $0xffffffff
+<span id="L982" class="ln">   982</span>	DATA masks&lt;&gt;+0xb4(SB)/4, $0xffffffff
+<span id="L983" class="ln">   983</span>	DATA masks&lt;&gt;+0xb8(SB)/4, $0x00ffffff
+<span id="L984" class="ln">   984</span>	DATA masks&lt;&gt;+0xbc(SB)/4, $0x00000000
+<span id="L985" class="ln">   985</span>		
+<span id="L986" class="ln">   986</span>	DATA masks&lt;&gt;+0xc0(SB)/4, $0xffffffff
+<span id="L987" class="ln">   987</span>	DATA masks&lt;&gt;+0xc4(SB)/4, $0xffffffff
+<span id="L988" class="ln">   988</span>	DATA masks&lt;&gt;+0xc8(SB)/4, $0xffffffff
+<span id="L989" class="ln">   989</span>	DATA masks&lt;&gt;+0xcc(SB)/4, $0x00000000
+<span id="L990" class="ln">   990</span>		
+<span id="L991" class="ln">   991</span>	DATA masks&lt;&gt;+0xd0(SB)/4, $0xffffffff
+<span id="L992" class="ln">   992</span>	DATA masks&lt;&gt;+0xd4(SB)/4, $0xffffffff
+<span id="L993" class="ln">   993</span>	DATA masks&lt;&gt;+0xd8(SB)/4, $0xffffffff
+<span id="L994" class="ln">   994</span>	DATA masks&lt;&gt;+0xdc(SB)/4, $0x000000ff
+<span id="L995" class="ln">   995</span>		
+<span id="L996" class="ln">   996</span>	DATA masks&lt;&gt;+0xe0(SB)/4, $0xffffffff
+<span id="L997" class="ln">   997</span>	DATA masks&lt;&gt;+0xe4(SB)/4, $0xffffffff
+<span id="L998" class="ln">   998</span>	DATA masks&lt;&gt;+0xe8(SB)/4, $0xffffffff
+<span id="L999" class="ln">   999</span>	DATA masks&lt;&gt;+0xec(SB)/4, $0x0000ffff
+<span id="L1000" class="ln">  1000</span>		
+<span id="L1001" class="ln">  1001</span>	DATA masks&lt;&gt;+0xf0(SB)/4, $0xffffffff
+<span id="L1002" class="ln">  1002</span>	DATA masks&lt;&gt;+0xf4(SB)/4, $0xffffffff
+<span id="L1003" class="ln">  1003</span>	DATA masks&lt;&gt;+0xf8(SB)/4, $0xffffffff
+<span id="L1004" class="ln">  1004</span>	DATA masks&lt;&gt;+0xfc(SB)/4, $0x00ffffff
+<span id="L1005" class="ln">  1005</span>	
+<span id="L1006" class="ln">  1006</span>	GLOBL masks&lt;&gt;(SB),RODATA,$256
+<span id="L1007" class="ln">  1007</span>	
+<span id="L1008" class="ln">  1008</span>	// these are arguments to pshufb.  They move data down from
+<span id="L1009" class="ln">  1009</span>	// the high bytes of the register to the low bytes of the register.
+<span id="L1010" class="ln">  1010</span>	// index is how many bytes to move.
+<span id="L1011" class="ln">  1011</span>	DATA shifts&lt;&gt;+0x00(SB)/4, $0x00000000
+<span id="L1012" class="ln">  1012</span>	DATA shifts&lt;&gt;+0x04(SB)/4, $0x00000000
+<span id="L1013" class="ln">  1013</span>	DATA shifts&lt;&gt;+0x08(SB)/4, $0x00000000
+<span id="L1014" class="ln">  1014</span>	DATA shifts&lt;&gt;+0x0c(SB)/4, $0x00000000
+<span id="L1015" class="ln">  1015</span>		
+<span id="L1016" class="ln">  1016</span>	DATA shifts&lt;&gt;+0x10(SB)/4, $0xffffff0f
+<span id="L1017" class="ln">  1017</span>	DATA shifts&lt;&gt;+0x14(SB)/4, $0xffffffff
+<span id="L1018" class="ln">  1018</span>	DATA shifts&lt;&gt;+0x18(SB)/4, $0xffffffff
+<span id="L1019" class="ln">  1019</span>	DATA shifts&lt;&gt;+0x1c(SB)/4, $0xffffffff
+<span id="L1020" class="ln">  1020</span>		
+<span id="L1021" class="ln">  1021</span>	DATA shifts&lt;&gt;+0x20(SB)/4, $0xffff0f0e
+<span id="L1022" class="ln">  1022</span>	DATA shifts&lt;&gt;+0x24(SB)/4, $0xffffffff
+<span id="L1023" class="ln">  1023</span>	DATA shifts&lt;&gt;+0x28(SB)/4, $0xffffffff
+<span id="L1024" class="ln">  1024</span>	DATA shifts&lt;&gt;+0x2c(SB)/4, $0xffffffff
+<span id="L1025" class="ln">  1025</span>		
+<span id="L1026" class="ln">  1026</span>	DATA shifts&lt;&gt;+0x30(SB)/4, $0xff0f0e0d
+<span id="L1027" class="ln">  1027</span>	DATA shifts&lt;&gt;+0x34(SB)/4, $0xffffffff
+<span id="L1028" class="ln">  1028</span>	DATA shifts&lt;&gt;+0x38(SB)/4, $0xffffffff
+<span id="L1029" class="ln">  1029</span>	DATA shifts&lt;&gt;+0x3c(SB)/4, $0xffffffff
+<span id="L1030" class="ln">  1030</span>		
+<span id="L1031" class="ln">  1031</span>	DATA shifts&lt;&gt;+0x40(SB)/4, $0x0f0e0d0c
+<span id="L1032" class="ln">  1032</span>	DATA shifts&lt;&gt;+0x44(SB)/4, $0xffffffff
+<span id="L1033" class="ln">  1033</span>	DATA shifts&lt;&gt;+0x48(SB)/4, $0xffffffff
+<span id="L1034" class="ln">  1034</span>	DATA shifts&lt;&gt;+0x4c(SB)/4, $0xffffffff
+<span id="L1035" class="ln">  1035</span>		
+<span id="L1036" class="ln">  1036</span>	DATA shifts&lt;&gt;+0x50(SB)/4, $0x0e0d0c0b
+<span id="L1037" class="ln">  1037</span>	DATA shifts&lt;&gt;+0x54(SB)/4, $0xffffff0f
+<span id="L1038" class="ln">  1038</span>	DATA shifts&lt;&gt;+0x58(SB)/4, $0xffffffff
+<span id="L1039" class="ln">  1039</span>	DATA shifts&lt;&gt;+0x5c(SB)/4, $0xffffffff
+<span id="L1040" class="ln">  1040</span>		
+<span id="L1041" class="ln">  1041</span>	DATA shifts&lt;&gt;+0x60(SB)/4, $0x0d0c0b0a
+<span id="L1042" class="ln">  1042</span>	DATA shifts&lt;&gt;+0x64(SB)/4, $0xffff0f0e
+<span id="L1043" class="ln">  1043</span>	DATA shifts&lt;&gt;+0x68(SB)/4, $0xffffffff
+<span id="L1044" class="ln">  1044</span>	DATA shifts&lt;&gt;+0x6c(SB)/4, $0xffffffff
+<span id="L1045" class="ln">  1045</span>		
+<span id="L1046" class="ln">  1046</span>	DATA shifts&lt;&gt;+0x70(SB)/4, $0x0c0b0a09
+<span id="L1047" class="ln">  1047</span>	DATA shifts&lt;&gt;+0x74(SB)/4, $0xff0f0e0d
+<span id="L1048" class="ln">  1048</span>	DATA shifts&lt;&gt;+0x78(SB)/4, $0xffffffff
+<span id="L1049" class="ln">  1049</span>	DATA shifts&lt;&gt;+0x7c(SB)/4, $0xffffffff
+<span id="L1050" class="ln">  1050</span>		
+<span id="L1051" class="ln">  1051</span>	DATA shifts&lt;&gt;+0x80(SB)/4, $0x0b0a0908
+<span id="L1052" class="ln">  1052</span>	DATA shifts&lt;&gt;+0x84(SB)/4, $0x0f0e0d0c
+<span id="L1053" class="ln">  1053</span>	DATA shifts&lt;&gt;+0x88(SB)/4, $0xffffffff
+<span id="L1054" class="ln">  1054</span>	DATA shifts&lt;&gt;+0x8c(SB)/4, $0xffffffff
+<span id="L1055" class="ln">  1055</span>		
+<span id="L1056" class="ln">  1056</span>	DATA shifts&lt;&gt;+0x90(SB)/4, $0x0a090807
+<span id="L1057" class="ln">  1057</span>	DATA shifts&lt;&gt;+0x94(SB)/4, $0x0e0d0c0b
+<span id="L1058" class="ln">  1058</span>	DATA shifts&lt;&gt;+0x98(SB)/4, $0xffffff0f
+<span id="L1059" class="ln">  1059</span>	DATA shifts&lt;&gt;+0x9c(SB)/4, $0xffffffff
+<span id="L1060" class="ln">  1060</span>		
+<span id="L1061" class="ln">  1061</span>	DATA shifts&lt;&gt;+0xa0(SB)/4, $0x09080706
+<span id="L1062" class="ln">  1062</span>	DATA shifts&lt;&gt;+0xa4(SB)/4, $0x0d0c0b0a
+<span id="L1063" class="ln">  1063</span>	DATA shifts&lt;&gt;+0xa8(SB)/4, $0xffff0f0e
+<span id="L1064" class="ln">  1064</span>	DATA shifts&lt;&gt;+0xac(SB)/4, $0xffffffff
+<span id="L1065" class="ln">  1065</span>		
+<span id="L1066" class="ln">  1066</span>	DATA shifts&lt;&gt;+0xb0(SB)/4, $0x08070605
+<span id="L1067" class="ln">  1067</span>	DATA shifts&lt;&gt;+0xb4(SB)/4, $0x0c0b0a09
+<span id="L1068" class="ln">  1068</span>	DATA shifts&lt;&gt;+0xb8(SB)/4, $0xff0f0e0d
+<span id="L1069" class="ln">  1069</span>	DATA shifts&lt;&gt;+0xbc(SB)/4, $0xffffffff
+<span id="L1070" class="ln">  1070</span>		
+<span id="L1071" class="ln">  1071</span>	DATA shifts&lt;&gt;+0xc0(SB)/4, $0x07060504
+<span id="L1072" class="ln">  1072</span>	DATA shifts&lt;&gt;+0xc4(SB)/4, $0x0b0a0908
+<span id="L1073" class="ln">  1073</span>	DATA shifts&lt;&gt;+0xc8(SB)/4, $0x0f0e0d0c
+<span id="L1074" class="ln">  1074</span>	DATA shifts&lt;&gt;+0xcc(SB)/4, $0xffffffff
+<span id="L1075" class="ln">  1075</span>		
+<span id="L1076" class="ln">  1076</span>	DATA shifts&lt;&gt;+0xd0(SB)/4, $0x06050403
+<span id="L1077" class="ln">  1077</span>	DATA shifts&lt;&gt;+0xd4(SB)/4, $0x0a090807
+<span id="L1078" class="ln">  1078</span>	DATA shifts&lt;&gt;+0xd8(SB)/4, $0x0e0d0c0b
+<span id="L1079" class="ln">  1079</span>	DATA shifts&lt;&gt;+0xdc(SB)/4, $0xffffff0f
+<span id="L1080" class="ln">  1080</span>		
+<span id="L1081" class="ln">  1081</span>	DATA shifts&lt;&gt;+0xe0(SB)/4, $0x05040302
+<span id="L1082" class="ln">  1082</span>	DATA shifts&lt;&gt;+0xe4(SB)/4, $0x09080706
+<span id="L1083" class="ln">  1083</span>	DATA shifts&lt;&gt;+0xe8(SB)/4, $0x0d0c0b0a
+<span id="L1084" class="ln">  1084</span>	DATA shifts&lt;&gt;+0xec(SB)/4, $0xffff0f0e
+<span id="L1085" class="ln">  1085</span>		
+<span id="L1086" class="ln">  1086</span>	DATA shifts&lt;&gt;+0xf0(SB)/4, $0x04030201
+<span id="L1087" class="ln">  1087</span>	DATA shifts&lt;&gt;+0xf4(SB)/4, $0x08070605
+<span id="L1088" class="ln">  1088</span>	DATA shifts&lt;&gt;+0xf8(SB)/4, $0x0c0b0a09
+<span id="L1089" class="ln">  1089</span>	DATA shifts&lt;&gt;+0xfc(SB)/4, $0xff0f0e0d
+<span id="L1090" class="ln">  1090</span>	
+<span id="L1091" class="ln">  1091</span>	GLOBL shifts&lt;&gt;(SB),RODATA,$256
+<span id="L1092" class="ln">  1092</span>	
+<span id="L1093" class="ln">  1093</span>	TEXT runtime·memeq(SB),NOSPLIT,$0-12
+<span id="L1094" class="ln">  1094</span>		MOVL	a+0(FP), SI
+<span id="L1095" class="ln">  1095</span>		MOVL	b+4(FP), DI
+<span id="L1096" class="ln">  1096</span>		MOVL	count+8(FP), BX
+<span id="L1097" class="ln">  1097</span>		JMP	runtime·memeqbody(SB)
+<span id="L1098" class="ln">  1098</span>	
+<span id="L1099" class="ln">  1099</span>	TEXT bytes·Equal(SB),NOSPLIT,$0-25
+<span id="L1100" class="ln">  1100</span>		MOVL	a_len+4(FP), BX
+<span id="L1101" class="ln">  1101</span>		MOVL	b_len+16(FP), CX
+<span id="L1102" class="ln">  1102</span>		XORL	AX, AX
+<span id="L1103" class="ln">  1103</span>		CMPL	BX, CX
+<span id="L1104" class="ln">  1104</span>		JNE	eqret
+<span id="L1105" class="ln">  1105</span>		MOVL	a+0(FP), SI
+<span id="L1106" class="ln">  1106</span>		MOVL	b+12(FP), DI
+<span id="L1107" class="ln">  1107</span>		CALL	runtime·memeqbody(SB)
+<span id="L1108" class="ln">  1108</span>	eqret:
+<span id="L1109" class="ln">  1109</span>		MOVB	AX, ret+24(FP)
+<span id="L1110" class="ln">  1110</span>		RET
+<span id="L1111" class="ln">  1111</span>	
+<span id="L1112" class="ln">  1112</span>	// a in SI
+<span id="L1113" class="ln">  1113</span>	// b in DI
+<span id="L1114" class="ln">  1114</span>	// count in BX
+<span id="L1115" class="ln">  1115</span>	TEXT runtime·memeqbody(SB),NOSPLIT,$0-0
+<span id="L1116" class="ln">  1116</span>		XORL	AX, AX
+<span id="L1117" class="ln">  1117</span>	
+<span id="L1118" class="ln">  1118</span>		CMPL	BX, $4
+<span id="L1119" class="ln">  1119</span>		JB	small
+<span id="L1120" class="ln">  1120</span>	
+<span id="L1121" class="ln">  1121</span>		// 64 bytes at a time using xmm registers
+<span id="L1122" class="ln">  1122</span>	hugeloop:
+<span id="L1123" class="ln">  1123</span>		CMPL	BX, $64
+<span id="L1124" class="ln">  1124</span>		JB	bigloop
+<span id="L1125" class="ln">  1125</span>		TESTL	$0x4000000, runtime·cpuid_edx(SB) // check for sse2
+<span id="L1126" class="ln">  1126</span>		JE	bigloop
+<span id="L1127" class="ln">  1127</span>		MOVOU	(SI), X0
+<span id="L1128" class="ln">  1128</span>		MOVOU	(DI), X1
+<span id="L1129" class="ln">  1129</span>		MOVOU	16(SI), X2
+<span id="L1130" class="ln">  1130</span>		MOVOU	16(DI), X3
+<span id="L1131" class="ln">  1131</span>		MOVOU	32(SI), X4
+<span id="L1132" class="ln">  1132</span>		MOVOU	32(DI), X5
+<span id="L1133" class="ln">  1133</span>		MOVOU	48(SI), X6
+<span id="L1134" class="ln">  1134</span>		MOVOU	48(DI), X7
+<span id="L1135" class="ln">  1135</span>		PCMPEQB	X1, X0
+<span id="L1136" class="ln">  1136</span>		PCMPEQB	X3, X2
+<span id="L1137" class="ln">  1137</span>		PCMPEQB	X5, X4
+<span id="L1138" class="ln">  1138</span>		PCMPEQB	X7, X6
+<span id="L1139" class="ln">  1139</span>		PAND	X2, X0
+<span id="L1140" class="ln">  1140</span>		PAND	X6, X4
+<span id="L1141" class="ln">  1141</span>		PAND	X4, X0
+<span id="L1142" class="ln">  1142</span>		PMOVMSKB X0, DX
+<span id="L1143" class="ln">  1143</span>		ADDL	$64, SI
+<span id="L1144" class="ln">  1144</span>		ADDL	$64, DI
+<span id="L1145" class="ln">  1145</span>		SUBL	$64, BX
+<span id="L1146" class="ln">  1146</span>		CMPL	DX, $0xffff
+<span id="L1147" class="ln">  1147</span>		JEQ	hugeloop
+<span id="L1148" class="ln">  1148</span>		RET
+<span id="L1149" class="ln">  1149</span>	
+<span id="L1150" class="ln">  1150</span>		// 4 bytes at a time using 32-bit register
+<span id="L1151" class="ln">  1151</span>	bigloop:
+<span id="L1152" class="ln">  1152</span>		CMPL	BX, $4
+<span id="L1153" class="ln">  1153</span>		JBE	leftover
+<span id="L1154" class="ln">  1154</span>		MOVL	(SI), CX
+<span id="L1155" class="ln">  1155</span>		MOVL	(DI), DX
+<span id="L1156" class="ln">  1156</span>		ADDL	$4, SI
+<span id="L1157" class="ln">  1157</span>		ADDL	$4, DI
+<span id="L1158" class="ln">  1158</span>		SUBL	$4, BX
+<span id="L1159" class="ln">  1159</span>		CMPL	CX, DX
+<span id="L1160" class="ln">  1160</span>		JEQ	bigloop
+<span id="L1161" class="ln">  1161</span>		RET
+<span id="L1162" class="ln">  1162</span>	
+<span id="L1163" class="ln">  1163</span>		// remaining 0-4 bytes
+<span id="L1164" class="ln">  1164</span>	leftover:
+<span id="L1165" class="ln">  1165</span>		MOVL	-4(SI)(BX*1), CX
+<span id="L1166" class="ln">  1166</span>		MOVL	-4(DI)(BX*1), DX
+<span id="L1167" class="ln">  1167</span>		CMPL	CX, DX
+<span id="L1168" class="ln">  1168</span>		SETEQ	AX
+<span id="L1169" class="ln">  1169</span>		RET
+<span id="L1170" class="ln">  1170</span>	
+<span id="L1171" class="ln">  1171</span>	small:
+<span id="L1172" class="ln">  1172</span>		CMPL	BX, $0
+<span id="L1173" class="ln">  1173</span>		JEQ	equal
+<span id="L1174" class="ln">  1174</span>	
+<span id="L1175" class="ln">  1175</span>		LEAL	0(BX*8), CX
+<span id="L1176" class="ln">  1176</span>		NEGL	CX
+<span id="L1177" class="ln">  1177</span>	
+<span id="L1178" class="ln">  1178</span>		MOVL	SI, DX
+<span id="L1179" class="ln">  1179</span>		CMPB	DX, $0xfc
+<span id="L1180" class="ln">  1180</span>		JA	si_high
+<span id="L1181" class="ln">  1181</span>	
+<span id="L1182" class="ln">  1182</span>		// load at SI won&#39;t cross a page boundary.
+<span id="L1183" class="ln">  1183</span>		MOVL	(SI), SI
+<span id="L1184" class="ln">  1184</span>		JMP	si_finish
+<span id="L1185" class="ln">  1185</span>	si_high:
+<span id="L1186" class="ln">  1186</span>		// address ends in 111111xx.  Load up to bytes we want, move to correct position.
+<span id="L1187" class="ln">  1187</span>		MOVL	-4(SI)(BX*1), SI
+<span id="L1188" class="ln">  1188</span>		SHRL	CX, SI
+<span id="L1189" class="ln">  1189</span>	si_finish:
+<span id="L1190" class="ln">  1190</span>	
+<span id="L1191" class="ln">  1191</span>		// same for DI.
+<span id="L1192" class="ln">  1192</span>		MOVL	DI, DX
+<span id="L1193" class="ln">  1193</span>		CMPB	DX, $0xfc
+<span id="L1194" class="ln">  1194</span>		JA	di_high
+<span id="L1195" class="ln">  1195</span>		MOVL	(DI), DI
+<span id="L1196" class="ln">  1196</span>		JMP	di_finish
+<span id="L1197" class="ln">  1197</span>	di_high:
+<span id="L1198" class="ln">  1198</span>		MOVL	-4(DI)(BX*1), DI
+<span id="L1199" class="ln">  1199</span>		SHRL	CX, DI
+<span id="L1200" class="ln">  1200</span>	di_finish:
+<span id="L1201" class="ln">  1201</span>	
+<span id="L1202" class="ln">  1202</span>		SUBL	SI, DI
+<span id="L1203" class="ln">  1203</span>		SHLL	CX, DI
+<span id="L1204" class="ln">  1204</span>	equal:
+<span id="L1205" class="ln">  1205</span>		SETEQ	AX
+<span id="L1206" class="ln">  1206</span>		RET
+<span id="L1207" class="ln">  1207</span>	
+<span id="L1208" class="ln">  1208</span>	TEXT runtime·cmpstring(SB),NOSPLIT,$0-20
+<span id="L1209" class="ln">  1209</span>		MOVL	s1+0(FP), SI
+<span id="L1210" class="ln">  1210</span>		MOVL	s1+4(FP), BX
+<span id="L1211" class="ln">  1211</span>		MOVL	s2+8(FP), DI
+<span id="L1212" class="ln">  1212</span>		MOVL	s2+12(FP), DX
+<span id="L1213" class="ln">  1213</span>		CALL	runtime·cmpbody(SB)
+<span id="L1214" class="ln">  1214</span>		MOVL	AX, res+16(FP)
+<span id="L1215" class="ln">  1215</span>		RET
+<span id="L1216" class="ln">  1216</span>	
+<span id="L1217" class="ln">  1217</span>	TEXT bytes·Compare(SB),NOSPLIT,$0-28
+<span id="L1218" class="ln">  1218</span>		MOVL	s1+0(FP), SI
+<span id="L1219" class="ln">  1219</span>		MOVL	s1+4(FP), BX
+<span id="L1220" class="ln">  1220</span>		MOVL	s2+12(FP), DI
+<span id="L1221" class="ln">  1221</span>		MOVL	s2+16(FP), DX
+<span id="L1222" class="ln">  1222</span>		CALL	runtime·cmpbody(SB)
+<span id="L1223" class="ln">  1223</span>		MOVL	AX, res+24(FP)
+<span id="L1224" class="ln">  1224</span>		RET
+<span id="L1225" class="ln">  1225</span>	
+<span id="L1226" class="ln">  1226</span>	TEXT bytes·IndexByte(SB),NOSPLIT,$0
+<span id="L1227" class="ln">  1227</span>		MOVL	s+0(FP), SI
+<span id="L1228" class="ln">  1228</span>		MOVL	s_len+4(FP), CX
+<span id="L1229" class="ln">  1229</span>		MOVB	c+12(FP), AL
+<span id="L1230" class="ln">  1230</span>		MOVL	SI, DI
+<span id="L1231" class="ln">  1231</span>		CLD; REPN; SCASB
+<span id="L1232" class="ln">  1232</span>		JZ 3(PC)
+<span id="L1233" class="ln">  1233</span>		MOVL	$-1, ret+16(FP)
+<span id="L1234" class="ln">  1234</span>		RET
+<span id="L1235" class="ln">  1235</span>		SUBL	SI, DI
+<span id="L1236" class="ln">  1236</span>		SUBL	$1, DI
+<span id="L1237" class="ln">  1237</span>		MOVL	DI, ret+16(FP)
+<span id="L1238" class="ln">  1238</span>		RET
+<span id="L1239" class="ln">  1239</span>	
+<span id="L1240" class="ln">  1240</span>	TEXT strings·IndexByte(SB),NOSPLIT,$0
+<span id="L1241" class="ln">  1241</span>		MOVL	s+0(FP), SI
+<span id="L1242" class="ln">  1242</span>		MOVL	s_len+4(FP), CX
+<span id="L1243" class="ln">  1243</span>		MOVB	c+8(FP), AL
+<span id="L1244" class="ln">  1244</span>		MOVL	SI, DI
+<span id="L1245" class="ln">  1245</span>		CLD; REPN; SCASB
+<span id="L1246" class="ln">  1246</span>		JZ 3(PC)
+<span id="L1247" class="ln">  1247</span>		MOVL	$-1, ret+12(FP)
+<span id="L1248" class="ln">  1248</span>		RET
+<span id="L1249" class="ln">  1249</span>		SUBL	SI, DI
+<span id="L1250" class="ln">  1250</span>		SUBL	$1, DI
+<span id="L1251" class="ln">  1251</span>		MOVL	DI, ret+12(FP)
+<span id="L1252" class="ln">  1252</span>		RET
+<span id="L1253" class="ln">  1253</span>	
+<span id="L1254" class="ln">  1254</span>	// input:
+<span id="L1255" class="ln">  1255</span>	//   SI = a
+<span id="L1256" class="ln">  1256</span>	//   DI = b
+<span id="L1257" class="ln">  1257</span>	//   BX = alen
+<span id="L1258" class="ln">  1258</span>	//   DX = blen
+<span id="L1259" class="ln">  1259</span>	// output:
+<span id="L1260" class="ln">  1260</span>	//   AX = 1/0/-1
+<span id="L1261" class="ln">  1261</span>	TEXT runtime·cmpbody(SB),NOSPLIT,$0-0
+<span id="L1262" class="ln">  1262</span>		CMPL	SI, DI
+<span id="L1263" class="ln">  1263</span>		JEQ	cmp_allsame
+<span id="L1264" class="ln">  1264</span>		CMPL	BX, DX
+<span id="L1265" class="ln">  1265</span>		MOVL	DX, BP
+<span id="L1266" class="ln">  1266</span>		CMOVLLT	BX, BP // BP = min(alen, blen)
+<span id="L1267" class="ln">  1267</span>		CMPL	BP, $4
+<span id="L1268" class="ln">  1268</span>		JB	cmp_small
+<span id="L1269" class="ln">  1269</span>		TESTL	$0x4000000, runtime·cpuid_edx(SB) // check for sse2
+<span id="L1270" class="ln">  1270</span>		JE	cmp_mediumloop
+<span id="L1271" class="ln">  1271</span>	cmp_largeloop:
+<span id="L1272" class="ln">  1272</span>		CMPL	BP, $16
+<span id="L1273" class="ln">  1273</span>		JB	cmp_mediumloop
+<span id="L1274" class="ln">  1274</span>		MOVOU	(SI), X0
+<span id="L1275" class="ln">  1275</span>		MOVOU	(DI), X1
+<span id="L1276" class="ln">  1276</span>		PCMPEQB X0, X1
+<span id="L1277" class="ln">  1277</span>		PMOVMSKB X1, AX
+<span id="L1278" class="ln">  1278</span>		XORL	$0xffff, AX	// convert EQ to NE
+<span id="L1279" class="ln">  1279</span>		JNE	cmp_diff16	// branch if at least one byte is not equal
+<span id="L1280" class="ln">  1280</span>		ADDL	$16, SI
+<span id="L1281" class="ln">  1281</span>		ADDL	$16, DI
+<span id="L1282" class="ln">  1282</span>		SUBL	$16, BP
+<span id="L1283" class="ln">  1283</span>		JMP	cmp_largeloop
+<span id="L1284" class="ln">  1284</span>	
+<span id="L1285" class="ln">  1285</span>	cmp_diff16:
+<span id="L1286" class="ln">  1286</span>		BSFL	AX, BX	// index of first byte that differs
+<span id="L1287" class="ln">  1287</span>		XORL	AX, AX
+<span id="L1288" class="ln">  1288</span>		MOVB	(SI)(BX*1), CX
+<span id="L1289" class="ln">  1289</span>		CMPB	CX, (DI)(BX*1)
+<span id="L1290" class="ln">  1290</span>		SETHI	AX
+<span id="L1291" class="ln">  1291</span>		LEAL	-1(AX*2), AX	// convert 1/0 to +1/-1
+<span id="L1292" class="ln">  1292</span>		RET
+<span id="L1293" class="ln">  1293</span>	
+<span id="L1294" class="ln">  1294</span>	cmp_mediumloop:
+<span id="L1295" class="ln">  1295</span>		CMPL	BP, $4
+<span id="L1296" class="ln">  1296</span>		JBE	cmp_0through4
+<span id="L1297" class="ln">  1297</span>		MOVL	(SI), AX
+<span id="L1298" class="ln">  1298</span>		MOVL	(DI), CX
+<span id="L1299" class="ln">  1299</span>		CMPL	AX, CX
+<span id="L1300" class="ln">  1300</span>		JNE	cmp_diff4
+<span id="L1301" class="ln">  1301</span>		ADDL	$4, SI
+<span id="L1302" class="ln">  1302</span>		ADDL	$4, DI
+<span id="L1303" class="ln">  1303</span>		SUBL	$4, BP
+<span id="L1304" class="ln">  1304</span>		JMP	cmp_mediumloop
+<span id="L1305" class="ln">  1305</span>	
+<span id="L1306" class="ln">  1306</span>	cmp_0through4:
+<span id="L1307" class="ln">  1307</span>		MOVL	-4(SI)(BP*1), AX
+<span id="L1308" class="ln">  1308</span>		MOVL	-4(DI)(BP*1), CX
+<span id="L1309" class="ln">  1309</span>		CMPL	AX, CX
+<span id="L1310" class="ln">  1310</span>		JEQ	cmp_allsame
+<span id="L1311" class="ln">  1311</span>	
+<span id="L1312" class="ln">  1312</span>	cmp_diff4:
+<span id="L1313" class="ln">  1313</span>		BSWAPL	AX	// reverse order of bytes
+<span id="L1314" class="ln">  1314</span>		BSWAPL	CX
+<span id="L1315" class="ln">  1315</span>		XORL	AX, CX	// find bit differences
+<span id="L1316" class="ln">  1316</span>		BSRL	CX, CX	// index of highest bit difference
+<span id="L1317" class="ln">  1317</span>		SHRL	CX, AX	// move a&#39;s bit to bottom
+<span id="L1318" class="ln">  1318</span>		ANDL	$1, AX	// mask bit
+<span id="L1319" class="ln">  1319</span>		LEAL	-1(AX*2), AX // 1/0 =&gt; +1/-1
+<span id="L1320" class="ln">  1320</span>		RET
+<span id="L1321" class="ln">  1321</span>	
+<span id="L1322" class="ln">  1322</span>		// 0-3 bytes in common
+<span id="L1323" class="ln">  1323</span>	cmp_small:
+<span id="L1324" class="ln">  1324</span>		LEAL	(BP*8), CX
+<span id="L1325" class="ln">  1325</span>		NEGL	CX
+<span id="L1326" class="ln">  1326</span>		JEQ	cmp_allsame
+<span id="L1327" class="ln">  1327</span>	
+<span id="L1328" class="ln">  1328</span>		// load si
+<span id="L1329" class="ln">  1329</span>		CMPB	SI, $0xfc
+<span id="L1330" class="ln">  1330</span>		JA	cmp_si_high
+<span id="L1331" class="ln">  1331</span>		MOVL	(SI), SI
+<span id="L1332" class="ln">  1332</span>		JMP	cmp_si_finish
+<span id="L1333" class="ln">  1333</span>	cmp_si_high:
+<span id="L1334" class="ln">  1334</span>		MOVL	-4(SI)(BP*1), SI
+<span id="L1335" class="ln">  1335</span>		SHRL	CX, SI
+<span id="L1336" class="ln">  1336</span>	cmp_si_finish:
+<span id="L1337" class="ln">  1337</span>		SHLL	CX, SI
+<span id="L1338" class="ln">  1338</span>	
+<span id="L1339" class="ln">  1339</span>		// same for di
+<span id="L1340" class="ln">  1340</span>		CMPB	DI, $0xfc
+<span id="L1341" class="ln">  1341</span>		JA	cmp_di_high
+<span id="L1342" class="ln">  1342</span>		MOVL	(DI), DI
+<span id="L1343" class="ln">  1343</span>		JMP	cmp_di_finish
+<span id="L1344" class="ln">  1344</span>	cmp_di_high:
+<span id="L1345" class="ln">  1345</span>		MOVL	-4(DI)(BP*1), DI
+<span id="L1346" class="ln">  1346</span>		SHRL	CX, DI
+<span id="L1347" class="ln">  1347</span>	cmp_di_finish:
+<span id="L1348" class="ln">  1348</span>		SHLL	CX, DI
+<span id="L1349" class="ln">  1349</span>	
+<span id="L1350" class="ln">  1350</span>		BSWAPL	SI	// reverse order of bytes
+<span id="L1351" class="ln">  1351</span>		BSWAPL	DI
+<span id="L1352" class="ln">  1352</span>		XORL	SI, DI	// find bit differences
+<span id="L1353" class="ln">  1353</span>		JEQ	cmp_allsame
+<span id="L1354" class="ln">  1354</span>		BSRL	DI, CX	// index of highest bit difference
+<span id="L1355" class="ln">  1355</span>		SHRL	CX, SI	// move a&#39;s bit to bottom
+<span id="L1356" class="ln">  1356</span>		ANDL	$1, SI	// mask bit
+<span id="L1357" class="ln">  1357</span>		LEAL	-1(SI*2), AX // 1/0 =&gt; +1/-1
+<span id="L1358" class="ln">  1358</span>		RET
+<span id="L1359" class="ln">  1359</span>	
+<span id="L1360" class="ln">  1360</span>		// all the bytes in common are the same, so we just need
+<span id="L1361" class="ln">  1361</span>		// to compare the lengths.
+<span id="L1362" class="ln">  1362</span>	cmp_allsame:
+<span id="L1363" class="ln">  1363</span>		XORL	AX, AX
+<span id="L1364" class="ln">  1364</span>		XORL	CX, CX
+<span id="L1365" class="ln">  1365</span>		CMPL	BX, DX
+<span id="L1366" class="ln">  1366</span>		SETGT	AX	// 1 if alen &gt; blen
+<span id="L1367" class="ln">  1367</span>		SETEQ	CX	// 1 if alen == blen
+<span id="L1368" class="ln">  1368</span>		LEAL	-1(CX)(AX*2), AX	// 1,0,-1 result
+<span id="L1369" class="ln">  1369</span>		RET
+<span id="L1370" class="ln">  1370</span>	
+<span id="L1371" class="ln">  1371</span>	// A Duff&#39;s device for zeroing memory.
+<span id="L1372" class="ln">  1372</span>	// The compiler jumps to computed addresses within
+<span id="L1373" class="ln">  1373</span>	// this routine to zero chunks of memory.  Do not
+<span id="L1374" class="ln">  1374</span>	// change this code without also changing the code
+<span id="L1375" class="ln">  1375</span>	// in ../../cmd/8g/ggen.c:clearfat.
+<span id="L1376" class="ln">  1376</span>	// AX: zero
+<span id="L1377" class="ln">  1377</span>	// DI: ptr to memory to be zeroed
+<span id="L1378" class="ln">  1378</span>	// DI is updated as a side effect.
+<span id="L1379" class="ln">  1379</span>	TEXT runtime·duffzero(SB), NOSPLIT, $0-0
+<span id="L1380" class="ln">  1380</span>		STOSL
+<span id="L1381" class="ln">  1381</span>		STOSL
+<span id="L1382" class="ln">  1382</span>		STOSL
+<span id="L1383" class="ln">  1383</span>		STOSL
+<span id="L1384" class="ln">  1384</span>		STOSL
+<span id="L1385" class="ln">  1385</span>		STOSL
+<span id="L1386" class="ln">  1386</span>		STOSL
+<span id="L1387" class="ln">  1387</span>		STOSL
+<span id="L1388" class="ln">  1388</span>		STOSL
+<span id="L1389" class="ln">  1389</span>		STOSL
+<span id="L1390" class="ln">  1390</span>		STOSL
+<span id="L1391" class="ln">  1391</span>		STOSL
+<span id="L1392" class="ln">  1392</span>		STOSL
+<span id="L1393" class="ln">  1393</span>		STOSL
+<span id="L1394" class="ln">  1394</span>		STOSL
+<span id="L1395" class="ln">  1395</span>		STOSL
+<span id="L1396" class="ln">  1396</span>		STOSL
+<span id="L1397" class="ln">  1397</span>		STOSL
+<span id="L1398" class="ln">  1398</span>		STOSL
+<span id="L1399" class="ln">  1399</span>		STOSL
+<span id="L1400" class="ln">  1400</span>		STOSL
+<span id="L1401" class="ln">  1401</span>		STOSL
+<span id="L1402" class="ln">  1402</span>		STOSL
+<span id="L1403" class="ln">  1403</span>		STOSL
+<span id="L1404" class="ln">  1404</span>		STOSL
+<span id="L1405" class="ln">  1405</span>		STOSL
+<span id="L1406" class="ln">  1406</span>		STOSL
+<span id="L1407" class="ln">  1407</span>		STOSL
+<span id="L1408" class="ln">  1408</span>		STOSL
+<span id="L1409" class="ln">  1409</span>		STOSL
+<span id="L1410" class="ln">  1410</span>		STOSL
+<span id="L1411" class="ln">  1411</span>		STOSL
+<span id="L1412" class="ln">  1412</span>		STOSL
+<span id="L1413" class="ln">  1413</span>		STOSL
+<span id="L1414" class="ln">  1414</span>		STOSL
+<span id="L1415" class="ln">  1415</span>		STOSL
+<span id="L1416" class="ln">  1416</span>		STOSL
+<span id="L1417" class="ln">  1417</span>		STOSL
+<span id="L1418" class="ln">  1418</span>		STOSL
+<span id="L1419" class="ln">  1419</span>		STOSL
+<span id="L1420" class="ln">  1420</span>		STOSL
+<span id="L1421" class="ln">  1421</span>		STOSL
+<span id="L1422" class="ln">  1422</span>		STOSL
+<span id="L1423" class="ln">  1423</span>		STOSL
+<span id="L1424" class="ln">  1424</span>		STOSL
+<span id="L1425" class="ln">  1425</span>		STOSL
+<span id="L1426" class="ln">  1426</span>		STOSL
+<span id="L1427" class="ln">  1427</span>		STOSL
+<span id="L1428" class="ln">  1428</span>		STOSL
+<span id="L1429" class="ln">  1429</span>		STOSL
+<span id="L1430" class="ln">  1430</span>		STOSL
+<span id="L1431" class="ln">  1431</span>		STOSL
+<span id="L1432" class="ln">  1432</span>		STOSL
+<span id="L1433" class="ln">  1433</span>		STOSL
+<span id="L1434" class="ln">  1434</span>		STOSL
+<span id="L1435" class="ln">  1435</span>		STOSL
+<span id="L1436" class="ln">  1436</span>		STOSL
+<span id="L1437" class="ln">  1437</span>		STOSL
+<span id="L1438" class="ln">  1438</span>		STOSL
+<span id="L1439" class="ln">  1439</span>		STOSL
+<span id="L1440" class="ln">  1440</span>		STOSL
+<span id="L1441" class="ln">  1441</span>		STOSL
+<span id="L1442" class="ln">  1442</span>		STOSL
+<span id="L1443" class="ln">  1443</span>		STOSL
+<span id="L1444" class="ln">  1444</span>		STOSL
+<span id="L1445" class="ln">  1445</span>		STOSL
+<span id="L1446" class="ln">  1446</span>		STOSL
+<span id="L1447" class="ln">  1447</span>		STOSL
+<span id="L1448" class="ln">  1448</span>		STOSL
+<span id="L1449" class="ln">  1449</span>		STOSL
+<span id="L1450" class="ln">  1450</span>		STOSL
+<span id="L1451" class="ln">  1451</span>		STOSL
+<span id="L1452" class="ln">  1452</span>		STOSL
+<span id="L1453" class="ln">  1453</span>		STOSL
+<span id="L1454" class="ln">  1454</span>		STOSL
+<span id="L1455" class="ln">  1455</span>		STOSL
+<span id="L1456" class="ln">  1456</span>		STOSL
+<span id="L1457" class="ln">  1457</span>		STOSL
+<span id="L1458" class="ln">  1458</span>		STOSL
+<span id="L1459" class="ln">  1459</span>		STOSL
+<span id="L1460" class="ln">  1460</span>		STOSL
+<span id="L1461" class="ln">  1461</span>		STOSL
+<span id="L1462" class="ln">  1462</span>		STOSL
+<span id="L1463" class="ln">  1463</span>		STOSL
+<span id="L1464" class="ln">  1464</span>		STOSL
+<span id="L1465" class="ln">  1465</span>		STOSL
+<span id="L1466" class="ln">  1466</span>		STOSL
+<span id="L1467" class="ln">  1467</span>		STOSL
+<span id="L1468" class="ln">  1468</span>		STOSL
+<span id="L1469" class="ln">  1469</span>		STOSL
+<span id="L1470" class="ln">  1470</span>		STOSL
+<span id="L1471" class="ln">  1471</span>		STOSL
+<span id="L1472" class="ln">  1472</span>		STOSL
+<span id="L1473" class="ln">  1473</span>		STOSL
+<span id="L1474" class="ln">  1474</span>		STOSL
+<span id="L1475" class="ln">  1475</span>		STOSL
+<span id="L1476" class="ln">  1476</span>		STOSL
+<span id="L1477" class="ln">  1477</span>		STOSL
+<span id="L1478" class="ln">  1478</span>		STOSL
+<span id="L1479" class="ln">  1479</span>		STOSL
+<span id="L1480" class="ln">  1480</span>		STOSL
+<span id="L1481" class="ln">  1481</span>		STOSL
+<span id="L1482" class="ln">  1482</span>		STOSL
+<span id="L1483" class="ln">  1483</span>		STOSL
+<span id="L1484" class="ln">  1484</span>		STOSL
+<span id="L1485" class="ln">  1485</span>		STOSL
+<span id="L1486" class="ln">  1486</span>		STOSL
+<span id="L1487" class="ln">  1487</span>		STOSL
+<span id="L1488" class="ln">  1488</span>		STOSL
+<span id="L1489" class="ln">  1489</span>		STOSL
+<span id="L1490" class="ln">  1490</span>		STOSL
+<span id="L1491" class="ln">  1491</span>		STOSL
+<span id="L1492" class="ln">  1492</span>		STOSL
+<span id="L1493" class="ln">  1493</span>		STOSL
+<span id="L1494" class="ln">  1494</span>		STOSL
+<span id="L1495" class="ln">  1495</span>		STOSL
+<span id="L1496" class="ln">  1496</span>		STOSL
+<span id="L1497" class="ln">  1497</span>		STOSL
+<span id="L1498" class="ln">  1498</span>		STOSL
+<span id="L1499" class="ln">  1499</span>		STOSL
+<span id="L1500" class="ln">  1500</span>		STOSL
+<span id="L1501" class="ln">  1501</span>		STOSL
+<span id="L1502" class="ln">  1502</span>		STOSL
+<span id="L1503" class="ln">  1503</span>		STOSL
+<span id="L1504" class="ln">  1504</span>		STOSL
+<span id="L1505" class="ln">  1505</span>		STOSL
+<span id="L1506" class="ln">  1506</span>		STOSL
+<span id="L1507" class="ln">  1507</span>		STOSL
+<span id="L1508" class="ln">  1508</span>		RET
+<span id="L1509" class="ln">  1509</span>	
+<span id="L1510" class="ln">  1510</span>	// A Duff&#39;s device for copying memory.
+<span id="L1511" class="ln">  1511</span>	// The compiler jumps to computed addresses within
+<span id="L1512" class="ln">  1512</span>	// this routine to copy chunks of memory.  Source
+<span id="L1513" class="ln">  1513</span>	// and destination must not overlap.  Do not
+<span id="L1514" class="ln">  1514</span>	// change this code without also changing the code
+<span id="L1515" class="ln">  1515</span>	// in ../../cmd/6g/cgen.c:sgen.
+<span id="L1516" class="ln">  1516</span>	// SI: ptr to source memory
+<span id="L1517" class="ln">  1517</span>	// DI: ptr to destination memory
+<span id="L1518" class="ln">  1518</span>	// SI and DI are updated as a side effect.
+<span id="L1519" class="ln">  1519</span>	
+<span id="L1520" class="ln">  1520</span>	// NOTE: this is equivalent to a sequence of MOVSL but
+<span id="L1521" class="ln">  1521</span>	// for some reason MOVSL is really slow.
+<span id="L1522" class="ln">  1522</span>	TEXT runtime·duffcopy(SB), NOSPLIT, $0-0
+<span id="L1523" class="ln">  1523</span>		MOVL	(SI),CX
+<span id="L1524" class="ln">  1524</span>		ADDL	$4,SI
+<span id="L1525" class="ln">  1525</span>		MOVL	CX,(DI)
+<span id="L1526" class="ln">  1526</span>		ADDL	$4,DI
+<span id="L1527" class="ln">  1527</span>		
+<span id="L1528" class="ln">  1528</span>		MOVL	(SI),CX
+<span id="L1529" class="ln">  1529</span>		ADDL	$4,SI
+<span id="L1530" class="ln">  1530</span>		MOVL	CX,(DI)
+<span id="L1531" class="ln">  1531</span>		ADDL	$4,DI
+<span id="L1532" class="ln">  1532</span>		
+<span id="L1533" class="ln">  1533</span>		MOVL	(SI),CX
+<span id="L1534" class="ln">  1534</span>		ADDL	$4,SI
+<span id="L1535" class="ln">  1535</span>		MOVL	CX,(DI)
+<span id="L1536" class="ln">  1536</span>		ADDL	$4,DI
+<span id="L1537" class="ln">  1537</span>		
+<span id="L1538" class="ln">  1538</span>		MOVL	(SI),CX
+<span id="L1539" class="ln">  1539</span>		ADDL	$4,SI
+<span id="L1540" class="ln">  1540</span>		MOVL	CX,(DI)
+<span id="L1541" class="ln">  1541</span>		ADDL	$4,DI
+<span id="L1542" class="ln">  1542</span>		
+<span id="L1543" class="ln">  1543</span>		MOVL	(SI),CX
+<span id="L1544" class="ln">  1544</span>		ADDL	$4,SI
+<span id="L1545" class="ln">  1545</span>		MOVL	CX,(DI)
+<span id="L1546" class="ln">  1546</span>		ADDL	$4,DI
+<span id="L1547" class="ln">  1547</span>		
+<span id="L1548" class="ln">  1548</span>		MOVL	(SI),CX
+<span id="L1549" class="ln">  1549</span>		ADDL	$4,SI
+<span id="L1550" class="ln">  1550</span>		MOVL	CX,(DI)
+<span id="L1551" class="ln">  1551</span>		ADDL	$4,DI
+<span id="L1552" class="ln">  1552</span>		
+<span id="L1553" class="ln">  1553</span>		MOVL	(SI),CX
+<span id="L1554" class="ln">  1554</span>		ADDL	$4,SI
+<span id="L1555" class="ln">  1555</span>		MOVL	CX,(DI)
+<span id="L1556" class="ln">  1556</span>		ADDL	$4,DI
+<span id="L1557" class="ln">  1557</span>		
+<span id="L1558" class="ln">  1558</span>		MOVL	(SI),CX
+<span id="L1559" class="ln">  1559</span>		ADDL	$4,SI
+<span id="L1560" class="ln">  1560</span>		MOVL	CX,(DI)
+<span id="L1561" class="ln">  1561</span>		ADDL	$4,DI
+<span id="L1562" class="ln">  1562</span>		
+<span id="L1563" class="ln">  1563</span>		MOVL	(SI),CX
+<span id="L1564" class="ln">  1564</span>		ADDL	$4,SI
+<span id="L1565" class="ln">  1565</span>		MOVL	CX,(DI)
+<span id="L1566" class="ln">  1566</span>		ADDL	$4,DI
+<span id="L1567" class="ln">  1567</span>		
+<span id="L1568" class="ln">  1568</span>		MOVL	(SI),CX
+<span id="L1569" class="ln">  1569</span>		ADDL	$4,SI
+<span id="L1570" class="ln">  1570</span>		MOVL	CX,(DI)
+<span id="L1571" class="ln">  1571</span>		ADDL	$4,DI
+<span id="L1572" class="ln">  1572</span>		
+<span id="L1573" class="ln">  1573</span>		MOVL	(SI),CX
+<span id="L1574" class="ln">  1574</span>		ADDL	$4,SI
+<span id="L1575" class="ln">  1575</span>		MOVL	CX,(DI)
+<span id="L1576" class="ln">  1576</span>		ADDL	$4,DI
+<span id="L1577" class="ln">  1577</span>		
+<span id="L1578" class="ln">  1578</span>		MOVL	(SI),CX
+<span id="L1579" class="ln">  1579</span>		ADDL	$4,SI
+<span id="L1580" class="ln">  1580</span>		MOVL	CX,(DI)
+<span id="L1581" class="ln">  1581</span>		ADDL	$4,DI
+<span id="L1582" class="ln">  1582</span>		
+<span id="L1583" class="ln">  1583</span>		MOVL	(SI),CX
+<span id="L1584" class="ln">  1584</span>		ADDL	$4,SI
+<span id="L1585" class="ln">  1585</span>		MOVL	CX,(DI)
+<span id="L1586" class="ln">  1586</span>		ADDL	$4,DI
+<span id="L1587" class="ln">  1587</span>		
+<span id="L1588" class="ln">  1588</span>		MOVL	(SI),CX
+<span id="L1589" class="ln">  1589</span>		ADDL	$4,SI
+<span id="L1590" class="ln">  1590</span>		MOVL	CX,(DI)
+<span id="L1591" class="ln">  1591</span>		ADDL	$4,DI
+<span id="L1592" class="ln">  1592</span>		
+<span id="L1593" class="ln">  1593</span>		MOVL	(SI),CX
+<span id="L1594" class="ln">  1594</span>		ADDL	$4,SI
+<span id="L1595" class="ln">  1595</span>		MOVL	CX,(DI)
+<span id="L1596" class="ln">  1596</span>		ADDL	$4,DI
+<span id="L1597" class="ln">  1597</span>		
+<span id="L1598" class="ln">  1598</span>		MOVL	(SI),CX
+<span id="L1599" class="ln">  1599</span>		ADDL	$4,SI
+<span id="L1600" class="ln">  1600</span>		MOVL	CX,(DI)
+<span id="L1601" class="ln">  1601</span>		ADDL	$4,DI
+<span id="L1602" class="ln">  1602</span>		
+<span id="L1603" class="ln">  1603</span>		MOVL	(SI),CX
+<span id="L1604" class="ln">  1604</span>		ADDL	$4,SI
+<span id="L1605" class="ln">  1605</span>		MOVL	CX,(DI)
+<span id="L1606" class="ln">  1606</span>		ADDL	$4,DI
+<span id="L1607" class="ln">  1607</span>		
+<span id="L1608" class="ln">  1608</span>		MOVL	(SI),CX
+<span id="L1609" class="ln">  1609</span>		ADDL	$4,SI
+<span id="L1610" class="ln">  1610</span>		MOVL	CX,(DI)
+<span id="L1611" class="ln">  1611</span>		ADDL	$4,DI
+<span id="L1612" class="ln">  1612</span>		
+<span id="L1613" class="ln">  1613</span>		MOVL	(SI),CX
+<span id="L1614" class="ln">  1614</span>		ADDL	$4,SI
+<span id="L1615" class="ln">  1615</span>		MOVL	CX,(DI)
+<span id="L1616" class="ln">  1616</span>		ADDL	$4,DI
+<span id="L1617" class="ln">  1617</span>		
+<span id="L1618" class="ln">  1618</span>		MOVL	(SI),CX
+<span id="L1619" class="ln">  1619</span>		ADDL	$4,SI
+<span id="L1620" class="ln">  1620</span>		MOVL	CX,(DI)
+<span id="L1621" class="ln">  1621</span>		ADDL	$4,DI
+<span id="L1622" class="ln">  1622</span>		
+<span id="L1623" class="ln">  1623</span>		MOVL	(SI),CX
+<span id="L1624" class="ln">  1624</span>		ADDL	$4,SI
+<span id="L1625" class="ln">  1625</span>		MOVL	CX,(DI)
+<span id="L1626" class="ln">  1626</span>		ADDL	$4,DI
+<span id="L1627" class="ln">  1627</span>		
+<span id="L1628" class="ln">  1628</span>		MOVL	(SI),CX
+<span id="L1629" class="ln">  1629</span>		ADDL	$4,SI
+<span id="L1630" class="ln">  1630</span>		MOVL	CX,(DI)
+<span id="L1631" class="ln">  1631</span>		ADDL	$4,DI
+<span id="L1632" class="ln">  1632</span>		
+<span id="L1633" class="ln">  1633</span>		MOVL	(SI),CX
+<span id="L1634" class="ln">  1634</span>		ADDL	$4,SI
+<span id="L1635" class="ln">  1635</span>		MOVL	CX,(DI)
+<span id="L1636" class="ln">  1636</span>		ADDL	$4,DI
+<span id="L1637" class="ln">  1637</span>		
+<span id="L1638" class="ln">  1638</span>		MOVL	(SI),CX
+<span id="L1639" class="ln">  1639</span>		ADDL	$4,SI
+<span id="L1640" class="ln">  1640</span>		MOVL	CX,(DI)
+<span id="L1641" class="ln">  1641</span>		ADDL	$4,DI
+<span id="L1642" class="ln">  1642</span>		
+<span id="L1643" class="ln">  1643</span>		MOVL	(SI),CX
+<span id="L1644" class="ln">  1644</span>		ADDL	$4,SI
+<span id="L1645" class="ln">  1645</span>		MOVL	CX,(DI)
+<span id="L1646" class="ln">  1646</span>		ADDL	$4,DI
+<span id="L1647" class="ln">  1647</span>		
+<span id="L1648" class="ln">  1648</span>		MOVL	(SI),CX
+<span id="L1649" class="ln">  1649</span>		ADDL	$4,SI
+<span id="L1650" class="ln">  1650</span>		MOVL	CX,(DI)
+<span id="L1651" class="ln">  1651</span>		ADDL	$4,DI
+<span id="L1652" class="ln">  1652</span>		
+<span id="L1653" class="ln">  1653</span>		MOVL	(SI),CX
+<span id="L1654" class="ln">  1654</span>		ADDL	$4,SI
+<span id="L1655" class="ln">  1655</span>		MOVL	CX,(DI)
+<span id="L1656" class="ln">  1656</span>		ADDL	$4,DI
+<span id="L1657" class="ln">  1657</span>		
+<span id="L1658" class="ln">  1658</span>		MOVL	(SI),CX
+<span id="L1659" class="ln">  1659</span>		ADDL	$4,SI
+<span id="L1660" class="ln">  1660</span>		MOVL	CX,(DI)
+<span id="L1661" class="ln">  1661</span>		ADDL	$4,DI
+<span id="L1662" class="ln">  1662</span>		
+<span id="L1663" class="ln">  1663</span>		MOVL	(SI),CX
+<span id="L1664" class="ln">  1664</span>		ADDL	$4,SI
+<span id="L1665" class="ln">  1665</span>		MOVL	CX,(DI)
+<span id="L1666" class="ln">  1666</span>		ADDL	$4,DI
+<span id="L1667" class="ln">  1667</span>		
+<span id="L1668" class="ln">  1668</span>		MOVL	(SI),CX
+<span id="L1669" class="ln">  1669</span>		ADDL	$4,SI
+<span id="L1670" class="ln">  1670</span>		MOVL	CX,(DI)
+<span id="L1671" class="ln">  1671</span>		ADDL	$4,DI
+<span id="L1672" class="ln">  1672</span>		
+<span id="L1673" class="ln">  1673</span>		MOVL	(SI),CX
+<span id="L1674" class="ln">  1674</span>		ADDL	$4,SI
+<span id="L1675" class="ln">  1675</span>		MOVL	CX,(DI)
+<span id="L1676" class="ln">  1676</span>		ADDL	$4,DI
+<span id="L1677" class="ln">  1677</span>		
+<span id="L1678" class="ln">  1678</span>		MOVL	(SI),CX
+<span id="L1679" class="ln">  1679</span>		ADDL	$4,SI
+<span id="L1680" class="ln">  1680</span>		MOVL	CX,(DI)
+<span id="L1681" class="ln">  1681</span>		ADDL	$4,DI
+<span id="L1682" class="ln">  1682</span>		
+<span id="L1683" class="ln">  1683</span>		MOVL	(SI),CX
+<span id="L1684" class="ln">  1684</span>		ADDL	$4,SI
+<span id="L1685" class="ln">  1685</span>		MOVL	CX,(DI)
+<span id="L1686" class="ln">  1686</span>		ADDL	$4,DI
+<span id="L1687" class="ln">  1687</span>		
+<span id="L1688" class="ln">  1688</span>		MOVL	(SI),CX
+<span id="L1689" class="ln">  1689</span>		ADDL	$4,SI
+<span id="L1690" class="ln">  1690</span>		MOVL	CX,(DI)
+<span id="L1691" class="ln">  1691</span>		ADDL	$4,DI
+<span id="L1692" class="ln">  1692</span>		
+<span id="L1693" class="ln">  1693</span>		MOVL	(SI),CX
+<span id="L1694" class="ln">  1694</span>		ADDL	$4,SI
+<span id="L1695" class="ln">  1695</span>		MOVL	CX,(DI)
+<span id="L1696" class="ln">  1696</span>		ADDL	$4,DI
+<span id="L1697" class="ln">  1697</span>		
+<span id="L1698" class="ln">  1698</span>		MOVL	(SI),CX
+<span id="L1699" class="ln">  1699</span>		ADDL	$4,SI
+<span id="L1700" class="ln">  1700</span>		MOVL	CX,(DI)
+<span id="L1701" class="ln">  1701</span>		ADDL	$4,DI
+<span id="L1702" class="ln">  1702</span>		
+<span id="L1703" class="ln">  1703</span>		MOVL	(SI),CX
+<span id="L1704" class="ln">  1704</span>		ADDL	$4,SI
+<span id="L1705" class="ln">  1705</span>		MOVL	CX,(DI)
+<span id="L1706" class="ln">  1706</span>		ADDL	$4,DI
+<span id="L1707" class="ln">  1707</span>		
+<span id="L1708" class="ln">  1708</span>		MOVL	(SI),CX
+<span id="L1709" class="ln">  1709</span>		ADDL	$4,SI
+<span id="L1710" class="ln">  1710</span>		MOVL	CX,(DI)
+<span id="L1711" class="ln">  1711</span>		ADDL	$4,DI
+<span id="L1712" class="ln">  1712</span>		
+<span id="L1713" class="ln">  1713</span>		MOVL	(SI),CX
+<span id="L1714" class="ln">  1714</span>		ADDL	$4,SI
+<span id="L1715" class="ln">  1715</span>		MOVL	CX,(DI)
+<span id="L1716" class="ln">  1716</span>		ADDL	$4,DI
+<span id="L1717" class="ln">  1717</span>		
+<span id="L1718" class="ln">  1718</span>		MOVL	(SI),CX
+<span id="L1719" class="ln">  1719</span>		ADDL	$4,SI
+<span id="L1720" class="ln">  1720</span>		MOVL	CX,(DI)
+<span id="L1721" class="ln">  1721</span>		ADDL	$4,DI
+<span id="L1722" class="ln">  1722</span>		
+<span id="L1723" class="ln">  1723</span>		MOVL	(SI),CX
+<span id="L1724" class="ln">  1724</span>		ADDL	$4,SI
+<span id="L1725" class="ln">  1725</span>		MOVL	CX,(DI)
+<span id="L1726" class="ln">  1726</span>		ADDL	$4,DI
+<span id="L1727" class="ln">  1727</span>		
+<span id="L1728" class="ln">  1728</span>		MOVL	(SI),CX
+<span id="L1729" class="ln">  1729</span>		ADDL	$4,SI
+<span id="L1730" class="ln">  1730</span>		MOVL	CX,(DI)
+<span id="L1731" class="ln">  1731</span>		ADDL	$4,DI
+<span id="L1732" class="ln">  1732</span>		
+<span id="L1733" class="ln">  1733</span>		MOVL	(SI),CX
+<span id="L1734" class="ln">  1734</span>		ADDL	$4,SI
+<span id="L1735" class="ln">  1735</span>		MOVL	CX,(DI)
+<span id="L1736" class="ln">  1736</span>		ADDL	$4,DI
+<span id="L1737" class="ln">  1737</span>		
+<span id="L1738" class="ln">  1738</span>		MOVL	(SI),CX
+<span id="L1739" class="ln">  1739</span>		ADDL	$4,SI
+<span id="L1740" class="ln">  1740</span>		MOVL	CX,(DI)
+<span id="L1741" class="ln">  1741</span>		ADDL	$4,DI
+<span id="L1742" class="ln">  1742</span>		
+<span id="L1743" class="ln">  1743</span>		MOVL	(SI),CX
+<span id="L1744" class="ln">  1744</span>		ADDL	$4,SI
+<span id="L1745" class="ln">  1745</span>		MOVL	CX,(DI)
+<span id="L1746" class="ln">  1746</span>		ADDL	$4,DI
+<span id="L1747" class="ln">  1747</span>		
+<span id="L1748" class="ln">  1748</span>		MOVL	(SI),CX
+<span id="L1749" class="ln">  1749</span>		ADDL	$4,SI
+<span id="L1750" class="ln">  1750</span>		MOVL	CX,(DI)
+<span id="L1751" class="ln">  1751</span>		ADDL	$4,DI
+<span id="L1752" class="ln">  1752</span>		
+<span id="L1753" class="ln">  1753</span>		MOVL	(SI),CX
+<span id="L1754" class="ln">  1754</span>		ADDL	$4,SI
+<span id="L1755" class="ln">  1755</span>		MOVL	CX,(DI)
+<span id="L1756" class="ln">  1756</span>		ADDL	$4,DI
+<span id="L1757" class="ln">  1757</span>		
+<span id="L1758" class="ln">  1758</span>		MOVL	(SI),CX
+<span id="L1759" class="ln">  1759</span>		ADDL	$4,SI
+<span id="L1760" class="ln">  1760</span>		MOVL	CX,(DI)
+<span id="L1761" class="ln">  1761</span>		ADDL	$4,DI
+<span id="L1762" class="ln">  1762</span>		
+<span id="L1763" class="ln">  1763</span>		MOVL	(SI),CX
+<span id="L1764" class="ln">  1764</span>		ADDL	$4,SI
+<span id="L1765" class="ln">  1765</span>		MOVL	CX,(DI)
+<span id="L1766" class="ln">  1766</span>		ADDL	$4,DI
+<span id="L1767" class="ln">  1767</span>		
+<span id="L1768" class="ln">  1768</span>		MOVL	(SI),CX
+<span id="L1769" class="ln">  1769</span>		ADDL	$4,SI
+<span id="L1770" class="ln">  1770</span>		MOVL	CX,(DI)
+<span id="L1771" class="ln">  1771</span>		ADDL	$4,DI
+<span id="L1772" class="ln">  1772</span>		
+<span id="L1773" class="ln">  1773</span>		MOVL	(SI),CX
+<span id="L1774" class="ln">  1774</span>		ADDL	$4,SI
+<span id="L1775" class="ln">  1775</span>		MOVL	CX,(DI)
+<span id="L1776" class="ln">  1776</span>		ADDL	$4,DI
+<span id="L1777" class="ln">  1777</span>		
+<span id="L1778" class="ln">  1778</span>		MOVL	(SI),CX
+<span id="L1779" class="ln">  1779</span>		ADDL	$4,SI
+<span id="L1780" class="ln">  1780</span>		MOVL	CX,(DI)
+<span id="L1781" class="ln">  1781</span>		ADDL	$4,DI
+<span id="L1782" class="ln">  1782</span>		
+<span id="L1783" class="ln">  1783</span>		MOVL	(SI),CX
+<span id="L1784" class="ln">  1784</span>		ADDL	$4,SI
+<span id="L1785" class="ln">  1785</span>		MOVL	CX,(DI)
+<span id="L1786" class="ln">  1786</span>		ADDL	$4,DI
+<span id="L1787" class="ln">  1787</span>		
+<span id="L1788" class="ln">  1788</span>		MOVL	(SI),CX
+<span id="L1789" class="ln">  1789</span>		ADDL	$4,SI
+<span id="L1790" class="ln">  1790</span>		MOVL	CX,(DI)
+<span id="L1791" class="ln">  1791</span>		ADDL	$4,DI
+<span id="L1792" class="ln">  1792</span>		
+<span id="L1793" class="ln">  1793</span>		MOVL	(SI),CX
+<span id="L1794" class="ln">  1794</span>		ADDL	$4,SI
+<span id="L1795" class="ln">  1795</span>		MOVL	CX,(DI)
+<span id="L1796" class="ln">  1796</span>		ADDL	$4,DI
+<span id="L1797" class="ln">  1797</span>		
+<span id="L1798" class="ln">  1798</span>		MOVL	(SI),CX
+<span id="L1799" class="ln">  1799</span>		ADDL	$4,SI
+<span id="L1800" class="ln">  1800</span>		MOVL	CX,(DI)
+<span id="L1801" class="ln">  1801</span>		ADDL	$4,DI
+<span id="L1802" class="ln">  1802</span>		
+<span id="L1803" class="ln">  1803</span>		MOVL	(SI),CX
+<span id="L1804" class="ln">  1804</span>		ADDL	$4,SI
+<span id="L1805" class="ln">  1805</span>		MOVL	CX,(DI)
+<span id="L1806" class="ln">  1806</span>		ADDL	$4,DI
+<span id="L1807" class="ln">  1807</span>		
+<span id="L1808" class="ln">  1808</span>		MOVL	(SI),CX
+<span id="L1809" class="ln">  1809</span>		ADDL	$4,SI
+<span id="L1810" class="ln">  1810</span>		MOVL	CX,(DI)
+<span id="L1811" class="ln">  1811</span>		ADDL	$4,DI
+<span id="L1812" class="ln">  1812</span>		
+<span id="L1813" class="ln">  1813</span>		MOVL	(SI),CX
+<span id="L1814" class="ln">  1814</span>		ADDL	$4,SI
+<span id="L1815" class="ln">  1815</span>		MOVL	CX,(DI)
+<span id="L1816" class="ln">  1816</span>		ADDL	$4,DI
+<span id="L1817" class="ln">  1817</span>		
+<span id="L1818" class="ln">  1818</span>		MOVL	(SI),CX
+<span id="L1819" class="ln">  1819</span>		ADDL	$4,SI
+<span id="L1820" class="ln">  1820</span>		MOVL	CX,(DI)
+<span id="L1821" class="ln">  1821</span>		ADDL	$4,DI
+<span id="L1822" class="ln">  1822</span>		
+<span id="L1823" class="ln">  1823</span>		MOVL	(SI),CX
+<span id="L1824" class="ln">  1824</span>		ADDL	$4,SI
+<span id="L1825" class="ln">  1825</span>		MOVL	CX,(DI)
+<span id="L1826" class="ln">  1826</span>		ADDL	$4,DI
+<span id="L1827" class="ln">  1827</span>		
+<span id="L1828" class="ln">  1828</span>		MOVL	(SI),CX
+<span id="L1829" class="ln">  1829</span>		ADDL	$4,SI
+<span id="L1830" class="ln">  1830</span>		MOVL	CX,(DI)
+<span id="L1831" class="ln">  1831</span>		ADDL	$4,DI
+<span id="L1832" class="ln">  1832</span>		
+<span id="L1833" class="ln">  1833</span>		MOVL	(SI),CX
+<span id="L1834" class="ln">  1834</span>		ADDL	$4,SI
+<span id="L1835" class="ln">  1835</span>		MOVL	CX,(DI)
+<span id="L1836" class="ln">  1836</span>		ADDL	$4,DI
+<span id="L1837" class="ln">  1837</span>		
+<span id="L1838" class="ln">  1838</span>		MOVL	(SI),CX
+<span id="L1839" class="ln">  1839</span>		ADDL	$4,SI
+<span id="L1840" class="ln">  1840</span>		MOVL	CX,(DI)
+<span id="L1841" class="ln">  1841</span>		ADDL	$4,DI
+<span id="L1842" class="ln">  1842</span>		
+<span id="L1843" class="ln">  1843</span>		MOVL	(SI),CX
+<span id="L1844" class="ln">  1844</span>		ADDL	$4,SI
+<span id="L1845" class="ln">  1845</span>		MOVL	CX,(DI)
+<span id="L1846" class="ln">  1846</span>		ADDL	$4,DI
+<span id="L1847" class="ln">  1847</span>		
+<span id="L1848" class="ln">  1848</span>		MOVL	(SI),CX
+<span id="L1849" class="ln">  1849</span>		ADDL	$4,SI
+<span id="L1850" class="ln">  1850</span>		MOVL	CX,(DI)
+<span id="L1851" class="ln">  1851</span>		ADDL	$4,DI
+<span id="L1852" class="ln">  1852</span>		
+<span id="L1853" class="ln">  1853</span>		MOVL	(SI),CX
+<span id="L1854" class="ln">  1854</span>		ADDL	$4,SI
+<span id="L1855" class="ln">  1855</span>		MOVL	CX,(DI)
+<span id="L1856" class="ln">  1856</span>		ADDL	$4,DI
+<span id="L1857" class="ln">  1857</span>		
+<span id="L1858" class="ln">  1858</span>		MOVL	(SI),CX
+<span id="L1859" class="ln">  1859</span>		ADDL	$4,SI
+<span id="L1860" class="ln">  1860</span>		MOVL	CX,(DI)
+<span id="L1861" class="ln">  1861</span>		ADDL	$4,DI
+<span id="L1862" class="ln">  1862</span>		
+<span id="L1863" class="ln">  1863</span>		MOVL	(SI),CX
+<span id="L1864" class="ln">  1864</span>		ADDL	$4,SI
+<span id="L1865" class="ln">  1865</span>		MOVL	CX,(DI)
+<span id="L1866" class="ln">  1866</span>		ADDL	$4,DI
+<span id="L1867" class="ln">  1867</span>		
+<span id="L1868" class="ln">  1868</span>		MOVL	(SI),CX
+<span id="L1869" class="ln">  1869</span>		ADDL	$4,SI
+<span id="L1870" class="ln">  1870</span>		MOVL	CX,(DI)
+<span id="L1871" class="ln">  1871</span>		ADDL	$4,DI
+<span id="L1872" class="ln">  1872</span>		
+<span id="L1873" class="ln">  1873</span>		MOVL	(SI),CX
+<span id="L1874" class="ln">  1874</span>		ADDL	$4,SI
+<span id="L1875" class="ln">  1875</span>		MOVL	CX,(DI)
+<span id="L1876" class="ln">  1876</span>		ADDL	$4,DI
+<span id="L1877" class="ln">  1877</span>		
+<span id="L1878" class="ln">  1878</span>		MOVL	(SI),CX
+<span id="L1879" class="ln">  1879</span>		ADDL	$4,SI
+<span id="L1880" class="ln">  1880</span>		MOVL	CX,(DI)
+<span id="L1881" class="ln">  1881</span>		ADDL	$4,DI
+<span id="L1882" class="ln">  1882</span>		
+<span id="L1883" class="ln">  1883</span>		MOVL	(SI),CX
+<span id="L1884" class="ln">  1884</span>		ADDL	$4,SI
+<span id="L1885" class="ln">  1885</span>		MOVL	CX,(DI)
+<span id="L1886" class="ln">  1886</span>		ADDL	$4,DI
+<span id="L1887" class="ln">  1887</span>		
+<span id="L1888" class="ln">  1888</span>		MOVL	(SI),CX
+<span id="L1889" class="ln">  1889</span>		ADDL	$4,SI
+<span id="L1890" class="ln">  1890</span>		MOVL	CX,(DI)
+<span id="L1891" class="ln">  1891</span>		ADDL	$4,DI
+<span id="L1892" class="ln">  1892</span>		
+<span id="L1893" class="ln">  1893</span>		MOVL	(SI),CX
+<span id="L1894" class="ln">  1894</span>		ADDL	$4,SI
+<span id="L1895" class="ln">  1895</span>		MOVL	CX,(DI)
+<span id="L1896" class="ln">  1896</span>		ADDL	$4,DI
+<span id="L1897" class="ln">  1897</span>		
+<span id="L1898" class="ln">  1898</span>		MOVL	(SI),CX
+<span id="L1899" class="ln">  1899</span>		ADDL	$4,SI
+<span id="L1900" class="ln">  1900</span>		MOVL	CX,(DI)
+<span id="L1901" class="ln">  1901</span>		ADDL	$4,DI
+<span id="L1902" class="ln">  1902</span>		
+<span id="L1903" class="ln">  1903</span>		MOVL	(SI),CX
+<span id="L1904" class="ln">  1904</span>		ADDL	$4,SI
+<span id="L1905" class="ln">  1905</span>		MOVL	CX,(DI)
+<span id="L1906" class="ln">  1906</span>		ADDL	$4,DI
+<span id="L1907" class="ln">  1907</span>		
+<span id="L1908" class="ln">  1908</span>		MOVL	(SI),CX
+<span id="L1909" class="ln">  1909</span>		ADDL	$4,SI
+<span id="L1910" class="ln">  1910</span>		MOVL	CX,(DI)
+<span id="L1911" class="ln">  1911</span>		ADDL	$4,DI
+<span id="L1912" class="ln">  1912</span>		
+<span id="L1913" class="ln">  1913</span>		MOVL	(SI),CX
+<span id="L1914" class="ln">  1914</span>		ADDL	$4,SI
+<span id="L1915" class="ln">  1915</span>		MOVL	CX,(DI)
+<span id="L1916" class="ln">  1916</span>		ADDL	$4,DI
+<span id="L1917" class="ln">  1917</span>		
+<span id="L1918" class="ln">  1918</span>		MOVL	(SI),CX
+<span id="L1919" class="ln">  1919</span>		ADDL	$4,SI
+<span id="L1920" class="ln">  1920</span>		MOVL	CX,(DI)
+<span id="L1921" class="ln">  1921</span>		ADDL	$4,DI
+<span id="L1922" class="ln">  1922</span>		
+<span id="L1923" class="ln">  1923</span>		MOVL	(SI),CX
+<span id="L1924" class="ln">  1924</span>		ADDL	$4,SI
+<span id="L1925" class="ln">  1925</span>		MOVL	CX,(DI)
+<span id="L1926" class="ln">  1926</span>		ADDL	$4,DI
+<span id="L1927" class="ln">  1927</span>		
+<span id="L1928" class="ln">  1928</span>		MOVL	(SI),CX
+<span id="L1929" class="ln">  1929</span>		ADDL	$4,SI
+<span id="L1930" class="ln">  1930</span>		MOVL	CX,(DI)
+<span id="L1931" class="ln">  1931</span>		ADDL	$4,DI
+<span id="L1932" class="ln">  1932</span>		
+<span id="L1933" class="ln">  1933</span>		MOVL	(SI),CX
+<span id="L1934" class="ln">  1934</span>		ADDL	$4,SI
+<span id="L1935" class="ln">  1935</span>		MOVL	CX,(DI)
+<span id="L1936" class="ln">  1936</span>		ADDL	$4,DI
+<span id="L1937" class="ln">  1937</span>		
+<span id="L1938" class="ln">  1938</span>		MOVL	(SI),CX
+<span id="L1939" class="ln">  1939</span>		ADDL	$4,SI
+<span id="L1940" class="ln">  1940</span>		MOVL	CX,(DI)
+<span id="L1941" class="ln">  1941</span>		ADDL	$4,DI
+<span id="L1942" class="ln">  1942</span>		
+<span id="L1943" class="ln">  1943</span>		MOVL	(SI),CX
+<span id="L1944" class="ln">  1944</span>		ADDL	$4,SI
+<span id="L1945" class="ln">  1945</span>		MOVL	CX,(DI)
+<span id="L1946" class="ln">  1946</span>		ADDL	$4,DI
+<span id="L1947" class="ln">  1947</span>		
+<span id="L1948" class="ln">  1948</span>		MOVL	(SI),CX
+<span id="L1949" class="ln">  1949</span>		ADDL	$4,SI
+<span id="L1950" class="ln">  1950</span>		MOVL	CX,(DI)
+<span id="L1951" class="ln">  1951</span>		ADDL	$4,DI
+<span id="L1952" class="ln">  1952</span>		
+<span id="L1953" class="ln">  1953</span>		MOVL	(SI),CX
+<span id="L1954" class="ln">  1954</span>		ADDL	$4,SI
+<span id="L1955" class="ln">  1955</span>		MOVL	CX,(DI)
+<span id="L1956" class="ln">  1956</span>		ADDL	$4,DI
+<span id="L1957" class="ln">  1957</span>		
+<span id="L1958" class="ln">  1958</span>		MOVL	(SI),CX
+<span id="L1959" class="ln">  1959</span>		ADDL	$4,SI
+<span id="L1960" class="ln">  1960</span>		MOVL	CX,(DI)
+<span id="L1961" class="ln">  1961</span>		ADDL	$4,DI
+<span id="L1962" class="ln">  1962</span>		
+<span id="L1963" class="ln">  1963</span>		MOVL	(SI),CX
+<span id="L1964" class="ln">  1964</span>		ADDL	$4,SI
+<span id="L1965" class="ln">  1965</span>		MOVL	CX,(DI)
+<span id="L1966" class="ln">  1966</span>		ADDL	$4,DI
+<span id="L1967" class="ln">  1967</span>		
+<span id="L1968" class="ln">  1968</span>		MOVL	(SI),CX
+<span id="L1969" class="ln">  1969</span>		ADDL	$4,SI
+<span id="L1970" class="ln">  1970</span>		MOVL	CX,(DI)
+<span id="L1971" class="ln">  1971</span>		ADDL	$4,DI
+<span id="L1972" class="ln">  1972</span>		
+<span id="L1973" class="ln">  1973</span>		MOVL	(SI),CX
+<span id="L1974" class="ln">  1974</span>		ADDL	$4,SI
+<span id="L1975" class="ln">  1975</span>		MOVL	CX,(DI)
+<span id="L1976" class="ln">  1976</span>		ADDL	$4,DI
+<span id="L1977" class="ln">  1977</span>		
+<span id="L1978" class="ln">  1978</span>		MOVL	(SI),CX
+<span id="L1979" class="ln">  1979</span>		ADDL	$4,SI
+<span id="L1980" class="ln">  1980</span>		MOVL	CX,(DI)
+<span id="L1981" class="ln">  1981</span>		ADDL	$4,DI
+<span id="L1982" class="ln">  1982</span>		
+<span id="L1983" class="ln">  1983</span>		MOVL	(SI),CX
+<span id="L1984" class="ln">  1984</span>		ADDL	$4,SI
+<span id="L1985" class="ln">  1985</span>		MOVL	CX,(DI)
+<span id="L1986" class="ln">  1986</span>		ADDL	$4,DI
+<span id="L1987" class="ln">  1987</span>		
+<span id="L1988" class="ln">  1988</span>		MOVL	(SI),CX
+<span id="L1989" class="ln">  1989</span>		ADDL	$4,SI
+<span id="L1990" class="ln">  1990</span>		MOVL	CX,(DI)
+<span id="L1991" class="ln">  1991</span>		ADDL	$4,DI
+<span id="L1992" class="ln">  1992</span>		
+<span id="L1993" class="ln">  1993</span>		MOVL	(SI),CX
+<span id="L1994" class="ln">  1994</span>		ADDL	$4,SI
+<span id="L1995" class="ln">  1995</span>		MOVL	CX,(DI)
+<span id="L1996" class="ln">  1996</span>		ADDL	$4,DI
+<span id="L1997" class="ln">  1997</span>		
+<span id="L1998" class="ln">  1998</span>		MOVL	(SI),CX
+<span id="L1999" class="ln">  1999</span>		ADDL	$4,SI
+<span id="L2000" class="ln">  2000</span>		MOVL	CX,(DI)
+<span id="L2001" class="ln">  2001</span>		ADDL	$4,DI
+<span id="L2002" class="ln">  2002</span>		
+<span id="L2003" class="ln">  2003</span>		MOVL	(SI),CX
+<span id="L2004" class="ln">  2004</span>		ADDL	$4,SI
+<span id="L2005" class="ln">  2005</span>		MOVL	CX,(DI)
+<span id="L2006" class="ln">  2006</span>		ADDL	$4,DI
+<span id="L2007" class="ln">  2007</span>		
+<span id="L2008" class="ln">  2008</span>		MOVL	(SI),CX
+<span id="L2009" class="ln">  2009</span>		ADDL	$4,SI
+<span id="L2010" class="ln">  2010</span>		MOVL	CX,(DI)
+<span id="L2011" class="ln">  2011</span>		ADDL	$4,DI
+<span id="L2012" class="ln">  2012</span>		
+<span id="L2013" class="ln">  2013</span>		MOVL	(SI),CX
+<span id="L2014" class="ln">  2014</span>		ADDL	$4,SI
+<span id="L2015" class="ln">  2015</span>		MOVL	CX,(DI)
+<span id="L2016" class="ln">  2016</span>		ADDL	$4,DI
+<span id="L2017" class="ln">  2017</span>		
+<span id="L2018" class="ln">  2018</span>		MOVL	(SI),CX
+<span id="L2019" class="ln">  2019</span>		ADDL	$4,SI
+<span id="L2020" class="ln">  2020</span>		MOVL	CX,(DI)
+<span id="L2021" class="ln">  2021</span>		ADDL	$4,DI
+<span id="L2022" class="ln">  2022</span>		
+<span id="L2023" class="ln">  2023</span>		MOVL	(SI),CX
+<span id="L2024" class="ln">  2024</span>		ADDL	$4,SI
+<span id="L2025" class="ln">  2025</span>		MOVL	CX,(DI)
+<span id="L2026" class="ln">  2026</span>		ADDL	$4,DI
+<span id="L2027" class="ln">  2027</span>		
+<span id="L2028" class="ln">  2028</span>		MOVL	(SI),CX
+<span id="L2029" class="ln">  2029</span>		ADDL	$4,SI
+<span id="L2030" class="ln">  2030</span>		MOVL	CX,(DI)
+<span id="L2031" class="ln">  2031</span>		ADDL	$4,DI
+<span id="L2032" class="ln">  2032</span>		
+<span id="L2033" class="ln">  2033</span>		MOVL	(SI),CX
+<span id="L2034" class="ln">  2034</span>		ADDL	$4,SI
+<span id="L2035" class="ln">  2035</span>		MOVL	CX,(DI)
+<span id="L2036" class="ln">  2036</span>		ADDL	$4,DI
+<span id="L2037" class="ln">  2037</span>		
+<span id="L2038" class="ln">  2038</span>		MOVL	(SI),CX
+<span id="L2039" class="ln">  2039</span>		ADDL	$4,SI
+<span id="L2040" class="ln">  2040</span>		MOVL	CX,(DI)
+<span id="L2041" class="ln">  2041</span>		ADDL	$4,DI
+<span id="L2042" class="ln">  2042</span>		
+<span id="L2043" class="ln">  2043</span>		MOVL	(SI),CX
+<span id="L2044" class="ln">  2044</span>		ADDL	$4,SI
+<span id="L2045" class="ln">  2045</span>		MOVL	CX,(DI)
+<span id="L2046" class="ln">  2046</span>		ADDL	$4,DI
+<span id="L2047" class="ln">  2047</span>		
+<span id="L2048" class="ln">  2048</span>		MOVL	(SI),CX
+<span id="L2049" class="ln">  2049</span>		ADDL	$4,SI
+<span id="L2050" class="ln">  2050</span>		MOVL	CX,(DI)
+<span id="L2051" class="ln">  2051</span>		ADDL	$4,DI
+<span id="L2052" class="ln">  2052</span>		
+<span id="L2053" class="ln">  2053</span>		MOVL	(SI),CX
+<span id="L2054" class="ln">  2054</span>		ADDL	$4,SI
+<span id="L2055" class="ln">  2055</span>		MOVL	CX,(DI)
+<span id="L2056" class="ln">  2056</span>		ADDL	$4,DI
+<span id="L2057" class="ln">  2057</span>		
+<span id="L2058" class="ln">  2058</span>		MOVL	(SI),CX
+<span id="L2059" class="ln">  2059</span>		ADDL	$4,SI
+<span id="L2060" class="ln">  2060</span>		MOVL	CX,(DI)
+<span id="L2061" class="ln">  2061</span>		ADDL	$4,DI
+<span id="L2062" class="ln">  2062</span>		
+<span id="L2063" class="ln">  2063</span>		MOVL	(SI),CX
+<span id="L2064" class="ln">  2064</span>		ADDL	$4,SI
+<span id="L2065" class="ln">  2065</span>		MOVL	CX,(DI)
+<span id="L2066" class="ln">  2066</span>		ADDL	$4,DI
+<span id="L2067" class="ln">  2067</span>		
+<span id="L2068" class="ln">  2068</span>		MOVL	(SI),CX
+<span id="L2069" class="ln">  2069</span>		ADDL	$4,SI
+<span id="L2070" class="ln">  2070</span>		MOVL	CX,(DI)
+<span id="L2071" class="ln">  2071</span>		ADDL	$4,DI
+<span id="L2072" class="ln">  2072</span>		
+<span id="L2073" class="ln">  2073</span>		MOVL	(SI),CX
+<span id="L2074" class="ln">  2074</span>		ADDL	$4,SI
+<span id="L2075" class="ln">  2075</span>		MOVL	CX,(DI)
+<span id="L2076" class="ln">  2076</span>		ADDL	$4,DI
+<span id="L2077" class="ln">  2077</span>		
+<span id="L2078" class="ln">  2078</span>		MOVL	(SI),CX
+<span id="L2079" class="ln">  2079</span>		ADDL	$4,SI
+<span id="L2080" class="ln">  2080</span>		MOVL	CX,(DI)
+<span id="L2081" class="ln">  2081</span>		ADDL	$4,DI
+<span id="L2082" class="ln">  2082</span>		
+<span id="L2083" class="ln">  2083</span>		MOVL	(SI),CX
+<span id="L2084" class="ln">  2084</span>		ADDL	$4,SI
+<span id="L2085" class="ln">  2085</span>		MOVL	CX,(DI)
+<span id="L2086" class="ln">  2086</span>		ADDL	$4,DI
+<span id="L2087" class="ln">  2087</span>		
+<span id="L2088" class="ln">  2088</span>		MOVL	(SI),CX
+<span id="L2089" class="ln">  2089</span>		ADDL	$4,SI
+<span id="L2090" class="ln">  2090</span>		MOVL	CX,(DI)
+<span id="L2091" class="ln">  2091</span>		ADDL	$4,DI
+<span id="L2092" class="ln">  2092</span>		
+<span id="L2093" class="ln">  2093</span>		MOVL	(SI),CX
+<span id="L2094" class="ln">  2094</span>		ADDL	$4,SI
+<span id="L2095" class="ln">  2095</span>		MOVL	CX,(DI)
+<span id="L2096" class="ln">  2096</span>		ADDL	$4,DI
+<span id="L2097" class="ln">  2097</span>		
+<span id="L2098" class="ln">  2098</span>		MOVL	(SI),CX
+<span id="L2099" class="ln">  2099</span>		ADDL	$4,SI
+<span id="L2100" class="ln">  2100</span>		MOVL	CX,(DI)
+<span id="L2101" class="ln">  2101</span>		ADDL	$4,DI
+<span id="L2102" class="ln">  2102</span>		
+<span id="L2103" class="ln">  2103</span>		MOVL	(SI),CX
+<span id="L2104" class="ln">  2104</span>		ADDL	$4,SI
+<span id="L2105" class="ln">  2105</span>		MOVL	CX,(DI)
+<span id="L2106" class="ln">  2106</span>		ADDL	$4,DI
+<span id="L2107" class="ln">  2107</span>		
+<span id="L2108" class="ln">  2108</span>		MOVL	(SI),CX
+<span id="L2109" class="ln">  2109</span>		ADDL	$4,SI
+<span id="L2110" class="ln">  2110</span>		MOVL	CX,(DI)
+<span id="L2111" class="ln">  2111</span>		ADDL	$4,DI
+<span id="L2112" class="ln">  2112</span>		
+<span id="L2113" class="ln">  2113</span>		MOVL	(SI),CX
+<span id="L2114" class="ln">  2114</span>		ADDL	$4,SI
+<span id="L2115" class="ln">  2115</span>		MOVL	CX,(DI)
+<span id="L2116" class="ln">  2116</span>		ADDL	$4,DI
+<span id="L2117" class="ln">  2117</span>		
+<span id="L2118" class="ln">  2118</span>		MOVL	(SI),CX
+<span id="L2119" class="ln">  2119</span>		ADDL	$4,SI
+<span id="L2120" class="ln">  2120</span>		MOVL	CX,(DI)
+<span id="L2121" class="ln">  2121</span>		ADDL	$4,DI
+<span id="L2122" class="ln">  2122</span>		
+<span id="L2123" class="ln">  2123</span>		MOVL	(SI),CX
+<span id="L2124" class="ln">  2124</span>		ADDL	$4,SI
+<span id="L2125" class="ln">  2125</span>		MOVL	CX,(DI)
+<span id="L2126" class="ln">  2126</span>		ADDL	$4,DI
+<span id="L2127" class="ln">  2127</span>		
+<span id="L2128" class="ln">  2128</span>		MOVL	(SI),CX
+<span id="L2129" class="ln">  2129</span>		ADDL	$4,SI
+<span id="L2130" class="ln">  2130</span>		MOVL	CX,(DI)
+<span id="L2131" class="ln">  2131</span>		ADDL	$4,DI
+<span id="L2132" class="ln">  2132</span>		
+<span id="L2133" class="ln">  2133</span>		MOVL	(SI),CX
+<span id="L2134" class="ln">  2134</span>		ADDL	$4,SI
+<span id="L2135" class="ln">  2135</span>		MOVL	CX,(DI)
+<span id="L2136" class="ln">  2136</span>		ADDL	$4,DI
+<span id="L2137" class="ln">  2137</span>		
+<span id="L2138" class="ln">  2138</span>		MOVL	(SI),CX
+<span id="L2139" class="ln">  2139</span>		ADDL	$4,SI
+<span id="L2140" class="ln">  2140</span>		MOVL	CX,(DI)
+<span id="L2141" class="ln">  2141</span>		ADDL	$4,DI
+<span id="L2142" class="ln">  2142</span>		
+<span id="L2143" class="ln">  2143</span>		MOVL	(SI),CX
+<span id="L2144" class="ln">  2144</span>		ADDL	$4,SI
+<span id="L2145" class="ln">  2145</span>		MOVL	CX,(DI)
+<span id="L2146" class="ln">  2146</span>		ADDL	$4,DI
+<span id="L2147" class="ln">  2147</span>		
+<span id="L2148" class="ln">  2148</span>		MOVL	(SI),CX
+<span id="L2149" class="ln">  2149</span>		ADDL	$4,SI
+<span id="L2150" class="ln">  2150</span>		MOVL	CX,(DI)
+<span id="L2151" class="ln">  2151</span>		ADDL	$4,DI
+<span id="L2152" class="ln">  2152</span>		
+<span id="L2153" class="ln">  2153</span>		MOVL	(SI),CX
+<span id="L2154" class="ln">  2154</span>		ADDL	$4,SI
+<span id="L2155" class="ln">  2155</span>		MOVL	CX,(DI)
+<span id="L2156" class="ln">  2156</span>		ADDL	$4,DI
+<span id="L2157" class="ln">  2157</span>		
+<span id="L2158" class="ln">  2158</span>		MOVL	(SI),CX
+<span id="L2159" class="ln">  2159</span>		ADDL	$4,SI
+<span id="L2160" class="ln">  2160</span>		MOVL	CX,(DI)
+<span id="L2161" class="ln">  2161</span>		ADDL	$4,DI
+<span id="L2162" class="ln">  2162</span>		
+<span id="L2163" class="ln">  2163</span>		RET
+<span id="L2164" class="ln">  2164</span>	
+<span id="L2165" class="ln">  2165</span>	TEXT runtime·timenow(SB), NOSPLIT, $0-0
+<span id="L2166" class="ln">  2166</span>		JMP	time·now(SB)
+</pre><p><a href="http://golang.org/src/pkg/runtime/asm_386.s?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

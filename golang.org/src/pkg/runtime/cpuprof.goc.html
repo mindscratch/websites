@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/cpuprof.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/cpuprof.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2011 The Go Authors.  All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	// CPU profiling.
+<span id="L6" class="ln">     6</span>	// Based on algorithms and data structures used in
+<span id="L7" class="ln">     7</span>	// http://code.google.com/p/google-perftools/.
+<span id="L8" class="ln">     8</span>	//
+<span id="L9" class="ln">     9</span>	// The main difference between this code and the google-perftools
+<span id="L10" class="ln">    10</span>	// code is that this code is written to allow copying the profile data
+<span id="L11" class="ln">    11</span>	// to an arbitrary io.Writer, while the google-perftools code always
+<span id="L12" class="ln">    12</span>	// writes to an operating system file.
+<span id="L13" class="ln">    13</span>	//
+<span id="L14" class="ln">    14</span>	// The signal handler for the profiling clock tick adds a new stack trace
+<span id="L15" class="ln">    15</span>	// to a hash table tracking counts for recent traces.  Most clock ticks
+<span id="L16" class="ln">    16</span>	// hit in the cache.  In the event of a cache miss, an entry must be 
+<span id="L17" class="ln">    17</span>	// evicted from the hash table, copied to a log that will eventually be
+<span id="L18" class="ln">    18</span>	// written as profile data.  The google-perftools code flushed the
+<span id="L19" class="ln">    19</span>	// log itself during the signal handler.  This code cannot do that, because
+<span id="L20" class="ln">    20</span>	// the io.Writer might block or need system calls or locks that are not
+<span id="L21" class="ln">    21</span>	// safe to use from within the signal handler.  Instead, we split the log
+<span id="L22" class="ln">    22</span>	// into two halves and let the signal handler fill one half while a goroutine
+<span id="L23" class="ln">    23</span>	// is writing out the other half.  When the signal handler fills its half, it
+<span id="L24" class="ln">    24</span>	// offers to swap with the goroutine.  If the writer is not done with its half,
+<span id="L25" class="ln">    25</span>	// we lose the stack trace for this clock tick (and record that loss).
+<span id="L26" class="ln">    26</span>	// The goroutine interacts with the signal handler by calling getprofile() to
+<span id="L27" class="ln">    27</span>	// get the next log piece to write, implicitly handing back the last log
+<span id="L28" class="ln">    28</span>	// piece it obtained.
+<span id="L29" class="ln">    29</span>	//
+<span id="L30" class="ln">    30</span>	// The state of this dance between the signal handler and the goroutine
+<span id="L31" class="ln">    31</span>	// is encoded in the Profile.handoff field.  If handoff == 0, then the goroutine
+<span id="L32" class="ln">    32</span>	// is not using either log half and is waiting (or will soon be waiting) for
+<span id="L33" class="ln">    33</span>	// a new piece by calling notesleep(&amp;p-&gt;wait).  If the signal handler
+<span id="L34" class="ln">    34</span>	// changes handoff from 0 to non-zero, it must call notewakeup(&amp;p-&gt;wait)
+<span id="L35" class="ln">    35</span>	// to wake the goroutine.  The value indicates the number of entries in the
+<span id="L36" class="ln">    36</span>	// log half being handed off.  The goroutine leaves the non-zero value in
+<span id="L37" class="ln">    37</span>	// place until it has finished processing the log half and then flips the number
+<span id="L38" class="ln">    38</span>	// back to zero.  Setting the high bit in handoff means that the profiling is over, 
+<span id="L39" class="ln">    39</span>	// and the goroutine is now in charge of flushing the data left in the hash table
+<span id="L40" class="ln">    40</span>	// to the log and returning that data.  
+<span id="L41" class="ln">    41</span>	//
+<span id="L42" class="ln">    42</span>	// The handoff field is manipulated using atomic operations.
+<span id="L43" class="ln">    43</span>	// For the most part, the manipulation of handoff is orderly: if handoff == 0
+<span id="L44" class="ln">    44</span>	// then the signal handler owns it and can change it to non-zero.  
+<span id="L45" class="ln">    45</span>	// If handoff != 0 then the goroutine owns it and can change it to zero.
+<span id="L46" class="ln">    46</span>	// If that were the end of the story then we would not need to manipulate
+<span id="L47" class="ln">    47</span>	// handoff using atomic operations.  The operations are needed, however,
+<span id="L48" class="ln">    48</span>	// in order to let the log closer set the high bit to indicate &#34;EOF&#34; safely
+<span id="L49" class="ln">    49</span>	// in the situation when normally the goroutine &#34;owns&#34; handoff.
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>	package runtime
+<span id="L52" class="ln">    52</span>	#include &#34;runtime.h&#34;
+<span id="L53" class="ln">    53</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L54" class="ln">    54</span>	#include &#34;malloc.h&#34;
+<span id="L55" class="ln">    55</span>	
+<span id="L56" class="ln">    56</span>	enum
+<span id="L57" class="ln">    57</span>	{
+<span id="L58" class="ln">    58</span>		HashSize = 1&lt;&lt;10,
+<span id="L59" class="ln">    59</span>		LogSize = 1&lt;&lt;17,
+<span id="L60" class="ln">    60</span>		Assoc = 4,
+<span id="L61" class="ln">    61</span>		MaxStack = 64,
+<span id="L62" class="ln">    62</span>	};
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>	typedef struct Profile Profile;
+<span id="L65" class="ln">    65</span>	typedef struct Bucket Bucket;
+<span id="L66" class="ln">    66</span>	typedef struct Entry Entry;
+<span id="L67" class="ln">    67</span>	
+<span id="L68" class="ln">    68</span>	struct Entry {
+<span id="L69" class="ln">    69</span>		uintptr count;
+<span id="L70" class="ln">    70</span>		uintptr depth;
+<span id="L71" class="ln">    71</span>		uintptr stack[MaxStack];
+<span id="L72" class="ln">    72</span>	};
+<span id="L73" class="ln">    73</span>	
+<span id="L74" class="ln">    74</span>	struct Bucket {
+<span id="L75" class="ln">    75</span>		Entry entry[Assoc];
+<span id="L76" class="ln">    76</span>	};
+<span id="L77" class="ln">    77</span>	
+<span id="L78" class="ln">    78</span>	struct Profile {
+<span id="L79" class="ln">    79</span>		bool on;		// profiling is on
+<span id="L80" class="ln">    80</span>		Note wait;		// goroutine waits here
+<span id="L81" class="ln">    81</span>		uintptr count;		// tick count
+<span id="L82" class="ln">    82</span>		uintptr evicts;		// eviction count
+<span id="L83" class="ln">    83</span>		uintptr lost;		// lost ticks that need to be logged
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>		// Active recent stack traces.
+<span id="L86" class="ln">    86</span>		Bucket hash[HashSize];
+<span id="L87" class="ln">    87</span>	
+<span id="L88" class="ln">    88</span>		// Log of traces evicted from hash.
+<span id="L89" class="ln">    89</span>		// Signal handler has filled log[toggle][:nlog].
+<span id="L90" class="ln">    90</span>		// Goroutine is writing log[1-toggle][:handoff].
+<span id="L91" class="ln">    91</span>		uintptr log[2][LogSize/2];
+<span id="L92" class="ln">    92</span>		uintptr nlog;
+<span id="L93" class="ln">    93</span>		int32 toggle;
+<span id="L94" class="ln">    94</span>		uint32 handoff;
+<span id="L95" class="ln">    95</span>		
+<span id="L96" class="ln">    96</span>		// Writer state.
+<span id="L97" class="ln">    97</span>		// Writer maintains its own toggle to avoid races
+<span id="L98" class="ln">    98</span>		// looking at signal handler&#39;s toggle.
+<span id="L99" class="ln">    99</span>		uint32 wtoggle;
+<span id="L100" class="ln">   100</span>		bool wholding;	// holding &amp; need to release a log half
+<span id="L101" class="ln">   101</span>		bool flushing;	// flushing hash table - profile is over
+<span id="L102" class="ln">   102</span>		bool eod_sent;  // special end-of-data record sent; =&gt; flushing
+<span id="L103" class="ln">   103</span>	};
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>	static Lock lk;
+<span id="L106" class="ln">   106</span>	static Profile *prof;
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>	static void tick(uintptr*, int32);
+<span id="L109" class="ln">   109</span>	static void add(Profile*, uintptr*, int32);
+<span id="L110" class="ln">   110</span>	static bool evict(Profile*, Entry*);
+<span id="L111" class="ln">   111</span>	static bool flushlog(Profile*);
+<span id="L112" class="ln">   112</span>	
+<span id="L113" class="ln">   113</span>	static uintptr eod[3] = {0, 1, 0};
+<span id="L114" class="ln">   114</span>	
+<span id="L115" class="ln">   115</span>	// LostProfileData is a no-op function used in profiles
+<span id="L116" class="ln">   116</span>	// to mark the number of profiling stack traces that were
+<span id="L117" class="ln">   117</span>	// discarded due to slow data writers.
+<span id="L118" class="ln">   118</span>	static void
+<span id="L119" class="ln">   119</span>	LostProfileData(void)
+<span id="L120" class="ln">   120</span>	{
+<span id="L121" class="ln">   121</span>	}
+<span id="L122" class="ln">   122</span>	
+<span id="L123" class="ln">   123</span>	// SetCPUProfileRate sets the CPU profiling rate.
+<span id="L124" class="ln">   124</span>	// The user documentation is in debug.go.
+<span id="L125" class="ln">   125</span>	void
+<span id="L126" class="ln">   126</span>	runtime·SetCPUProfileRate(intgo hz)
+<span id="L127" class="ln">   127</span>	{
+<span id="L128" class="ln">   128</span>		uintptr *p;
+<span id="L129" class="ln">   129</span>		uintptr n;
+<span id="L130" class="ln">   130</span>	
+<span id="L131" class="ln">   131</span>		// Clamp hz to something reasonable.
+<span id="L132" class="ln">   132</span>		if(hz &lt; 0)
+<span id="L133" class="ln">   133</span>			hz = 0;
+<span id="L134" class="ln">   134</span>		if(hz &gt; 1000000)
+<span id="L135" class="ln">   135</span>			hz = 1000000;
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>		runtime·lock(&amp;lk);
+<span id="L138" class="ln">   138</span>		if(hz &gt; 0) {
+<span id="L139" class="ln">   139</span>			if(prof == nil) {
+<span id="L140" class="ln">   140</span>				prof = runtime·SysAlloc(sizeof *prof, &amp;mstats.other_sys);
+<span id="L141" class="ln">   141</span>				if(prof == nil) {
+<span id="L142" class="ln">   142</span>					runtime·printf(&#34;runtime: cpu profiling cannot allocate memory\n&#34;);
+<span id="L143" class="ln">   143</span>					runtime·unlock(&amp;lk);
+<span id="L144" class="ln">   144</span>					return;
+<span id="L145" class="ln">   145</span>				}
+<span id="L146" class="ln">   146</span>			}
+<span id="L147" class="ln">   147</span>			if(prof-&gt;on || prof-&gt;handoff != 0) {
+<span id="L148" class="ln">   148</span>				runtime·printf(&#34;runtime: cannot set cpu profile rate until previous profile has finished.\n&#34;);
+<span id="L149" class="ln">   149</span>				runtime·unlock(&amp;lk);
+<span id="L150" class="ln">   150</span>				return;
+<span id="L151" class="ln">   151</span>			}
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>			prof-&gt;on = true;
+<span id="L154" class="ln">   154</span>			p = prof-&gt;log[0];
+<span id="L155" class="ln">   155</span>			// pprof binary header format.
+<span id="L156" class="ln">   156</span>			// http://code.google.com/p/google-perftools/source/browse/trunk/src/profiledata.cc#117
+<span id="L157" class="ln">   157</span>			*p++ = 0;  // count for header
+<span id="L158" class="ln">   158</span>			*p++ = 3;  // depth for header
+<span id="L159" class="ln">   159</span>			*p++ = 0;  // version number
+<span id="L160" class="ln">   160</span>			*p++ = 1000000 / hz;  // period (microseconds)
+<span id="L161" class="ln">   161</span>			*p++ = 0;
+<span id="L162" class="ln">   162</span>			prof-&gt;nlog = p - prof-&gt;log[0];
+<span id="L163" class="ln">   163</span>			prof-&gt;toggle = 0;
+<span id="L164" class="ln">   164</span>			prof-&gt;wholding = false;
+<span id="L165" class="ln">   165</span>			prof-&gt;wtoggle = 0;
+<span id="L166" class="ln">   166</span>			prof-&gt;flushing = false;
+<span id="L167" class="ln">   167</span>			prof-&gt;eod_sent = false;
+<span id="L168" class="ln">   168</span>			runtime·noteclear(&amp;prof-&gt;wait);
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>			runtime·setcpuprofilerate(tick, hz);
+<span id="L171" class="ln">   171</span>		} else if(prof != nil &amp;&amp; prof-&gt;on) {
+<span id="L172" class="ln">   172</span>			runtime·setcpuprofilerate(nil, 0);
+<span id="L173" class="ln">   173</span>			prof-&gt;on = false;
+<span id="L174" class="ln">   174</span>	
+<span id="L175" class="ln">   175</span>			// Now add is not running anymore, and getprofile owns the entire log.
+<span id="L176" class="ln">   176</span>			// Set the high bit in prof-&gt;handoff to tell getprofile.
+<span id="L177" class="ln">   177</span>			for(;;) {
+<span id="L178" class="ln">   178</span>				n = prof-&gt;handoff;
+<span id="L179" class="ln">   179</span>				if(n&amp;0x80000000)
+<span id="L180" class="ln">   180</span>					runtime·printf(&#34;runtime: setcpuprofile(off) twice&#34;);
+<span id="L181" class="ln">   181</span>				if(runtime·cas(&amp;prof-&gt;handoff, n, n|0x80000000))
+<span id="L182" class="ln">   182</span>					break;
+<span id="L183" class="ln">   183</span>			}
+<span id="L184" class="ln">   184</span>			if(n == 0) {
+<span id="L185" class="ln">   185</span>				// we did the transition from 0 -&gt; nonzero so we wake getprofile
+<span id="L186" class="ln">   186</span>				runtime·notewakeup(&amp;prof-&gt;wait);
+<span id="L187" class="ln">   187</span>			}
+<span id="L188" class="ln">   188</span>		}
+<span id="L189" class="ln">   189</span>		runtime·unlock(&amp;lk);
+<span id="L190" class="ln">   190</span>	}
+<span id="L191" class="ln">   191</span>	
+<span id="L192" class="ln">   192</span>	static void
+<span id="L193" class="ln">   193</span>	tick(uintptr *pc, int32 n)
+<span id="L194" class="ln">   194</span>	{
+<span id="L195" class="ln">   195</span>		add(prof, pc, n);
+<span id="L196" class="ln">   196</span>	}
+<span id="L197" class="ln">   197</span>	
+<span id="L198" class="ln">   198</span>	// add adds the stack trace to the profile.
+<span id="L199" class="ln">   199</span>	// It is called from signal handlers and other limited environments
+<span id="L200" class="ln">   200</span>	// and cannot allocate memory or acquire locks that might be
+<span id="L201" class="ln">   201</span>	// held at the time of the signal, nor can it use substantial amounts
+<span id="L202" class="ln">   202</span>	// of stack.  It is allowed to call evict.
+<span id="L203" class="ln">   203</span>	static void
+<span id="L204" class="ln">   204</span>	add(Profile *p, uintptr *pc, int32 n)
+<span id="L205" class="ln">   205</span>	{
+<span id="L206" class="ln">   206</span>		int32 i, j;
+<span id="L207" class="ln">   207</span>		uintptr h, x;
+<span id="L208" class="ln">   208</span>		Bucket *b;
+<span id="L209" class="ln">   209</span>		Entry *e;
+<span id="L210" class="ln">   210</span>	
+<span id="L211" class="ln">   211</span>		if(n &gt; MaxStack)
+<span id="L212" class="ln">   212</span>			n = MaxStack;
+<span id="L213" class="ln">   213</span>		
+<span id="L214" class="ln">   214</span>		// Compute hash.
+<span id="L215" class="ln">   215</span>		h = 0;
+<span id="L216" class="ln">   216</span>		for(i=0; i&lt;n; i++) {
+<span id="L217" class="ln">   217</span>			h = h&lt;&lt;8 | (h&gt;&gt;(8*(sizeof(h)-1)));
+<span id="L218" class="ln">   218</span>			x = pc[i];
+<span id="L219" class="ln">   219</span>			h += x*31 + x*7 + x*3;
+<span id="L220" class="ln">   220</span>		}
+<span id="L221" class="ln">   221</span>		p-&gt;count++;
+<span id="L222" class="ln">   222</span>	
+<span id="L223" class="ln">   223</span>		// Add to entry count if already present in table.
+<span id="L224" class="ln">   224</span>		b = &amp;p-&gt;hash[h%HashSize];
+<span id="L225" class="ln">   225</span>		for(i=0; i&lt;Assoc; i++) {
+<span id="L226" class="ln">   226</span>			e = &amp;b-&gt;entry[i];
+<span id="L227" class="ln">   227</span>			if(e-&gt;depth != n)	
+<span id="L228" class="ln">   228</span>				continue;
+<span id="L229" class="ln">   229</span>			for(j=0; j&lt;n; j++)
+<span id="L230" class="ln">   230</span>				if(e-&gt;stack[j] != pc[j])
+<span id="L231" class="ln">   231</span>					goto ContinueAssoc;
+<span id="L232" class="ln">   232</span>			e-&gt;count++;
+<span id="L233" class="ln">   233</span>			return;
+<span id="L234" class="ln">   234</span>		ContinueAssoc:;
+<span id="L235" class="ln">   235</span>		}
+<span id="L236" class="ln">   236</span>	
+<span id="L237" class="ln">   237</span>		// Evict entry with smallest count.
+<span id="L238" class="ln">   238</span>		e = &amp;b-&gt;entry[0];
+<span id="L239" class="ln">   239</span>		for(i=1; i&lt;Assoc; i++)
+<span id="L240" class="ln">   240</span>			if(b-&gt;entry[i].count &lt; e-&gt;count)
+<span id="L241" class="ln">   241</span>				e = &amp;b-&gt;entry[i];
+<span id="L242" class="ln">   242</span>		if(e-&gt;count &gt; 0) {
+<span id="L243" class="ln">   243</span>			if(!evict(p, e)) {
+<span id="L244" class="ln">   244</span>				// Could not evict entry.  Record lost stack.
+<span id="L245" class="ln">   245</span>				p-&gt;lost++;
+<span id="L246" class="ln">   246</span>				return;
+<span id="L247" class="ln">   247</span>			}
+<span id="L248" class="ln">   248</span>			p-&gt;evicts++;
+<span id="L249" class="ln">   249</span>		}
+<span id="L250" class="ln">   250</span>		
+<span id="L251" class="ln">   251</span>		// Reuse the newly evicted entry.
+<span id="L252" class="ln">   252</span>		e-&gt;depth = n;
+<span id="L253" class="ln">   253</span>		e-&gt;count = 1;
+<span id="L254" class="ln">   254</span>		for(i=0; i&lt;n; i++)
+<span id="L255" class="ln">   255</span>			e-&gt;stack[i] = pc[i];
+<span id="L256" class="ln">   256</span>	}
+<span id="L257" class="ln">   257</span>	
+<span id="L258" class="ln">   258</span>	// evict copies the given entry&#39;s data into the log, so that
+<span id="L259" class="ln">   259</span>	// the entry can be reused.  evict is called from add, which
+<span id="L260" class="ln">   260</span>	// is called from the profiling signal handler, so it must not
+<span id="L261" class="ln">   261</span>	// allocate memory or block.  It is safe to call flushLog.
+<span id="L262" class="ln">   262</span>	// evict returns true if the entry was copied to the log,
+<span id="L263" class="ln">   263</span>	// false if there was no room available.
+<span id="L264" class="ln">   264</span>	static bool
+<span id="L265" class="ln">   265</span>	evict(Profile *p, Entry *e)
+<span id="L266" class="ln">   266</span>	{
+<span id="L267" class="ln">   267</span>		int32 i, d, nslot;
+<span id="L268" class="ln">   268</span>		uintptr *log, *q;
+<span id="L269" class="ln">   269</span>		
+<span id="L270" class="ln">   270</span>		d = e-&gt;depth;
+<span id="L271" class="ln">   271</span>		nslot = d+2;
+<span id="L272" class="ln">   272</span>		log = p-&gt;log[p-&gt;toggle];
+<span id="L273" class="ln">   273</span>		if(p-&gt;nlog+nslot &gt; nelem(p-&gt;log[0])) {
+<span id="L274" class="ln">   274</span>			if(!flushlog(p))
+<span id="L275" class="ln">   275</span>				return false;
+<span id="L276" class="ln">   276</span>			log = p-&gt;log[p-&gt;toggle];
+<span id="L277" class="ln">   277</span>		}
+<span id="L278" class="ln">   278</span>		
+<span id="L279" class="ln">   279</span>		q = log+p-&gt;nlog;
+<span id="L280" class="ln">   280</span>		*q++ = e-&gt;count;
+<span id="L281" class="ln">   281</span>		*q++ = d;
+<span id="L282" class="ln">   282</span>		for(i=0; i&lt;d; i++)
+<span id="L283" class="ln">   283</span>			*q++ = e-&gt;stack[i];
+<span id="L284" class="ln">   284</span>		p-&gt;nlog = q - log;
+<span id="L285" class="ln">   285</span>		e-&gt;count = 0;
+<span id="L286" class="ln">   286</span>		return true;
+<span id="L287" class="ln">   287</span>	}
+<span id="L288" class="ln">   288</span>	
+<span id="L289" class="ln">   289</span>	// flushlog tries to flush the current log and switch to the other one.
+<span id="L290" class="ln">   290</span>	// flushlog is called from evict, called from add, called from the signal handler,
+<span id="L291" class="ln">   291</span>	// so it cannot allocate memory or block.  It can try to swap logs with
+<span id="L292" class="ln">   292</span>	// the writing goroutine, as explained in the comment at the top of this file.
+<span id="L293" class="ln">   293</span>	static bool
+<span id="L294" class="ln">   294</span>	flushlog(Profile *p)
+<span id="L295" class="ln">   295</span>	{
+<span id="L296" class="ln">   296</span>		uintptr *log, *q;
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>		if(!runtime·cas(&amp;p-&gt;handoff, 0, p-&gt;nlog))
+<span id="L299" class="ln">   299</span>			return false;
+<span id="L300" class="ln">   300</span>		runtime·notewakeup(&amp;p-&gt;wait);
+<span id="L301" class="ln">   301</span>	
+<span id="L302" class="ln">   302</span>		p-&gt;toggle = 1 - p-&gt;toggle;
+<span id="L303" class="ln">   303</span>		log = p-&gt;log[p-&gt;toggle];
+<span id="L304" class="ln">   304</span>		q = log;
+<span id="L305" class="ln">   305</span>		if(p-&gt;lost &gt; 0) {
+<span id="L306" class="ln">   306</span>			*q++ = p-&gt;lost;
+<span id="L307" class="ln">   307</span>			*q++ = 1;
+<span id="L308" class="ln">   308</span>			*q++ = (uintptr)LostProfileData;
+<span id="L309" class="ln">   309</span>			p-&gt;lost = 0;
+<span id="L310" class="ln">   310</span>		}
+<span id="L311" class="ln">   311</span>		p-&gt;nlog = q - log;
+<span id="L312" class="ln">   312</span>		return true;
+<span id="L313" class="ln">   313</span>	}
+<span id="L314" class="ln">   314</span>	
+<span id="L315" class="ln">   315</span>	// getprofile blocks until the next block of profiling data is available
+<span id="L316" class="ln">   316</span>	// and returns it as a []byte.  It is called from the writing goroutine.
+<span id="L317" class="ln">   317</span>	Slice
+<span id="L318" class="ln">   318</span>	getprofile(Profile *p)
+<span id="L319" class="ln">   319</span>	{
+<span id="L320" class="ln">   320</span>		uint32 i, j, n;
+<span id="L321" class="ln">   321</span>		Slice ret;
+<span id="L322" class="ln">   322</span>		Bucket *b;
+<span id="L323" class="ln">   323</span>		Entry *e;
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>		ret.array = nil;
+<span id="L326" class="ln">   326</span>		ret.len = 0;
+<span id="L327" class="ln">   327</span>		ret.cap = 0;
+<span id="L328" class="ln">   328</span>		
+<span id="L329" class="ln">   329</span>		if(p == nil)	
+<span id="L330" class="ln">   330</span>			return ret;
+<span id="L331" class="ln">   331</span>	
+<span id="L332" class="ln">   332</span>		if(p-&gt;wholding) {
+<span id="L333" class="ln">   333</span>			// Release previous log to signal handling side.
+<span id="L334" class="ln">   334</span>			// Loop because we are racing against SetCPUProfileRate(0).
+<span id="L335" class="ln">   335</span>			for(;;) {
+<span id="L336" class="ln">   336</span>				n = p-&gt;handoff;
+<span id="L337" class="ln">   337</span>				if(n == 0) {
+<span id="L338" class="ln">   338</span>					runtime·printf(&#34;runtime: phase error during cpu profile handoff\n&#34;);
+<span id="L339" class="ln">   339</span>					return ret;
+<span id="L340" class="ln">   340</span>				}
+<span id="L341" class="ln">   341</span>				if(n &amp; 0x80000000) {
+<span id="L342" class="ln">   342</span>					p-&gt;wtoggle = 1 - p-&gt;wtoggle;
+<span id="L343" class="ln">   343</span>					p-&gt;wholding = false;
+<span id="L344" class="ln">   344</span>					p-&gt;flushing = true;
+<span id="L345" class="ln">   345</span>					goto flush;
+<span id="L346" class="ln">   346</span>				}
+<span id="L347" class="ln">   347</span>				if(runtime·cas(&amp;p-&gt;handoff, n, 0))
+<span id="L348" class="ln">   348</span>					break;
+<span id="L349" class="ln">   349</span>			}
+<span id="L350" class="ln">   350</span>			p-&gt;wtoggle = 1 - p-&gt;wtoggle;
+<span id="L351" class="ln">   351</span>			p-&gt;wholding = false;
+<span id="L352" class="ln">   352</span>		}
+<span id="L353" class="ln">   353</span>		
+<span id="L354" class="ln">   354</span>		if(p-&gt;flushing)
+<span id="L355" class="ln">   355</span>			goto flush;
+<span id="L356" class="ln">   356</span>		
+<span id="L357" class="ln">   357</span>		if(!p-&gt;on &amp;&amp; p-&gt;handoff == 0)
+<span id="L358" class="ln">   358</span>			return ret;
+<span id="L359" class="ln">   359</span>	
+<span id="L360" class="ln">   360</span>		// Wait for new log.
+<span id="L361" class="ln">   361</span>		runtime·notetsleepg(&amp;p-&gt;wait, -1);
+<span id="L362" class="ln">   362</span>		runtime·noteclear(&amp;p-&gt;wait);
+<span id="L363" class="ln">   363</span>	
+<span id="L364" class="ln">   364</span>		n = p-&gt;handoff;
+<span id="L365" class="ln">   365</span>		if(n == 0) {
+<span id="L366" class="ln">   366</span>			runtime·printf(&#34;runtime: phase error during cpu profile wait\n&#34;);
+<span id="L367" class="ln">   367</span>			return ret;
+<span id="L368" class="ln">   368</span>		}
+<span id="L369" class="ln">   369</span>		if(n == 0x80000000) {
+<span id="L370" class="ln">   370</span>			p-&gt;flushing = true;
+<span id="L371" class="ln">   371</span>			goto flush;
+<span id="L372" class="ln">   372</span>		}
+<span id="L373" class="ln">   373</span>		n &amp;= ~0x80000000;
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>		// Return new log to caller.
+<span id="L376" class="ln">   376</span>		p-&gt;wholding = true;
+<span id="L377" class="ln">   377</span>	
+<span id="L378" class="ln">   378</span>		ret.array = (byte*)p-&gt;log[p-&gt;wtoggle];
+<span id="L379" class="ln">   379</span>		ret.len = n*sizeof(uintptr);
+<span id="L380" class="ln">   380</span>		ret.cap = ret.len;
+<span id="L381" class="ln">   381</span>		return ret;
+<span id="L382" class="ln">   382</span>	
+<span id="L383" class="ln">   383</span>	flush:
+<span id="L384" class="ln">   384</span>		// In flush mode.
+<span id="L385" class="ln">   385</span>		// Add is no longer being called.  We own the log.
+<span id="L386" class="ln">   386</span>		// Also, p-&gt;handoff is non-zero, so flushlog will return false.
+<span id="L387" class="ln">   387</span>		// Evict the hash table into the log and return it.
+<span id="L388" class="ln">   388</span>		for(i=0; i&lt;HashSize; i++) {
+<span id="L389" class="ln">   389</span>			b = &amp;p-&gt;hash[i];
+<span id="L390" class="ln">   390</span>			for(j=0; j&lt;Assoc; j++) {
+<span id="L391" class="ln">   391</span>				e = &amp;b-&gt;entry[j];
+<span id="L392" class="ln">   392</span>				if(e-&gt;count &gt; 0 &amp;&amp; !evict(p, e)) {
+<span id="L393" class="ln">   393</span>					// Filled the log.  Stop the loop and return what we&#39;ve got.
+<span id="L394" class="ln">   394</span>					goto breakflush;
+<span id="L395" class="ln">   395</span>				}
+<span id="L396" class="ln">   396</span>			}
+<span id="L397" class="ln">   397</span>		}
+<span id="L398" class="ln">   398</span>	breakflush:
+<span id="L399" class="ln">   399</span>	
+<span id="L400" class="ln">   400</span>		// Return pending log data.
+<span id="L401" class="ln">   401</span>		if(p-&gt;nlog &gt; 0) {
+<span id="L402" class="ln">   402</span>			// Note that we&#39;re using toggle now, not wtoggle,
+<span id="L403" class="ln">   403</span>			// because we&#39;re working on the log directly.
+<span id="L404" class="ln">   404</span>			ret.array = (byte*)p-&gt;log[p-&gt;toggle];
+<span id="L405" class="ln">   405</span>			ret.len = p-&gt;nlog*sizeof(uintptr);
+<span id="L406" class="ln">   406</span>			ret.cap = ret.len;
+<span id="L407" class="ln">   407</span>			p-&gt;nlog = 0;
+<span id="L408" class="ln">   408</span>			return ret;
+<span id="L409" class="ln">   409</span>		}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>		// Made it through the table without finding anything to log.
+<span id="L412" class="ln">   412</span>		if(!p-&gt;eod_sent) {
+<span id="L413" class="ln">   413</span>			// We may not have space to append this to the partial log buf,
+<span id="L414" class="ln">   414</span>			// so we always return a new slice for the end-of-data marker.
+<span id="L415" class="ln">   415</span>			p-&gt;eod_sent = true;
+<span id="L416" class="ln">   416</span>			ret.array = (byte*)eod;
+<span id="L417" class="ln">   417</span>			ret.len = sizeof eod;
+<span id="L418" class="ln">   418</span>			ret.cap = ret.len;
+<span id="L419" class="ln">   419</span>			return ret;
+<span id="L420" class="ln">   420</span>		}
+<span id="L421" class="ln">   421</span>	
+<span id="L422" class="ln">   422</span>		// Finally done.  Clean up and return nil.
+<span id="L423" class="ln">   423</span>		p-&gt;flushing = false;
+<span id="L424" class="ln">   424</span>		if(!runtime·cas(&amp;p-&gt;handoff, p-&gt;handoff, 0))
+<span id="L425" class="ln">   425</span>			runtime·printf(&#34;runtime: profile flush racing with something\n&#34;);
+<span id="L426" class="ln">   426</span>		return ret;  // set to nil at top of function
+<span id="L427" class="ln">   427</span>	}
+<span id="L428" class="ln">   428</span>	
+<span id="L429" class="ln">   429</span>	// CPUProfile returns the next cpu profile block as a []byte.
+<span id="L430" class="ln">   430</span>	// The user documentation is in debug.go.
+<span id="L431" class="ln">   431</span>	func CPUProfile() (ret Slice) {
+<span id="L432" class="ln">   432</span>		ret = getprofile(prof);
+<span id="L433" class="ln">   433</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/cpuprof.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

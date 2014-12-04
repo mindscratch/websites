@@ -1,0 +1,3051 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/math/all_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/math/all_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package math_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		. &#34;math&#34;
+<span id="L10" class="ln">    10</span>		&#34;testing&#34;
+<span id="L11" class="ln">    11</span>	)
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	var vf = []float64{
+<span id="L14" class="ln">    14</span>		4.9790119248836735e+00,
+<span id="L15" class="ln">    15</span>		7.7388724745781045e+00,
+<span id="L16" class="ln">    16</span>		-2.7688005719200159e-01,
+<span id="L17" class="ln">    17</span>		-5.0106036182710749e+00,
+<span id="L18" class="ln">    18</span>		9.6362937071984173e+00,
+<span id="L19" class="ln">    19</span>		2.9263772392439646e+00,
+<span id="L20" class="ln">    20</span>		5.2290834314593066e+00,
+<span id="L21" class="ln">    21</span>		2.7279399104360102e+00,
+<span id="L22" class="ln">    22</span>		1.8253080916808550e+00,
+<span id="L23" class="ln">    23</span>		-8.6859247685756013e+00,
+<span id="L24" class="ln">    24</span>	}
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	<span class="comment">// The expected results below were computed by the high precision calculators</span>
+<span id="L27" class="ln">    27</span>	<span class="comment">// at http://keisan.casio.com/.  More exact input values (array vf[], above)</span>
+<span id="L28" class="ln">    28</span>	<span class="comment">// were obtained by printing them with &#34;%.26f&#34;.  The answers were calculated</span>
+<span id="L29" class="ln">    29</span>	<span class="comment">// to 26 digits (by using the &#34;Digit number&#34; drop-down control of each</span>
+<span id="L30" class="ln">    30</span>	<span class="comment">// calculator).</span>
+<span id="L31" class="ln">    31</span>	var acos = []float64{
+<span id="L32" class="ln">    32</span>		1.0496193546107222142571536e+00,
+<span id="L33" class="ln">    33</span>		6.8584012813664425171660692e-01,
+<span id="L34" class="ln">    34</span>		1.5984878714577160325521819e+00,
+<span id="L35" class="ln">    35</span>		2.0956199361475859327461799e+00,
+<span id="L36" class="ln">    36</span>		2.7053008467824138592616927e-01,
+<span id="L37" class="ln">    37</span>		1.2738121680361776018155625e+00,
+<span id="L38" class="ln">    38</span>		1.0205369421140629186287407e+00,
+<span id="L39" class="ln">    39</span>		1.2945003481781246062157835e+00,
+<span id="L40" class="ln">    40</span>		1.3872364345374451433846657e+00,
+<span id="L41" class="ln">    41</span>		2.6231510803970463967294145e+00,
+<span id="L42" class="ln">    42</span>	}
+<span id="L43" class="ln">    43</span>	var acosh = []float64{
+<span id="L44" class="ln">    44</span>		2.4743347004159012494457618e+00,
+<span id="L45" class="ln">    45</span>		2.8576385344292769649802701e+00,
+<span id="L46" class="ln">    46</span>		7.2796961502981066190593175e-01,
+<span id="L47" class="ln">    47</span>		2.4796794418831451156471977e+00,
+<span id="L48" class="ln">    48</span>		3.0552020742306061857212962e+00,
+<span id="L49" class="ln">    49</span>		2.044238592688586588942468e+00,
+<span id="L50" class="ln">    50</span>		2.5158701513104513595766636e+00,
+<span id="L51" class="ln">    51</span>		1.99050839282411638174299e+00,
+<span id="L52" class="ln">    52</span>		1.6988625798424034227205445e+00,
+<span id="L53" class="ln">    53</span>		2.9611454842470387925531875e+00,
+<span id="L54" class="ln">    54</span>	}
+<span id="L55" class="ln">    55</span>	var asin = []float64{
+<span id="L56" class="ln">    56</span>		5.2117697218417440497416805e-01,
+<span id="L57" class="ln">    57</span>		8.8495619865825236751471477e-01,
+<span id="L58" class="ln">    58</span>		-02.769154466281941332086016e-02,
+<span id="L59" class="ln">    59</span>		-5.2482360935268931351485822e-01,
+<span id="L60" class="ln">    60</span>		1.3002662421166552333051524e+00,
+<span id="L61" class="ln">    61</span>		2.9698415875871901741575922e-01,
+<span id="L62" class="ln">    62</span>		5.5025938468083370060258102e-01,
+<span id="L63" class="ln">    63</span>		2.7629597861677201301553823e-01,
+<span id="L64" class="ln">    64</span>		1.83559892257451475846656e-01,
+<span id="L65" class="ln">    65</span>		-1.0523547536021497774980928e+00,
+<span id="L66" class="ln">    66</span>	}
+<span id="L67" class="ln">    67</span>	var asinh = []float64{
+<span id="L68" class="ln">    68</span>		2.3083139124923523427628243e+00,
+<span id="L69" class="ln">    69</span>		2.743551594301593620039021e+00,
+<span id="L70" class="ln">    70</span>		-2.7345908534880091229413487e-01,
+<span id="L71" class="ln">    71</span>		-2.3145157644718338650499085e+00,
+<span id="L72" class="ln">    72</span>		2.9613652154015058521951083e+00,
+<span id="L73" class="ln">    73</span>		1.7949041616585821933067568e+00,
+<span id="L74" class="ln">    74</span>		2.3564032905983506405561554e+00,
+<span id="L75" class="ln">    75</span>		1.7287118790768438878045346e+00,
+<span id="L76" class="ln">    76</span>		1.3626658083714826013073193e+00,
+<span id="L77" class="ln">    77</span>		-2.8581483626513914445234004e+00,
+<span id="L78" class="ln">    78</span>	}
+<span id="L79" class="ln">    79</span>	var atan = []float64{
+<span id="L80" class="ln">    80</span>		1.372590262129621651920085e+00,
+<span id="L81" class="ln">    81</span>		1.442290609645298083020664e+00,
+<span id="L82" class="ln">    82</span>		-2.7011324359471758245192595e-01,
+<span id="L83" class="ln">    83</span>		-1.3738077684543379452781531e+00,
+<span id="L84" class="ln">    84</span>		1.4673921193587666049154681e+00,
+<span id="L85" class="ln">    85</span>		1.2415173565870168649117764e+00,
+<span id="L86" class="ln">    86</span>		1.3818396865615168979966498e+00,
+<span id="L87" class="ln">    87</span>		1.2194305844639670701091426e+00,
+<span id="L88" class="ln">    88</span>		1.0696031952318783760193244e+00,
+<span id="L89" class="ln">    89</span>		-1.4561721938838084990898679e+00,
+<span id="L90" class="ln">    90</span>	}
+<span id="L91" class="ln">    91</span>	var atanh = []float64{
+<span id="L92" class="ln">    92</span>		5.4651163712251938116878204e-01,
+<span id="L93" class="ln">    93</span>		1.0299474112843111224914709e+00,
+<span id="L94" class="ln">    94</span>		-2.7695084420740135145234906e-02,
+<span id="L95" class="ln">    95</span>		-5.5072096119207195480202529e-01,
+<span id="L96" class="ln">    96</span>		1.9943940993171843235906642e+00,
+<span id="L97" class="ln">    97</span>		3.01448604578089708203017e-01,
+<span id="L98" class="ln">    98</span>		5.8033427206942188834370595e-01,
+<span id="L99" class="ln">    99</span>		2.7987997499441511013958297e-01,
+<span id="L100" class="ln">   100</span>		1.8459947964298794318714228e-01,
+<span id="L101" class="ln">   101</span>		-1.3273186910532645867272502e+00,
+<span id="L102" class="ln">   102</span>	}
+<span id="L103" class="ln">   103</span>	var atan2 = []float64{
+<span id="L104" class="ln">   104</span>		1.1088291730037004444527075e+00,
+<span id="L105" class="ln">   105</span>		9.1218183188715804018797795e-01,
+<span id="L106" class="ln">   106</span>		1.5984772603216203736068915e+00,
+<span id="L107" class="ln">   107</span>		2.0352918654092086637227327e+00,
+<span id="L108" class="ln">   108</span>		8.0391819139044720267356014e-01,
+<span id="L109" class="ln">   109</span>		1.2861075249894661588866752e+00,
+<span id="L110" class="ln">   110</span>		1.0889904479131695712182587e+00,
+<span id="L111" class="ln">   111</span>		1.3044821793397925293797357e+00,
+<span id="L112" class="ln">   112</span>		1.3902530903455392306872261e+00,
+<span id="L113" class="ln">   113</span>		2.2859857424479142655411058e+00,
+<span id="L114" class="ln">   114</span>	}
+<span id="L115" class="ln">   115</span>	var cbrt = []float64{
+<span id="L116" class="ln">   116</span>		1.7075799841925094446722675e+00,
+<span id="L117" class="ln">   117</span>		1.9779982212970353936691498e+00,
+<span id="L118" class="ln">   118</span>		-6.5177429017779910853339447e-01,
+<span id="L119" class="ln">   119</span>		-1.7111838886544019873338113e+00,
+<span id="L120" class="ln">   120</span>		2.1279920909827937423960472e+00,
+<span id="L121" class="ln">   121</span>		1.4303536770460741452312367e+00,
+<span id="L122" class="ln">   122</span>		1.7357021059106154902341052e+00,
+<span id="L123" class="ln">   123</span>		1.3972633462554328350552916e+00,
+<span id="L124" class="ln">   124</span>		1.2221149580905388454977636e+00,
+<span id="L125" class="ln">   125</span>		-2.0556003730500069110343596e+00,
+<span id="L126" class="ln">   126</span>	}
+<span id="L127" class="ln">   127</span>	var ceil = []float64{
+<span id="L128" class="ln">   128</span>		5.0000000000000000e+00,
+<span id="L129" class="ln">   129</span>		8.0000000000000000e+00,
+<span id="L130" class="ln">   130</span>		0.0000000000000000e+00,
+<span id="L131" class="ln">   131</span>		-5.0000000000000000e+00,
+<span id="L132" class="ln">   132</span>		1.0000000000000000e+01,
+<span id="L133" class="ln">   133</span>		3.0000000000000000e+00,
+<span id="L134" class="ln">   134</span>		6.0000000000000000e+00,
+<span id="L135" class="ln">   135</span>		3.0000000000000000e+00,
+<span id="L136" class="ln">   136</span>		2.0000000000000000e+00,
+<span id="L137" class="ln">   137</span>		-8.0000000000000000e+00,
+<span id="L138" class="ln">   138</span>	}
+<span id="L139" class="ln">   139</span>	var copysign = []float64{
+<span id="L140" class="ln">   140</span>		-4.9790119248836735e+00,
+<span id="L141" class="ln">   141</span>		-7.7388724745781045e+00,
+<span id="L142" class="ln">   142</span>		-2.7688005719200159e-01,
+<span id="L143" class="ln">   143</span>		-5.0106036182710749e+00,
+<span id="L144" class="ln">   144</span>		-9.6362937071984173e+00,
+<span id="L145" class="ln">   145</span>		-2.9263772392439646e+00,
+<span id="L146" class="ln">   146</span>		-5.2290834314593066e+00,
+<span id="L147" class="ln">   147</span>		-2.7279399104360102e+00,
+<span id="L148" class="ln">   148</span>		-1.8253080916808550e+00,
+<span id="L149" class="ln">   149</span>		-8.6859247685756013e+00,
+<span id="L150" class="ln">   150</span>	}
+<span id="L151" class="ln">   151</span>	var cos = []float64{
+<span id="L152" class="ln">   152</span>		2.634752140995199110787593e-01,
+<span id="L153" class="ln">   153</span>		1.148551260848219865642039e-01,
+<span id="L154" class="ln">   154</span>		9.6191297325640768154550453e-01,
+<span id="L155" class="ln">   155</span>		2.938141150061714816890637e-01,
+<span id="L156" class="ln">   156</span>		-9.777138189897924126294461e-01,
+<span id="L157" class="ln">   157</span>		-9.7693041344303219127199518e-01,
+<span id="L158" class="ln">   158</span>		4.940088096948647263961162e-01,
+<span id="L159" class="ln">   159</span>		-9.1565869021018925545016502e-01,
+<span id="L160" class="ln">   160</span>		-2.517729313893103197176091e-01,
+<span id="L161" class="ln">   161</span>		-7.39241351595676573201918e-01,
+<span id="L162" class="ln">   162</span>	}
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>	<span class="comment">// Results for 100000 * Pi + vf[i]</span>
+<span id="L165" class="ln">   165</span>	var cosLarge = []float64{
+<span id="L166" class="ln">   166</span>		2.634752141185559426744e-01,
+<span id="L167" class="ln">   167</span>		1.14855126055543100712e-01,
+<span id="L168" class="ln">   168</span>		9.61912973266488928113e-01,
+<span id="L169" class="ln">   169</span>		2.9381411499556122552e-01,
+<span id="L170" class="ln">   170</span>		-9.777138189880161924641e-01,
+<span id="L171" class="ln">   171</span>		-9.76930413445147608049e-01,
+<span id="L172" class="ln">   172</span>		4.940088097314976789841e-01,
+<span id="L173" class="ln">   173</span>		-9.15658690217517835002e-01,
+<span id="L174" class="ln">   174</span>		-2.51772931436786954751e-01,
+<span id="L175" class="ln">   175</span>		-7.3924135157173099849e-01,
+<span id="L176" class="ln">   176</span>	}
+<span id="L177" class="ln">   177</span>	var cosh = []float64{
+<span id="L178" class="ln">   178</span>		7.2668796942212842775517446e+01,
+<span id="L179" class="ln">   179</span>		1.1479413465659254502011135e+03,
+<span id="L180" class="ln">   180</span>		1.0385767908766418550935495e+00,
+<span id="L181" class="ln">   181</span>		7.5000957789658051428857788e+01,
+<span id="L182" class="ln">   182</span>		7.655246669605357888468613e+03,
+<span id="L183" class="ln">   183</span>		9.3567491758321272072888257e+00,
+<span id="L184" class="ln">   184</span>		9.331351599270605471131735e+01,
+<span id="L185" class="ln">   185</span>		7.6833430994624643209296404e+00,
+<span id="L186" class="ln">   186</span>		3.1829371625150718153881164e+00,
+<span id="L187" class="ln">   187</span>		2.9595059261916188501640911e+03,
+<span id="L188" class="ln">   188</span>	}
+<span id="L189" class="ln">   189</span>	var erf = []float64{
+<span id="L190" class="ln">   190</span>		5.1865354817738701906913566e-01,
+<span id="L191" class="ln">   191</span>		7.2623875834137295116929844e-01,
+<span id="L192" class="ln">   192</span>		-3.123458688281309990629839e-02,
+<span id="L193" class="ln">   193</span>		-5.2143121110253302920437013e-01,
+<span id="L194" class="ln">   194</span>		8.2704742671312902508629582e-01,
+<span id="L195" class="ln">   195</span>		3.2101767558376376743993945e-01,
+<span id="L196" class="ln">   196</span>		5.403990312223245516066252e-01,
+<span id="L197" class="ln">   197</span>		3.0034702916738588551174831e-01,
+<span id="L198" class="ln">   198</span>		2.0369924417882241241559589e-01,
+<span id="L199" class="ln">   199</span>		-7.8069386968009226729944677e-01,
+<span id="L200" class="ln">   200</span>	}
+<span id="L201" class="ln">   201</span>	var erfc = []float64{
+<span id="L202" class="ln">   202</span>		4.8134645182261298093086434e-01,
+<span id="L203" class="ln">   203</span>		2.7376124165862704883070156e-01,
+<span id="L204" class="ln">   204</span>		1.0312345868828130999062984e+00,
+<span id="L205" class="ln">   205</span>		1.5214312111025330292043701e+00,
+<span id="L206" class="ln">   206</span>		1.7295257328687097491370418e-01,
+<span id="L207" class="ln">   207</span>		6.7898232441623623256006055e-01,
+<span id="L208" class="ln">   208</span>		4.596009687776754483933748e-01,
+<span id="L209" class="ln">   209</span>		6.9965297083261411448825169e-01,
+<span id="L210" class="ln">   210</span>		7.9630075582117758758440411e-01,
+<span id="L211" class="ln">   211</span>		1.7806938696800922672994468e+00,
+<span id="L212" class="ln">   212</span>	}
+<span id="L213" class="ln">   213</span>	var exp = []float64{
+<span id="L214" class="ln">   214</span>		1.4533071302642137507696589e+02,
+<span id="L215" class="ln">   215</span>		2.2958822575694449002537581e+03,
+<span id="L216" class="ln">   216</span>		7.5814542574851666582042306e-01,
+<span id="L217" class="ln">   217</span>		6.6668778421791005061482264e-03,
+<span id="L218" class="ln">   218</span>		1.5310493273896033740861206e+04,
+<span id="L219" class="ln">   219</span>		1.8659907517999328638667732e+01,
+<span id="L220" class="ln">   220</span>		1.8662167355098714543942057e+02,
+<span id="L221" class="ln">   221</span>		1.5301332413189378961665788e+01,
+<span id="L222" class="ln">   222</span>		6.2047063430646876349125085e+00,
+<span id="L223" class="ln">   223</span>		1.6894712385826521111610438e-04,
+<span id="L224" class="ln">   224</span>	}
+<span id="L225" class="ln">   225</span>	var expm1 = []float64{
+<span id="L226" class="ln">   226</span>		5.105047796122957327384770212e-02,
+<span id="L227" class="ln">   227</span>		8.046199708567344080562675439e-02,
+<span id="L228" class="ln">   228</span>		-2.764970978891639815187418703e-03,
+<span id="L229" class="ln">   229</span>		-4.8871434888875355394330300273e-02,
+<span id="L230" class="ln">   230</span>		1.0115864277221467777117227494e-01,
+<span id="L231" class="ln">   231</span>		2.969616407795910726014621657e-02,
+<span id="L232" class="ln">   232</span>		5.368214487944892300914037972e-02,
+<span id="L233" class="ln">   233</span>		2.765488851131274068067445335e-02,
+<span id="L234" class="ln">   234</span>		1.842068661871398836913874273e-02,
+<span id="L235" class="ln">   235</span>		-8.3193870863553801814961137573e-02,
+<span id="L236" class="ln">   236</span>	}
+<span id="L237" class="ln">   237</span>	var exp2 = []float64{
+<span id="L238" class="ln">   238</span>		3.1537839463286288034313104e+01,
+<span id="L239" class="ln">   239</span>		2.1361549283756232296144849e+02,
+<span id="L240" class="ln">   240</span>		8.2537402562185562902577219e-01,
+<span id="L241" class="ln">   241</span>		3.1021158628740294833424229e-02,
+<span id="L242" class="ln">   242</span>		7.9581744110252191462569661e+02,
+<span id="L243" class="ln">   243</span>		7.6019905892596359262696423e+00,
+<span id="L244" class="ln">   244</span>		3.7506882048388096973183084e+01,
+<span id="L245" class="ln">   245</span>		6.6250893439173561733216375e+00,
+<span id="L246" class="ln">   246</span>		3.5438267900243941544605339e+00,
+<span id="L247" class="ln">   247</span>		2.4281533133513300984289196e-03,
+<span id="L248" class="ln">   248</span>	}
+<span id="L249" class="ln">   249</span>	var fabs = []float64{
+<span id="L250" class="ln">   250</span>		4.9790119248836735e+00,
+<span id="L251" class="ln">   251</span>		7.7388724745781045e+00,
+<span id="L252" class="ln">   252</span>		2.7688005719200159e-01,
+<span id="L253" class="ln">   253</span>		5.0106036182710749e+00,
+<span id="L254" class="ln">   254</span>		9.6362937071984173e+00,
+<span id="L255" class="ln">   255</span>		2.9263772392439646e+00,
+<span id="L256" class="ln">   256</span>		5.2290834314593066e+00,
+<span id="L257" class="ln">   257</span>		2.7279399104360102e+00,
+<span id="L258" class="ln">   258</span>		1.8253080916808550e+00,
+<span id="L259" class="ln">   259</span>		8.6859247685756013e+00,
+<span id="L260" class="ln">   260</span>	}
+<span id="L261" class="ln">   261</span>	var fdim = []float64{
+<span id="L262" class="ln">   262</span>		4.9790119248836735e+00,
+<span id="L263" class="ln">   263</span>		7.7388724745781045e+00,
+<span id="L264" class="ln">   264</span>		0.0000000000000000e+00,
+<span id="L265" class="ln">   265</span>		0.0000000000000000e+00,
+<span id="L266" class="ln">   266</span>		9.6362937071984173e+00,
+<span id="L267" class="ln">   267</span>		2.9263772392439646e+00,
+<span id="L268" class="ln">   268</span>		5.2290834314593066e+00,
+<span id="L269" class="ln">   269</span>		2.7279399104360102e+00,
+<span id="L270" class="ln">   270</span>		1.8253080916808550e+00,
+<span id="L271" class="ln">   271</span>		0.0000000000000000e+00,
+<span id="L272" class="ln">   272</span>	}
+<span id="L273" class="ln">   273</span>	var floor = []float64{
+<span id="L274" class="ln">   274</span>		4.0000000000000000e+00,
+<span id="L275" class="ln">   275</span>		7.0000000000000000e+00,
+<span id="L276" class="ln">   276</span>		-1.0000000000000000e+00,
+<span id="L277" class="ln">   277</span>		-6.0000000000000000e+00,
+<span id="L278" class="ln">   278</span>		9.0000000000000000e+00,
+<span id="L279" class="ln">   279</span>		2.0000000000000000e+00,
+<span id="L280" class="ln">   280</span>		5.0000000000000000e+00,
+<span id="L281" class="ln">   281</span>		2.0000000000000000e+00,
+<span id="L282" class="ln">   282</span>		1.0000000000000000e+00,
+<span id="L283" class="ln">   283</span>		-9.0000000000000000e+00,
+<span id="L284" class="ln">   284</span>	}
+<span id="L285" class="ln">   285</span>	var fmod = []float64{
+<span id="L286" class="ln">   286</span>		4.197615023265299782906368e-02,
+<span id="L287" class="ln">   287</span>		2.261127525421895434476482e+00,
+<span id="L288" class="ln">   288</span>		3.231794108794261433104108e-02,
+<span id="L289" class="ln">   289</span>		4.989396381728925078391512e+00,
+<span id="L290" class="ln">   290</span>		3.637062928015826201999516e-01,
+<span id="L291" class="ln">   291</span>		1.220868282268106064236690e+00,
+<span id="L292" class="ln">   292</span>		4.770916568540693347699744e+00,
+<span id="L293" class="ln">   293</span>		1.816180268691969246219742e+00,
+<span id="L294" class="ln">   294</span>		8.734595415957246977711748e-01,
+<span id="L295" class="ln">   295</span>		1.314075231424398637614104e+00,
+<span id="L296" class="ln">   296</span>	}
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>	type fi struct {
+<span id="L299" class="ln">   299</span>		f float64
+<span id="L300" class="ln">   300</span>		i int
+<span id="L301" class="ln">   301</span>	}
+<span id="L302" class="ln">   302</span>	
+<span id="L303" class="ln">   303</span>	var frexp = []fi{
+<span id="L304" class="ln">   304</span>		{6.2237649061045918750e-01, 3},
+<span id="L305" class="ln">   305</span>		{9.6735905932226306250e-01, 3},
+<span id="L306" class="ln">   306</span>		{-5.5376011438400318000e-01, -1},
+<span id="L307" class="ln">   307</span>		{-6.2632545228388436250e-01, 3},
+<span id="L308" class="ln">   308</span>		{6.02268356699901081250e-01, 4},
+<span id="L309" class="ln">   309</span>		{7.3159430981099115000e-01, 2},
+<span id="L310" class="ln">   310</span>		{6.5363542893241332500e-01, 3},
+<span id="L311" class="ln">   311</span>		{6.8198497760900255000e-01, 2},
+<span id="L312" class="ln">   312</span>		{9.1265404584042750000e-01, 1},
+<span id="L313" class="ln">   313</span>		{-5.4287029803597508250e-01, 4},
+<span id="L314" class="ln">   314</span>	}
+<span id="L315" class="ln">   315</span>	var gamma = []float64{
+<span id="L316" class="ln">   316</span>		2.3254348370739963835386613898e+01,
+<span id="L317" class="ln">   317</span>		2.991153837155317076427529816e+03,
+<span id="L318" class="ln">   318</span>		-4.561154336726758060575129109e+00,
+<span id="L319" class="ln">   319</span>		7.719403468842639065959210984e-01,
+<span id="L320" class="ln">   320</span>		1.6111876618855418534325755566e+05,
+<span id="L321" class="ln">   321</span>		1.8706575145216421164173224946e+00,
+<span id="L322" class="ln">   322</span>		3.4082787447257502836734201635e+01,
+<span id="L323" class="ln">   323</span>		1.579733951448952054898583387e+00,
+<span id="L324" class="ln">   324</span>		9.3834586598354592860187267089e-01,
+<span id="L325" class="ln">   325</span>		-2.093995902923148389186189429e-05,
+<span id="L326" class="ln">   326</span>	}
+<span id="L327" class="ln">   327</span>	var j0 = []float64{
+<span id="L328" class="ln">   328</span>		-1.8444682230601672018219338e-01,
+<span id="L329" class="ln">   329</span>		2.27353668906331975435892e-01,
+<span id="L330" class="ln">   330</span>		9.809259936157051116270273e-01,
+<span id="L331" class="ln">   331</span>		-1.741170131426226587841181e-01,
+<span id="L332" class="ln">   332</span>		-2.1389448451144143352039069e-01,
+<span id="L333" class="ln">   333</span>		-2.340905848928038763337414e-01,
+<span id="L334" class="ln">   334</span>		-1.0029099691890912094586326e-01,
+<span id="L335" class="ln">   335</span>		-1.5466726714884328135358907e-01,
+<span id="L336" class="ln">   336</span>		3.252650187653420388714693e-01,
+<span id="L337" class="ln">   337</span>		-8.72218484409407250005360235e-03,
+<span id="L338" class="ln">   338</span>	}
+<span id="L339" class="ln">   339</span>	var j1 = []float64{
+<span id="L340" class="ln">   340</span>		-3.251526395295203422162967e-01,
+<span id="L341" class="ln">   341</span>		1.893581711430515718062564e-01,
+<span id="L342" class="ln">   342</span>		-1.3711761352467242914491514e-01,
+<span id="L343" class="ln">   343</span>		3.287486536269617297529617e-01,
+<span id="L344" class="ln">   344</span>		1.3133899188830978473849215e-01,
+<span id="L345" class="ln">   345</span>		3.660243417832986825301766e-01,
+<span id="L346" class="ln">   346</span>		-3.4436769271848174665420672e-01,
+<span id="L347" class="ln">   347</span>		4.329481396640773768835036e-01,
+<span id="L348" class="ln">   348</span>		5.8181350531954794639333955e-01,
+<span id="L349" class="ln">   349</span>		-2.7030574577733036112996607e-01,
+<span id="L350" class="ln">   350</span>	}
+<span id="L351" class="ln">   351</span>	var j2 = []float64{
+<span id="L352" class="ln">   352</span>		5.3837518920137802565192769e-02,
+<span id="L353" class="ln">   353</span>		-1.7841678003393207281244667e-01,
+<span id="L354" class="ln">   354</span>		9.521746934916464142495821e-03,
+<span id="L355" class="ln">   355</span>		4.28958355470987397983072e-02,
+<span id="L356" class="ln">   356</span>		2.4115371837854494725492872e-01,
+<span id="L357" class="ln">   357</span>		4.842458532394520316844449e-01,
+<span id="L358" class="ln">   358</span>		-3.142145220618633390125946e-02,
+<span id="L359" class="ln">   359</span>		4.720849184745124761189957e-01,
+<span id="L360" class="ln">   360</span>		3.122312022520957042957497e-01,
+<span id="L361" class="ln">   361</span>		7.096213118930231185707277e-02,
+<span id="L362" class="ln">   362</span>	}
+<span id="L363" class="ln">   363</span>	var jM3 = []float64{
+<span id="L364" class="ln">   364</span>		-3.684042080996403091021151e-01,
+<span id="L365" class="ln">   365</span>		2.8157665936340887268092661e-01,
+<span id="L366" class="ln">   366</span>		4.401005480841948348343589e-04,
+<span id="L367" class="ln">   367</span>		3.629926999056814081597135e-01,
+<span id="L368" class="ln">   368</span>		3.123672198825455192489266e-02,
+<span id="L369" class="ln">   369</span>		-2.958805510589623607540455e-01,
+<span id="L370" class="ln">   370</span>		-3.2033177696533233403289416e-01,
+<span id="L371" class="ln">   371</span>		-2.592737332129663376736604e-01,
+<span id="L372" class="ln">   372</span>		-1.0241334641061485092351251e-01,
+<span id="L373" class="ln">   373</span>		-2.3762660886100206491674503e-01,
+<span id="L374" class="ln">   374</span>	}
+<span id="L375" class="ln">   375</span>	var lgamma = []fi{
+<span id="L376" class="ln">   376</span>		{3.146492141244545774319734e+00, 1},
+<span id="L377" class="ln">   377</span>		{8.003414490659126375852113e+00, 1},
+<span id="L378" class="ln">   378</span>		{1.517575735509779707488106e+00, -1},
+<span id="L379" class="ln">   379</span>		{-2.588480028182145853558748e-01, 1},
+<span id="L380" class="ln">   380</span>		{1.1989897050205555002007985e+01, 1},
+<span id="L381" class="ln">   381</span>		{6.262899811091257519386906e-01, 1},
+<span id="L382" class="ln">   382</span>		{3.5287924899091566764846037e+00, 1},
+<span id="L383" class="ln">   383</span>		{4.5725644770161182299423372e-01, 1},
+<span id="L384" class="ln">   384</span>		{-6.363667087767961257654854e-02, 1},
+<span id="L385" class="ln">   385</span>		{-1.077385130910300066425564e+01, -1},
+<span id="L386" class="ln">   386</span>	}
+<span id="L387" class="ln">   387</span>	var log = []float64{
+<span id="L388" class="ln">   388</span>		1.605231462693062999102599e+00,
+<span id="L389" class="ln">   389</span>		2.0462560018708770653153909e+00,
+<span id="L390" class="ln">   390</span>		-1.2841708730962657801275038e+00,
+<span id="L391" class="ln">   391</span>		1.6115563905281545116286206e+00,
+<span id="L392" class="ln">   392</span>		2.2655365644872016636317461e+00,
+<span id="L393" class="ln">   393</span>		1.0737652208918379856272735e+00,
+<span id="L394" class="ln">   394</span>		1.6542360106073546632707956e+00,
+<span id="L395" class="ln">   395</span>		1.0035467127723465801264487e+00,
+<span id="L396" class="ln">   396</span>		6.0174879014578057187016475e-01,
+<span id="L397" class="ln">   397</span>		2.161703872847352815363655e+00,
+<span id="L398" class="ln">   398</span>	}
+<span id="L399" class="ln">   399</span>	var logb = []float64{
+<span id="L400" class="ln">   400</span>		2.0000000000000000e+00,
+<span id="L401" class="ln">   401</span>		2.0000000000000000e+00,
+<span id="L402" class="ln">   402</span>		-2.0000000000000000e+00,
+<span id="L403" class="ln">   403</span>		2.0000000000000000e+00,
+<span id="L404" class="ln">   404</span>		3.0000000000000000e+00,
+<span id="L405" class="ln">   405</span>		1.0000000000000000e+00,
+<span id="L406" class="ln">   406</span>		2.0000000000000000e+00,
+<span id="L407" class="ln">   407</span>		1.0000000000000000e+00,
+<span id="L408" class="ln">   408</span>		0.0000000000000000e+00,
+<span id="L409" class="ln">   409</span>		3.0000000000000000e+00,
+<span id="L410" class="ln">   410</span>	}
+<span id="L411" class="ln">   411</span>	var log10 = []float64{
+<span id="L412" class="ln">   412</span>		6.9714316642508290997617083e-01,
+<span id="L413" class="ln">   413</span>		8.886776901739320576279124e-01,
+<span id="L414" class="ln">   414</span>		-5.5770832400658929815908236e-01,
+<span id="L415" class="ln">   415</span>		6.998900476822994346229723e-01,
+<span id="L416" class="ln">   416</span>		9.8391002850684232013281033e-01,
+<span id="L417" class="ln">   417</span>		4.6633031029295153334285302e-01,
+<span id="L418" class="ln">   418</span>		7.1842557117242328821552533e-01,
+<span id="L419" class="ln">   419</span>		4.3583479968917773161304553e-01,
+<span id="L420" class="ln">   420</span>		2.6133617905227038228626834e-01,
+<span id="L421" class="ln">   421</span>		9.3881606348649405716214241e-01,
+<span id="L422" class="ln">   422</span>	}
+<span id="L423" class="ln">   423</span>	var log1p = []float64{
+<span id="L424" class="ln">   424</span>		4.8590257759797794104158205e-02,
+<span id="L425" class="ln">   425</span>		7.4540265965225865330849141e-02,
+<span id="L426" class="ln">   426</span>		-2.7726407903942672823234024e-03,
+<span id="L427" class="ln">   427</span>		-5.1404917651627649094953380e-02,
+<span id="L428" class="ln">   428</span>		9.1998280672258624681335010e-02,
+<span id="L429" class="ln">   429</span>		2.8843762576593352865894824e-02,
+<span id="L430" class="ln">   430</span>		5.0969534581863707268992645e-02,
+<span id="L431" class="ln">   431</span>		2.6913947602193238458458594e-02,
+<span id="L432" class="ln">   432</span>		1.8088493239630770262045333e-02,
+<span id="L433" class="ln">   433</span>		-9.0865245631588989681559268e-02,
+<span id="L434" class="ln">   434</span>	}
+<span id="L435" class="ln">   435</span>	var log2 = []float64{
+<span id="L436" class="ln">   436</span>		2.3158594707062190618898251e+00,
+<span id="L437" class="ln">   437</span>		2.9521233862883917703341018e+00,
+<span id="L438" class="ln">   438</span>		-1.8526669502700329984917062e+00,
+<span id="L439" class="ln">   439</span>		2.3249844127278861543568029e+00,
+<span id="L440" class="ln">   440</span>		3.268478366538305087466309e+00,
+<span id="L441" class="ln">   441</span>		1.5491157592596970278166492e+00,
+<span id="L442" class="ln">   442</span>		2.3865580889631732407886495e+00,
+<span id="L443" class="ln">   443</span>		1.447811865817085365540347e+00,
+<span id="L444" class="ln">   444</span>		8.6813999540425116282815557e-01,
+<span id="L445" class="ln">   445</span>		3.118679457227342224364709e+00,
+<span id="L446" class="ln">   446</span>	}
+<span id="L447" class="ln">   447</span>	var modf = [][2]float64{
+<span id="L448" class="ln">   448</span>		{4.0000000000000000e+00, 9.7901192488367350108546816e-01},
+<span id="L449" class="ln">   449</span>		{7.0000000000000000e+00, 7.3887247457810456552351752e-01},
+<span id="L450" class="ln">   450</span>		{0.0000000000000000e+00, -2.7688005719200159404635997e-01},
+<span id="L451" class="ln">   451</span>		{-5.0000000000000000e+00, -1.060361827107492160848778e-02},
+<span id="L452" class="ln">   452</span>		{9.0000000000000000e+00, 6.3629370719841737980004837e-01},
+<span id="L453" class="ln">   453</span>		{2.0000000000000000e+00, 9.2637723924396464525443662e-01},
+<span id="L454" class="ln">   454</span>		{5.0000000000000000e+00, 2.2908343145930665230025625e-01},
+<span id="L455" class="ln">   455</span>		{2.0000000000000000e+00, 7.2793991043601025126008608e-01},
+<span id="L456" class="ln">   456</span>		{1.0000000000000000e+00, 8.2530809168085506044576505e-01},
+<span id="L457" class="ln">   457</span>		{-8.0000000000000000e+00, -6.8592476857560136238589621e-01},
+<span id="L458" class="ln">   458</span>	}
+<span id="L459" class="ln">   459</span>	var nextafter = []float64{
+<span id="L460" class="ln">   460</span>		4.97901192488367438926388786e+00,
+<span id="L461" class="ln">   461</span>		7.73887247457810545370193722e+00,
+<span id="L462" class="ln">   462</span>		-2.7688005719200153853520874e-01,
+<span id="L463" class="ln">   463</span>		-5.01060361827107403343006808e+00,
+<span id="L464" class="ln">   464</span>		9.63629370719841915615688777e+00,
+<span id="L465" class="ln">   465</span>		2.92637723924396508934364647e+00,
+<span id="L466" class="ln">   466</span>		5.22908343145930754047867595e+00,
+<span id="L467" class="ln">   467</span>		2.72793991043601069534929593e+00,
+<span id="L468" class="ln">   468</span>		1.82530809168085528249036997e+00,
+<span id="L469" class="ln">   469</span>		-8.68592476857559958602905681e+00,
+<span id="L470" class="ln">   470</span>	}
+<span id="L471" class="ln">   471</span>	var pow = []float64{
+<span id="L472" class="ln">   472</span>		9.5282232631648411840742957e+04,
+<span id="L473" class="ln">   473</span>		5.4811599352999901232411871e+07,
+<span id="L474" class="ln">   474</span>		5.2859121715894396531132279e-01,
+<span id="L475" class="ln">   475</span>		9.7587991957286474464259698e-06,
+<span id="L476" class="ln">   476</span>		4.328064329346044846740467e+09,
+<span id="L477" class="ln">   477</span>		8.4406761805034547437659092e+02,
+<span id="L478" class="ln">   478</span>		1.6946633276191194947742146e+05,
+<span id="L479" class="ln">   479</span>		5.3449040147551939075312879e+02,
+<span id="L480" class="ln">   480</span>		6.688182138451414936380374e+01,
+<span id="L481" class="ln">   481</span>		2.0609869004248742886827439e-09,
+<span id="L482" class="ln">   482</span>	}
+<span id="L483" class="ln">   483</span>	var remainder = []float64{
+<span id="L484" class="ln">   484</span>		4.197615023265299782906368e-02,
+<span id="L485" class="ln">   485</span>		2.261127525421895434476482e+00,
+<span id="L486" class="ln">   486</span>		3.231794108794261433104108e-02,
+<span id="L487" class="ln">   487</span>		-2.120723654214984321697556e-02,
+<span id="L488" class="ln">   488</span>		3.637062928015826201999516e-01,
+<span id="L489" class="ln">   489</span>		1.220868282268106064236690e+00,
+<span id="L490" class="ln">   490</span>		-4.581668629186133046005125e-01,
+<span id="L491" class="ln">   491</span>		-9.117596417440410050403443e-01,
+<span id="L492" class="ln">   492</span>		8.734595415957246977711748e-01,
+<span id="L493" class="ln">   493</span>		1.314075231424398637614104e+00,
+<span id="L494" class="ln">   494</span>	}
+<span id="L495" class="ln">   495</span>	var signbit = []bool{
+<span id="L496" class="ln">   496</span>		false,
+<span id="L497" class="ln">   497</span>		false,
+<span id="L498" class="ln">   498</span>		true,
+<span id="L499" class="ln">   499</span>		true,
+<span id="L500" class="ln">   500</span>		false,
+<span id="L501" class="ln">   501</span>		false,
+<span id="L502" class="ln">   502</span>		false,
+<span id="L503" class="ln">   503</span>		false,
+<span id="L504" class="ln">   504</span>		false,
+<span id="L505" class="ln">   505</span>		true,
+<span id="L506" class="ln">   506</span>	}
+<span id="L507" class="ln">   507</span>	var sin = []float64{
+<span id="L508" class="ln">   508</span>		-9.6466616586009283766724726e-01,
+<span id="L509" class="ln">   509</span>		9.9338225271646545763467022e-01,
+<span id="L510" class="ln">   510</span>		-2.7335587039794393342449301e-01,
+<span id="L511" class="ln">   511</span>		9.5586257685042792878173752e-01,
+<span id="L512" class="ln">   512</span>		-2.099421066779969164496634e-01,
+<span id="L513" class="ln">   513</span>		2.135578780799860532750616e-01,
+<span id="L514" class="ln">   514</span>		-8.694568971167362743327708e-01,
+<span id="L515" class="ln">   515</span>		4.019566681155577786649878e-01,
+<span id="L516" class="ln">   516</span>		9.6778633541687993721617774e-01,
+<span id="L517" class="ln">   517</span>		-6.734405869050344734943028e-01,
+<span id="L518" class="ln">   518</span>	}
+<span id="L519" class="ln">   519</span>	
+<span id="L520" class="ln">   520</span>	<span class="comment">// Results for 100000 * Pi + vf[i]</span>
+<span id="L521" class="ln">   521</span>	var sinLarge = []float64{
+<span id="L522" class="ln">   522</span>		-9.646661658548936063912e-01,
+<span id="L523" class="ln">   523</span>		9.933822527198506903752e-01,
+<span id="L524" class="ln">   524</span>		-2.7335587036246899796e-01,
+<span id="L525" class="ln">   525</span>		9.55862576853689321268e-01,
+<span id="L526" class="ln">   526</span>		-2.099421066862688873691e-01,
+<span id="L527" class="ln">   527</span>		2.13557878070308981163e-01,
+<span id="L528" class="ln">   528</span>		-8.694568970959221300497e-01,
+<span id="L529" class="ln">   529</span>		4.01956668098863248917e-01,
+<span id="L530" class="ln">   530</span>		9.67786335404528727927e-01,
+<span id="L531" class="ln">   531</span>		-6.7344058693131973066e-01,
+<span id="L532" class="ln">   532</span>	}
+<span id="L533" class="ln">   533</span>	var sinh = []float64{
+<span id="L534" class="ln">   534</span>		7.2661916084208532301448439e+01,
+<span id="L535" class="ln">   535</span>		1.1479409110035194500526446e+03,
+<span id="L536" class="ln">   536</span>		-2.8043136512812518927312641e-01,
+<span id="L537" class="ln">   537</span>		-7.499429091181587232835164e+01,
+<span id="L538" class="ln">   538</span>		7.6552466042906758523925934e+03,
+<span id="L539" class="ln">   539</span>		9.3031583421672014313789064e+00,
+<span id="L540" class="ln">   540</span>		9.330815755828109072810322e+01,
+<span id="L541" class="ln">   541</span>		7.6179893137269146407361477e+00,
+<span id="L542" class="ln">   542</span>		3.021769180549615819524392e+00,
+<span id="L543" class="ln">   543</span>		-2.95950575724449499189888e+03,
+<span id="L544" class="ln">   544</span>	}
+<span id="L545" class="ln">   545</span>	var sqrt = []float64{
+<span id="L546" class="ln">   546</span>		2.2313699659365484748756904e+00,
+<span id="L547" class="ln">   547</span>		2.7818829009464263511285458e+00,
+<span id="L548" class="ln">   548</span>		5.2619393496314796848143251e-01,
+<span id="L549" class="ln">   549</span>		2.2384377628763938724244104e+00,
+<span id="L550" class="ln">   550</span>		3.1042380236055381099288487e+00,
+<span id="L551" class="ln">   551</span>		1.7106657298385224403917771e+00,
+<span id="L552" class="ln">   552</span>		2.286718922705479046148059e+00,
+<span id="L553" class="ln">   553</span>		1.6516476350711159636222979e+00,
+<span id="L554" class="ln">   554</span>		1.3510396336454586262419247e+00,
+<span id="L555" class="ln">   555</span>		2.9471892997524949215723329e+00,
+<span id="L556" class="ln">   556</span>	}
+<span id="L557" class="ln">   557</span>	var tan = []float64{
+<span id="L558" class="ln">   558</span>		-3.661316565040227801781974e+00,
+<span id="L559" class="ln">   559</span>		8.64900232648597589369854e+00,
+<span id="L560" class="ln">   560</span>		-2.8417941955033612725238097e-01,
+<span id="L561" class="ln">   561</span>		3.253290185974728640827156e+00,
+<span id="L562" class="ln">   562</span>		2.147275640380293804770778e-01,
+<span id="L563" class="ln">   563</span>		-2.18600910711067004921551e-01,
+<span id="L564" class="ln">   564</span>		-1.760002817872367935518928e+00,
+<span id="L565" class="ln">   565</span>		-4.389808914752818126249079e-01,
+<span id="L566" class="ln">   566</span>		-3.843885560201130679995041e+00,
+<span id="L567" class="ln">   567</span>		9.10988793377685105753416e-01,
+<span id="L568" class="ln">   568</span>	}
+<span id="L569" class="ln">   569</span>	
+<span id="L570" class="ln">   570</span>	<span class="comment">// Results for 100000 * Pi + vf[i]</span>
+<span id="L571" class="ln">   571</span>	var tanLarge = []float64{
+<span id="L572" class="ln">   572</span>		-3.66131656475596512705e+00,
+<span id="L573" class="ln">   573</span>		8.6490023287202547927e+00,
+<span id="L574" class="ln">   574</span>		-2.841794195104782406e-01,
+<span id="L575" class="ln">   575</span>		3.2532901861033120983e+00,
+<span id="L576" class="ln">   576</span>		2.14727564046880001365e-01,
+<span id="L577" class="ln">   577</span>		-2.18600910700688062874e-01,
+<span id="L578" class="ln">   578</span>		-1.760002817699722747043e+00,
+<span id="L579" class="ln">   579</span>		-4.38980891453536115952e-01,
+<span id="L580" class="ln">   580</span>		-3.84388555942723509071e+00,
+<span id="L581" class="ln">   581</span>		9.1098879344275101051e-01,
+<span id="L582" class="ln">   582</span>	}
+<span id="L583" class="ln">   583</span>	var tanh = []float64{
+<span id="L584" class="ln">   584</span>		9.9990531206936338549262119e-01,
+<span id="L585" class="ln">   585</span>		9.9999962057085294197613294e-01,
+<span id="L586" class="ln">   586</span>		-2.7001505097318677233756845e-01,
+<span id="L587" class="ln">   587</span>		-9.9991110943061718603541401e-01,
+<span id="L588" class="ln">   588</span>		9.9999999146798465745022007e-01,
+<span id="L589" class="ln">   589</span>		9.9427249436125236705001048e-01,
+<span id="L590" class="ln">   590</span>		9.9994257600983138572705076e-01,
+<span id="L591" class="ln">   591</span>		9.9149409509772875982054701e-01,
+<span id="L592" class="ln">   592</span>		9.4936501296239685514466577e-01,
+<span id="L593" class="ln">   593</span>		-9.9999994291374030946055701e-01,
+<span id="L594" class="ln">   594</span>	}
+<span id="L595" class="ln">   595</span>	var trunc = []float64{
+<span id="L596" class="ln">   596</span>		4.0000000000000000e+00,
+<span id="L597" class="ln">   597</span>		7.0000000000000000e+00,
+<span id="L598" class="ln">   598</span>		-0.0000000000000000e+00,
+<span id="L599" class="ln">   599</span>		-5.0000000000000000e+00,
+<span id="L600" class="ln">   600</span>		9.0000000000000000e+00,
+<span id="L601" class="ln">   601</span>		2.0000000000000000e+00,
+<span id="L602" class="ln">   602</span>		5.0000000000000000e+00,
+<span id="L603" class="ln">   603</span>		2.0000000000000000e+00,
+<span id="L604" class="ln">   604</span>		1.0000000000000000e+00,
+<span id="L605" class="ln">   605</span>		-8.0000000000000000e+00,
+<span id="L606" class="ln">   606</span>	}
+<span id="L607" class="ln">   607</span>	var y0 = []float64{
+<span id="L608" class="ln">   608</span>		-3.053399153780788357534855e-01,
+<span id="L609" class="ln">   609</span>		1.7437227649515231515503649e-01,
+<span id="L610" class="ln">   610</span>		-8.6221781263678836910392572e-01,
+<span id="L611" class="ln">   611</span>		-3.100664880987498407872839e-01,
+<span id="L612" class="ln">   612</span>		1.422200649300982280645377e-01,
+<span id="L613" class="ln">   613</span>		4.000004067997901144239363e-01,
+<span id="L614" class="ln">   614</span>		-3.3340749753099352392332536e-01,
+<span id="L615" class="ln">   615</span>		4.5399790746668954555205502e-01,
+<span id="L616" class="ln">   616</span>		4.8290004112497761007536522e-01,
+<span id="L617" class="ln">   617</span>		2.7036697826604756229601611e-01,
+<span id="L618" class="ln">   618</span>	}
+<span id="L619" class="ln">   619</span>	var y1 = []float64{
+<span id="L620" class="ln">   620</span>		0.15494213737457922210218611,
+<span id="L621" class="ln">   621</span>		-0.2165955142081145245075746,
+<span id="L622" class="ln">   622</span>		-2.4644949631241895201032829,
+<span id="L623" class="ln">   623</span>		0.1442740489541836405154505,
+<span id="L624" class="ln">   624</span>		0.2215379960518984777080163,
+<span id="L625" class="ln">   625</span>		0.3038800915160754150565448,
+<span id="L626" class="ln">   626</span>		0.0691107642452362383808547,
+<span id="L627" class="ln">   627</span>		0.2380116417809914424860165,
+<span id="L628" class="ln">   628</span>		-0.20849492979459761009678934,
+<span id="L629" class="ln">   629</span>		0.0242503179793232308250804,
+<span id="L630" class="ln">   630</span>	}
+<span id="L631" class="ln">   631</span>	var y2 = []float64{
+<span id="L632" class="ln">   632</span>		0.3675780219390303613394936,
+<span id="L633" class="ln">   633</span>		-0.23034826393250119879267257,
+<span id="L634" class="ln">   634</span>		-16.939677983817727205631397,
+<span id="L635" class="ln">   635</span>		0.367653980523052152867791,
+<span id="L636" class="ln">   636</span>		-0.0962401471767804440353136,
+<span id="L637" class="ln">   637</span>		-0.1923169356184851105200523,
+<span id="L638" class="ln">   638</span>		0.35984072054267882391843766,
+<span id="L639" class="ln">   639</span>		-0.2794987252299739821654982,
+<span id="L640" class="ln">   640</span>		-0.7113490692587462579757954,
+<span id="L641" class="ln">   641</span>		-0.2647831587821263302087457,
+<span id="L642" class="ln">   642</span>	}
+<span id="L643" class="ln">   643</span>	var yM3 = []float64{
+<span id="L644" class="ln">   644</span>		-0.14035984421094849100895341,
+<span id="L645" class="ln">   645</span>		-0.097535139617792072703973,
+<span id="L646" class="ln">   646</span>		242.25775994555580176377379,
+<span id="L647" class="ln">   647</span>		-0.1492267014802818619511046,
+<span id="L648" class="ln">   648</span>		0.26148702629155918694500469,
+<span id="L649" class="ln">   649</span>		0.56675383593895176530394248,
+<span id="L650" class="ln">   650</span>		-0.206150264009006981070575,
+<span id="L651" class="ln">   651</span>		0.64784284687568332737963658,
+<span id="L652" class="ln">   652</span>		1.3503631555901938037008443,
+<span id="L653" class="ln">   653</span>		0.1461869756579956803341844,
+<span id="L654" class="ln">   654</span>	}
+<span id="L655" class="ln">   655</span>	
+<span id="L656" class="ln">   656</span>	<span class="comment">// arguments and expected results for special cases</span>
+<span id="L657" class="ln">   657</span>	var vfacosSC = []float64{
+<span id="L658" class="ln">   658</span>		-Pi,
+<span id="L659" class="ln">   659</span>		1,
+<span id="L660" class="ln">   660</span>		Pi,
+<span id="L661" class="ln">   661</span>		NaN(),
+<span id="L662" class="ln">   662</span>	}
+<span id="L663" class="ln">   663</span>	var acosSC = []float64{
+<span id="L664" class="ln">   664</span>		NaN(),
+<span id="L665" class="ln">   665</span>		0,
+<span id="L666" class="ln">   666</span>		NaN(),
+<span id="L667" class="ln">   667</span>		NaN(),
+<span id="L668" class="ln">   668</span>	}
+<span id="L669" class="ln">   669</span>	
+<span id="L670" class="ln">   670</span>	var vfacoshSC = []float64{
+<span id="L671" class="ln">   671</span>		Inf(-1),
+<span id="L672" class="ln">   672</span>		0.5,
+<span id="L673" class="ln">   673</span>		1,
+<span id="L674" class="ln">   674</span>		Inf(1),
+<span id="L675" class="ln">   675</span>		NaN(),
+<span id="L676" class="ln">   676</span>	}
+<span id="L677" class="ln">   677</span>	var acoshSC = []float64{
+<span id="L678" class="ln">   678</span>		NaN(),
+<span id="L679" class="ln">   679</span>		NaN(),
+<span id="L680" class="ln">   680</span>		0,
+<span id="L681" class="ln">   681</span>		Inf(1),
+<span id="L682" class="ln">   682</span>		NaN(),
+<span id="L683" class="ln">   683</span>	}
+<span id="L684" class="ln">   684</span>	
+<span id="L685" class="ln">   685</span>	var vfasinSC = []float64{
+<span id="L686" class="ln">   686</span>		-Pi,
+<span id="L687" class="ln">   687</span>		Copysign(0, -1),
+<span id="L688" class="ln">   688</span>		0,
+<span id="L689" class="ln">   689</span>		Pi,
+<span id="L690" class="ln">   690</span>		NaN(),
+<span id="L691" class="ln">   691</span>	}
+<span id="L692" class="ln">   692</span>	var asinSC = []float64{
+<span id="L693" class="ln">   693</span>		NaN(),
+<span id="L694" class="ln">   694</span>		Copysign(0, -1),
+<span id="L695" class="ln">   695</span>		0,
+<span id="L696" class="ln">   696</span>		NaN(),
+<span id="L697" class="ln">   697</span>		NaN(),
+<span id="L698" class="ln">   698</span>	}
+<span id="L699" class="ln">   699</span>	
+<span id="L700" class="ln">   700</span>	var vfasinhSC = []float64{
+<span id="L701" class="ln">   701</span>		Inf(-1),
+<span id="L702" class="ln">   702</span>		Copysign(0, -1),
+<span id="L703" class="ln">   703</span>		0,
+<span id="L704" class="ln">   704</span>		Inf(1),
+<span id="L705" class="ln">   705</span>		NaN(),
+<span id="L706" class="ln">   706</span>	}
+<span id="L707" class="ln">   707</span>	var asinhSC = []float64{
+<span id="L708" class="ln">   708</span>		Inf(-1),
+<span id="L709" class="ln">   709</span>		Copysign(0, -1),
+<span id="L710" class="ln">   710</span>		0,
+<span id="L711" class="ln">   711</span>		Inf(1),
+<span id="L712" class="ln">   712</span>		NaN(),
+<span id="L713" class="ln">   713</span>	}
+<span id="L714" class="ln">   714</span>	
+<span id="L715" class="ln">   715</span>	var vfatanSC = []float64{
+<span id="L716" class="ln">   716</span>		Inf(-1),
+<span id="L717" class="ln">   717</span>		Copysign(0, -1),
+<span id="L718" class="ln">   718</span>		0,
+<span id="L719" class="ln">   719</span>		Inf(1),
+<span id="L720" class="ln">   720</span>		NaN(),
+<span id="L721" class="ln">   721</span>	}
+<span id="L722" class="ln">   722</span>	var atanSC = []float64{
+<span id="L723" class="ln">   723</span>		-Pi / 2,
+<span id="L724" class="ln">   724</span>		Copysign(0, -1),
+<span id="L725" class="ln">   725</span>		0,
+<span id="L726" class="ln">   726</span>		Pi / 2,
+<span id="L727" class="ln">   727</span>		NaN(),
+<span id="L728" class="ln">   728</span>	}
+<span id="L729" class="ln">   729</span>	
+<span id="L730" class="ln">   730</span>	var vfatanhSC = []float64{
+<span id="L731" class="ln">   731</span>		Inf(-1),
+<span id="L732" class="ln">   732</span>		-Pi,
+<span id="L733" class="ln">   733</span>		-1,
+<span id="L734" class="ln">   734</span>		Copysign(0, -1),
+<span id="L735" class="ln">   735</span>		0,
+<span id="L736" class="ln">   736</span>		1,
+<span id="L737" class="ln">   737</span>		Pi,
+<span id="L738" class="ln">   738</span>		Inf(1),
+<span id="L739" class="ln">   739</span>		NaN(),
+<span id="L740" class="ln">   740</span>	}
+<span id="L741" class="ln">   741</span>	var atanhSC = []float64{
+<span id="L742" class="ln">   742</span>		NaN(),
+<span id="L743" class="ln">   743</span>		NaN(),
+<span id="L744" class="ln">   744</span>		Inf(-1),
+<span id="L745" class="ln">   745</span>		Copysign(0, -1),
+<span id="L746" class="ln">   746</span>		0,
+<span id="L747" class="ln">   747</span>		Inf(1),
+<span id="L748" class="ln">   748</span>		NaN(),
+<span id="L749" class="ln">   749</span>		NaN(),
+<span id="L750" class="ln">   750</span>		NaN(),
+<span id="L751" class="ln">   751</span>	}
+<span id="L752" class="ln">   752</span>	var vfatan2SC = [][2]float64{
+<span id="L753" class="ln">   753</span>		{Inf(-1), Inf(-1)},
+<span id="L754" class="ln">   754</span>		{Inf(-1), -Pi},
+<span id="L755" class="ln">   755</span>		{Inf(-1), 0},
+<span id="L756" class="ln">   756</span>		{Inf(-1), +Pi},
+<span id="L757" class="ln">   757</span>		{Inf(-1), Inf(1)},
+<span id="L758" class="ln">   758</span>		{Inf(-1), NaN()},
+<span id="L759" class="ln">   759</span>		{-Pi, Inf(-1)},
+<span id="L760" class="ln">   760</span>		{-Pi, 0},
+<span id="L761" class="ln">   761</span>		{-Pi, Inf(1)},
+<span id="L762" class="ln">   762</span>		{-Pi, NaN()},
+<span id="L763" class="ln">   763</span>		{Copysign(0, -1), Inf(-1)},
+<span id="L764" class="ln">   764</span>		{Copysign(0, -1), -Pi},
+<span id="L765" class="ln">   765</span>		{Copysign(0, -1), Copysign(0, -1)},
+<span id="L766" class="ln">   766</span>		{Copysign(0, -1), 0},
+<span id="L767" class="ln">   767</span>		{Copysign(0, -1), +Pi},
+<span id="L768" class="ln">   768</span>		{Copysign(0, -1), Inf(1)},
+<span id="L769" class="ln">   769</span>		{Copysign(0, -1), NaN()},
+<span id="L770" class="ln">   770</span>		{0, Inf(-1)},
+<span id="L771" class="ln">   771</span>		{0, -Pi},
+<span id="L772" class="ln">   772</span>		{0, Copysign(0, -1)},
+<span id="L773" class="ln">   773</span>		{0, 0},
+<span id="L774" class="ln">   774</span>		{0, +Pi},
+<span id="L775" class="ln">   775</span>		{0, Inf(1)},
+<span id="L776" class="ln">   776</span>		{0, NaN()},
+<span id="L777" class="ln">   777</span>		{+Pi, Inf(-1)},
+<span id="L778" class="ln">   778</span>		{+Pi, 0},
+<span id="L779" class="ln">   779</span>		{+Pi, Inf(1)},
+<span id="L780" class="ln">   780</span>		{+Pi, NaN()},
+<span id="L781" class="ln">   781</span>		{Inf(1), Inf(-1)},
+<span id="L782" class="ln">   782</span>		{Inf(1), -Pi},
+<span id="L783" class="ln">   783</span>		{Inf(1), 0},
+<span id="L784" class="ln">   784</span>		{Inf(1), +Pi},
+<span id="L785" class="ln">   785</span>		{Inf(1), Inf(1)},
+<span id="L786" class="ln">   786</span>		{Inf(1), NaN()},
+<span id="L787" class="ln">   787</span>		{NaN(), NaN()},
+<span id="L788" class="ln">   788</span>	}
+<span id="L789" class="ln">   789</span>	var atan2SC = []float64{
+<span id="L790" class="ln">   790</span>		-3 * Pi / 4,     <span class="comment">// atan2(-Inf, -Inf)</span>
+<span id="L791" class="ln">   791</span>		-Pi / 2,         <span class="comment">// atan2(-Inf, -Pi)</span>
+<span id="L792" class="ln">   792</span>		-Pi / 2,         <span class="comment">// atan2(-Inf, +0)</span>
+<span id="L793" class="ln">   793</span>		-Pi / 2,         <span class="comment">// atan2(-Inf, +Pi)</span>
+<span id="L794" class="ln">   794</span>		-Pi / 4,         <span class="comment">// atan2(-Inf, +Inf)</span>
+<span id="L795" class="ln">   795</span>		NaN(),           <span class="comment">// atan2(-Inf, NaN)</span>
+<span id="L796" class="ln">   796</span>		-Pi,             <span class="comment">// atan2(-Pi, -Inf)</span>
+<span id="L797" class="ln">   797</span>		-Pi / 2,         <span class="comment">// atan2(-Pi, +0)</span>
+<span id="L798" class="ln">   798</span>		Copysign(0, -1), <span class="comment">// atan2(-Pi, Inf)</span>
+<span id="L799" class="ln">   799</span>		NaN(),           <span class="comment">// atan2(-Pi, NaN)</span>
+<span id="L800" class="ln">   800</span>		-Pi,             <span class="comment">// atan2(-0, -Inf)</span>
+<span id="L801" class="ln">   801</span>		-Pi,             <span class="comment">// atan2(-0, -Pi)</span>
+<span id="L802" class="ln">   802</span>		-Pi,             <span class="comment">// atan2(-0, -0)</span>
+<span id="L803" class="ln">   803</span>		Copysign(0, -1), <span class="comment">// atan2(-0, +0)</span>
+<span id="L804" class="ln">   804</span>		Copysign(0, -1), <span class="comment">// atan2(-0, +Pi)</span>
+<span id="L805" class="ln">   805</span>		Copysign(0, -1), <span class="comment">// atan2(-0, +Inf)</span>
+<span id="L806" class="ln">   806</span>		NaN(),           <span class="comment">// atan2(-0, NaN)</span>
+<span id="L807" class="ln">   807</span>		Pi,              <span class="comment">// atan2(+0, -Inf)</span>
+<span id="L808" class="ln">   808</span>		Pi,              <span class="comment">// atan2(+0, -Pi)</span>
+<span id="L809" class="ln">   809</span>		Pi,              <span class="comment">// atan2(+0, -0)</span>
+<span id="L810" class="ln">   810</span>		0,               <span class="comment">// atan2(+0, +0)</span>
+<span id="L811" class="ln">   811</span>		0,               <span class="comment">// atan2(+0, +Pi)</span>
+<span id="L812" class="ln">   812</span>		0,               <span class="comment">// atan2(+0, +Inf)</span>
+<span id="L813" class="ln">   813</span>		NaN(),           <span class="comment">// atan2(+0, NaN)</span>
+<span id="L814" class="ln">   814</span>		Pi,              <span class="comment">// atan2(+Pi, -Inf)</span>
+<span id="L815" class="ln">   815</span>		Pi / 2,          <span class="comment">// atan2(+Pi, +0)</span>
+<span id="L816" class="ln">   816</span>		0,               <span class="comment">// atan2(+Pi, +Inf)</span>
+<span id="L817" class="ln">   817</span>		NaN(),           <span class="comment">// atan2(+Pi, NaN)</span>
+<span id="L818" class="ln">   818</span>		3 * Pi / 4,      <span class="comment">// atan2(+Inf, -Inf)</span>
+<span id="L819" class="ln">   819</span>		Pi / 2,          <span class="comment">// atan2(+Inf, -Pi)</span>
+<span id="L820" class="ln">   820</span>		Pi / 2,          <span class="comment">// atan2(+Inf, +0)</span>
+<span id="L821" class="ln">   821</span>		Pi / 2,          <span class="comment">// atan2(+Inf, +Pi)</span>
+<span id="L822" class="ln">   822</span>		Pi / 4,          <span class="comment">// atan2(+Inf, +Inf)</span>
+<span id="L823" class="ln">   823</span>		NaN(),           <span class="comment">// atan2(+Inf, NaN)</span>
+<span id="L824" class="ln">   824</span>		NaN(),           <span class="comment">// atan2(NaN, NaN)</span>
+<span id="L825" class="ln">   825</span>	}
+<span id="L826" class="ln">   826</span>	
+<span id="L827" class="ln">   827</span>	var vfcbrtSC = []float64{
+<span id="L828" class="ln">   828</span>		Inf(-1),
+<span id="L829" class="ln">   829</span>		Copysign(0, -1),
+<span id="L830" class="ln">   830</span>		0,
+<span id="L831" class="ln">   831</span>		Inf(1),
+<span id="L832" class="ln">   832</span>		NaN(),
+<span id="L833" class="ln">   833</span>	}
+<span id="L834" class="ln">   834</span>	var cbrtSC = []float64{
+<span id="L835" class="ln">   835</span>		Inf(-1),
+<span id="L836" class="ln">   836</span>		Copysign(0, -1),
+<span id="L837" class="ln">   837</span>		0,
+<span id="L838" class="ln">   838</span>		Inf(1),
+<span id="L839" class="ln">   839</span>		NaN(),
+<span id="L840" class="ln">   840</span>	}
+<span id="L841" class="ln">   841</span>	
+<span id="L842" class="ln">   842</span>	var vfceilSC = []float64{
+<span id="L843" class="ln">   843</span>		Inf(-1),
+<span id="L844" class="ln">   844</span>		Copysign(0, -1),
+<span id="L845" class="ln">   845</span>		0,
+<span id="L846" class="ln">   846</span>		Inf(1),
+<span id="L847" class="ln">   847</span>		NaN(),
+<span id="L848" class="ln">   848</span>	}
+<span id="L849" class="ln">   849</span>	var ceilSC = []float64{
+<span id="L850" class="ln">   850</span>		Inf(-1),
+<span id="L851" class="ln">   851</span>		Copysign(0, -1),
+<span id="L852" class="ln">   852</span>		0,
+<span id="L853" class="ln">   853</span>		Inf(1),
+<span id="L854" class="ln">   854</span>		NaN(),
+<span id="L855" class="ln">   855</span>	}
+<span id="L856" class="ln">   856</span>	
+<span id="L857" class="ln">   857</span>	var vfcopysignSC = []float64{
+<span id="L858" class="ln">   858</span>		Inf(-1),
+<span id="L859" class="ln">   859</span>		Inf(1),
+<span id="L860" class="ln">   860</span>		NaN(),
+<span id="L861" class="ln">   861</span>	}
+<span id="L862" class="ln">   862</span>	var copysignSC = []float64{
+<span id="L863" class="ln">   863</span>		Inf(-1),
+<span id="L864" class="ln">   864</span>		Inf(-1),
+<span id="L865" class="ln">   865</span>		NaN(),
+<span id="L866" class="ln">   866</span>	}
+<span id="L867" class="ln">   867</span>	
+<span id="L868" class="ln">   868</span>	var vfcosSC = []float64{
+<span id="L869" class="ln">   869</span>		Inf(-1),
+<span id="L870" class="ln">   870</span>		Inf(1),
+<span id="L871" class="ln">   871</span>		NaN(),
+<span id="L872" class="ln">   872</span>	}
+<span id="L873" class="ln">   873</span>	var cosSC = []float64{
+<span id="L874" class="ln">   874</span>		NaN(),
+<span id="L875" class="ln">   875</span>		NaN(),
+<span id="L876" class="ln">   876</span>		NaN(),
+<span id="L877" class="ln">   877</span>	}
+<span id="L878" class="ln">   878</span>	
+<span id="L879" class="ln">   879</span>	var vfcoshSC = []float64{
+<span id="L880" class="ln">   880</span>		Inf(-1),
+<span id="L881" class="ln">   881</span>		Copysign(0, -1),
+<span id="L882" class="ln">   882</span>		0,
+<span id="L883" class="ln">   883</span>		Inf(1),
+<span id="L884" class="ln">   884</span>		NaN(),
+<span id="L885" class="ln">   885</span>	}
+<span id="L886" class="ln">   886</span>	var coshSC = []float64{
+<span id="L887" class="ln">   887</span>		Inf(1),
+<span id="L888" class="ln">   888</span>		1,
+<span id="L889" class="ln">   889</span>		1,
+<span id="L890" class="ln">   890</span>		Inf(1),
+<span id="L891" class="ln">   891</span>		NaN(),
+<span id="L892" class="ln">   892</span>	}
+<span id="L893" class="ln">   893</span>	
+<span id="L894" class="ln">   894</span>	var vferfSC = []float64{
+<span id="L895" class="ln">   895</span>		Inf(-1),
+<span id="L896" class="ln">   896</span>		Copysign(0, -1),
+<span id="L897" class="ln">   897</span>		0,
+<span id="L898" class="ln">   898</span>		Inf(1),
+<span id="L899" class="ln">   899</span>		NaN(),
+<span id="L900" class="ln">   900</span>	}
+<span id="L901" class="ln">   901</span>	var erfSC = []float64{
+<span id="L902" class="ln">   902</span>		-1,
+<span id="L903" class="ln">   903</span>		Copysign(0, -1),
+<span id="L904" class="ln">   904</span>		0,
+<span id="L905" class="ln">   905</span>		1,
+<span id="L906" class="ln">   906</span>		NaN(),
+<span id="L907" class="ln">   907</span>	}
+<span id="L908" class="ln">   908</span>	
+<span id="L909" class="ln">   909</span>	var vferfcSC = []float64{
+<span id="L910" class="ln">   910</span>		Inf(-1),
+<span id="L911" class="ln">   911</span>		Inf(1),
+<span id="L912" class="ln">   912</span>		NaN(),
+<span id="L913" class="ln">   913</span>	}
+<span id="L914" class="ln">   914</span>	var erfcSC = []float64{
+<span id="L915" class="ln">   915</span>		2,
+<span id="L916" class="ln">   916</span>		0,
+<span id="L917" class="ln">   917</span>		NaN(),
+<span id="L918" class="ln">   918</span>	}
+<span id="L919" class="ln">   919</span>	
+<span id="L920" class="ln">   920</span>	var vfexpSC = []float64{
+<span id="L921" class="ln">   921</span>		Inf(-1),
+<span id="L922" class="ln">   922</span>		-2000,
+<span id="L923" class="ln">   923</span>		2000,
+<span id="L924" class="ln">   924</span>		Inf(1),
+<span id="L925" class="ln">   925</span>		NaN(),
+<span id="L926" class="ln">   926</span>	}
+<span id="L927" class="ln">   927</span>	var expSC = []float64{
+<span id="L928" class="ln">   928</span>		0,
+<span id="L929" class="ln">   929</span>		0,
+<span id="L930" class="ln">   930</span>		Inf(1),
+<span id="L931" class="ln">   931</span>		Inf(1),
+<span id="L932" class="ln">   932</span>		NaN(),
+<span id="L933" class="ln">   933</span>	}
+<span id="L934" class="ln">   934</span>	
+<span id="L935" class="ln">   935</span>	var vfexpm1SC = []float64{
+<span id="L936" class="ln">   936</span>		Inf(-1),
+<span id="L937" class="ln">   937</span>		Copysign(0, -1),
+<span id="L938" class="ln">   938</span>		0,
+<span id="L939" class="ln">   939</span>		Inf(1),
+<span id="L940" class="ln">   940</span>		NaN(),
+<span id="L941" class="ln">   941</span>	}
+<span id="L942" class="ln">   942</span>	var expm1SC = []float64{
+<span id="L943" class="ln">   943</span>		-1,
+<span id="L944" class="ln">   944</span>		Copysign(0, -1),
+<span id="L945" class="ln">   945</span>		0,
+<span id="L946" class="ln">   946</span>		Inf(1),
+<span id="L947" class="ln">   947</span>		NaN(),
+<span id="L948" class="ln">   948</span>	}
+<span id="L949" class="ln">   949</span>	
+<span id="L950" class="ln">   950</span>	var vffabsSC = []float64{
+<span id="L951" class="ln">   951</span>		Inf(-1),
+<span id="L952" class="ln">   952</span>		Copysign(0, -1),
+<span id="L953" class="ln">   953</span>		0,
+<span id="L954" class="ln">   954</span>		Inf(1),
+<span id="L955" class="ln">   955</span>		NaN(),
+<span id="L956" class="ln">   956</span>	}
+<span id="L957" class="ln">   957</span>	var fabsSC = []float64{
+<span id="L958" class="ln">   958</span>		Inf(1),
+<span id="L959" class="ln">   959</span>		0,
+<span id="L960" class="ln">   960</span>		0,
+<span id="L961" class="ln">   961</span>		Inf(1),
+<span id="L962" class="ln">   962</span>		NaN(),
+<span id="L963" class="ln">   963</span>	}
+<span id="L964" class="ln">   964</span>	
+<span id="L965" class="ln">   965</span>	var vffdimSC = [][2]float64{
+<span id="L966" class="ln">   966</span>		{Inf(-1), Inf(-1)},
+<span id="L967" class="ln">   967</span>		{Inf(-1), Inf(1)},
+<span id="L968" class="ln">   968</span>		{Inf(-1), NaN()},
+<span id="L969" class="ln">   969</span>		{Copysign(0, -1), Copysign(0, -1)},
+<span id="L970" class="ln">   970</span>		{Copysign(0, -1), 0},
+<span id="L971" class="ln">   971</span>		{0, Copysign(0, -1)},
+<span id="L972" class="ln">   972</span>		{0, 0},
+<span id="L973" class="ln">   973</span>		{Inf(1), Inf(-1)},
+<span id="L974" class="ln">   974</span>		{Inf(1), Inf(1)},
+<span id="L975" class="ln">   975</span>		{Inf(1), NaN()},
+<span id="L976" class="ln">   976</span>		{NaN(), Inf(-1)},
+<span id="L977" class="ln">   977</span>		{NaN(), Copysign(0, -1)},
+<span id="L978" class="ln">   978</span>		{NaN(), 0},
+<span id="L979" class="ln">   979</span>		{NaN(), Inf(1)},
+<span id="L980" class="ln">   980</span>		{NaN(), NaN()},
+<span id="L981" class="ln">   981</span>	}
+<span id="L982" class="ln">   982</span>	var fdimSC = []float64{
+<span id="L983" class="ln">   983</span>		NaN(),
+<span id="L984" class="ln">   984</span>		0,
+<span id="L985" class="ln">   985</span>		NaN(),
+<span id="L986" class="ln">   986</span>		0,
+<span id="L987" class="ln">   987</span>		0,
+<span id="L988" class="ln">   988</span>		0,
+<span id="L989" class="ln">   989</span>		0,
+<span id="L990" class="ln">   990</span>		Inf(1),
+<span id="L991" class="ln">   991</span>		NaN(),
+<span id="L992" class="ln">   992</span>		NaN(),
+<span id="L993" class="ln">   993</span>		NaN(),
+<span id="L994" class="ln">   994</span>		NaN(),
+<span id="L995" class="ln">   995</span>		NaN(),
+<span id="L996" class="ln">   996</span>		NaN(),
+<span id="L997" class="ln">   997</span>		NaN(),
+<span id="L998" class="ln">   998</span>	}
+<span id="L999" class="ln">   999</span>	var fmaxSC = []float64{
+<span id="L1000" class="ln">  1000</span>		Inf(-1),
+<span id="L1001" class="ln">  1001</span>		Inf(1),
+<span id="L1002" class="ln">  1002</span>		NaN(),
+<span id="L1003" class="ln">  1003</span>		Copysign(0, -1),
+<span id="L1004" class="ln">  1004</span>		0,
+<span id="L1005" class="ln">  1005</span>		0,
+<span id="L1006" class="ln">  1006</span>		0,
+<span id="L1007" class="ln">  1007</span>		Inf(1),
+<span id="L1008" class="ln">  1008</span>		Inf(1),
+<span id="L1009" class="ln">  1009</span>		Inf(1),
+<span id="L1010" class="ln">  1010</span>		NaN(),
+<span id="L1011" class="ln">  1011</span>		NaN(),
+<span id="L1012" class="ln">  1012</span>		NaN(),
+<span id="L1013" class="ln">  1013</span>		Inf(1),
+<span id="L1014" class="ln">  1014</span>		NaN(),
+<span id="L1015" class="ln">  1015</span>	}
+<span id="L1016" class="ln">  1016</span>	var fminSC = []float64{
+<span id="L1017" class="ln">  1017</span>		Inf(-1),
+<span id="L1018" class="ln">  1018</span>		Inf(-1),
+<span id="L1019" class="ln">  1019</span>		Inf(-1),
+<span id="L1020" class="ln">  1020</span>		Copysign(0, -1),
+<span id="L1021" class="ln">  1021</span>		Copysign(0, -1),
+<span id="L1022" class="ln">  1022</span>		Copysign(0, -1),
+<span id="L1023" class="ln">  1023</span>		0,
+<span id="L1024" class="ln">  1024</span>		Inf(-1),
+<span id="L1025" class="ln">  1025</span>		Inf(1),
+<span id="L1026" class="ln">  1026</span>		NaN(),
+<span id="L1027" class="ln">  1027</span>		Inf(-1),
+<span id="L1028" class="ln">  1028</span>		NaN(),
+<span id="L1029" class="ln">  1029</span>		NaN(),
+<span id="L1030" class="ln">  1030</span>		NaN(),
+<span id="L1031" class="ln">  1031</span>		NaN(),
+<span id="L1032" class="ln">  1032</span>	}
+<span id="L1033" class="ln">  1033</span>	
+<span id="L1034" class="ln">  1034</span>	var vffmodSC = [][2]float64{
+<span id="L1035" class="ln">  1035</span>		{Inf(-1), Inf(-1)},
+<span id="L1036" class="ln">  1036</span>		{Inf(-1), -Pi},
+<span id="L1037" class="ln">  1037</span>		{Inf(-1), 0},
+<span id="L1038" class="ln">  1038</span>		{Inf(-1), Pi},
+<span id="L1039" class="ln">  1039</span>		{Inf(-1), Inf(1)},
+<span id="L1040" class="ln">  1040</span>		{Inf(-1), NaN()},
+<span id="L1041" class="ln">  1041</span>		{-Pi, Inf(-1)},
+<span id="L1042" class="ln">  1042</span>		{-Pi, 0},
+<span id="L1043" class="ln">  1043</span>		{-Pi, Inf(1)},
+<span id="L1044" class="ln">  1044</span>		{-Pi, NaN()},
+<span id="L1045" class="ln">  1045</span>		{Copysign(0, -1), Inf(-1)},
+<span id="L1046" class="ln">  1046</span>		{Copysign(0, -1), 0},
+<span id="L1047" class="ln">  1047</span>		{Copysign(0, -1), Inf(1)},
+<span id="L1048" class="ln">  1048</span>		{Copysign(0, -1), NaN()},
+<span id="L1049" class="ln">  1049</span>		{0, Inf(-1)},
+<span id="L1050" class="ln">  1050</span>		{0, 0},
+<span id="L1051" class="ln">  1051</span>		{0, Inf(1)},
+<span id="L1052" class="ln">  1052</span>		{0, NaN()},
+<span id="L1053" class="ln">  1053</span>		{Pi, Inf(-1)},
+<span id="L1054" class="ln">  1054</span>		{Pi, 0},
+<span id="L1055" class="ln">  1055</span>		{Pi, Inf(1)},
+<span id="L1056" class="ln">  1056</span>		{Pi, NaN()},
+<span id="L1057" class="ln">  1057</span>		{Inf(1), Inf(-1)},
+<span id="L1058" class="ln">  1058</span>		{Inf(1), -Pi},
+<span id="L1059" class="ln">  1059</span>		{Inf(1), 0},
+<span id="L1060" class="ln">  1060</span>		{Inf(1), Pi},
+<span id="L1061" class="ln">  1061</span>		{Inf(1), Inf(1)},
+<span id="L1062" class="ln">  1062</span>		{Inf(1), NaN()},
+<span id="L1063" class="ln">  1063</span>		{NaN(), Inf(-1)},
+<span id="L1064" class="ln">  1064</span>		{NaN(), -Pi},
+<span id="L1065" class="ln">  1065</span>		{NaN(), 0},
+<span id="L1066" class="ln">  1066</span>		{NaN(), Pi},
+<span id="L1067" class="ln">  1067</span>		{NaN(), Inf(1)},
+<span id="L1068" class="ln">  1068</span>		{NaN(), NaN()},
+<span id="L1069" class="ln">  1069</span>	}
+<span id="L1070" class="ln">  1070</span>	var fmodSC = []float64{
+<span id="L1071" class="ln">  1071</span>		NaN(),           <span class="comment">// fmod(-Inf, -Inf)</span>
+<span id="L1072" class="ln">  1072</span>		NaN(),           <span class="comment">// fmod(-Inf, -Pi)</span>
+<span id="L1073" class="ln">  1073</span>		NaN(),           <span class="comment">// fmod(-Inf, 0)</span>
+<span id="L1074" class="ln">  1074</span>		NaN(),           <span class="comment">// fmod(-Inf, Pi)</span>
+<span id="L1075" class="ln">  1075</span>		NaN(),           <span class="comment">// fmod(-Inf, +Inf)</span>
+<span id="L1076" class="ln">  1076</span>		NaN(),           <span class="comment">// fmod(-Inf, NaN)</span>
+<span id="L1077" class="ln">  1077</span>		-Pi,             <span class="comment">// fmod(-Pi, -Inf)</span>
+<span id="L1078" class="ln">  1078</span>		NaN(),           <span class="comment">// fmod(-Pi, 0)</span>
+<span id="L1079" class="ln">  1079</span>		-Pi,             <span class="comment">// fmod(-Pi, +Inf)</span>
+<span id="L1080" class="ln">  1080</span>		NaN(),           <span class="comment">// fmod(-Pi, NaN)</span>
+<span id="L1081" class="ln">  1081</span>		Copysign(0, -1), <span class="comment">// fmod(-0, -Inf)</span>
+<span id="L1082" class="ln">  1082</span>		NaN(),           <span class="comment">// fmod(-0, 0)</span>
+<span id="L1083" class="ln">  1083</span>		Copysign(0, -1), <span class="comment">// fmod(-0, Inf)</span>
+<span id="L1084" class="ln">  1084</span>		NaN(),           <span class="comment">// fmod(-0, NaN)</span>
+<span id="L1085" class="ln">  1085</span>		0,               <span class="comment">// fmod(0, -Inf)</span>
+<span id="L1086" class="ln">  1086</span>		NaN(),           <span class="comment">// fmod(0, 0)</span>
+<span id="L1087" class="ln">  1087</span>		0,               <span class="comment">// fmod(0, +Inf)</span>
+<span id="L1088" class="ln">  1088</span>		NaN(),           <span class="comment">// fmod(0, NaN)</span>
+<span id="L1089" class="ln">  1089</span>		Pi,              <span class="comment">// fmod(Pi, -Inf)</span>
+<span id="L1090" class="ln">  1090</span>		NaN(),           <span class="comment">// fmod(Pi, 0)</span>
+<span id="L1091" class="ln">  1091</span>		Pi,              <span class="comment">// fmod(Pi, +Inf)</span>
+<span id="L1092" class="ln">  1092</span>		NaN(),           <span class="comment">// fmod(Pi, NaN)</span>
+<span id="L1093" class="ln">  1093</span>		NaN(),           <span class="comment">// fmod(+Inf, -Inf)</span>
+<span id="L1094" class="ln">  1094</span>		NaN(),           <span class="comment">// fmod(+Inf, -Pi)</span>
+<span id="L1095" class="ln">  1095</span>		NaN(),           <span class="comment">// fmod(+Inf, 0)</span>
+<span id="L1096" class="ln">  1096</span>		NaN(),           <span class="comment">// fmod(+Inf, Pi)</span>
+<span id="L1097" class="ln">  1097</span>		NaN(),           <span class="comment">// fmod(+Inf, +Inf)</span>
+<span id="L1098" class="ln">  1098</span>		NaN(),           <span class="comment">// fmod(+Inf, NaN)</span>
+<span id="L1099" class="ln">  1099</span>		NaN(),           <span class="comment">// fmod(NaN, -Inf)</span>
+<span id="L1100" class="ln">  1100</span>		NaN(),           <span class="comment">// fmod(NaN, -Pi)</span>
+<span id="L1101" class="ln">  1101</span>		NaN(),           <span class="comment">// fmod(NaN, 0)</span>
+<span id="L1102" class="ln">  1102</span>		NaN(),           <span class="comment">// fmod(NaN, Pi)</span>
+<span id="L1103" class="ln">  1103</span>		NaN(),           <span class="comment">// fmod(NaN, +Inf)</span>
+<span id="L1104" class="ln">  1104</span>		NaN(),           <span class="comment">// fmod(NaN, NaN)</span>
+<span id="L1105" class="ln">  1105</span>	}
+<span id="L1106" class="ln">  1106</span>	
+<span id="L1107" class="ln">  1107</span>	var vffrexpSC = []float64{
+<span id="L1108" class="ln">  1108</span>		Inf(-1),
+<span id="L1109" class="ln">  1109</span>		Copysign(0, -1),
+<span id="L1110" class="ln">  1110</span>		0,
+<span id="L1111" class="ln">  1111</span>		Inf(1),
+<span id="L1112" class="ln">  1112</span>		NaN(),
+<span id="L1113" class="ln">  1113</span>	}
+<span id="L1114" class="ln">  1114</span>	var frexpSC = []fi{
+<span id="L1115" class="ln">  1115</span>		{Inf(-1), 0},
+<span id="L1116" class="ln">  1116</span>		{Copysign(0, -1), 0},
+<span id="L1117" class="ln">  1117</span>		{0, 0},
+<span id="L1118" class="ln">  1118</span>		{Inf(1), 0},
+<span id="L1119" class="ln">  1119</span>		{NaN(), 0},
+<span id="L1120" class="ln">  1120</span>	}
+<span id="L1121" class="ln">  1121</span>	
+<span id="L1122" class="ln">  1122</span>	var vfgammaSC = []float64{
+<span id="L1123" class="ln">  1123</span>		Inf(-1),
+<span id="L1124" class="ln">  1124</span>		-3,
+<span id="L1125" class="ln">  1125</span>		Copysign(0, -1),
+<span id="L1126" class="ln">  1126</span>		0,
+<span id="L1127" class="ln">  1127</span>		Inf(1),
+<span id="L1128" class="ln">  1128</span>		NaN(),
+<span id="L1129" class="ln">  1129</span>	}
+<span id="L1130" class="ln">  1130</span>	var gammaSC = []float64{
+<span id="L1131" class="ln">  1131</span>		NaN(),
+<span id="L1132" class="ln">  1132</span>		NaN(),
+<span id="L1133" class="ln">  1133</span>		Inf(-1),
+<span id="L1134" class="ln">  1134</span>		Inf(1),
+<span id="L1135" class="ln">  1135</span>		Inf(1),
+<span id="L1136" class="ln">  1136</span>		NaN(),
+<span id="L1137" class="ln">  1137</span>	}
+<span id="L1138" class="ln">  1138</span>	
+<span id="L1139" class="ln">  1139</span>	var vfhypotSC = [][2]float64{
+<span id="L1140" class="ln">  1140</span>		{Inf(-1), Inf(-1)},
+<span id="L1141" class="ln">  1141</span>		{Inf(-1), 0},
+<span id="L1142" class="ln">  1142</span>		{Inf(-1), Inf(1)},
+<span id="L1143" class="ln">  1143</span>		{Inf(-1), NaN()},
+<span id="L1144" class="ln">  1144</span>		{Copysign(0, -1), Copysign(0, -1)},
+<span id="L1145" class="ln">  1145</span>		{Copysign(0, -1), 0},
+<span id="L1146" class="ln">  1146</span>		{0, Copysign(0, -1)},
+<span id="L1147" class="ln">  1147</span>		{0, 0}, <span class="comment">// +0, +0</span>
+<span id="L1148" class="ln">  1148</span>		{0, Inf(-1)},
+<span id="L1149" class="ln">  1149</span>		{0, Inf(1)},
+<span id="L1150" class="ln">  1150</span>		{0, NaN()},
+<span id="L1151" class="ln">  1151</span>		{Inf(1), Inf(-1)},
+<span id="L1152" class="ln">  1152</span>		{Inf(1), 0},
+<span id="L1153" class="ln">  1153</span>		{Inf(1), Inf(1)},
+<span id="L1154" class="ln">  1154</span>		{Inf(1), NaN()},
+<span id="L1155" class="ln">  1155</span>		{NaN(), Inf(-1)},
+<span id="L1156" class="ln">  1156</span>		{NaN(), 0},
+<span id="L1157" class="ln">  1157</span>		{NaN(), Inf(1)},
+<span id="L1158" class="ln">  1158</span>		{NaN(), NaN()},
+<span id="L1159" class="ln">  1159</span>	}
+<span id="L1160" class="ln">  1160</span>	var hypotSC = []float64{
+<span id="L1161" class="ln">  1161</span>		Inf(1),
+<span id="L1162" class="ln">  1162</span>		Inf(1),
+<span id="L1163" class="ln">  1163</span>		Inf(1),
+<span id="L1164" class="ln">  1164</span>		Inf(1),
+<span id="L1165" class="ln">  1165</span>		0,
+<span id="L1166" class="ln">  1166</span>		0,
+<span id="L1167" class="ln">  1167</span>		0,
+<span id="L1168" class="ln">  1168</span>		0,
+<span id="L1169" class="ln">  1169</span>		Inf(1),
+<span id="L1170" class="ln">  1170</span>		Inf(1),
+<span id="L1171" class="ln">  1171</span>		NaN(),
+<span id="L1172" class="ln">  1172</span>		Inf(1),
+<span id="L1173" class="ln">  1173</span>		Inf(1),
+<span id="L1174" class="ln">  1174</span>		Inf(1),
+<span id="L1175" class="ln">  1175</span>		Inf(1),
+<span id="L1176" class="ln">  1176</span>		Inf(1),
+<span id="L1177" class="ln">  1177</span>		NaN(),
+<span id="L1178" class="ln">  1178</span>		Inf(1),
+<span id="L1179" class="ln">  1179</span>		NaN(),
+<span id="L1180" class="ln">  1180</span>	}
+<span id="L1181" class="ln">  1181</span>	
+<span id="L1182" class="ln">  1182</span>	var vfilogbSC = []float64{
+<span id="L1183" class="ln">  1183</span>		Inf(-1),
+<span id="L1184" class="ln">  1184</span>		0,
+<span id="L1185" class="ln">  1185</span>		Inf(1),
+<span id="L1186" class="ln">  1186</span>		NaN(),
+<span id="L1187" class="ln">  1187</span>	}
+<span id="L1188" class="ln">  1188</span>	var ilogbSC = []int{
+<span id="L1189" class="ln">  1189</span>		MaxInt32,
+<span id="L1190" class="ln">  1190</span>		MinInt32,
+<span id="L1191" class="ln">  1191</span>		MaxInt32,
+<span id="L1192" class="ln">  1192</span>		MaxInt32,
+<span id="L1193" class="ln">  1193</span>	}
+<span id="L1194" class="ln">  1194</span>	
+<span id="L1195" class="ln">  1195</span>	var vfj0SC = []float64{
+<span id="L1196" class="ln">  1196</span>		Inf(-1),
+<span id="L1197" class="ln">  1197</span>		0,
+<span id="L1198" class="ln">  1198</span>		Inf(1),
+<span id="L1199" class="ln">  1199</span>		NaN(),
+<span id="L1200" class="ln">  1200</span>	}
+<span id="L1201" class="ln">  1201</span>	var j0SC = []float64{
+<span id="L1202" class="ln">  1202</span>		0,
+<span id="L1203" class="ln">  1203</span>		1,
+<span id="L1204" class="ln">  1204</span>		0,
+<span id="L1205" class="ln">  1205</span>		NaN(),
+<span id="L1206" class="ln">  1206</span>	}
+<span id="L1207" class="ln">  1207</span>	var j1SC = []float64{
+<span id="L1208" class="ln">  1208</span>		0,
+<span id="L1209" class="ln">  1209</span>		0,
+<span id="L1210" class="ln">  1210</span>		0,
+<span id="L1211" class="ln">  1211</span>		NaN(),
+<span id="L1212" class="ln">  1212</span>	}
+<span id="L1213" class="ln">  1213</span>	var j2SC = []float64{
+<span id="L1214" class="ln">  1214</span>		0,
+<span id="L1215" class="ln">  1215</span>		0,
+<span id="L1216" class="ln">  1216</span>		0,
+<span id="L1217" class="ln">  1217</span>		NaN(),
+<span id="L1218" class="ln">  1218</span>	}
+<span id="L1219" class="ln">  1219</span>	var jM3SC = []float64{
+<span id="L1220" class="ln">  1220</span>		0,
+<span id="L1221" class="ln">  1221</span>		0,
+<span id="L1222" class="ln">  1222</span>		0,
+<span id="L1223" class="ln">  1223</span>		NaN(),
+<span id="L1224" class="ln">  1224</span>	}
+<span id="L1225" class="ln">  1225</span>	
+<span id="L1226" class="ln">  1226</span>	var vfldexpSC = []fi{
+<span id="L1227" class="ln">  1227</span>		{0, 0},
+<span id="L1228" class="ln">  1228</span>		{0, -1075},
+<span id="L1229" class="ln">  1229</span>		{0, 1024},
+<span id="L1230" class="ln">  1230</span>		{Copysign(0, -1), 0},
+<span id="L1231" class="ln">  1231</span>		{Copysign(0, -1), -1075},
+<span id="L1232" class="ln">  1232</span>		{Copysign(0, -1), 1024},
+<span id="L1233" class="ln">  1233</span>		{Inf(1), 0},
+<span id="L1234" class="ln">  1234</span>		{Inf(1), -1024},
+<span id="L1235" class="ln">  1235</span>		{Inf(-1), 0},
+<span id="L1236" class="ln">  1236</span>		{Inf(-1), -1024},
+<span id="L1237" class="ln">  1237</span>		{NaN(), -1024},
+<span id="L1238" class="ln">  1238</span>	}
+<span id="L1239" class="ln">  1239</span>	var ldexpSC = []float64{
+<span id="L1240" class="ln">  1240</span>		0,
+<span id="L1241" class="ln">  1241</span>		0,
+<span id="L1242" class="ln">  1242</span>		0,
+<span id="L1243" class="ln">  1243</span>		Copysign(0, -1),
+<span id="L1244" class="ln">  1244</span>		Copysign(0, -1),
+<span id="L1245" class="ln">  1245</span>		Copysign(0, -1),
+<span id="L1246" class="ln">  1246</span>		Inf(1),
+<span id="L1247" class="ln">  1247</span>		Inf(1),
+<span id="L1248" class="ln">  1248</span>		Inf(-1),
+<span id="L1249" class="ln">  1249</span>		Inf(-1),
+<span id="L1250" class="ln">  1250</span>		NaN(),
+<span id="L1251" class="ln">  1251</span>	}
+<span id="L1252" class="ln">  1252</span>	
+<span id="L1253" class="ln">  1253</span>	var vflgammaSC = []float64{
+<span id="L1254" class="ln">  1254</span>		Inf(-1),
+<span id="L1255" class="ln">  1255</span>		-3,
+<span id="L1256" class="ln">  1256</span>		0,
+<span id="L1257" class="ln">  1257</span>		1,
+<span id="L1258" class="ln">  1258</span>		2,
+<span id="L1259" class="ln">  1259</span>		Inf(1),
+<span id="L1260" class="ln">  1260</span>		NaN(),
+<span id="L1261" class="ln">  1261</span>	}
+<span id="L1262" class="ln">  1262</span>	var lgammaSC = []fi{
+<span id="L1263" class="ln">  1263</span>		{Inf(-1), 1},
+<span id="L1264" class="ln">  1264</span>		{Inf(1), 1},
+<span id="L1265" class="ln">  1265</span>		{Inf(1), 1},
+<span id="L1266" class="ln">  1266</span>		{0, 1},
+<span id="L1267" class="ln">  1267</span>		{0, 1},
+<span id="L1268" class="ln">  1268</span>		{Inf(1), 1},
+<span id="L1269" class="ln">  1269</span>		{NaN(), 1},
+<span id="L1270" class="ln">  1270</span>	}
+<span id="L1271" class="ln">  1271</span>	
+<span id="L1272" class="ln">  1272</span>	var vflogSC = []float64{
+<span id="L1273" class="ln">  1273</span>		Inf(-1),
+<span id="L1274" class="ln">  1274</span>		-Pi,
+<span id="L1275" class="ln">  1275</span>		Copysign(0, -1),
+<span id="L1276" class="ln">  1276</span>		0,
+<span id="L1277" class="ln">  1277</span>		1,
+<span id="L1278" class="ln">  1278</span>		Inf(1),
+<span id="L1279" class="ln">  1279</span>		NaN(),
+<span id="L1280" class="ln">  1280</span>	}
+<span id="L1281" class="ln">  1281</span>	var logSC = []float64{
+<span id="L1282" class="ln">  1282</span>		NaN(),
+<span id="L1283" class="ln">  1283</span>		NaN(),
+<span id="L1284" class="ln">  1284</span>		Inf(-1),
+<span id="L1285" class="ln">  1285</span>		Inf(-1),
+<span id="L1286" class="ln">  1286</span>		0,
+<span id="L1287" class="ln">  1287</span>		Inf(1),
+<span id="L1288" class="ln">  1288</span>		NaN(),
+<span id="L1289" class="ln">  1289</span>	}
+<span id="L1290" class="ln">  1290</span>	
+<span id="L1291" class="ln">  1291</span>	var vflogbSC = []float64{
+<span id="L1292" class="ln">  1292</span>		Inf(-1),
+<span id="L1293" class="ln">  1293</span>		0,
+<span id="L1294" class="ln">  1294</span>		Inf(1),
+<span id="L1295" class="ln">  1295</span>		NaN(),
+<span id="L1296" class="ln">  1296</span>	}
+<span id="L1297" class="ln">  1297</span>	var logbSC = []float64{
+<span id="L1298" class="ln">  1298</span>		Inf(1),
+<span id="L1299" class="ln">  1299</span>		Inf(-1),
+<span id="L1300" class="ln">  1300</span>		Inf(1),
+<span id="L1301" class="ln">  1301</span>		NaN(),
+<span id="L1302" class="ln">  1302</span>	}
+<span id="L1303" class="ln">  1303</span>	
+<span id="L1304" class="ln">  1304</span>	var vflog1pSC = []float64{
+<span id="L1305" class="ln">  1305</span>		Inf(-1),
+<span id="L1306" class="ln">  1306</span>		-Pi,
+<span id="L1307" class="ln">  1307</span>		-1,
+<span id="L1308" class="ln">  1308</span>		Copysign(0, -1),
+<span id="L1309" class="ln">  1309</span>		0,
+<span id="L1310" class="ln">  1310</span>		Inf(1),
+<span id="L1311" class="ln">  1311</span>		NaN(),
+<span id="L1312" class="ln">  1312</span>	}
+<span id="L1313" class="ln">  1313</span>	var log1pSC = []float64{
+<span id="L1314" class="ln">  1314</span>		NaN(),
+<span id="L1315" class="ln">  1315</span>		NaN(),
+<span id="L1316" class="ln">  1316</span>		Inf(-1),
+<span id="L1317" class="ln">  1317</span>		Copysign(0, -1),
+<span id="L1318" class="ln">  1318</span>		0,
+<span id="L1319" class="ln">  1319</span>		Inf(1),
+<span id="L1320" class="ln">  1320</span>		NaN(),
+<span id="L1321" class="ln">  1321</span>	}
+<span id="L1322" class="ln">  1322</span>	
+<span id="L1323" class="ln">  1323</span>	var vfmodfSC = []float64{
+<span id="L1324" class="ln">  1324</span>		Inf(-1),
+<span id="L1325" class="ln">  1325</span>		Inf(1),
+<span id="L1326" class="ln">  1326</span>		NaN(),
+<span id="L1327" class="ln">  1327</span>	}
+<span id="L1328" class="ln">  1328</span>	var modfSC = [][2]float64{
+<span id="L1329" class="ln">  1329</span>		{Inf(-1), NaN()}, <span class="comment">// [2]float64{Copysign(0, -1), Inf(-1)},</span>
+<span id="L1330" class="ln">  1330</span>		{Inf(1), NaN()},  <span class="comment">// [2]float64{0, Inf(1)},</span>
+<span id="L1331" class="ln">  1331</span>		{NaN(), NaN()},
+<span id="L1332" class="ln">  1332</span>	}
+<span id="L1333" class="ln">  1333</span>	
+<span id="L1334" class="ln">  1334</span>	var vfnextafterSC = [][2]float64{
+<span id="L1335" class="ln">  1335</span>		{0, 0},
+<span id="L1336" class="ln">  1336</span>		{0, Copysign(0, -1)},
+<span id="L1337" class="ln">  1337</span>		{0, -1},
+<span id="L1338" class="ln">  1338</span>		{0, NaN()},
+<span id="L1339" class="ln">  1339</span>		{Copysign(0, -1), 1},
+<span id="L1340" class="ln">  1340</span>		{Copysign(0, -1), 0},
+<span id="L1341" class="ln">  1341</span>		{Copysign(0, -1), Copysign(0, -1)},
+<span id="L1342" class="ln">  1342</span>		{Copysign(0, -1), -1},
+<span id="L1343" class="ln">  1343</span>		{NaN(), 0},
+<span id="L1344" class="ln">  1344</span>		{NaN(), NaN()},
+<span id="L1345" class="ln">  1345</span>	}
+<span id="L1346" class="ln">  1346</span>	var nextafterSC = []float64{
+<span id="L1347" class="ln">  1347</span>		0,
+<span id="L1348" class="ln">  1348</span>		0,
+<span id="L1349" class="ln">  1349</span>		-4.9406564584124654418e-324, <span class="comment">// Float64frombits(0x8000000000000001)</span>
+<span id="L1350" class="ln">  1350</span>		NaN(),
+<span id="L1351" class="ln">  1351</span>		4.9406564584124654418e-324, <span class="comment">// Float64frombits(0x0000000000000001)</span>
+<span id="L1352" class="ln">  1352</span>		Copysign(0, -1),
+<span id="L1353" class="ln">  1353</span>		Copysign(0, -1),
+<span id="L1354" class="ln">  1354</span>		-4.9406564584124654418e-324, <span class="comment">// Float64frombits(0x8000000000000001)</span>
+<span id="L1355" class="ln">  1355</span>		NaN(),
+<span id="L1356" class="ln">  1356</span>		NaN(),
+<span id="L1357" class="ln">  1357</span>	}
+<span id="L1358" class="ln">  1358</span>	
+<span id="L1359" class="ln">  1359</span>	var vfpowSC = [][2]float64{
+<span id="L1360" class="ln">  1360</span>		{Inf(-1), -Pi},
+<span id="L1361" class="ln">  1361</span>		{Inf(-1), -3},
+<span id="L1362" class="ln">  1362</span>		{Inf(-1), Copysign(0, -1)},
+<span id="L1363" class="ln">  1363</span>		{Inf(-1), 0},
+<span id="L1364" class="ln">  1364</span>		{Inf(-1), 1},
+<span id="L1365" class="ln">  1365</span>		{Inf(-1), 3},
+<span id="L1366" class="ln">  1366</span>		{Inf(-1), Pi},
+<span id="L1367" class="ln">  1367</span>		{Inf(-1), NaN()},
+<span id="L1368" class="ln">  1368</span>	
+<span id="L1369" class="ln">  1369</span>		{-Pi, Inf(-1)},
+<span id="L1370" class="ln">  1370</span>		{-Pi, -Pi},
+<span id="L1371" class="ln">  1371</span>		{-Pi, Copysign(0, -1)},
+<span id="L1372" class="ln">  1372</span>		{-Pi, 0},
+<span id="L1373" class="ln">  1373</span>		{-Pi, 1},
+<span id="L1374" class="ln">  1374</span>		{-Pi, Pi},
+<span id="L1375" class="ln">  1375</span>		{-Pi, Inf(1)},
+<span id="L1376" class="ln">  1376</span>		{-Pi, NaN()},
+<span id="L1377" class="ln">  1377</span>	
+<span id="L1378" class="ln">  1378</span>		{-1, Inf(-1)},
+<span id="L1379" class="ln">  1379</span>		{-1, Inf(1)},
+<span id="L1380" class="ln">  1380</span>		{-1, NaN()},
+<span id="L1381" class="ln">  1381</span>		{-1 / 2, Inf(-1)},
+<span id="L1382" class="ln">  1382</span>		{-1 / 2, Inf(1)},
+<span id="L1383" class="ln">  1383</span>		{Copysign(0, -1), Inf(-1)},
+<span id="L1384" class="ln">  1384</span>		{Copysign(0, -1), -Pi},
+<span id="L1385" class="ln">  1385</span>		{Copysign(0, -1), -3},
+<span id="L1386" class="ln">  1386</span>		{Copysign(0, -1), 3},
+<span id="L1387" class="ln">  1387</span>		{Copysign(0, -1), Pi},
+<span id="L1388" class="ln">  1388</span>		{Copysign(0, -1), Inf(1)},
+<span id="L1389" class="ln">  1389</span>	
+<span id="L1390" class="ln">  1390</span>		{0, Inf(-1)},
+<span id="L1391" class="ln">  1391</span>		{0, -Pi},
+<span id="L1392" class="ln">  1392</span>		{0, -3},
+<span id="L1393" class="ln">  1393</span>		{0, Copysign(0, -1)},
+<span id="L1394" class="ln">  1394</span>		{0, 0},
+<span id="L1395" class="ln">  1395</span>		{0, 3},
+<span id="L1396" class="ln">  1396</span>		{0, Pi},
+<span id="L1397" class="ln">  1397</span>		{0, Inf(1)},
+<span id="L1398" class="ln">  1398</span>		{0, NaN()},
+<span id="L1399" class="ln">  1399</span>	
+<span id="L1400" class="ln">  1400</span>		{1 / 2, Inf(-1)},
+<span id="L1401" class="ln">  1401</span>		{1 / 2, Inf(1)},
+<span id="L1402" class="ln">  1402</span>		{1, Inf(-1)},
+<span id="L1403" class="ln">  1403</span>		{1, Inf(1)},
+<span id="L1404" class="ln">  1404</span>		{1, NaN()},
+<span id="L1405" class="ln">  1405</span>	
+<span id="L1406" class="ln">  1406</span>		{Pi, Inf(-1)},
+<span id="L1407" class="ln">  1407</span>		{Pi, Copysign(0, -1)},
+<span id="L1408" class="ln">  1408</span>		{Pi, 0},
+<span id="L1409" class="ln">  1409</span>		{Pi, 1},
+<span id="L1410" class="ln">  1410</span>		{Pi, Inf(1)},
+<span id="L1411" class="ln">  1411</span>		{Pi, NaN()},
+<span id="L1412" class="ln">  1412</span>		{Inf(1), -Pi},
+<span id="L1413" class="ln">  1413</span>		{Inf(1), Copysign(0, -1)},
+<span id="L1414" class="ln">  1414</span>		{Inf(1), 0},
+<span id="L1415" class="ln">  1415</span>		{Inf(1), 1},
+<span id="L1416" class="ln">  1416</span>		{Inf(1), Pi},
+<span id="L1417" class="ln">  1417</span>		{Inf(1), NaN()},
+<span id="L1418" class="ln">  1418</span>		{NaN(), -Pi},
+<span id="L1419" class="ln">  1419</span>		{NaN(), Copysign(0, -1)},
+<span id="L1420" class="ln">  1420</span>		{NaN(), 0},
+<span id="L1421" class="ln">  1421</span>		{NaN(), 1},
+<span id="L1422" class="ln">  1422</span>		{NaN(), Pi},
+<span id="L1423" class="ln">  1423</span>		{NaN(), NaN()},
+<span id="L1424" class="ln">  1424</span>	}
+<span id="L1425" class="ln">  1425</span>	var powSC = []float64{
+<span id="L1426" class="ln">  1426</span>		0,               <span class="comment">// pow(-Inf, -Pi)</span>
+<span id="L1427" class="ln">  1427</span>		Copysign(0, -1), <span class="comment">// pow(-Inf, -3)</span>
+<span id="L1428" class="ln">  1428</span>		1,               <span class="comment">// pow(-Inf, -0)</span>
+<span id="L1429" class="ln">  1429</span>		1,               <span class="comment">// pow(-Inf, +0)</span>
+<span id="L1430" class="ln">  1430</span>		Inf(-1),         <span class="comment">// pow(-Inf, 1)</span>
+<span id="L1431" class="ln">  1431</span>		Inf(-1),         <span class="comment">// pow(-Inf, 3)</span>
+<span id="L1432" class="ln">  1432</span>		Inf(1),          <span class="comment">// pow(-Inf, Pi)</span>
+<span id="L1433" class="ln">  1433</span>		NaN(),           <span class="comment">// pow(-Inf, NaN)</span>
+<span id="L1434" class="ln">  1434</span>		0,               <span class="comment">// pow(-Pi, -Inf)</span>
+<span id="L1435" class="ln">  1435</span>		NaN(),           <span class="comment">// pow(-Pi, -Pi)</span>
+<span id="L1436" class="ln">  1436</span>		1,               <span class="comment">// pow(-Pi, -0)</span>
+<span id="L1437" class="ln">  1437</span>		1,               <span class="comment">// pow(-Pi, +0)</span>
+<span id="L1438" class="ln">  1438</span>		-Pi,             <span class="comment">// pow(-Pi, 1)</span>
+<span id="L1439" class="ln">  1439</span>		NaN(),           <span class="comment">// pow(-Pi, Pi)</span>
+<span id="L1440" class="ln">  1440</span>		Inf(1),          <span class="comment">// pow(-Pi, +Inf)</span>
+<span id="L1441" class="ln">  1441</span>		NaN(),           <span class="comment">// pow(-Pi, NaN)</span>
+<span id="L1442" class="ln">  1442</span>		1,               <span class="comment">// pow(-1, -Inf) IEEE 754-2008</span>
+<span id="L1443" class="ln">  1443</span>		1,               <span class="comment">// pow(-1, +Inf) IEEE 754-2008</span>
+<span id="L1444" class="ln">  1444</span>		NaN(),           <span class="comment">// pow(-1, NaN)</span>
+<span id="L1445" class="ln">  1445</span>		Inf(1),          <span class="comment">// pow(-1/2, -Inf)</span>
+<span id="L1446" class="ln">  1446</span>		0,               <span class="comment">// pow(-1/2, +Inf)</span>
+<span id="L1447" class="ln">  1447</span>		Inf(1),          <span class="comment">// pow(-0, -Inf)</span>
+<span id="L1448" class="ln">  1448</span>		Inf(1),          <span class="comment">// pow(-0, -Pi)</span>
+<span id="L1449" class="ln">  1449</span>		Inf(-1),         <span class="comment">// pow(-0, -3) IEEE 754-2008</span>
+<span id="L1450" class="ln">  1450</span>		Copysign(0, -1), <span class="comment">// pow(-0, 3) IEEE 754-2008</span>
+<span id="L1451" class="ln">  1451</span>		0,               <span class="comment">// pow(-0, +Pi)</span>
+<span id="L1452" class="ln">  1452</span>		0,               <span class="comment">// pow(-0, +Inf)</span>
+<span id="L1453" class="ln">  1453</span>		Inf(1),          <span class="comment">// pow(+0, -Inf)</span>
+<span id="L1454" class="ln">  1454</span>		Inf(1),          <span class="comment">// pow(+0, -Pi)</span>
+<span id="L1455" class="ln">  1455</span>		Inf(1),          <span class="comment">// pow(+0, -3)</span>
+<span id="L1456" class="ln">  1456</span>		1,               <span class="comment">// pow(+0, -0)</span>
+<span id="L1457" class="ln">  1457</span>		1,               <span class="comment">// pow(+0, +0)</span>
+<span id="L1458" class="ln">  1458</span>		0,               <span class="comment">// pow(+0, 3)</span>
+<span id="L1459" class="ln">  1459</span>		0,               <span class="comment">// pow(+0, +Pi)</span>
+<span id="L1460" class="ln">  1460</span>		0,               <span class="comment">// pow(+0, +Inf)</span>
+<span id="L1461" class="ln">  1461</span>		NaN(),           <span class="comment">// pow(+0, NaN)</span>
+<span id="L1462" class="ln">  1462</span>		Inf(1),          <span class="comment">// pow(1/2, -Inf)</span>
+<span id="L1463" class="ln">  1463</span>		0,               <span class="comment">// pow(1/2, +Inf)</span>
+<span id="L1464" class="ln">  1464</span>		1,               <span class="comment">// pow(1, -Inf) IEEE 754-2008</span>
+<span id="L1465" class="ln">  1465</span>		1,               <span class="comment">// pow(1, +Inf) IEEE 754-2008</span>
+<span id="L1466" class="ln">  1466</span>		1,               <span class="comment">// pow(1, NaN) IEEE 754-2008</span>
+<span id="L1467" class="ln">  1467</span>		0,               <span class="comment">// pow(+Pi, -Inf)</span>
+<span id="L1468" class="ln">  1468</span>		1,               <span class="comment">// pow(+Pi, -0)</span>
+<span id="L1469" class="ln">  1469</span>		1,               <span class="comment">// pow(+Pi, +0)</span>
+<span id="L1470" class="ln">  1470</span>		Pi,              <span class="comment">// pow(+Pi, 1)</span>
+<span id="L1471" class="ln">  1471</span>		Inf(1),          <span class="comment">// pow(+Pi, +Inf)</span>
+<span id="L1472" class="ln">  1472</span>		NaN(),           <span class="comment">// pow(+Pi, NaN)</span>
+<span id="L1473" class="ln">  1473</span>		0,               <span class="comment">// pow(+Inf, -Pi)</span>
+<span id="L1474" class="ln">  1474</span>		1,               <span class="comment">// pow(+Inf, -0)</span>
+<span id="L1475" class="ln">  1475</span>		1,               <span class="comment">// pow(+Inf, +0)</span>
+<span id="L1476" class="ln">  1476</span>		Inf(1),          <span class="comment">// pow(+Inf, 1)</span>
+<span id="L1477" class="ln">  1477</span>		Inf(1),          <span class="comment">// pow(+Inf, Pi)</span>
+<span id="L1478" class="ln">  1478</span>		NaN(),           <span class="comment">// pow(+Inf, NaN)</span>
+<span id="L1479" class="ln">  1479</span>		NaN(),           <span class="comment">// pow(NaN, -Pi)</span>
+<span id="L1480" class="ln">  1480</span>		1,               <span class="comment">// pow(NaN, -0)</span>
+<span id="L1481" class="ln">  1481</span>		1,               <span class="comment">// pow(NaN, +0)</span>
+<span id="L1482" class="ln">  1482</span>		NaN(),           <span class="comment">// pow(NaN, 1)</span>
+<span id="L1483" class="ln">  1483</span>		NaN(),           <span class="comment">// pow(NaN, +Pi)</span>
+<span id="L1484" class="ln">  1484</span>		NaN(),           <span class="comment">// pow(NaN, NaN)</span>
+<span id="L1485" class="ln">  1485</span>	}
+<span id="L1486" class="ln">  1486</span>	
+<span id="L1487" class="ln">  1487</span>	var vfpow10SC = []int{
+<span id="L1488" class="ln">  1488</span>		MinInt32,
+<span id="L1489" class="ln">  1489</span>		MaxInt32,
+<span id="L1490" class="ln">  1490</span>		-325,
+<span id="L1491" class="ln">  1491</span>		309,
+<span id="L1492" class="ln">  1492</span>	}
+<span id="L1493" class="ln">  1493</span>	
+<span id="L1494" class="ln">  1494</span>	var pow10SC = []float64{
+<span id="L1495" class="ln">  1495</span>		0,      <span class="comment">// pow10(MinInt32)</span>
+<span id="L1496" class="ln">  1496</span>		Inf(1), <span class="comment">// pow10(MaxInt32)</span>
+<span id="L1497" class="ln">  1497</span>		0,      <span class="comment">// pow10(-325)</span>
+<span id="L1498" class="ln">  1498</span>		Inf(1), <span class="comment">// pow10(309)</span>
+<span id="L1499" class="ln">  1499</span>	}
+<span id="L1500" class="ln">  1500</span>	
+<span id="L1501" class="ln">  1501</span>	var vfsignbitSC = []float64{
+<span id="L1502" class="ln">  1502</span>		Inf(-1),
+<span id="L1503" class="ln">  1503</span>		Copysign(0, -1),
+<span id="L1504" class="ln">  1504</span>		0,
+<span id="L1505" class="ln">  1505</span>		Inf(1),
+<span id="L1506" class="ln">  1506</span>		NaN(),
+<span id="L1507" class="ln">  1507</span>	}
+<span id="L1508" class="ln">  1508</span>	var signbitSC = []bool{
+<span id="L1509" class="ln">  1509</span>		true,
+<span id="L1510" class="ln">  1510</span>		true,
+<span id="L1511" class="ln">  1511</span>		false,
+<span id="L1512" class="ln">  1512</span>		false,
+<span id="L1513" class="ln">  1513</span>		false,
+<span id="L1514" class="ln">  1514</span>	}
+<span id="L1515" class="ln">  1515</span>	
+<span id="L1516" class="ln">  1516</span>	var vfsinSC = []float64{
+<span id="L1517" class="ln">  1517</span>		Inf(-1),
+<span id="L1518" class="ln">  1518</span>		Copysign(0, -1),
+<span id="L1519" class="ln">  1519</span>		0,
+<span id="L1520" class="ln">  1520</span>		Inf(1),
+<span id="L1521" class="ln">  1521</span>		NaN(),
+<span id="L1522" class="ln">  1522</span>	}
+<span id="L1523" class="ln">  1523</span>	var sinSC = []float64{
+<span id="L1524" class="ln">  1524</span>		NaN(),
+<span id="L1525" class="ln">  1525</span>		Copysign(0, -1),
+<span id="L1526" class="ln">  1526</span>		0,
+<span id="L1527" class="ln">  1527</span>		NaN(),
+<span id="L1528" class="ln">  1528</span>		NaN(),
+<span id="L1529" class="ln">  1529</span>	}
+<span id="L1530" class="ln">  1530</span>	
+<span id="L1531" class="ln">  1531</span>	var vfsinhSC = []float64{
+<span id="L1532" class="ln">  1532</span>		Inf(-1),
+<span id="L1533" class="ln">  1533</span>		Copysign(0, -1),
+<span id="L1534" class="ln">  1534</span>		0,
+<span id="L1535" class="ln">  1535</span>		Inf(1),
+<span id="L1536" class="ln">  1536</span>		NaN(),
+<span id="L1537" class="ln">  1537</span>	}
+<span id="L1538" class="ln">  1538</span>	var sinhSC = []float64{
+<span id="L1539" class="ln">  1539</span>		Inf(-1),
+<span id="L1540" class="ln">  1540</span>		Copysign(0, -1),
+<span id="L1541" class="ln">  1541</span>		0,
+<span id="L1542" class="ln">  1542</span>		Inf(1),
+<span id="L1543" class="ln">  1543</span>		NaN(),
+<span id="L1544" class="ln">  1544</span>	}
+<span id="L1545" class="ln">  1545</span>	
+<span id="L1546" class="ln">  1546</span>	var vfsqrtSC = []float64{
+<span id="L1547" class="ln">  1547</span>		Inf(-1),
+<span id="L1548" class="ln">  1548</span>		-Pi,
+<span id="L1549" class="ln">  1549</span>		Copysign(0, -1),
+<span id="L1550" class="ln">  1550</span>		0,
+<span id="L1551" class="ln">  1551</span>		Inf(1),
+<span id="L1552" class="ln">  1552</span>		NaN(),
+<span id="L1553" class="ln">  1553</span>	}
+<span id="L1554" class="ln">  1554</span>	var sqrtSC = []float64{
+<span id="L1555" class="ln">  1555</span>		NaN(),
+<span id="L1556" class="ln">  1556</span>		NaN(),
+<span id="L1557" class="ln">  1557</span>		Copysign(0, -1),
+<span id="L1558" class="ln">  1558</span>		0,
+<span id="L1559" class="ln">  1559</span>		Inf(1),
+<span id="L1560" class="ln">  1560</span>		NaN(),
+<span id="L1561" class="ln">  1561</span>	}
+<span id="L1562" class="ln">  1562</span>	
+<span id="L1563" class="ln">  1563</span>	var vftanhSC = []float64{
+<span id="L1564" class="ln">  1564</span>		Inf(-1),
+<span id="L1565" class="ln">  1565</span>		Copysign(0, -1),
+<span id="L1566" class="ln">  1566</span>		0,
+<span id="L1567" class="ln">  1567</span>		Inf(1),
+<span id="L1568" class="ln">  1568</span>		NaN(),
+<span id="L1569" class="ln">  1569</span>	}
+<span id="L1570" class="ln">  1570</span>	var tanhSC = []float64{
+<span id="L1571" class="ln">  1571</span>		-1,
+<span id="L1572" class="ln">  1572</span>		Copysign(0, -1),
+<span id="L1573" class="ln">  1573</span>		0,
+<span id="L1574" class="ln">  1574</span>		1,
+<span id="L1575" class="ln">  1575</span>		NaN(),
+<span id="L1576" class="ln">  1576</span>	}
+<span id="L1577" class="ln">  1577</span>	
+<span id="L1578" class="ln">  1578</span>	var vfy0SC = []float64{
+<span id="L1579" class="ln">  1579</span>		Inf(-1),
+<span id="L1580" class="ln">  1580</span>		0,
+<span id="L1581" class="ln">  1581</span>		Inf(1),
+<span id="L1582" class="ln">  1582</span>		NaN(),
+<span id="L1583" class="ln">  1583</span>	}
+<span id="L1584" class="ln">  1584</span>	var y0SC = []float64{
+<span id="L1585" class="ln">  1585</span>		NaN(),
+<span id="L1586" class="ln">  1586</span>		Inf(-1),
+<span id="L1587" class="ln">  1587</span>		0,
+<span id="L1588" class="ln">  1588</span>		NaN(),
+<span id="L1589" class="ln">  1589</span>	}
+<span id="L1590" class="ln">  1590</span>	var y1SC = []float64{
+<span id="L1591" class="ln">  1591</span>		NaN(),
+<span id="L1592" class="ln">  1592</span>		Inf(-1),
+<span id="L1593" class="ln">  1593</span>		0,
+<span id="L1594" class="ln">  1594</span>		NaN(),
+<span id="L1595" class="ln">  1595</span>	}
+<span id="L1596" class="ln">  1596</span>	var y2SC = []float64{
+<span id="L1597" class="ln">  1597</span>		NaN(),
+<span id="L1598" class="ln">  1598</span>		Inf(-1),
+<span id="L1599" class="ln">  1599</span>		0,
+<span id="L1600" class="ln">  1600</span>		NaN(),
+<span id="L1601" class="ln">  1601</span>	}
+<span id="L1602" class="ln">  1602</span>	var yM3SC = []float64{
+<span id="L1603" class="ln">  1603</span>		NaN(),
+<span id="L1604" class="ln">  1604</span>		Inf(1),
+<span id="L1605" class="ln">  1605</span>		0,
+<span id="L1606" class="ln">  1606</span>		NaN(),
+<span id="L1607" class="ln">  1607</span>	}
+<span id="L1608" class="ln">  1608</span>	
+<span id="L1609" class="ln">  1609</span>	<span class="comment">// arguments and expected results for boundary cases</span>
+<span id="L1610" class="ln">  1610</span>	const (
+<span id="L1611" class="ln">  1611</span>		SmallestNormalFloat64   = 2.2250738585072014e-308 <span class="comment">// 2**-1022</span>
+<span id="L1612" class="ln">  1612</span>		LargestSubnormalFloat64 = SmallestNormalFloat64 - SmallestNonzeroFloat64
+<span id="L1613" class="ln">  1613</span>	)
+<span id="L1614" class="ln">  1614</span>	
+<span id="L1615" class="ln">  1615</span>	var vffrexpBC = []float64{
+<span id="L1616" class="ln">  1616</span>		SmallestNormalFloat64,
+<span id="L1617" class="ln">  1617</span>		LargestSubnormalFloat64,
+<span id="L1618" class="ln">  1618</span>		SmallestNonzeroFloat64,
+<span id="L1619" class="ln">  1619</span>		MaxFloat64,
+<span id="L1620" class="ln">  1620</span>		-SmallestNormalFloat64,
+<span id="L1621" class="ln">  1621</span>		-LargestSubnormalFloat64,
+<span id="L1622" class="ln">  1622</span>		-SmallestNonzeroFloat64,
+<span id="L1623" class="ln">  1623</span>		-MaxFloat64,
+<span id="L1624" class="ln">  1624</span>	}
+<span id="L1625" class="ln">  1625</span>	var frexpBC = []fi{
+<span id="L1626" class="ln">  1626</span>		{0.5, -1021},
+<span id="L1627" class="ln">  1627</span>		{0.99999999999999978, -1022},
+<span id="L1628" class="ln">  1628</span>		{0.5, -1073},
+<span id="L1629" class="ln">  1629</span>		{0.99999999999999989, 1024},
+<span id="L1630" class="ln">  1630</span>		{-0.5, -1021},
+<span id="L1631" class="ln">  1631</span>		{-0.99999999999999978, -1022},
+<span id="L1632" class="ln">  1632</span>		{-0.5, -1073},
+<span id="L1633" class="ln">  1633</span>		{-0.99999999999999989, 1024},
+<span id="L1634" class="ln">  1634</span>	}
+<span id="L1635" class="ln">  1635</span>	
+<span id="L1636" class="ln">  1636</span>	var vfldexpBC = []fi{
+<span id="L1637" class="ln">  1637</span>		{SmallestNormalFloat64, -52},
+<span id="L1638" class="ln">  1638</span>		{LargestSubnormalFloat64, -51},
+<span id="L1639" class="ln">  1639</span>		{SmallestNonzeroFloat64, 1074},
+<span id="L1640" class="ln">  1640</span>		{MaxFloat64, -(1023 + 1074)},
+<span id="L1641" class="ln">  1641</span>		{1, -1075},
+<span id="L1642" class="ln">  1642</span>		{-1, -1075},
+<span id="L1643" class="ln">  1643</span>		{1, 1024},
+<span id="L1644" class="ln">  1644</span>		{-1, 1024},
+<span id="L1645" class="ln">  1645</span>	}
+<span id="L1646" class="ln">  1646</span>	var ldexpBC = []float64{
+<span id="L1647" class="ln">  1647</span>		SmallestNonzeroFloat64,
+<span id="L1648" class="ln">  1648</span>		1e-323, <span class="comment">// 2**-1073</span>
+<span id="L1649" class="ln">  1649</span>		1,
+<span id="L1650" class="ln">  1650</span>		1e-323, <span class="comment">// 2**-1073</span>
+<span id="L1651" class="ln">  1651</span>		0,
+<span id="L1652" class="ln">  1652</span>		Copysign(0, -1),
+<span id="L1653" class="ln">  1653</span>		Inf(1),
+<span id="L1654" class="ln">  1654</span>		Inf(-1),
+<span id="L1655" class="ln">  1655</span>	}
+<span id="L1656" class="ln">  1656</span>	
+<span id="L1657" class="ln">  1657</span>	var logbBC = []float64{
+<span id="L1658" class="ln">  1658</span>		-1022,
+<span id="L1659" class="ln">  1659</span>		-1023,
+<span id="L1660" class="ln">  1660</span>		-1074,
+<span id="L1661" class="ln">  1661</span>		1023,
+<span id="L1662" class="ln">  1662</span>		-1022,
+<span id="L1663" class="ln">  1663</span>		-1023,
+<span id="L1664" class="ln">  1664</span>		-1074,
+<span id="L1665" class="ln">  1665</span>		1023,
+<span id="L1666" class="ln">  1666</span>	}
+<span id="L1667" class="ln">  1667</span>	
+<span id="L1668" class="ln">  1668</span>	func tolerance(a, b, e float64) bool {
+<span id="L1669" class="ln">  1669</span>		d := a - b
+<span id="L1670" class="ln">  1670</span>		if d &lt; 0 {
+<span id="L1671" class="ln">  1671</span>			d = -d
+<span id="L1672" class="ln">  1672</span>		}
+<span id="L1673" class="ln">  1673</span>	
+<span id="L1674" class="ln">  1674</span>		if a != 0 {
+<span id="L1675" class="ln">  1675</span>			e = e * a
+<span id="L1676" class="ln">  1676</span>			if e &lt; 0 {
+<span id="L1677" class="ln">  1677</span>				e = -e
+<span id="L1678" class="ln">  1678</span>			}
+<span id="L1679" class="ln">  1679</span>		}
+<span id="L1680" class="ln">  1680</span>		return d &lt; e
+<span id="L1681" class="ln">  1681</span>	}
+<span id="L1682" class="ln">  1682</span>	func kindaclose(a, b float64) bool { return tolerance(a, b, 1e-8) }
+<span id="L1683" class="ln">  1683</span>	func close(a, b float64) bool      { return tolerance(a, b, 1e-14) }
+<span id="L1684" class="ln">  1684</span>	func veryclose(a, b float64) bool  { return tolerance(a, b, 4e-16) }
+<span id="L1685" class="ln">  1685</span>	func soclose(a, b, e float64) bool { return tolerance(a, b, e) }
+<span id="L1686" class="ln">  1686</span>	func alike(a, b float64) bool {
+<span id="L1687" class="ln">  1687</span>		switch {
+<span id="L1688" class="ln">  1688</span>		case IsNaN(a) &amp;&amp; IsNaN(b):
+<span id="L1689" class="ln">  1689</span>			return true
+<span id="L1690" class="ln">  1690</span>		case a == b:
+<span id="L1691" class="ln">  1691</span>			return Signbit(a) == Signbit(b)
+<span id="L1692" class="ln">  1692</span>		}
+<span id="L1693" class="ln">  1693</span>		return false
+<span id="L1694" class="ln">  1694</span>	}
+<span id="L1695" class="ln">  1695</span>	
+<span id="L1696" class="ln">  1696</span>	func TestNaN(t *testing.T) {
+<span id="L1697" class="ln">  1697</span>		f64 := NaN()
+<span id="L1698" class="ln">  1698</span>		if f64 == f64 {
+<span id="L1699" class="ln">  1699</span>			t.Fatalf(&#34;NaN() returns %g, expected NaN&#34;, f64)
+<span id="L1700" class="ln">  1700</span>		}
+<span id="L1701" class="ln">  1701</span>		f32 := float32(f64)
+<span id="L1702" class="ln">  1702</span>		if f32 == f32 {
+<span id="L1703" class="ln">  1703</span>			t.Fatalf(&#34;float32(NaN()) is %g, expected NaN&#34;, f32)
+<span id="L1704" class="ln">  1704</span>		}
+<span id="L1705" class="ln">  1705</span>	}
+<span id="L1706" class="ln">  1706</span>	
+<span id="L1707" class="ln">  1707</span>	func TestAcos(t *testing.T) {
+<span id="L1708" class="ln">  1708</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1709" class="ln">  1709</span>			a := vf[i] / 10
+<span id="L1710" class="ln">  1710</span>			if f := Acos(a); !close(acos[i], f) {
+<span id="L1711" class="ln">  1711</span>				t.Errorf(&#34;Acos(%g) = %g, want %g&#34;, a, f, acos[i])
+<span id="L1712" class="ln">  1712</span>			}
+<span id="L1713" class="ln">  1713</span>		}
+<span id="L1714" class="ln">  1714</span>		for i := 0; i &lt; len(vfacosSC); i++ {
+<span id="L1715" class="ln">  1715</span>			if f := Acos(vfacosSC[i]); !alike(acosSC[i], f) {
+<span id="L1716" class="ln">  1716</span>				t.Errorf(&#34;Acos(%g) = %g, want %g&#34;, vfacosSC[i], f, acosSC[i])
+<span id="L1717" class="ln">  1717</span>			}
+<span id="L1718" class="ln">  1718</span>		}
+<span id="L1719" class="ln">  1719</span>	}
+<span id="L1720" class="ln">  1720</span>	
+<span id="L1721" class="ln">  1721</span>	func TestAcosh(t *testing.T) {
+<span id="L1722" class="ln">  1722</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1723" class="ln">  1723</span>			a := 1 + Abs(vf[i])
+<span id="L1724" class="ln">  1724</span>			if f := Acosh(a); !veryclose(acosh[i], f) {
+<span id="L1725" class="ln">  1725</span>				t.Errorf(&#34;Acosh(%g) = %g, want %g&#34;, a, f, acosh[i])
+<span id="L1726" class="ln">  1726</span>			}
+<span id="L1727" class="ln">  1727</span>		}
+<span id="L1728" class="ln">  1728</span>		for i := 0; i &lt; len(vfacoshSC); i++ {
+<span id="L1729" class="ln">  1729</span>			if f := Acosh(vfacoshSC[i]); !alike(acoshSC[i], f) {
+<span id="L1730" class="ln">  1730</span>				t.Errorf(&#34;Acosh(%g) = %g, want %g&#34;, vfacoshSC[i], f, acoshSC[i])
+<span id="L1731" class="ln">  1731</span>			}
+<span id="L1732" class="ln">  1732</span>		}
+<span id="L1733" class="ln">  1733</span>	}
+<span id="L1734" class="ln">  1734</span>	
+<span id="L1735" class="ln">  1735</span>	func TestAsin(t *testing.T) {
+<span id="L1736" class="ln">  1736</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1737" class="ln">  1737</span>			a := vf[i] / 10
+<span id="L1738" class="ln">  1738</span>			if f := Asin(a); !veryclose(asin[i], f) {
+<span id="L1739" class="ln">  1739</span>				t.Errorf(&#34;Asin(%g) = %g, want %g&#34;, a, f, asin[i])
+<span id="L1740" class="ln">  1740</span>			}
+<span id="L1741" class="ln">  1741</span>		}
+<span id="L1742" class="ln">  1742</span>		for i := 0; i &lt; len(vfasinSC); i++ {
+<span id="L1743" class="ln">  1743</span>			if f := Asin(vfasinSC[i]); !alike(asinSC[i], f) {
+<span id="L1744" class="ln">  1744</span>				t.Errorf(&#34;Asin(%g) = %g, want %g&#34;, vfasinSC[i], f, asinSC[i])
+<span id="L1745" class="ln">  1745</span>			}
+<span id="L1746" class="ln">  1746</span>		}
+<span id="L1747" class="ln">  1747</span>	}
+<span id="L1748" class="ln">  1748</span>	
+<span id="L1749" class="ln">  1749</span>	func TestAsinh(t *testing.T) {
+<span id="L1750" class="ln">  1750</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1751" class="ln">  1751</span>			if f := Asinh(vf[i]); !veryclose(asinh[i], f) {
+<span id="L1752" class="ln">  1752</span>				t.Errorf(&#34;Asinh(%g) = %g, want %g&#34;, vf[i], f, asinh[i])
+<span id="L1753" class="ln">  1753</span>			}
+<span id="L1754" class="ln">  1754</span>		}
+<span id="L1755" class="ln">  1755</span>		for i := 0; i &lt; len(vfasinhSC); i++ {
+<span id="L1756" class="ln">  1756</span>			if f := Asinh(vfasinhSC[i]); !alike(asinhSC[i], f) {
+<span id="L1757" class="ln">  1757</span>				t.Errorf(&#34;Asinh(%g) = %g, want %g&#34;, vfasinhSC[i], f, asinhSC[i])
+<span id="L1758" class="ln">  1758</span>			}
+<span id="L1759" class="ln">  1759</span>		}
+<span id="L1760" class="ln">  1760</span>	}
+<span id="L1761" class="ln">  1761</span>	
+<span id="L1762" class="ln">  1762</span>	func TestAtan(t *testing.T) {
+<span id="L1763" class="ln">  1763</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1764" class="ln">  1764</span>			if f := Atan(vf[i]); !veryclose(atan[i], f) {
+<span id="L1765" class="ln">  1765</span>				t.Errorf(&#34;Atan(%g) = %g, want %g&#34;, vf[i], f, atan[i])
+<span id="L1766" class="ln">  1766</span>			}
+<span id="L1767" class="ln">  1767</span>		}
+<span id="L1768" class="ln">  1768</span>		for i := 0; i &lt; len(vfatanSC); i++ {
+<span id="L1769" class="ln">  1769</span>			if f := Atan(vfatanSC[i]); !alike(atanSC[i], f) {
+<span id="L1770" class="ln">  1770</span>				t.Errorf(&#34;Atan(%g) = %g, want %g&#34;, vfatanSC[i], f, atanSC[i])
+<span id="L1771" class="ln">  1771</span>			}
+<span id="L1772" class="ln">  1772</span>		}
+<span id="L1773" class="ln">  1773</span>	}
+<span id="L1774" class="ln">  1774</span>	
+<span id="L1775" class="ln">  1775</span>	func TestAtanh(t *testing.T) {
+<span id="L1776" class="ln">  1776</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1777" class="ln">  1777</span>			a := vf[i] / 10
+<span id="L1778" class="ln">  1778</span>			if f := Atanh(a); !veryclose(atanh[i], f) {
+<span id="L1779" class="ln">  1779</span>				t.Errorf(&#34;Atanh(%g) = %g, want %g&#34;, a, f, atanh[i])
+<span id="L1780" class="ln">  1780</span>			}
+<span id="L1781" class="ln">  1781</span>		}
+<span id="L1782" class="ln">  1782</span>		for i := 0; i &lt; len(vfatanhSC); i++ {
+<span id="L1783" class="ln">  1783</span>			if f := Atanh(vfatanhSC[i]); !alike(atanhSC[i], f) {
+<span id="L1784" class="ln">  1784</span>				t.Errorf(&#34;Atanh(%g) = %g, want %g&#34;, vfatanhSC[i], f, atanhSC[i])
+<span id="L1785" class="ln">  1785</span>			}
+<span id="L1786" class="ln">  1786</span>		}
+<span id="L1787" class="ln">  1787</span>	}
+<span id="L1788" class="ln">  1788</span>	
+<span id="L1789" class="ln">  1789</span>	func TestAtan2(t *testing.T) {
+<span id="L1790" class="ln">  1790</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1791" class="ln">  1791</span>			if f := Atan2(10, vf[i]); !veryclose(atan2[i], f) {
+<span id="L1792" class="ln">  1792</span>				t.Errorf(&#34;Atan2(10, %g) = %g, want %g&#34;, vf[i], f, atan2[i])
+<span id="L1793" class="ln">  1793</span>			}
+<span id="L1794" class="ln">  1794</span>		}
+<span id="L1795" class="ln">  1795</span>		for i := 0; i &lt; len(vfatan2SC); i++ {
+<span id="L1796" class="ln">  1796</span>			if f := Atan2(vfatan2SC[i][0], vfatan2SC[i][1]); !alike(atan2SC[i], f) {
+<span id="L1797" class="ln">  1797</span>				t.Errorf(&#34;Atan2(%g, %g) = %g, want %g&#34;, vfatan2SC[i][0], vfatan2SC[i][1], f, atan2SC[i])
+<span id="L1798" class="ln">  1798</span>			}
+<span id="L1799" class="ln">  1799</span>		}
+<span id="L1800" class="ln">  1800</span>	}
+<span id="L1801" class="ln">  1801</span>	
+<span id="L1802" class="ln">  1802</span>	func TestCbrt(t *testing.T) {
+<span id="L1803" class="ln">  1803</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1804" class="ln">  1804</span>			if f := Cbrt(vf[i]); !veryclose(cbrt[i], f) {
+<span id="L1805" class="ln">  1805</span>				t.Errorf(&#34;Cbrt(%g) = %g, want %g&#34;, vf[i], f, cbrt[i])
+<span id="L1806" class="ln">  1806</span>			}
+<span id="L1807" class="ln">  1807</span>		}
+<span id="L1808" class="ln">  1808</span>		for i := 0; i &lt; len(vfcbrtSC); i++ {
+<span id="L1809" class="ln">  1809</span>			if f := Cbrt(vfcbrtSC[i]); !alike(cbrtSC[i], f) {
+<span id="L1810" class="ln">  1810</span>				t.Errorf(&#34;Cbrt(%g) = %g, want %g&#34;, vfcbrtSC[i], f, cbrtSC[i])
+<span id="L1811" class="ln">  1811</span>			}
+<span id="L1812" class="ln">  1812</span>		}
+<span id="L1813" class="ln">  1813</span>	}
+<span id="L1814" class="ln">  1814</span>	
+<span id="L1815" class="ln">  1815</span>	func TestCeil(t *testing.T) {
+<span id="L1816" class="ln">  1816</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1817" class="ln">  1817</span>			if f := Ceil(vf[i]); ceil[i] != f {
+<span id="L1818" class="ln">  1818</span>				t.Errorf(&#34;Ceil(%g) = %g, want %g&#34;, vf[i], f, ceil[i])
+<span id="L1819" class="ln">  1819</span>			}
+<span id="L1820" class="ln">  1820</span>		}
+<span id="L1821" class="ln">  1821</span>		for i := 0; i &lt; len(vfceilSC); i++ {
+<span id="L1822" class="ln">  1822</span>			if f := Ceil(vfceilSC[i]); !alike(ceilSC[i], f) {
+<span id="L1823" class="ln">  1823</span>				t.Errorf(&#34;Ceil(%g) = %g, want %g&#34;, vfceilSC[i], f, ceilSC[i])
+<span id="L1824" class="ln">  1824</span>			}
+<span id="L1825" class="ln">  1825</span>		}
+<span id="L1826" class="ln">  1826</span>	}
+<span id="L1827" class="ln">  1827</span>	
+<span id="L1828" class="ln">  1828</span>	func TestCopysign(t *testing.T) {
+<span id="L1829" class="ln">  1829</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1830" class="ln">  1830</span>			if f := Copysign(vf[i], -1); copysign[i] != f {
+<span id="L1831" class="ln">  1831</span>				t.Errorf(&#34;Copysign(%g, -1) = %g, want %g&#34;, vf[i], f, copysign[i])
+<span id="L1832" class="ln">  1832</span>			}
+<span id="L1833" class="ln">  1833</span>		}
+<span id="L1834" class="ln">  1834</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1835" class="ln">  1835</span>			if f := Copysign(vf[i], 1); -copysign[i] != f {
+<span id="L1836" class="ln">  1836</span>				t.Errorf(&#34;Copysign(%g, 1) = %g, want %g&#34;, vf[i], f, -copysign[i])
+<span id="L1837" class="ln">  1837</span>			}
+<span id="L1838" class="ln">  1838</span>		}
+<span id="L1839" class="ln">  1839</span>		for i := 0; i &lt; len(vfcopysignSC); i++ {
+<span id="L1840" class="ln">  1840</span>			if f := Copysign(vfcopysignSC[i], -1); !alike(copysignSC[i], f) {
+<span id="L1841" class="ln">  1841</span>				t.Errorf(&#34;Copysign(%g, -1) = %g, want %g&#34;, vfcopysignSC[i], f, copysignSC[i])
+<span id="L1842" class="ln">  1842</span>			}
+<span id="L1843" class="ln">  1843</span>		}
+<span id="L1844" class="ln">  1844</span>	}
+<span id="L1845" class="ln">  1845</span>	
+<span id="L1846" class="ln">  1846</span>	func TestCos(t *testing.T) {
+<span id="L1847" class="ln">  1847</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1848" class="ln">  1848</span>			if f := Cos(vf[i]); !veryclose(cos[i], f) {
+<span id="L1849" class="ln">  1849</span>				t.Errorf(&#34;Cos(%g) = %g, want %g&#34;, vf[i], f, cos[i])
+<span id="L1850" class="ln">  1850</span>			}
+<span id="L1851" class="ln">  1851</span>		}
+<span id="L1852" class="ln">  1852</span>		for i := 0; i &lt; len(vfcosSC); i++ {
+<span id="L1853" class="ln">  1853</span>			if f := Cos(vfcosSC[i]); !alike(cosSC[i], f) {
+<span id="L1854" class="ln">  1854</span>				t.Errorf(&#34;Cos(%g) = %g, want %g&#34;, vfcosSC[i], f, cosSC[i])
+<span id="L1855" class="ln">  1855</span>			}
+<span id="L1856" class="ln">  1856</span>		}
+<span id="L1857" class="ln">  1857</span>	}
+<span id="L1858" class="ln">  1858</span>	
+<span id="L1859" class="ln">  1859</span>	func TestCosh(t *testing.T) {
+<span id="L1860" class="ln">  1860</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1861" class="ln">  1861</span>			if f := Cosh(vf[i]); !close(cosh[i], f) {
+<span id="L1862" class="ln">  1862</span>				t.Errorf(&#34;Cosh(%g) = %g, want %g&#34;, vf[i], f, cosh[i])
+<span id="L1863" class="ln">  1863</span>			}
+<span id="L1864" class="ln">  1864</span>		}
+<span id="L1865" class="ln">  1865</span>		for i := 0; i &lt; len(vfcoshSC); i++ {
+<span id="L1866" class="ln">  1866</span>			if f := Cosh(vfcoshSC[i]); !alike(coshSC[i], f) {
+<span id="L1867" class="ln">  1867</span>				t.Errorf(&#34;Cosh(%g) = %g, want %g&#34;, vfcoshSC[i], f, coshSC[i])
+<span id="L1868" class="ln">  1868</span>			}
+<span id="L1869" class="ln">  1869</span>		}
+<span id="L1870" class="ln">  1870</span>	}
+<span id="L1871" class="ln">  1871</span>	
+<span id="L1872" class="ln">  1872</span>	func TestErf(t *testing.T) {
+<span id="L1873" class="ln">  1873</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1874" class="ln">  1874</span>			a := vf[i] / 10
+<span id="L1875" class="ln">  1875</span>			if f := Erf(a); !veryclose(erf[i], f) {
+<span id="L1876" class="ln">  1876</span>				t.Errorf(&#34;Erf(%g) = %g, want %g&#34;, a, f, erf[i])
+<span id="L1877" class="ln">  1877</span>			}
+<span id="L1878" class="ln">  1878</span>		}
+<span id="L1879" class="ln">  1879</span>		for i := 0; i &lt; len(vferfSC); i++ {
+<span id="L1880" class="ln">  1880</span>			if f := Erf(vferfSC[i]); !alike(erfSC[i], f) {
+<span id="L1881" class="ln">  1881</span>				t.Errorf(&#34;Erf(%g) = %g, want %g&#34;, vferfSC[i], f, erfSC[i])
+<span id="L1882" class="ln">  1882</span>			}
+<span id="L1883" class="ln">  1883</span>		}
+<span id="L1884" class="ln">  1884</span>	}
+<span id="L1885" class="ln">  1885</span>	
+<span id="L1886" class="ln">  1886</span>	func TestErfc(t *testing.T) {
+<span id="L1887" class="ln">  1887</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1888" class="ln">  1888</span>			a := vf[i] / 10
+<span id="L1889" class="ln">  1889</span>			if f := Erfc(a); !veryclose(erfc[i], f) {
+<span id="L1890" class="ln">  1890</span>				t.Errorf(&#34;Erfc(%g) = %g, want %g&#34;, a, f, erfc[i])
+<span id="L1891" class="ln">  1891</span>			}
+<span id="L1892" class="ln">  1892</span>		}
+<span id="L1893" class="ln">  1893</span>		for i := 0; i &lt; len(vferfcSC); i++ {
+<span id="L1894" class="ln">  1894</span>			if f := Erfc(vferfcSC[i]); !alike(erfcSC[i], f) {
+<span id="L1895" class="ln">  1895</span>				t.Errorf(&#34;Erfc(%g) = %g, want %g&#34;, vferfcSC[i], f, erfcSC[i])
+<span id="L1896" class="ln">  1896</span>			}
+<span id="L1897" class="ln">  1897</span>		}
+<span id="L1898" class="ln">  1898</span>	}
+<span id="L1899" class="ln">  1899</span>	
+<span id="L1900" class="ln">  1900</span>	func TestExp(t *testing.T) {
+<span id="L1901" class="ln">  1901</span>		testExp(t, Exp, &#34;Exp&#34;)
+<span id="L1902" class="ln">  1902</span>		testExp(t, ExpGo, &#34;ExpGo&#34;)
+<span id="L1903" class="ln">  1903</span>	}
+<span id="L1904" class="ln">  1904</span>	
+<span id="L1905" class="ln">  1905</span>	func testExp(t *testing.T, Exp func(float64) float64, name string) {
+<span id="L1906" class="ln">  1906</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1907" class="ln">  1907</span>			if f := Exp(vf[i]); !close(exp[i], f) {
+<span id="L1908" class="ln">  1908</span>				t.Errorf(&#34;%s(%g) = %g, want %g&#34;, name, vf[i], f, exp[i])
+<span id="L1909" class="ln">  1909</span>			}
+<span id="L1910" class="ln">  1910</span>		}
+<span id="L1911" class="ln">  1911</span>		for i := 0; i &lt; len(vfexpSC); i++ {
+<span id="L1912" class="ln">  1912</span>			if f := Exp(vfexpSC[i]); !alike(expSC[i], f) {
+<span id="L1913" class="ln">  1913</span>				t.Errorf(&#34;%s(%g) = %g, want %g&#34;, name, vfexpSC[i], f, expSC[i])
+<span id="L1914" class="ln">  1914</span>			}
+<span id="L1915" class="ln">  1915</span>		}
+<span id="L1916" class="ln">  1916</span>	}
+<span id="L1917" class="ln">  1917</span>	
+<span id="L1918" class="ln">  1918</span>	func TestExpm1(t *testing.T) {
+<span id="L1919" class="ln">  1919</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1920" class="ln">  1920</span>			a := vf[i] / 100
+<span id="L1921" class="ln">  1921</span>			if f := Expm1(a); !veryclose(expm1[i], f) {
+<span id="L1922" class="ln">  1922</span>				t.Errorf(&#34;Expm1(%g) = %g, want %g&#34;, a, f, expm1[i])
+<span id="L1923" class="ln">  1923</span>			}
+<span id="L1924" class="ln">  1924</span>		}
+<span id="L1925" class="ln">  1925</span>		for i := 0; i &lt; len(vfexpm1SC); i++ {
+<span id="L1926" class="ln">  1926</span>			if f := Expm1(vfexpm1SC[i]); !alike(expm1SC[i], f) {
+<span id="L1927" class="ln">  1927</span>				t.Errorf(&#34;Expm1(%g) = %g, want %g&#34;, vfexpm1SC[i], f, expm1SC[i])
+<span id="L1928" class="ln">  1928</span>			}
+<span id="L1929" class="ln">  1929</span>		}
+<span id="L1930" class="ln">  1930</span>	}
+<span id="L1931" class="ln">  1931</span>	
+<span id="L1932" class="ln">  1932</span>	func TestExp2(t *testing.T) {
+<span id="L1933" class="ln">  1933</span>		testExp2(t, Exp2, &#34;Exp2&#34;)
+<span id="L1934" class="ln">  1934</span>		testExp2(t, Exp2Go, &#34;Exp2Go&#34;)
+<span id="L1935" class="ln">  1935</span>	}
+<span id="L1936" class="ln">  1936</span>	
+<span id="L1937" class="ln">  1937</span>	func testExp2(t *testing.T, Exp2 func(float64) float64, name string) {
+<span id="L1938" class="ln">  1938</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1939" class="ln">  1939</span>			if f := Exp2(vf[i]); !close(exp2[i], f) {
+<span id="L1940" class="ln">  1940</span>				t.Errorf(&#34;%s(%g) = %g, want %g&#34;, name, vf[i], f, exp2[i])
+<span id="L1941" class="ln">  1941</span>			}
+<span id="L1942" class="ln">  1942</span>		}
+<span id="L1943" class="ln">  1943</span>		for i := 0; i &lt; len(vfexpSC); i++ {
+<span id="L1944" class="ln">  1944</span>			if f := Exp2(vfexpSC[i]); !alike(expSC[i], f) {
+<span id="L1945" class="ln">  1945</span>				t.Errorf(&#34;%s(%g) = %g, want %g&#34;, name, vfexpSC[i], f, expSC[i])
+<span id="L1946" class="ln">  1946</span>			}
+<span id="L1947" class="ln">  1947</span>		}
+<span id="L1948" class="ln">  1948</span>		for n := -1074; n &lt; 1024; n++ {
+<span id="L1949" class="ln">  1949</span>			f := Exp2(float64(n))
+<span id="L1950" class="ln">  1950</span>			vf := Ldexp(1, n)
+<span id="L1951" class="ln">  1951</span>			if f != vf {
+<span id="L1952" class="ln">  1952</span>				t.Errorf(&#34;%s(%d) = %g, want %g&#34;, name, n, f, vf)
+<span id="L1953" class="ln">  1953</span>			}
+<span id="L1954" class="ln">  1954</span>		}
+<span id="L1955" class="ln">  1955</span>	}
+<span id="L1956" class="ln">  1956</span>	
+<span id="L1957" class="ln">  1957</span>	func TestAbs(t *testing.T) {
+<span id="L1958" class="ln">  1958</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1959" class="ln">  1959</span>			if f := Abs(vf[i]); fabs[i] != f {
+<span id="L1960" class="ln">  1960</span>				t.Errorf(&#34;Abs(%g) = %g, want %g&#34;, vf[i], f, fabs[i])
+<span id="L1961" class="ln">  1961</span>			}
+<span id="L1962" class="ln">  1962</span>		}
+<span id="L1963" class="ln">  1963</span>		for i := 0; i &lt; len(vffabsSC); i++ {
+<span id="L1964" class="ln">  1964</span>			if f := Abs(vffabsSC[i]); !alike(fabsSC[i], f) {
+<span id="L1965" class="ln">  1965</span>				t.Errorf(&#34;Abs(%g) = %g, want %g&#34;, vffabsSC[i], f, fabsSC[i])
+<span id="L1966" class="ln">  1966</span>			}
+<span id="L1967" class="ln">  1967</span>		}
+<span id="L1968" class="ln">  1968</span>	}
+<span id="L1969" class="ln">  1969</span>	
+<span id="L1970" class="ln">  1970</span>	func TestDim(t *testing.T) {
+<span id="L1971" class="ln">  1971</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1972" class="ln">  1972</span>			if f := Dim(vf[i], 0); fdim[i] != f {
+<span id="L1973" class="ln">  1973</span>				t.Errorf(&#34;Dim(%g, %g) = %g, want %g&#34;, vf[i], 0.0, f, fdim[i])
+<span id="L1974" class="ln">  1974</span>			}
+<span id="L1975" class="ln">  1975</span>		}
+<span id="L1976" class="ln">  1976</span>		for i := 0; i &lt; len(vffdimSC); i++ {
+<span id="L1977" class="ln">  1977</span>			if f := Dim(vffdimSC[i][0], vffdimSC[i][1]); !alike(fdimSC[i], f) {
+<span id="L1978" class="ln">  1978</span>				t.Errorf(&#34;Dim(%g, %g) = %g, want %g&#34;, vffdimSC[i][0], vffdimSC[i][1], f, fdimSC[i])
+<span id="L1979" class="ln">  1979</span>			}
+<span id="L1980" class="ln">  1980</span>		}
+<span id="L1981" class="ln">  1981</span>	}
+<span id="L1982" class="ln">  1982</span>	
+<span id="L1983" class="ln">  1983</span>	func TestFloor(t *testing.T) {
+<span id="L1984" class="ln">  1984</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1985" class="ln">  1985</span>			if f := Floor(vf[i]); floor[i] != f {
+<span id="L1986" class="ln">  1986</span>				t.Errorf(&#34;Floor(%g) = %g, want %g&#34;, vf[i], f, floor[i])
+<span id="L1987" class="ln">  1987</span>			}
+<span id="L1988" class="ln">  1988</span>		}
+<span id="L1989" class="ln">  1989</span>		for i := 0; i &lt; len(vfceilSC); i++ {
+<span id="L1990" class="ln">  1990</span>			if f := Floor(vfceilSC[i]); !alike(ceilSC[i], f) {
+<span id="L1991" class="ln">  1991</span>				t.Errorf(&#34;Floor(%g) = %g, want %g&#34;, vfceilSC[i], f, ceilSC[i])
+<span id="L1992" class="ln">  1992</span>			}
+<span id="L1993" class="ln">  1993</span>		}
+<span id="L1994" class="ln">  1994</span>	}
+<span id="L1995" class="ln">  1995</span>	
+<span id="L1996" class="ln">  1996</span>	func TestMax(t *testing.T) {
+<span id="L1997" class="ln">  1997</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L1998" class="ln">  1998</span>			if f := Max(vf[i], ceil[i]); ceil[i] != f {
+<span id="L1999" class="ln">  1999</span>				t.Errorf(&#34;Max(%g, %g) = %g, want %g&#34;, vf[i], ceil[i], f, ceil[i])
+<span id="L2000" class="ln">  2000</span>			}
+<span id="L2001" class="ln">  2001</span>		}
+<span id="L2002" class="ln">  2002</span>		for i := 0; i &lt; len(vffdimSC); i++ {
+<span id="L2003" class="ln">  2003</span>			if f := Max(vffdimSC[i][0], vffdimSC[i][1]); !alike(fmaxSC[i], f) {
+<span id="L2004" class="ln">  2004</span>				t.Errorf(&#34;Max(%g, %g) = %g, want %g&#34;, vffdimSC[i][0], vffdimSC[i][1], f, fmaxSC[i])
+<span id="L2005" class="ln">  2005</span>			}
+<span id="L2006" class="ln">  2006</span>		}
+<span id="L2007" class="ln">  2007</span>	}
+<span id="L2008" class="ln">  2008</span>	
+<span id="L2009" class="ln">  2009</span>	func TestMin(t *testing.T) {
+<span id="L2010" class="ln">  2010</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2011" class="ln">  2011</span>			if f := Min(vf[i], floor[i]); floor[i] != f {
+<span id="L2012" class="ln">  2012</span>				t.Errorf(&#34;Min(%g, %g) = %g, want %g&#34;, vf[i], floor[i], f, floor[i])
+<span id="L2013" class="ln">  2013</span>			}
+<span id="L2014" class="ln">  2014</span>		}
+<span id="L2015" class="ln">  2015</span>		for i := 0; i &lt; len(vffdimSC); i++ {
+<span id="L2016" class="ln">  2016</span>			if f := Min(vffdimSC[i][0], vffdimSC[i][1]); !alike(fminSC[i], f) {
+<span id="L2017" class="ln">  2017</span>				t.Errorf(&#34;Min(%g, %g) = %g, want %g&#34;, vffdimSC[i][0], vffdimSC[i][1], f, fminSC[i])
+<span id="L2018" class="ln">  2018</span>			}
+<span id="L2019" class="ln">  2019</span>		}
+<span id="L2020" class="ln">  2020</span>	}
+<span id="L2021" class="ln">  2021</span>	
+<span id="L2022" class="ln">  2022</span>	func TestMod(t *testing.T) {
+<span id="L2023" class="ln">  2023</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2024" class="ln">  2024</span>			if f := Mod(10, vf[i]); fmod[i] != f {
+<span id="L2025" class="ln">  2025</span>				t.Errorf(&#34;Mod(10, %g) = %g, want %g&#34;, vf[i], f, fmod[i])
+<span id="L2026" class="ln">  2026</span>			}
+<span id="L2027" class="ln">  2027</span>		}
+<span id="L2028" class="ln">  2028</span>		for i := 0; i &lt; len(vffmodSC); i++ {
+<span id="L2029" class="ln">  2029</span>			if f := Mod(vffmodSC[i][0], vffmodSC[i][1]); !alike(fmodSC[i], f) {
+<span id="L2030" class="ln">  2030</span>				t.Errorf(&#34;Mod(%g, %g) = %g, want %g&#34;, vffmodSC[i][0], vffmodSC[i][1], f, fmodSC[i])
+<span id="L2031" class="ln">  2031</span>			}
+<span id="L2032" class="ln">  2032</span>		}
+<span id="L2033" class="ln">  2033</span>	}
+<span id="L2034" class="ln">  2034</span>	
+<span id="L2035" class="ln">  2035</span>	func TestFrexp(t *testing.T) {
+<span id="L2036" class="ln">  2036</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2037" class="ln">  2037</span>			if f, j := Frexp(vf[i]); !veryclose(frexp[i].f, f) || frexp[i].i != j {
+<span id="L2038" class="ln">  2038</span>				t.Errorf(&#34;Frexp(%g) = %g, %d, want %g, %d&#34;, vf[i], f, j, frexp[i].f, frexp[i].i)
+<span id="L2039" class="ln">  2039</span>			}
+<span id="L2040" class="ln">  2040</span>		}
+<span id="L2041" class="ln">  2041</span>		for i := 0; i &lt; len(vffrexpSC); i++ {
+<span id="L2042" class="ln">  2042</span>			if f, j := Frexp(vffrexpSC[i]); !alike(frexpSC[i].f, f) || frexpSC[i].i != j {
+<span id="L2043" class="ln">  2043</span>				t.Errorf(&#34;Frexp(%g) = %g, %d, want %g, %d&#34;, vffrexpSC[i], f, j, frexpSC[i].f, frexpSC[i].i)
+<span id="L2044" class="ln">  2044</span>			}
+<span id="L2045" class="ln">  2045</span>		}
+<span id="L2046" class="ln">  2046</span>		for i := 0; i &lt; len(vffrexpBC); i++ {
+<span id="L2047" class="ln">  2047</span>			if f, j := Frexp(vffrexpBC[i]); !alike(frexpBC[i].f, f) || frexpBC[i].i != j {
+<span id="L2048" class="ln">  2048</span>				t.Errorf(&#34;Frexp(%g) = %g, %d, want %g, %d&#34;, vffrexpBC[i], f, j, frexpBC[i].f, frexpBC[i].i)
+<span id="L2049" class="ln">  2049</span>			}
+<span id="L2050" class="ln">  2050</span>		}
+<span id="L2051" class="ln">  2051</span>	}
+<span id="L2052" class="ln">  2052</span>	
+<span id="L2053" class="ln">  2053</span>	func TestGamma(t *testing.T) {
+<span id="L2054" class="ln">  2054</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2055" class="ln">  2055</span>			if f := Gamma(vf[i]); !close(gamma[i], f) {
+<span id="L2056" class="ln">  2056</span>				t.Errorf(&#34;Gamma(%g) = %g, want %g&#34;, vf[i], f, gamma[i])
+<span id="L2057" class="ln">  2057</span>			}
+<span id="L2058" class="ln">  2058</span>		}
+<span id="L2059" class="ln">  2059</span>		for i := 0; i &lt; len(vfgammaSC); i++ {
+<span id="L2060" class="ln">  2060</span>			if f := Gamma(vfgammaSC[i]); !alike(gammaSC[i], f) {
+<span id="L2061" class="ln">  2061</span>				t.Errorf(&#34;Gamma(%g) = %g, want %g&#34;, vfgammaSC[i], f, gammaSC[i])
+<span id="L2062" class="ln">  2062</span>			}
+<span id="L2063" class="ln">  2063</span>		}
+<span id="L2064" class="ln">  2064</span>	}
+<span id="L2065" class="ln">  2065</span>	
+<span id="L2066" class="ln">  2066</span>	func TestHypot(t *testing.T) {
+<span id="L2067" class="ln">  2067</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2068" class="ln">  2068</span>			a := Abs(1e200 * tanh[i] * Sqrt(2))
+<span id="L2069" class="ln">  2069</span>			if f := Hypot(1e200*tanh[i], 1e200*tanh[i]); !veryclose(a, f) {
+<span id="L2070" class="ln">  2070</span>				t.Errorf(&#34;Hypot(%g, %g) = %g, want %g&#34;, 1e200*tanh[i], 1e200*tanh[i], f, a)
+<span id="L2071" class="ln">  2071</span>			}
+<span id="L2072" class="ln">  2072</span>		}
+<span id="L2073" class="ln">  2073</span>		for i := 0; i &lt; len(vfhypotSC); i++ {
+<span id="L2074" class="ln">  2074</span>			if f := Hypot(vfhypotSC[i][0], vfhypotSC[i][1]); !alike(hypotSC[i], f) {
+<span id="L2075" class="ln">  2075</span>				t.Errorf(&#34;Hypot(%g, %g) = %g, want %g&#34;, vfhypotSC[i][0], vfhypotSC[i][1], f, hypotSC[i])
+<span id="L2076" class="ln">  2076</span>			}
+<span id="L2077" class="ln">  2077</span>		}
+<span id="L2078" class="ln">  2078</span>	}
+<span id="L2079" class="ln">  2079</span>	
+<span id="L2080" class="ln">  2080</span>	func TestHypotGo(t *testing.T) {
+<span id="L2081" class="ln">  2081</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2082" class="ln">  2082</span>			a := Abs(1e200 * tanh[i] * Sqrt(2))
+<span id="L2083" class="ln">  2083</span>			if f := HypotGo(1e200*tanh[i], 1e200*tanh[i]); !veryclose(a, f) {
+<span id="L2084" class="ln">  2084</span>				t.Errorf(&#34;HypotGo(%g, %g) = %g, want %g&#34;, 1e200*tanh[i], 1e200*tanh[i], f, a)
+<span id="L2085" class="ln">  2085</span>			}
+<span id="L2086" class="ln">  2086</span>		}
+<span id="L2087" class="ln">  2087</span>		for i := 0; i &lt; len(vfhypotSC); i++ {
+<span id="L2088" class="ln">  2088</span>			if f := HypotGo(vfhypotSC[i][0], vfhypotSC[i][1]); !alike(hypotSC[i], f) {
+<span id="L2089" class="ln">  2089</span>				t.Errorf(&#34;HypotGo(%g, %g) = %g, want %g&#34;, vfhypotSC[i][0], vfhypotSC[i][1], f, hypotSC[i])
+<span id="L2090" class="ln">  2090</span>			}
+<span id="L2091" class="ln">  2091</span>		}
+<span id="L2092" class="ln">  2092</span>	}
+<span id="L2093" class="ln">  2093</span>	
+<span id="L2094" class="ln">  2094</span>	func TestIlogb(t *testing.T) {
+<span id="L2095" class="ln">  2095</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2096" class="ln">  2096</span>			a := frexp[i].i - 1 <span class="comment">// adjust because fr in the interval [½, 1)</span>
+<span id="L2097" class="ln">  2097</span>			if e := Ilogb(vf[i]); a != e {
+<span id="L2098" class="ln">  2098</span>				t.Errorf(&#34;Ilogb(%g) = %d, want %d&#34;, vf[i], e, a)
+<span id="L2099" class="ln">  2099</span>			}
+<span id="L2100" class="ln">  2100</span>		}
+<span id="L2101" class="ln">  2101</span>		for i := 0; i &lt; len(vflogbSC); i++ {
+<span id="L2102" class="ln">  2102</span>			if e := Ilogb(vflogbSC[i]); ilogbSC[i] != e {
+<span id="L2103" class="ln">  2103</span>				t.Errorf(&#34;Ilogb(%g) = %d, want %d&#34;, vflogbSC[i], e, ilogbSC[i])
+<span id="L2104" class="ln">  2104</span>			}
+<span id="L2105" class="ln">  2105</span>		}
+<span id="L2106" class="ln">  2106</span>		for i := 0; i &lt; len(vffrexpBC); i++ {
+<span id="L2107" class="ln">  2107</span>			if e := Ilogb(vffrexpBC[i]); int(logbBC[i]) != e {
+<span id="L2108" class="ln">  2108</span>				t.Errorf(&#34;Ilogb(%g) = %d, want %d&#34;, vffrexpBC[i], e, int(logbBC[i]))
+<span id="L2109" class="ln">  2109</span>			}
+<span id="L2110" class="ln">  2110</span>		}
+<span id="L2111" class="ln">  2111</span>	}
+<span id="L2112" class="ln">  2112</span>	
+<span id="L2113" class="ln">  2113</span>	func TestJ0(t *testing.T) {
+<span id="L2114" class="ln">  2114</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2115" class="ln">  2115</span>			if f := J0(vf[i]); !soclose(j0[i], f, 4e-14) {
+<span id="L2116" class="ln">  2116</span>				t.Errorf(&#34;J0(%g) = %g, want %g&#34;, vf[i], f, j0[i])
+<span id="L2117" class="ln">  2117</span>			}
+<span id="L2118" class="ln">  2118</span>		}
+<span id="L2119" class="ln">  2119</span>		for i := 0; i &lt; len(vfj0SC); i++ {
+<span id="L2120" class="ln">  2120</span>			if f := J0(vfj0SC[i]); !alike(j0SC[i], f) {
+<span id="L2121" class="ln">  2121</span>				t.Errorf(&#34;J0(%g) = %g, want %g&#34;, vfj0SC[i], f, j0SC[i])
+<span id="L2122" class="ln">  2122</span>			}
+<span id="L2123" class="ln">  2123</span>		}
+<span id="L2124" class="ln">  2124</span>	}
+<span id="L2125" class="ln">  2125</span>	
+<span id="L2126" class="ln">  2126</span>	func TestJ1(t *testing.T) {
+<span id="L2127" class="ln">  2127</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2128" class="ln">  2128</span>			if f := J1(vf[i]); !close(j1[i], f) {
+<span id="L2129" class="ln">  2129</span>				t.Errorf(&#34;J1(%g) = %g, want %g&#34;, vf[i], f, j1[i])
+<span id="L2130" class="ln">  2130</span>			}
+<span id="L2131" class="ln">  2131</span>		}
+<span id="L2132" class="ln">  2132</span>		for i := 0; i &lt; len(vfj0SC); i++ {
+<span id="L2133" class="ln">  2133</span>			if f := J1(vfj0SC[i]); !alike(j1SC[i], f) {
+<span id="L2134" class="ln">  2134</span>				t.Errorf(&#34;J1(%g) = %g, want %g&#34;, vfj0SC[i], f, j1SC[i])
+<span id="L2135" class="ln">  2135</span>			}
+<span id="L2136" class="ln">  2136</span>		}
+<span id="L2137" class="ln">  2137</span>	}
+<span id="L2138" class="ln">  2138</span>	
+<span id="L2139" class="ln">  2139</span>	func TestJn(t *testing.T) {
+<span id="L2140" class="ln">  2140</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2141" class="ln">  2141</span>			if f := Jn(2, vf[i]); !close(j2[i], f) {
+<span id="L2142" class="ln">  2142</span>				t.Errorf(&#34;Jn(2, %g) = %g, want %g&#34;, vf[i], f, j2[i])
+<span id="L2143" class="ln">  2143</span>			}
+<span id="L2144" class="ln">  2144</span>			if f := Jn(-3, vf[i]); !close(jM3[i], f) {
+<span id="L2145" class="ln">  2145</span>				t.Errorf(&#34;Jn(-3, %g) = %g, want %g&#34;, vf[i], f, jM3[i])
+<span id="L2146" class="ln">  2146</span>			}
+<span id="L2147" class="ln">  2147</span>		}
+<span id="L2148" class="ln">  2148</span>		for i := 0; i &lt; len(vfj0SC); i++ {
+<span id="L2149" class="ln">  2149</span>			if f := Jn(2, vfj0SC[i]); !alike(j2SC[i], f) {
+<span id="L2150" class="ln">  2150</span>				t.Errorf(&#34;Jn(2, %g) = %g, want %g&#34;, vfj0SC[i], f, j2SC[i])
+<span id="L2151" class="ln">  2151</span>			}
+<span id="L2152" class="ln">  2152</span>			if f := Jn(-3, vfj0SC[i]); !alike(jM3SC[i], f) {
+<span id="L2153" class="ln">  2153</span>				t.Errorf(&#34;Jn(-3, %g) = %g, want %g&#34;, vfj0SC[i], f, jM3SC[i])
+<span id="L2154" class="ln">  2154</span>			}
+<span id="L2155" class="ln">  2155</span>		}
+<span id="L2156" class="ln">  2156</span>	}
+<span id="L2157" class="ln">  2157</span>	
+<span id="L2158" class="ln">  2158</span>	func TestLdexp(t *testing.T) {
+<span id="L2159" class="ln">  2159</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2160" class="ln">  2160</span>			if f := Ldexp(frexp[i].f, frexp[i].i); !veryclose(vf[i], f) {
+<span id="L2161" class="ln">  2161</span>				t.Errorf(&#34;Ldexp(%g, %d) = %g, want %g&#34;, frexp[i].f, frexp[i].i, f, vf[i])
+<span id="L2162" class="ln">  2162</span>			}
+<span id="L2163" class="ln">  2163</span>		}
+<span id="L2164" class="ln">  2164</span>		for i := 0; i &lt; len(vffrexpSC); i++ {
+<span id="L2165" class="ln">  2165</span>			if f := Ldexp(frexpSC[i].f, frexpSC[i].i); !alike(vffrexpSC[i], f) {
+<span id="L2166" class="ln">  2166</span>				t.Errorf(&#34;Ldexp(%g, %d) = %g, want %g&#34;, frexpSC[i].f, frexpSC[i].i, f, vffrexpSC[i])
+<span id="L2167" class="ln">  2167</span>			}
+<span id="L2168" class="ln">  2168</span>		}
+<span id="L2169" class="ln">  2169</span>		for i := 0; i &lt; len(vfldexpSC); i++ {
+<span id="L2170" class="ln">  2170</span>			if f := Ldexp(vfldexpSC[i].f, vfldexpSC[i].i); !alike(ldexpSC[i], f) {
+<span id="L2171" class="ln">  2171</span>				t.Errorf(&#34;Ldexp(%g, %d) = %g, want %g&#34;, vfldexpSC[i].f, vfldexpSC[i].i, f, ldexpSC[i])
+<span id="L2172" class="ln">  2172</span>			}
+<span id="L2173" class="ln">  2173</span>		}
+<span id="L2174" class="ln">  2174</span>		for i := 0; i &lt; len(vffrexpBC); i++ {
+<span id="L2175" class="ln">  2175</span>			if f := Ldexp(frexpBC[i].f, frexpBC[i].i); !alike(vffrexpBC[i], f) {
+<span id="L2176" class="ln">  2176</span>				t.Errorf(&#34;Ldexp(%g, %d) = %g, want %g&#34;, frexpBC[i].f, frexpBC[i].i, f, vffrexpBC[i])
+<span id="L2177" class="ln">  2177</span>			}
+<span id="L2178" class="ln">  2178</span>		}
+<span id="L2179" class="ln">  2179</span>		for i := 0; i &lt; len(vfldexpBC); i++ {
+<span id="L2180" class="ln">  2180</span>			if f := Ldexp(vfldexpBC[i].f, vfldexpBC[i].i); !alike(ldexpBC[i], f) {
+<span id="L2181" class="ln">  2181</span>				t.Errorf(&#34;Ldexp(%g, %d) = %g, want %g&#34;, vfldexpBC[i].f, vfldexpBC[i].i, f, ldexpBC[i])
+<span id="L2182" class="ln">  2182</span>			}
+<span id="L2183" class="ln">  2183</span>		}
+<span id="L2184" class="ln">  2184</span>	}
+<span id="L2185" class="ln">  2185</span>	
+<span id="L2186" class="ln">  2186</span>	func TestLgamma(t *testing.T) {
+<span id="L2187" class="ln">  2187</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2188" class="ln">  2188</span>			if f, s := Lgamma(vf[i]); !close(lgamma[i].f, f) || lgamma[i].i != s {
+<span id="L2189" class="ln">  2189</span>				t.Errorf(&#34;Lgamma(%g) = %g, %d, want %g, %d&#34;, vf[i], f, s, lgamma[i].f, lgamma[i].i)
+<span id="L2190" class="ln">  2190</span>			}
+<span id="L2191" class="ln">  2191</span>		}
+<span id="L2192" class="ln">  2192</span>		for i := 0; i &lt; len(vflgammaSC); i++ {
+<span id="L2193" class="ln">  2193</span>			if f, s := Lgamma(vflgammaSC[i]); !alike(lgammaSC[i].f, f) || lgammaSC[i].i != s {
+<span id="L2194" class="ln">  2194</span>				t.Errorf(&#34;Lgamma(%g) = %g, %d, want %g, %d&#34;, vflgammaSC[i], f, s, lgammaSC[i].f, lgammaSC[i].i)
+<span id="L2195" class="ln">  2195</span>			}
+<span id="L2196" class="ln">  2196</span>		}
+<span id="L2197" class="ln">  2197</span>	}
+<span id="L2198" class="ln">  2198</span>	
+<span id="L2199" class="ln">  2199</span>	func TestLog(t *testing.T) {
+<span id="L2200" class="ln">  2200</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2201" class="ln">  2201</span>			a := Abs(vf[i])
+<span id="L2202" class="ln">  2202</span>			if f := Log(a); log[i] != f {
+<span id="L2203" class="ln">  2203</span>				t.Errorf(&#34;Log(%g) = %g, want %g&#34;, a, f, log[i])
+<span id="L2204" class="ln">  2204</span>			}
+<span id="L2205" class="ln">  2205</span>		}
+<span id="L2206" class="ln">  2206</span>		if f := Log(10); f != Ln10 {
+<span id="L2207" class="ln">  2207</span>			t.Errorf(&#34;Log(%g) = %g, want %g&#34;, 10.0, f, Ln10)
+<span id="L2208" class="ln">  2208</span>		}
+<span id="L2209" class="ln">  2209</span>		for i := 0; i &lt; len(vflogSC); i++ {
+<span id="L2210" class="ln">  2210</span>			if f := Log(vflogSC[i]); !alike(logSC[i], f) {
+<span id="L2211" class="ln">  2211</span>				t.Errorf(&#34;Log(%g) = %g, want %g&#34;, vflogSC[i], f, logSC[i])
+<span id="L2212" class="ln">  2212</span>			}
+<span id="L2213" class="ln">  2213</span>		}
+<span id="L2214" class="ln">  2214</span>	}
+<span id="L2215" class="ln">  2215</span>	
+<span id="L2216" class="ln">  2216</span>	func TestLogb(t *testing.T) {
+<span id="L2217" class="ln">  2217</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2218" class="ln">  2218</span>			if f := Logb(vf[i]); logb[i] != f {
+<span id="L2219" class="ln">  2219</span>				t.Errorf(&#34;Logb(%g) = %g, want %g&#34;, vf[i], f, logb[i])
+<span id="L2220" class="ln">  2220</span>			}
+<span id="L2221" class="ln">  2221</span>		}
+<span id="L2222" class="ln">  2222</span>		for i := 0; i &lt; len(vflogbSC); i++ {
+<span id="L2223" class="ln">  2223</span>			if f := Logb(vflogbSC[i]); !alike(logbSC[i], f) {
+<span id="L2224" class="ln">  2224</span>				t.Errorf(&#34;Logb(%g) = %g, want %g&#34;, vflogbSC[i], f, logbSC[i])
+<span id="L2225" class="ln">  2225</span>			}
+<span id="L2226" class="ln">  2226</span>		}
+<span id="L2227" class="ln">  2227</span>		for i := 0; i &lt; len(vffrexpBC); i++ {
+<span id="L2228" class="ln">  2228</span>			if f := Logb(vffrexpBC[i]); !alike(logbBC[i], f) {
+<span id="L2229" class="ln">  2229</span>				t.Errorf(&#34;Logb(%g) = %g, want %g&#34;, vffrexpBC[i], f, logbBC[i])
+<span id="L2230" class="ln">  2230</span>			}
+<span id="L2231" class="ln">  2231</span>		}
+<span id="L2232" class="ln">  2232</span>	}
+<span id="L2233" class="ln">  2233</span>	
+<span id="L2234" class="ln">  2234</span>	func TestLog10(t *testing.T) {
+<span id="L2235" class="ln">  2235</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2236" class="ln">  2236</span>			a := Abs(vf[i])
+<span id="L2237" class="ln">  2237</span>			if f := Log10(a); !veryclose(log10[i], f) {
+<span id="L2238" class="ln">  2238</span>				t.Errorf(&#34;Log10(%g) = %g, want %g&#34;, a, f, log10[i])
+<span id="L2239" class="ln">  2239</span>			}
+<span id="L2240" class="ln">  2240</span>		}
+<span id="L2241" class="ln">  2241</span>		if f := Log10(E); f != Log10E {
+<span id="L2242" class="ln">  2242</span>			t.Errorf(&#34;Log10(%g) = %g, want %g&#34;, E, f, Log10E)
+<span id="L2243" class="ln">  2243</span>		}
+<span id="L2244" class="ln">  2244</span>		for i := 0; i &lt; len(vflogSC); i++ {
+<span id="L2245" class="ln">  2245</span>			if f := Log10(vflogSC[i]); !alike(logSC[i], f) {
+<span id="L2246" class="ln">  2246</span>				t.Errorf(&#34;Log10(%g) = %g, want %g&#34;, vflogSC[i], f, logSC[i])
+<span id="L2247" class="ln">  2247</span>			}
+<span id="L2248" class="ln">  2248</span>		}
+<span id="L2249" class="ln">  2249</span>	}
+<span id="L2250" class="ln">  2250</span>	
+<span id="L2251" class="ln">  2251</span>	func TestLog1p(t *testing.T) {
+<span id="L2252" class="ln">  2252</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2253" class="ln">  2253</span>			a := vf[i] / 100
+<span id="L2254" class="ln">  2254</span>			if f := Log1p(a); !veryclose(log1p[i], f) {
+<span id="L2255" class="ln">  2255</span>				t.Errorf(&#34;Log1p(%g) = %g, want %g&#34;, a, f, log1p[i])
+<span id="L2256" class="ln">  2256</span>			}
+<span id="L2257" class="ln">  2257</span>		}
+<span id="L2258" class="ln">  2258</span>		a := 9.0
+<span id="L2259" class="ln">  2259</span>		if f := Log1p(a); f != Ln10 {
+<span id="L2260" class="ln">  2260</span>			t.Errorf(&#34;Log1p(%g) = %g, want %g&#34;, a, f, Ln10)
+<span id="L2261" class="ln">  2261</span>		}
+<span id="L2262" class="ln">  2262</span>		for i := 0; i &lt; len(vflogSC); i++ {
+<span id="L2263" class="ln">  2263</span>			if f := Log1p(vflog1pSC[i]); !alike(log1pSC[i], f) {
+<span id="L2264" class="ln">  2264</span>				t.Errorf(&#34;Log1p(%g) = %g, want %g&#34;, vflog1pSC[i], f, log1pSC[i])
+<span id="L2265" class="ln">  2265</span>			}
+<span id="L2266" class="ln">  2266</span>		}
+<span id="L2267" class="ln">  2267</span>	}
+<span id="L2268" class="ln">  2268</span>	
+<span id="L2269" class="ln">  2269</span>	func TestLog2(t *testing.T) {
+<span id="L2270" class="ln">  2270</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2271" class="ln">  2271</span>			a := Abs(vf[i])
+<span id="L2272" class="ln">  2272</span>			if f := Log2(a); !veryclose(log2[i], f) {
+<span id="L2273" class="ln">  2273</span>				t.Errorf(&#34;Log2(%g) = %g, want %g&#34;, a, f, log2[i])
+<span id="L2274" class="ln">  2274</span>			}
+<span id="L2275" class="ln">  2275</span>		}
+<span id="L2276" class="ln">  2276</span>		if f := Log2(E); f != Log2E {
+<span id="L2277" class="ln">  2277</span>			t.Errorf(&#34;Log2(%g) = %g, want %g&#34;, E, f, Log2E)
+<span id="L2278" class="ln">  2278</span>		}
+<span id="L2279" class="ln">  2279</span>		for i := 0; i &lt; len(vflogSC); i++ {
+<span id="L2280" class="ln">  2280</span>			if f := Log2(vflogSC[i]); !alike(logSC[i], f) {
+<span id="L2281" class="ln">  2281</span>				t.Errorf(&#34;Log2(%g) = %g, want %g&#34;, vflogSC[i], f, logSC[i])
+<span id="L2282" class="ln">  2282</span>			}
+<span id="L2283" class="ln">  2283</span>		}
+<span id="L2284" class="ln">  2284</span>		for i := -1074; i &lt;= 1023; i++ {
+<span id="L2285" class="ln">  2285</span>			f := Ldexp(1, i)
+<span id="L2286" class="ln">  2286</span>			l := Log2(f)
+<span id="L2287" class="ln">  2287</span>			if l != float64(i) {
+<span id="L2288" class="ln">  2288</span>				t.Errorf(&#34;Log2(2**%d) = %g, want %d&#34;, i, l, i)
+<span id="L2289" class="ln">  2289</span>			}
+<span id="L2290" class="ln">  2290</span>		}
+<span id="L2291" class="ln">  2291</span>	}
+<span id="L2292" class="ln">  2292</span>	
+<span id="L2293" class="ln">  2293</span>	func TestModf(t *testing.T) {
+<span id="L2294" class="ln">  2294</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2295" class="ln">  2295</span>			if f, g := Modf(vf[i]); !veryclose(modf[i][0], f) || !veryclose(modf[i][1], g) {
+<span id="L2296" class="ln">  2296</span>				t.Errorf(&#34;Modf(%g) = %g, %g, want %g, %g&#34;, vf[i], f, g, modf[i][0], modf[i][1])
+<span id="L2297" class="ln">  2297</span>			}
+<span id="L2298" class="ln">  2298</span>		}
+<span id="L2299" class="ln">  2299</span>		for i := 0; i &lt; len(vfmodfSC); i++ {
+<span id="L2300" class="ln">  2300</span>			if f, g := Modf(vfmodfSC[i]); !alike(modfSC[i][0], f) || !alike(modfSC[i][1], g) {
+<span id="L2301" class="ln">  2301</span>				t.Errorf(&#34;Modf(%g) = %g, %g, want %g, %g&#34;, vfmodfSC[i], f, g, modfSC[i][0], modfSC[i][1])
+<span id="L2302" class="ln">  2302</span>			}
+<span id="L2303" class="ln">  2303</span>		}
+<span id="L2304" class="ln">  2304</span>	}
+<span id="L2305" class="ln">  2305</span>	
+<span id="L2306" class="ln">  2306</span>	func TestNextafter(t *testing.T) {
+<span id="L2307" class="ln">  2307</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2308" class="ln">  2308</span>			if f := Nextafter(vf[i], 10); nextafter[i] != f {
+<span id="L2309" class="ln">  2309</span>				t.Errorf(&#34;Nextafter(%g, %g) = %g want %g&#34;, vf[i], 10.0, f, nextafter[i])
+<span id="L2310" class="ln">  2310</span>			}
+<span id="L2311" class="ln">  2311</span>		}
+<span id="L2312" class="ln">  2312</span>		for i := 0; i &lt; len(vfnextafterSC); i++ {
+<span id="L2313" class="ln">  2313</span>			if f := Nextafter(vfnextafterSC[i][0], vfnextafterSC[i][1]); !alike(nextafterSC[i], f) {
+<span id="L2314" class="ln">  2314</span>				t.Errorf(&#34;Nextafter(%g, %g) = %g want %g&#34;, vfnextafterSC[i][0], vfnextafterSC[i][1], f, nextafterSC[i])
+<span id="L2315" class="ln">  2315</span>			}
+<span id="L2316" class="ln">  2316</span>		}
+<span id="L2317" class="ln">  2317</span>	}
+<span id="L2318" class="ln">  2318</span>	
+<span id="L2319" class="ln">  2319</span>	func TestPow(t *testing.T) {
+<span id="L2320" class="ln">  2320</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2321" class="ln">  2321</span>			if f := Pow(10, vf[i]); !close(pow[i], f) {
+<span id="L2322" class="ln">  2322</span>				t.Errorf(&#34;Pow(10, %g) = %g, want %g&#34;, vf[i], f, pow[i])
+<span id="L2323" class="ln">  2323</span>			}
+<span id="L2324" class="ln">  2324</span>		}
+<span id="L2325" class="ln">  2325</span>		for i := 0; i &lt; len(vfpowSC); i++ {
+<span id="L2326" class="ln">  2326</span>			if f := Pow(vfpowSC[i][0], vfpowSC[i][1]); !alike(powSC[i], f) {
+<span id="L2327" class="ln">  2327</span>				t.Errorf(&#34;Pow(%g, %g) = %g, want %g&#34;, vfpowSC[i][0], vfpowSC[i][1], f, powSC[i])
+<span id="L2328" class="ln">  2328</span>			}
+<span id="L2329" class="ln">  2329</span>		}
+<span id="L2330" class="ln">  2330</span>	}
+<span id="L2331" class="ln">  2331</span>	
+<span id="L2332" class="ln">  2332</span>	func TestPow10(t *testing.T) {
+<span id="L2333" class="ln">  2333</span>		for i := 0; i &lt; len(vfpow10SC); i++ {
+<span id="L2334" class="ln">  2334</span>			if f := Pow10(vfpow10SC[i]); !alike(pow10SC[i], f) {
+<span id="L2335" class="ln">  2335</span>				t.Errorf(&#34;Pow10(%d) = %g, want %g&#34;, vfpow10SC[i], f, pow10SC[i])
+<span id="L2336" class="ln">  2336</span>			}
+<span id="L2337" class="ln">  2337</span>		}
+<span id="L2338" class="ln">  2338</span>	}
+<span id="L2339" class="ln">  2339</span>	
+<span id="L2340" class="ln">  2340</span>	func TestRemainder(t *testing.T) {
+<span id="L2341" class="ln">  2341</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2342" class="ln">  2342</span>			if f := Remainder(10, vf[i]); remainder[i] != f {
+<span id="L2343" class="ln">  2343</span>				t.Errorf(&#34;Remainder(10, %g) = %g, want %g&#34;, vf[i], f, remainder[i])
+<span id="L2344" class="ln">  2344</span>			}
+<span id="L2345" class="ln">  2345</span>		}
+<span id="L2346" class="ln">  2346</span>		for i := 0; i &lt; len(vffmodSC); i++ {
+<span id="L2347" class="ln">  2347</span>			if f := Remainder(vffmodSC[i][0], vffmodSC[i][1]); !alike(fmodSC[i], f) {
+<span id="L2348" class="ln">  2348</span>				t.Errorf(&#34;Remainder(%g, %g) = %g, want %g&#34;, vffmodSC[i][0], vffmodSC[i][1], f, fmodSC[i])
+<span id="L2349" class="ln">  2349</span>			}
+<span id="L2350" class="ln">  2350</span>		}
+<span id="L2351" class="ln">  2351</span>	}
+<span id="L2352" class="ln">  2352</span>	
+<span id="L2353" class="ln">  2353</span>	func TestSignbit(t *testing.T) {
+<span id="L2354" class="ln">  2354</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2355" class="ln">  2355</span>			if f := Signbit(vf[i]); signbit[i] != f {
+<span id="L2356" class="ln">  2356</span>				t.Errorf(&#34;Signbit(%g) = %t, want %t&#34;, vf[i], f, signbit[i])
+<span id="L2357" class="ln">  2357</span>			}
+<span id="L2358" class="ln">  2358</span>		}
+<span id="L2359" class="ln">  2359</span>		for i := 0; i &lt; len(vfsignbitSC); i++ {
+<span id="L2360" class="ln">  2360</span>			if f := Signbit(vfsignbitSC[i]); signbitSC[i] != f {
+<span id="L2361" class="ln">  2361</span>				t.Errorf(&#34;Signbit(%g) = %t, want %t&#34;, vfsignbitSC[i], f, signbitSC[i])
+<span id="L2362" class="ln">  2362</span>			}
+<span id="L2363" class="ln">  2363</span>		}
+<span id="L2364" class="ln">  2364</span>	}
+<span id="L2365" class="ln">  2365</span>	func TestSin(t *testing.T) {
+<span id="L2366" class="ln">  2366</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2367" class="ln">  2367</span>			if f := Sin(vf[i]); !veryclose(sin[i], f) {
+<span id="L2368" class="ln">  2368</span>				t.Errorf(&#34;Sin(%g) = %g, want %g&#34;, vf[i], f, sin[i])
+<span id="L2369" class="ln">  2369</span>			}
+<span id="L2370" class="ln">  2370</span>		}
+<span id="L2371" class="ln">  2371</span>		for i := 0; i &lt; len(vfsinSC); i++ {
+<span id="L2372" class="ln">  2372</span>			if f := Sin(vfsinSC[i]); !alike(sinSC[i], f) {
+<span id="L2373" class="ln">  2373</span>				t.Errorf(&#34;Sin(%g) = %g, want %g&#34;, vfsinSC[i], f, sinSC[i])
+<span id="L2374" class="ln">  2374</span>			}
+<span id="L2375" class="ln">  2375</span>		}
+<span id="L2376" class="ln">  2376</span>	}
+<span id="L2377" class="ln">  2377</span>	
+<span id="L2378" class="ln">  2378</span>	func TestSincos(t *testing.T) {
+<span id="L2379" class="ln">  2379</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2380" class="ln">  2380</span>			if s, c := Sincos(vf[i]); !veryclose(sin[i], s) || !veryclose(cos[i], c) {
+<span id="L2381" class="ln">  2381</span>				t.Errorf(&#34;Sincos(%g) = %g, %g want %g, %g&#34;, vf[i], s, c, sin[i], cos[i])
+<span id="L2382" class="ln">  2382</span>			}
+<span id="L2383" class="ln">  2383</span>		}
+<span id="L2384" class="ln">  2384</span>	}
+<span id="L2385" class="ln">  2385</span>	
+<span id="L2386" class="ln">  2386</span>	func TestSinh(t *testing.T) {
+<span id="L2387" class="ln">  2387</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2388" class="ln">  2388</span>			if f := Sinh(vf[i]); !close(sinh[i], f) {
+<span id="L2389" class="ln">  2389</span>				t.Errorf(&#34;Sinh(%g) = %g, want %g&#34;, vf[i], f, sinh[i])
+<span id="L2390" class="ln">  2390</span>			}
+<span id="L2391" class="ln">  2391</span>		}
+<span id="L2392" class="ln">  2392</span>		for i := 0; i &lt; len(vfsinhSC); i++ {
+<span id="L2393" class="ln">  2393</span>			if f := Sinh(vfsinhSC[i]); !alike(sinhSC[i], f) {
+<span id="L2394" class="ln">  2394</span>				t.Errorf(&#34;Sinh(%g) = %g, want %g&#34;, vfsinhSC[i], f, sinhSC[i])
+<span id="L2395" class="ln">  2395</span>			}
+<span id="L2396" class="ln">  2396</span>		}
+<span id="L2397" class="ln">  2397</span>	}
+<span id="L2398" class="ln">  2398</span>	
+<span id="L2399" class="ln">  2399</span>	func TestSqrt(t *testing.T) {
+<span id="L2400" class="ln">  2400</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2401" class="ln">  2401</span>			a := Abs(vf[i])
+<span id="L2402" class="ln">  2402</span>			if f := SqrtGo(a); sqrt[i] != f {
+<span id="L2403" class="ln">  2403</span>				t.Errorf(&#34;SqrtGo(%g) = %g, want %g&#34;, a, f, sqrt[i])
+<span id="L2404" class="ln">  2404</span>			}
+<span id="L2405" class="ln">  2405</span>			a = Abs(vf[i])
+<span id="L2406" class="ln">  2406</span>			if f := Sqrt(a); sqrt[i] != f {
+<span id="L2407" class="ln">  2407</span>				t.Errorf(&#34;Sqrt(%g) = %g, want %g&#34;, a, f, sqrt[i])
+<span id="L2408" class="ln">  2408</span>			}
+<span id="L2409" class="ln">  2409</span>		}
+<span id="L2410" class="ln">  2410</span>		for i := 0; i &lt; len(vfsqrtSC); i++ {
+<span id="L2411" class="ln">  2411</span>			if f := SqrtGo(vfsqrtSC[i]); !alike(sqrtSC[i], f) {
+<span id="L2412" class="ln">  2412</span>				t.Errorf(&#34;SqrtGo(%g) = %g, want %g&#34;, vfsqrtSC[i], f, sqrtSC[i])
+<span id="L2413" class="ln">  2413</span>			}
+<span id="L2414" class="ln">  2414</span>			if f := Sqrt(vfsqrtSC[i]); !alike(sqrtSC[i], f) {
+<span id="L2415" class="ln">  2415</span>				t.Errorf(&#34;Sqrt(%g) = %g, want %g&#34;, vfsqrtSC[i], f, sqrtSC[i])
+<span id="L2416" class="ln">  2416</span>			}
+<span id="L2417" class="ln">  2417</span>		}
+<span id="L2418" class="ln">  2418</span>	}
+<span id="L2419" class="ln">  2419</span>	
+<span id="L2420" class="ln">  2420</span>	func TestTan(t *testing.T) {
+<span id="L2421" class="ln">  2421</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2422" class="ln">  2422</span>			if f := Tan(vf[i]); !veryclose(tan[i], f) {
+<span id="L2423" class="ln">  2423</span>				t.Errorf(&#34;Tan(%g) = %g, want %g&#34;, vf[i], f, tan[i])
+<span id="L2424" class="ln">  2424</span>			}
+<span id="L2425" class="ln">  2425</span>		}
+<span id="L2426" class="ln">  2426</span>		<span class="comment">// same special cases as Sin</span>
+<span id="L2427" class="ln">  2427</span>		for i := 0; i &lt; len(vfsinSC); i++ {
+<span id="L2428" class="ln">  2428</span>			if f := Tan(vfsinSC[i]); !alike(sinSC[i], f) {
+<span id="L2429" class="ln">  2429</span>				t.Errorf(&#34;Tan(%g) = %g, want %g&#34;, vfsinSC[i], f, sinSC[i])
+<span id="L2430" class="ln">  2430</span>			}
+<span id="L2431" class="ln">  2431</span>		}
+<span id="L2432" class="ln">  2432</span>	}
+<span id="L2433" class="ln">  2433</span>	
+<span id="L2434" class="ln">  2434</span>	func TestTanh(t *testing.T) {
+<span id="L2435" class="ln">  2435</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2436" class="ln">  2436</span>			if f := Tanh(vf[i]); !veryclose(tanh[i], f) {
+<span id="L2437" class="ln">  2437</span>				t.Errorf(&#34;Tanh(%g) = %g, want %g&#34;, vf[i], f, tanh[i])
+<span id="L2438" class="ln">  2438</span>			}
+<span id="L2439" class="ln">  2439</span>		}
+<span id="L2440" class="ln">  2440</span>		for i := 0; i &lt; len(vftanhSC); i++ {
+<span id="L2441" class="ln">  2441</span>			if f := Tanh(vftanhSC[i]); !alike(tanhSC[i], f) {
+<span id="L2442" class="ln">  2442</span>				t.Errorf(&#34;Tanh(%g) = %g, want %g&#34;, vftanhSC[i], f, tanhSC[i])
+<span id="L2443" class="ln">  2443</span>			}
+<span id="L2444" class="ln">  2444</span>		}
+<span id="L2445" class="ln">  2445</span>	}
+<span id="L2446" class="ln">  2446</span>	
+<span id="L2447" class="ln">  2447</span>	func TestTrunc(t *testing.T) {
+<span id="L2448" class="ln">  2448</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2449" class="ln">  2449</span>			if f := Trunc(vf[i]); trunc[i] != f {
+<span id="L2450" class="ln">  2450</span>				t.Errorf(&#34;Trunc(%g) = %g, want %g&#34;, vf[i], f, trunc[i])
+<span id="L2451" class="ln">  2451</span>			}
+<span id="L2452" class="ln">  2452</span>		}
+<span id="L2453" class="ln">  2453</span>		for i := 0; i &lt; len(vfceilSC); i++ {
+<span id="L2454" class="ln">  2454</span>			if f := Trunc(vfceilSC[i]); !alike(ceilSC[i], f) {
+<span id="L2455" class="ln">  2455</span>				t.Errorf(&#34;Trunc(%g) = %g, want %g&#34;, vfceilSC[i], f, ceilSC[i])
+<span id="L2456" class="ln">  2456</span>			}
+<span id="L2457" class="ln">  2457</span>		}
+<span id="L2458" class="ln">  2458</span>	}
+<span id="L2459" class="ln">  2459</span>	
+<span id="L2460" class="ln">  2460</span>	func TestY0(t *testing.T) {
+<span id="L2461" class="ln">  2461</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2462" class="ln">  2462</span>			a := Abs(vf[i])
+<span id="L2463" class="ln">  2463</span>			if f := Y0(a); !close(y0[i], f) {
+<span id="L2464" class="ln">  2464</span>				t.Errorf(&#34;Y0(%g) = %g, want %g&#34;, a, f, y0[i])
+<span id="L2465" class="ln">  2465</span>			}
+<span id="L2466" class="ln">  2466</span>		}
+<span id="L2467" class="ln">  2467</span>		for i := 0; i &lt; len(vfy0SC); i++ {
+<span id="L2468" class="ln">  2468</span>			if f := Y0(vfy0SC[i]); !alike(y0SC[i], f) {
+<span id="L2469" class="ln">  2469</span>				t.Errorf(&#34;Y0(%g) = %g, want %g&#34;, vfy0SC[i], f, y0SC[i])
+<span id="L2470" class="ln">  2470</span>			}
+<span id="L2471" class="ln">  2471</span>		}
+<span id="L2472" class="ln">  2472</span>	}
+<span id="L2473" class="ln">  2473</span>	
+<span id="L2474" class="ln">  2474</span>	func TestY1(t *testing.T) {
+<span id="L2475" class="ln">  2475</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2476" class="ln">  2476</span>			a := Abs(vf[i])
+<span id="L2477" class="ln">  2477</span>			if f := Y1(a); !soclose(y1[i], f, 2e-14) {
+<span id="L2478" class="ln">  2478</span>				t.Errorf(&#34;Y1(%g) = %g, want %g&#34;, a, f, y1[i])
+<span id="L2479" class="ln">  2479</span>			}
+<span id="L2480" class="ln">  2480</span>		}
+<span id="L2481" class="ln">  2481</span>		for i := 0; i &lt; len(vfy0SC); i++ {
+<span id="L2482" class="ln">  2482</span>			if f := Y1(vfy0SC[i]); !alike(y1SC[i], f) {
+<span id="L2483" class="ln">  2483</span>				t.Errorf(&#34;Y1(%g) = %g, want %g&#34;, vfy0SC[i], f, y1SC[i])
+<span id="L2484" class="ln">  2484</span>			}
+<span id="L2485" class="ln">  2485</span>		}
+<span id="L2486" class="ln">  2486</span>	}
+<span id="L2487" class="ln">  2487</span>	
+<span id="L2488" class="ln">  2488</span>	func TestYn(t *testing.T) {
+<span id="L2489" class="ln">  2489</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2490" class="ln">  2490</span>			a := Abs(vf[i])
+<span id="L2491" class="ln">  2491</span>			if f := Yn(2, a); !close(y2[i], f) {
+<span id="L2492" class="ln">  2492</span>				t.Errorf(&#34;Yn(2, %g) = %g, want %g&#34;, a, f, y2[i])
+<span id="L2493" class="ln">  2493</span>			}
+<span id="L2494" class="ln">  2494</span>			if f := Yn(-3, a); !close(yM3[i], f) {
+<span id="L2495" class="ln">  2495</span>				t.Errorf(&#34;Yn(-3, %g) = %g, want %g&#34;, a, f, yM3[i])
+<span id="L2496" class="ln">  2496</span>			}
+<span id="L2497" class="ln">  2497</span>		}
+<span id="L2498" class="ln">  2498</span>		for i := 0; i &lt; len(vfy0SC); i++ {
+<span id="L2499" class="ln">  2499</span>			if f := Yn(2, vfy0SC[i]); !alike(y2SC[i], f) {
+<span id="L2500" class="ln">  2500</span>				t.Errorf(&#34;Yn(2, %g) = %g, want %g&#34;, vfy0SC[i], f, y2SC[i])
+<span id="L2501" class="ln">  2501</span>			}
+<span id="L2502" class="ln">  2502</span>			if f := Yn(-3, vfy0SC[i]); !alike(yM3SC[i], f) {
+<span id="L2503" class="ln">  2503</span>				t.Errorf(&#34;Yn(-3, %g) = %g, want %g&#34;, vfy0SC[i], f, yM3SC[i])
+<span id="L2504" class="ln">  2504</span>			}
+<span id="L2505" class="ln">  2505</span>		}
+<span id="L2506" class="ln">  2506</span>	}
+<span id="L2507" class="ln">  2507</span>	
+<span id="L2508" class="ln">  2508</span>	<span class="comment">// Check that math functions of high angle values</span>
+<span id="L2509" class="ln">  2509</span>	<span class="comment">// return accurate results. [Since (vf[i] + large) - large != vf[i],</span>
+<span id="L2510" class="ln">  2510</span>	<span class="comment">// testing for Trig(vf[i] + large) == Trig(vf[i]), where large is</span>
+<span id="L2511" class="ln">  2511</span>	<span class="comment">// a multiple of 2*Pi, is misleading.]</span>
+<span id="L2512" class="ln">  2512</span>	func TestLargeCos(t *testing.T) {
+<span id="L2513" class="ln">  2513</span>		large := float64(100000 * Pi)
+<span id="L2514" class="ln">  2514</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2515" class="ln">  2515</span>			f1 := cosLarge[i]
+<span id="L2516" class="ln">  2516</span>			f2 := Cos(vf[i] + large)
+<span id="L2517" class="ln">  2517</span>			if !close(f1, f2) {
+<span id="L2518" class="ln">  2518</span>				t.Errorf(&#34;Cos(%g) = %g, want %g&#34;, vf[i]+large, f2, f1)
+<span id="L2519" class="ln">  2519</span>			}
+<span id="L2520" class="ln">  2520</span>		}
+<span id="L2521" class="ln">  2521</span>	}
+<span id="L2522" class="ln">  2522</span>	
+<span id="L2523" class="ln">  2523</span>	func TestLargeSin(t *testing.T) {
+<span id="L2524" class="ln">  2524</span>		large := float64(100000 * Pi)
+<span id="L2525" class="ln">  2525</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2526" class="ln">  2526</span>			f1 := sinLarge[i]
+<span id="L2527" class="ln">  2527</span>			f2 := Sin(vf[i] + large)
+<span id="L2528" class="ln">  2528</span>			if !close(f1, f2) {
+<span id="L2529" class="ln">  2529</span>				t.Errorf(&#34;Sin(%g) = %g, want %g&#34;, vf[i]+large, f2, f1)
+<span id="L2530" class="ln">  2530</span>			}
+<span id="L2531" class="ln">  2531</span>		}
+<span id="L2532" class="ln">  2532</span>	}
+<span id="L2533" class="ln">  2533</span>	
+<span id="L2534" class="ln">  2534</span>	func TestLargeSincos(t *testing.T) {
+<span id="L2535" class="ln">  2535</span>		large := float64(100000 * Pi)
+<span id="L2536" class="ln">  2536</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2537" class="ln">  2537</span>			f1, g1 := sinLarge[i], cosLarge[i]
+<span id="L2538" class="ln">  2538</span>			f2, g2 := Sincos(vf[i] + large)
+<span id="L2539" class="ln">  2539</span>			if !close(f1, f2) || !close(g1, g2) {
+<span id="L2540" class="ln">  2540</span>				t.Errorf(&#34;Sincos(%g) = %g, %g, want %g, %g&#34;, vf[i]+large, f2, g2, f1, g1)
+<span id="L2541" class="ln">  2541</span>			}
+<span id="L2542" class="ln">  2542</span>		}
+<span id="L2543" class="ln">  2543</span>	}
+<span id="L2544" class="ln">  2544</span>	
+<span id="L2545" class="ln">  2545</span>	func TestLargeTan(t *testing.T) {
+<span id="L2546" class="ln">  2546</span>		large := float64(100000 * Pi)
+<span id="L2547" class="ln">  2547</span>		for i := 0; i &lt; len(vf); i++ {
+<span id="L2548" class="ln">  2548</span>			f1 := tanLarge[i]
+<span id="L2549" class="ln">  2549</span>			f2 := Tan(vf[i] + large)
+<span id="L2550" class="ln">  2550</span>			if !close(f1, f2) {
+<span id="L2551" class="ln">  2551</span>				t.Errorf(&#34;Tan(%g) = %g, want %g&#34;, vf[i]+large, f2, f1)
+<span id="L2552" class="ln">  2552</span>			}
+<span id="L2553" class="ln">  2553</span>		}
+<span id="L2554" class="ln">  2554</span>	}
+<span id="L2555" class="ln">  2555</span>	
+<span id="L2556" class="ln">  2556</span>	<span class="comment">// Check that math constants are accepted by compiler</span>
+<span id="L2557" class="ln">  2557</span>	<span class="comment">// and have right value (assumes strconv.ParseFloat works).</span>
+<span id="L2558" class="ln">  2558</span>	<span class="comment">// http://code.google.com/p/go/issues/detail?id=201</span>
+<span id="L2559" class="ln">  2559</span>	
+<span id="L2560" class="ln">  2560</span>	type floatTest struct {
+<span id="L2561" class="ln">  2561</span>		val  interface{}
+<span id="L2562" class="ln">  2562</span>		name string
+<span id="L2563" class="ln">  2563</span>		str  string
+<span id="L2564" class="ln">  2564</span>	}
+<span id="L2565" class="ln">  2565</span>	
+<span id="L2566" class="ln">  2566</span>	var floatTests = []floatTest{
+<span id="L2567" class="ln">  2567</span>		{float64(MaxFloat64), &#34;MaxFloat64&#34;, &#34;1.7976931348623157e+308&#34;},
+<span id="L2568" class="ln">  2568</span>		{float64(SmallestNonzeroFloat64), &#34;SmallestNonzeroFloat64&#34;, &#34;5e-324&#34;},
+<span id="L2569" class="ln">  2569</span>		{float32(MaxFloat32), &#34;MaxFloat32&#34;, &#34;3.4028235e+38&#34;},
+<span id="L2570" class="ln">  2570</span>		{float32(SmallestNonzeroFloat32), &#34;SmallestNonzeroFloat32&#34;, &#34;1e-45&#34;},
+<span id="L2571" class="ln">  2571</span>	}
+<span id="L2572" class="ln">  2572</span>	
+<span id="L2573" class="ln">  2573</span>	func TestFloatMinMax(t *testing.T) {
+<span id="L2574" class="ln">  2574</span>		for _, tt := range floatTests {
+<span id="L2575" class="ln">  2575</span>			s := fmt.Sprint(tt.val)
+<span id="L2576" class="ln">  2576</span>			if s != tt.str {
+<span id="L2577" class="ln">  2577</span>				t.Errorf(&#34;Sprint(%v) = %s, want %s&#34;, tt.name, s, tt.str)
+<span id="L2578" class="ln">  2578</span>			}
+<span id="L2579" class="ln">  2579</span>		}
+<span id="L2580" class="ln">  2580</span>	}
+<span id="L2581" class="ln">  2581</span>	
+<span id="L2582" class="ln">  2582</span>	<span class="comment">// Benchmarks</span>
+<span id="L2583" class="ln">  2583</span>	
+<span id="L2584" class="ln">  2584</span>	func BenchmarkAcos(b *testing.B) {
+<span id="L2585" class="ln">  2585</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2586" class="ln">  2586</span>			Acos(.5)
+<span id="L2587" class="ln">  2587</span>		}
+<span id="L2588" class="ln">  2588</span>	}
+<span id="L2589" class="ln">  2589</span>	
+<span id="L2590" class="ln">  2590</span>	func BenchmarkAcosh(b *testing.B) {
+<span id="L2591" class="ln">  2591</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2592" class="ln">  2592</span>			Acosh(1.5)
+<span id="L2593" class="ln">  2593</span>		}
+<span id="L2594" class="ln">  2594</span>	}
+<span id="L2595" class="ln">  2595</span>	
+<span id="L2596" class="ln">  2596</span>	func BenchmarkAsin(b *testing.B) {
+<span id="L2597" class="ln">  2597</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2598" class="ln">  2598</span>			Asin(.5)
+<span id="L2599" class="ln">  2599</span>		}
+<span id="L2600" class="ln">  2600</span>	}
+<span id="L2601" class="ln">  2601</span>	
+<span id="L2602" class="ln">  2602</span>	func BenchmarkAsinh(b *testing.B) {
+<span id="L2603" class="ln">  2603</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2604" class="ln">  2604</span>			Asinh(.5)
+<span id="L2605" class="ln">  2605</span>		}
+<span id="L2606" class="ln">  2606</span>	}
+<span id="L2607" class="ln">  2607</span>	
+<span id="L2608" class="ln">  2608</span>	func BenchmarkAtan(b *testing.B) {
+<span id="L2609" class="ln">  2609</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2610" class="ln">  2610</span>			Atan(.5)
+<span id="L2611" class="ln">  2611</span>		}
+<span id="L2612" class="ln">  2612</span>	}
+<span id="L2613" class="ln">  2613</span>	
+<span id="L2614" class="ln">  2614</span>	func BenchmarkAtanh(b *testing.B) {
+<span id="L2615" class="ln">  2615</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2616" class="ln">  2616</span>			Atanh(.5)
+<span id="L2617" class="ln">  2617</span>		}
+<span id="L2618" class="ln">  2618</span>	}
+<span id="L2619" class="ln">  2619</span>	
+<span id="L2620" class="ln">  2620</span>	func BenchmarkAtan2(b *testing.B) {
+<span id="L2621" class="ln">  2621</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2622" class="ln">  2622</span>			Atan2(.5, 1)
+<span id="L2623" class="ln">  2623</span>		}
+<span id="L2624" class="ln">  2624</span>	}
+<span id="L2625" class="ln">  2625</span>	
+<span id="L2626" class="ln">  2626</span>	func BenchmarkCbrt(b *testing.B) {
+<span id="L2627" class="ln">  2627</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2628" class="ln">  2628</span>			Cbrt(10)
+<span id="L2629" class="ln">  2629</span>		}
+<span id="L2630" class="ln">  2630</span>	}
+<span id="L2631" class="ln">  2631</span>	
+<span id="L2632" class="ln">  2632</span>	func BenchmarkCeil(b *testing.B) {
+<span id="L2633" class="ln">  2633</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2634" class="ln">  2634</span>			Ceil(.5)
+<span id="L2635" class="ln">  2635</span>		}
+<span id="L2636" class="ln">  2636</span>	}
+<span id="L2637" class="ln">  2637</span>	
+<span id="L2638" class="ln">  2638</span>	func BenchmarkCopysign(b *testing.B) {
+<span id="L2639" class="ln">  2639</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2640" class="ln">  2640</span>			Copysign(.5, -1)
+<span id="L2641" class="ln">  2641</span>		}
+<span id="L2642" class="ln">  2642</span>	}
+<span id="L2643" class="ln">  2643</span>	
+<span id="L2644" class="ln">  2644</span>	func BenchmarkCos(b *testing.B) {
+<span id="L2645" class="ln">  2645</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2646" class="ln">  2646</span>			Cos(.5)
+<span id="L2647" class="ln">  2647</span>		}
+<span id="L2648" class="ln">  2648</span>	}
+<span id="L2649" class="ln">  2649</span>	
+<span id="L2650" class="ln">  2650</span>	func BenchmarkCosh(b *testing.B) {
+<span id="L2651" class="ln">  2651</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2652" class="ln">  2652</span>			Cosh(2.5)
+<span id="L2653" class="ln">  2653</span>		}
+<span id="L2654" class="ln">  2654</span>	}
+<span id="L2655" class="ln">  2655</span>	
+<span id="L2656" class="ln">  2656</span>	func BenchmarkErf(b *testing.B) {
+<span id="L2657" class="ln">  2657</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2658" class="ln">  2658</span>			Erf(.5)
+<span id="L2659" class="ln">  2659</span>		}
+<span id="L2660" class="ln">  2660</span>	}
+<span id="L2661" class="ln">  2661</span>	
+<span id="L2662" class="ln">  2662</span>	func BenchmarkErfc(b *testing.B) {
+<span id="L2663" class="ln">  2663</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2664" class="ln">  2664</span>			Erfc(.5)
+<span id="L2665" class="ln">  2665</span>		}
+<span id="L2666" class="ln">  2666</span>	}
+<span id="L2667" class="ln">  2667</span>	
+<span id="L2668" class="ln">  2668</span>	func BenchmarkExp(b *testing.B) {
+<span id="L2669" class="ln">  2669</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2670" class="ln">  2670</span>			Exp(.5)
+<span id="L2671" class="ln">  2671</span>		}
+<span id="L2672" class="ln">  2672</span>	}
+<span id="L2673" class="ln">  2673</span>	
+<span id="L2674" class="ln">  2674</span>	func BenchmarkExpGo(b *testing.B) {
+<span id="L2675" class="ln">  2675</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2676" class="ln">  2676</span>			ExpGo(.5)
+<span id="L2677" class="ln">  2677</span>		}
+<span id="L2678" class="ln">  2678</span>	}
+<span id="L2679" class="ln">  2679</span>	
+<span id="L2680" class="ln">  2680</span>	func BenchmarkExpm1(b *testing.B) {
+<span id="L2681" class="ln">  2681</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2682" class="ln">  2682</span>			Expm1(.5)
+<span id="L2683" class="ln">  2683</span>		}
+<span id="L2684" class="ln">  2684</span>	}
+<span id="L2685" class="ln">  2685</span>	
+<span id="L2686" class="ln">  2686</span>	func BenchmarkExp2(b *testing.B) {
+<span id="L2687" class="ln">  2687</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2688" class="ln">  2688</span>			Exp2(.5)
+<span id="L2689" class="ln">  2689</span>		}
+<span id="L2690" class="ln">  2690</span>	}
+<span id="L2691" class="ln">  2691</span>	
+<span id="L2692" class="ln">  2692</span>	func BenchmarkExp2Go(b *testing.B) {
+<span id="L2693" class="ln">  2693</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2694" class="ln">  2694</span>			Exp2Go(.5)
+<span id="L2695" class="ln">  2695</span>		}
+<span id="L2696" class="ln">  2696</span>	}
+<span id="L2697" class="ln">  2697</span>	
+<span id="L2698" class="ln">  2698</span>	func BenchmarkAbs(b *testing.B) {
+<span id="L2699" class="ln">  2699</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2700" class="ln">  2700</span>			Abs(.5)
+<span id="L2701" class="ln">  2701</span>		}
+<span id="L2702" class="ln">  2702</span>	}
+<span id="L2703" class="ln">  2703</span>	
+<span id="L2704" class="ln">  2704</span>	func BenchmarkDim(b *testing.B) {
+<span id="L2705" class="ln">  2705</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2706" class="ln">  2706</span>			Dim(10, 3)
+<span id="L2707" class="ln">  2707</span>		}
+<span id="L2708" class="ln">  2708</span>	}
+<span id="L2709" class="ln">  2709</span>	
+<span id="L2710" class="ln">  2710</span>	func BenchmarkFloor(b *testing.B) {
+<span id="L2711" class="ln">  2711</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2712" class="ln">  2712</span>			Floor(.5)
+<span id="L2713" class="ln">  2713</span>		}
+<span id="L2714" class="ln">  2714</span>	}
+<span id="L2715" class="ln">  2715</span>	
+<span id="L2716" class="ln">  2716</span>	func BenchmarkMax(b *testing.B) {
+<span id="L2717" class="ln">  2717</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2718" class="ln">  2718</span>			Max(10, 3)
+<span id="L2719" class="ln">  2719</span>		}
+<span id="L2720" class="ln">  2720</span>	}
+<span id="L2721" class="ln">  2721</span>	
+<span id="L2722" class="ln">  2722</span>	func BenchmarkMin(b *testing.B) {
+<span id="L2723" class="ln">  2723</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2724" class="ln">  2724</span>			Min(10, 3)
+<span id="L2725" class="ln">  2725</span>		}
+<span id="L2726" class="ln">  2726</span>	}
+<span id="L2727" class="ln">  2727</span>	
+<span id="L2728" class="ln">  2728</span>	func BenchmarkMod(b *testing.B) {
+<span id="L2729" class="ln">  2729</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2730" class="ln">  2730</span>			Mod(10, 3)
+<span id="L2731" class="ln">  2731</span>		}
+<span id="L2732" class="ln">  2732</span>	}
+<span id="L2733" class="ln">  2733</span>	
+<span id="L2734" class="ln">  2734</span>	func BenchmarkFrexp(b *testing.B) {
+<span id="L2735" class="ln">  2735</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2736" class="ln">  2736</span>			Frexp(8)
+<span id="L2737" class="ln">  2737</span>		}
+<span id="L2738" class="ln">  2738</span>	}
+<span id="L2739" class="ln">  2739</span>	
+<span id="L2740" class="ln">  2740</span>	func BenchmarkGamma(b *testing.B) {
+<span id="L2741" class="ln">  2741</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2742" class="ln">  2742</span>			Gamma(2.5)
+<span id="L2743" class="ln">  2743</span>		}
+<span id="L2744" class="ln">  2744</span>	}
+<span id="L2745" class="ln">  2745</span>	
+<span id="L2746" class="ln">  2746</span>	func BenchmarkHypot(b *testing.B) {
+<span id="L2747" class="ln">  2747</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2748" class="ln">  2748</span>			Hypot(3, 4)
+<span id="L2749" class="ln">  2749</span>		}
+<span id="L2750" class="ln">  2750</span>	}
+<span id="L2751" class="ln">  2751</span>	
+<span id="L2752" class="ln">  2752</span>	func BenchmarkHypotGo(b *testing.B) {
+<span id="L2753" class="ln">  2753</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2754" class="ln">  2754</span>			HypotGo(3, 4)
+<span id="L2755" class="ln">  2755</span>		}
+<span id="L2756" class="ln">  2756</span>	}
+<span id="L2757" class="ln">  2757</span>	
+<span id="L2758" class="ln">  2758</span>	func BenchmarkIlogb(b *testing.B) {
+<span id="L2759" class="ln">  2759</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2760" class="ln">  2760</span>			Ilogb(.5)
+<span id="L2761" class="ln">  2761</span>		}
+<span id="L2762" class="ln">  2762</span>	}
+<span id="L2763" class="ln">  2763</span>	
+<span id="L2764" class="ln">  2764</span>	func BenchmarkJ0(b *testing.B) {
+<span id="L2765" class="ln">  2765</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2766" class="ln">  2766</span>			J0(2.5)
+<span id="L2767" class="ln">  2767</span>		}
+<span id="L2768" class="ln">  2768</span>	}
+<span id="L2769" class="ln">  2769</span>	
+<span id="L2770" class="ln">  2770</span>	func BenchmarkJ1(b *testing.B) {
+<span id="L2771" class="ln">  2771</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2772" class="ln">  2772</span>			J1(2.5)
+<span id="L2773" class="ln">  2773</span>		}
+<span id="L2774" class="ln">  2774</span>	}
+<span id="L2775" class="ln">  2775</span>	
+<span id="L2776" class="ln">  2776</span>	func BenchmarkJn(b *testing.B) {
+<span id="L2777" class="ln">  2777</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2778" class="ln">  2778</span>			Jn(2, 2.5)
+<span id="L2779" class="ln">  2779</span>		}
+<span id="L2780" class="ln">  2780</span>	}
+<span id="L2781" class="ln">  2781</span>	
+<span id="L2782" class="ln">  2782</span>	func BenchmarkLdexp(b *testing.B) {
+<span id="L2783" class="ln">  2783</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2784" class="ln">  2784</span>			Ldexp(.5, 2)
+<span id="L2785" class="ln">  2785</span>		}
+<span id="L2786" class="ln">  2786</span>	}
+<span id="L2787" class="ln">  2787</span>	
+<span id="L2788" class="ln">  2788</span>	func BenchmarkLgamma(b *testing.B) {
+<span id="L2789" class="ln">  2789</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2790" class="ln">  2790</span>			Lgamma(2.5)
+<span id="L2791" class="ln">  2791</span>		}
+<span id="L2792" class="ln">  2792</span>	}
+<span id="L2793" class="ln">  2793</span>	
+<span id="L2794" class="ln">  2794</span>	func BenchmarkLog(b *testing.B) {
+<span id="L2795" class="ln">  2795</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2796" class="ln">  2796</span>			Log(.5)
+<span id="L2797" class="ln">  2797</span>		}
+<span id="L2798" class="ln">  2798</span>	}
+<span id="L2799" class="ln">  2799</span>	
+<span id="L2800" class="ln">  2800</span>	func BenchmarkLogb(b *testing.B) {
+<span id="L2801" class="ln">  2801</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2802" class="ln">  2802</span>			Logb(.5)
+<span id="L2803" class="ln">  2803</span>		}
+<span id="L2804" class="ln">  2804</span>	}
+<span id="L2805" class="ln">  2805</span>	
+<span id="L2806" class="ln">  2806</span>	func BenchmarkLog1p(b *testing.B) {
+<span id="L2807" class="ln">  2807</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2808" class="ln">  2808</span>			Log1p(.5)
+<span id="L2809" class="ln">  2809</span>		}
+<span id="L2810" class="ln">  2810</span>	}
+<span id="L2811" class="ln">  2811</span>	
+<span id="L2812" class="ln">  2812</span>	func BenchmarkLog10(b *testing.B) {
+<span id="L2813" class="ln">  2813</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2814" class="ln">  2814</span>			Log10(.5)
+<span id="L2815" class="ln">  2815</span>		}
+<span id="L2816" class="ln">  2816</span>	}
+<span id="L2817" class="ln">  2817</span>	
+<span id="L2818" class="ln">  2818</span>	func BenchmarkLog2(b *testing.B) {
+<span id="L2819" class="ln">  2819</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2820" class="ln">  2820</span>			Log2(.5)
+<span id="L2821" class="ln">  2821</span>		}
+<span id="L2822" class="ln">  2822</span>	}
+<span id="L2823" class="ln">  2823</span>	
+<span id="L2824" class="ln">  2824</span>	func BenchmarkModf(b *testing.B) {
+<span id="L2825" class="ln">  2825</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2826" class="ln">  2826</span>			Modf(1.5)
+<span id="L2827" class="ln">  2827</span>		}
+<span id="L2828" class="ln">  2828</span>	}
+<span id="L2829" class="ln">  2829</span>	
+<span id="L2830" class="ln">  2830</span>	func BenchmarkNextafter(b *testing.B) {
+<span id="L2831" class="ln">  2831</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2832" class="ln">  2832</span>			Nextafter(.5, 1)
+<span id="L2833" class="ln">  2833</span>		}
+<span id="L2834" class="ln">  2834</span>	}
+<span id="L2835" class="ln">  2835</span>	
+<span id="L2836" class="ln">  2836</span>	func BenchmarkPowInt(b *testing.B) {
+<span id="L2837" class="ln">  2837</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2838" class="ln">  2838</span>			Pow(2, 2)
+<span id="L2839" class="ln">  2839</span>		}
+<span id="L2840" class="ln">  2840</span>	}
+<span id="L2841" class="ln">  2841</span>	
+<span id="L2842" class="ln">  2842</span>	func BenchmarkPowFrac(b *testing.B) {
+<span id="L2843" class="ln">  2843</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2844" class="ln">  2844</span>			Pow(2.5, 1.5)
+<span id="L2845" class="ln">  2845</span>		}
+<span id="L2846" class="ln">  2846</span>	}
+<span id="L2847" class="ln">  2847</span>	
+<span id="L2848" class="ln">  2848</span>	func BenchmarkPow10Pos(b *testing.B) {
+<span id="L2849" class="ln">  2849</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2850" class="ln">  2850</span>			Pow10(300)
+<span id="L2851" class="ln">  2851</span>		}
+<span id="L2852" class="ln">  2852</span>	}
+<span id="L2853" class="ln">  2853</span>	
+<span id="L2854" class="ln">  2854</span>	func BenchmarkPow10Neg(b *testing.B) {
+<span id="L2855" class="ln">  2855</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2856" class="ln">  2856</span>			Pow10(-300)
+<span id="L2857" class="ln">  2857</span>		}
+<span id="L2858" class="ln">  2858</span>	}
+<span id="L2859" class="ln">  2859</span>	
+<span id="L2860" class="ln">  2860</span>	func BenchmarkRemainder(b *testing.B) {
+<span id="L2861" class="ln">  2861</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2862" class="ln">  2862</span>			Remainder(10, 3)
+<span id="L2863" class="ln">  2863</span>		}
+<span id="L2864" class="ln">  2864</span>	}
+<span id="L2865" class="ln">  2865</span>	
+<span id="L2866" class="ln">  2866</span>	func BenchmarkSignbit(b *testing.B) {
+<span id="L2867" class="ln">  2867</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2868" class="ln">  2868</span>			Signbit(2.5)
+<span id="L2869" class="ln">  2869</span>		}
+<span id="L2870" class="ln">  2870</span>	}
+<span id="L2871" class="ln">  2871</span>	
+<span id="L2872" class="ln">  2872</span>	func BenchmarkSin(b *testing.B) {
+<span id="L2873" class="ln">  2873</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2874" class="ln">  2874</span>			Sin(.5)
+<span id="L2875" class="ln">  2875</span>		}
+<span id="L2876" class="ln">  2876</span>	}
+<span id="L2877" class="ln">  2877</span>	
+<span id="L2878" class="ln">  2878</span>	func BenchmarkSincos(b *testing.B) {
+<span id="L2879" class="ln">  2879</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2880" class="ln">  2880</span>			Sincos(.5)
+<span id="L2881" class="ln">  2881</span>		}
+<span id="L2882" class="ln">  2882</span>	}
+<span id="L2883" class="ln">  2883</span>	
+<span id="L2884" class="ln">  2884</span>	func BenchmarkSinh(b *testing.B) {
+<span id="L2885" class="ln">  2885</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2886" class="ln">  2886</span>			Sinh(2.5)
+<span id="L2887" class="ln">  2887</span>		}
+<span id="L2888" class="ln">  2888</span>	}
+<span id="L2889" class="ln">  2889</span>	
+<span id="L2890" class="ln">  2890</span>	func BenchmarkSqrt(b *testing.B) {
+<span id="L2891" class="ln">  2891</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2892" class="ln">  2892</span>			Sqrt(10)
+<span id="L2893" class="ln">  2893</span>		}
+<span id="L2894" class="ln">  2894</span>	}
+<span id="L2895" class="ln">  2895</span>	
+<span id="L2896" class="ln">  2896</span>	func BenchmarkSqrtGo(b *testing.B) {
+<span id="L2897" class="ln">  2897</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2898" class="ln">  2898</span>			SqrtGo(10)
+<span id="L2899" class="ln">  2899</span>		}
+<span id="L2900" class="ln">  2900</span>	}
+<span id="L2901" class="ln">  2901</span>	
+<span id="L2902" class="ln">  2902</span>	func BenchmarkTan(b *testing.B) {
+<span id="L2903" class="ln">  2903</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2904" class="ln">  2904</span>			Tan(.5)
+<span id="L2905" class="ln">  2905</span>		}
+<span id="L2906" class="ln">  2906</span>	}
+<span id="L2907" class="ln">  2907</span>	
+<span id="L2908" class="ln">  2908</span>	func BenchmarkTanh(b *testing.B) {
+<span id="L2909" class="ln">  2909</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2910" class="ln">  2910</span>			Tanh(2.5)
+<span id="L2911" class="ln">  2911</span>		}
+<span id="L2912" class="ln">  2912</span>	}
+<span id="L2913" class="ln">  2913</span>	func BenchmarkTrunc(b *testing.B) {
+<span id="L2914" class="ln">  2914</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2915" class="ln">  2915</span>			Trunc(.5)
+<span id="L2916" class="ln">  2916</span>		}
+<span id="L2917" class="ln">  2917</span>	}
+<span id="L2918" class="ln">  2918</span>	
+<span id="L2919" class="ln">  2919</span>	func BenchmarkY0(b *testing.B) {
+<span id="L2920" class="ln">  2920</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2921" class="ln">  2921</span>			Y0(2.5)
+<span id="L2922" class="ln">  2922</span>		}
+<span id="L2923" class="ln">  2923</span>	}
+<span id="L2924" class="ln">  2924</span>	
+<span id="L2925" class="ln">  2925</span>	func BenchmarkY1(b *testing.B) {
+<span id="L2926" class="ln">  2926</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2927" class="ln">  2927</span>			Y1(2.5)
+<span id="L2928" class="ln">  2928</span>		}
+<span id="L2929" class="ln">  2929</span>	}
+<span id="L2930" class="ln">  2930</span>	
+<span id="L2931" class="ln">  2931</span>	func BenchmarkYn(b *testing.B) {
+<span id="L2932" class="ln">  2932</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L2933" class="ln">  2933</span>			Yn(2, 2.5)
+<span id="L2934" class="ln">  2934</span>		}
+<span id="L2935" class="ln">  2935</span>	}
+<span id="L2936" class="ln">  2936</span>	
+</pre><p><a href="http://golang.org/src/pkg/math/all_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

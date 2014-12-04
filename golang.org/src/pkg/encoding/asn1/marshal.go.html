@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/encoding/asn1/marshal.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/encoding/asn1/marshal.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package asn1
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;bytes&#34;
+<span id="L9" class="ln">     9</span>		&#34;errors&#34;
+<span id="L10" class="ln">    10</span>		&#34;fmt&#34;
+<span id="L11" class="ln">    11</span>		&#34;io&#34;
+<span id="L12" class="ln">    12</span>		&#34;math/big&#34;
+<span id="L13" class="ln">    13</span>		&#34;reflect&#34;
+<span id="L14" class="ln">    14</span>		&#34;time&#34;
+<span id="L15" class="ln">    15</span>		&#34;unicode/utf8&#34;
+<span id="L16" class="ln">    16</span>	)
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>	<span class="comment">// A forkableWriter is an in-memory buffer that can be</span>
+<span id="L19" class="ln">    19</span>	<span class="comment">// &#39;forked&#39; to create new forkableWriters that bracket the</span>
+<span id="L20" class="ln">    20</span>	<span class="comment">// original.  After</span>
+<span id="L21" class="ln">    21</span>	<span class="comment">//    pre, post := w.fork();</span>
+<span id="L22" class="ln">    22</span>	<span class="comment">// the overall sequence of bytes represented is logically w+pre+post.</span>
+<span id="L23" class="ln">    23</span>	type forkableWriter struct {
+<span id="L24" class="ln">    24</span>		*bytes.Buffer
+<span id="L25" class="ln">    25</span>		pre, post *forkableWriter
+<span id="L26" class="ln">    26</span>	}
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>	func newForkableWriter() *forkableWriter {
+<span id="L29" class="ln">    29</span>		return &amp;forkableWriter{new(bytes.Buffer), nil, nil}
+<span id="L30" class="ln">    30</span>	}
+<span id="L31" class="ln">    31</span>	
+<span id="L32" class="ln">    32</span>	func (f *forkableWriter) fork() (pre, post *forkableWriter) {
+<span id="L33" class="ln">    33</span>		if f.pre != nil || f.post != nil {
+<span id="L34" class="ln">    34</span>			panic(&#34;have already forked&#34;)
+<span id="L35" class="ln">    35</span>		}
+<span id="L36" class="ln">    36</span>		f.pre = newForkableWriter()
+<span id="L37" class="ln">    37</span>		f.post = newForkableWriter()
+<span id="L38" class="ln">    38</span>		return f.pre, f.post
+<span id="L39" class="ln">    39</span>	}
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>	func (f *forkableWriter) Len() (l int) {
+<span id="L42" class="ln">    42</span>		l += f.Buffer.Len()
+<span id="L43" class="ln">    43</span>		if f.pre != nil {
+<span id="L44" class="ln">    44</span>			l += f.pre.Len()
+<span id="L45" class="ln">    45</span>		}
+<span id="L46" class="ln">    46</span>		if f.post != nil {
+<span id="L47" class="ln">    47</span>			l += f.post.Len()
+<span id="L48" class="ln">    48</span>		}
+<span id="L49" class="ln">    49</span>		return
+<span id="L50" class="ln">    50</span>	}
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>	func (f *forkableWriter) writeTo(out io.Writer) (n int, err error) {
+<span id="L53" class="ln">    53</span>		n, err = out.Write(f.Bytes())
+<span id="L54" class="ln">    54</span>		if err != nil {
+<span id="L55" class="ln">    55</span>			return
+<span id="L56" class="ln">    56</span>		}
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>		var nn int
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>		if f.pre != nil {
+<span id="L61" class="ln">    61</span>			nn, err = f.pre.writeTo(out)
+<span id="L62" class="ln">    62</span>			n += nn
+<span id="L63" class="ln">    63</span>			if err != nil {
+<span id="L64" class="ln">    64</span>				return
+<span id="L65" class="ln">    65</span>			}
+<span id="L66" class="ln">    66</span>		}
+<span id="L67" class="ln">    67</span>	
+<span id="L68" class="ln">    68</span>		if f.post != nil {
+<span id="L69" class="ln">    69</span>			nn, err = f.post.writeTo(out)
+<span id="L70" class="ln">    70</span>			n += nn
+<span id="L71" class="ln">    71</span>		}
+<span id="L72" class="ln">    72</span>		return
+<span id="L73" class="ln">    73</span>	}
+<span id="L74" class="ln">    74</span>	
+<span id="L75" class="ln">    75</span>	func marshalBase128Int(out *forkableWriter, n int64) (err error) {
+<span id="L76" class="ln">    76</span>		if n == 0 {
+<span id="L77" class="ln">    77</span>			err = out.WriteByte(0)
+<span id="L78" class="ln">    78</span>			return
+<span id="L79" class="ln">    79</span>		}
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>		l := 0
+<span id="L82" class="ln">    82</span>		for i := n; i &gt; 0; i &gt;&gt;= 7 {
+<span id="L83" class="ln">    83</span>			l++
+<span id="L84" class="ln">    84</span>		}
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>		for i := l - 1; i &gt;= 0; i-- {
+<span id="L87" class="ln">    87</span>			o := byte(n &gt;&gt; uint(i*7))
+<span id="L88" class="ln">    88</span>			o &amp;= 0x7f
+<span id="L89" class="ln">    89</span>			if i != 0 {
+<span id="L90" class="ln">    90</span>				o |= 0x80
+<span id="L91" class="ln">    91</span>			}
+<span id="L92" class="ln">    92</span>			err = out.WriteByte(o)
+<span id="L93" class="ln">    93</span>			if err != nil {
+<span id="L94" class="ln">    94</span>				return
+<span id="L95" class="ln">    95</span>			}
+<span id="L96" class="ln">    96</span>		}
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>		return nil
+<span id="L99" class="ln">    99</span>	}
+<span id="L100" class="ln">   100</span>	
+<span id="L101" class="ln">   101</span>	func marshalInt64(out *forkableWriter, i int64) (err error) {
+<span id="L102" class="ln">   102</span>		n := int64Length(i)
+<span id="L103" class="ln">   103</span>	
+<span id="L104" class="ln">   104</span>		for ; n &gt; 0; n-- {
+<span id="L105" class="ln">   105</span>			err = out.WriteByte(byte(i &gt;&gt; uint((n-1)*8)))
+<span id="L106" class="ln">   106</span>			if err != nil {
+<span id="L107" class="ln">   107</span>				return
+<span id="L108" class="ln">   108</span>			}
+<span id="L109" class="ln">   109</span>		}
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>		return nil
+<span id="L112" class="ln">   112</span>	}
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>	func int64Length(i int64) (numBytes int) {
+<span id="L115" class="ln">   115</span>		numBytes = 1
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>		for i &gt; 127 {
+<span id="L118" class="ln">   118</span>			numBytes++
+<span id="L119" class="ln">   119</span>			i &gt;&gt;= 8
+<span id="L120" class="ln">   120</span>		}
+<span id="L121" class="ln">   121</span>	
+<span id="L122" class="ln">   122</span>		for i &lt; -128 {
+<span id="L123" class="ln">   123</span>			numBytes++
+<span id="L124" class="ln">   124</span>			i &gt;&gt;= 8
+<span id="L125" class="ln">   125</span>		}
+<span id="L126" class="ln">   126</span>	
+<span id="L127" class="ln">   127</span>		return
+<span id="L128" class="ln">   128</span>	}
+<span id="L129" class="ln">   129</span>	
+<span id="L130" class="ln">   130</span>	func marshalBigInt(out *forkableWriter, n *big.Int) (err error) {
+<span id="L131" class="ln">   131</span>		if n.Sign() &lt; 0 {
+<span id="L132" class="ln">   132</span>			<span class="comment">// A negative number has to be converted to two&#39;s-complement</span>
+<span id="L133" class="ln">   133</span>			<span class="comment">// form. So we&#39;ll subtract 1 and invert. If the</span>
+<span id="L134" class="ln">   134</span>			<span class="comment">// most-significant-bit isn&#39;t set then we&#39;ll need to pad the</span>
+<span id="L135" class="ln">   135</span>			<span class="comment">// beginning with 0xff in order to keep the number negative.</span>
+<span id="L136" class="ln">   136</span>			nMinus1 := new(big.Int).Neg(n)
+<span id="L137" class="ln">   137</span>			nMinus1.Sub(nMinus1, bigOne)
+<span id="L138" class="ln">   138</span>			bytes := nMinus1.Bytes()
+<span id="L139" class="ln">   139</span>			for i := range bytes {
+<span id="L140" class="ln">   140</span>				bytes[i] ^= 0xff
+<span id="L141" class="ln">   141</span>			}
+<span id="L142" class="ln">   142</span>			if len(bytes) == 0 || bytes[0]&amp;0x80 == 0 {
+<span id="L143" class="ln">   143</span>				err = out.WriteByte(0xff)
+<span id="L144" class="ln">   144</span>				if err != nil {
+<span id="L145" class="ln">   145</span>					return
+<span id="L146" class="ln">   146</span>				}
+<span id="L147" class="ln">   147</span>			}
+<span id="L148" class="ln">   148</span>			_, err = out.Write(bytes)
+<span id="L149" class="ln">   149</span>		} else if n.Sign() == 0 {
+<span id="L150" class="ln">   150</span>			<span class="comment">// Zero is written as a single 0 zero rather than no bytes.</span>
+<span id="L151" class="ln">   151</span>			err = out.WriteByte(0x00)
+<span id="L152" class="ln">   152</span>		} else {
+<span id="L153" class="ln">   153</span>			bytes := n.Bytes()
+<span id="L154" class="ln">   154</span>			if len(bytes) &gt; 0 &amp;&amp; bytes[0]&amp;0x80 != 0 {
+<span id="L155" class="ln">   155</span>				<span class="comment">// We&#39;ll have to pad this with 0x00 in order to stop it</span>
+<span id="L156" class="ln">   156</span>				<span class="comment">// looking like a negative number.</span>
+<span id="L157" class="ln">   157</span>				err = out.WriteByte(0)
+<span id="L158" class="ln">   158</span>				if err != nil {
+<span id="L159" class="ln">   159</span>					return
+<span id="L160" class="ln">   160</span>				}
+<span id="L161" class="ln">   161</span>			}
+<span id="L162" class="ln">   162</span>			_, err = out.Write(bytes)
+<span id="L163" class="ln">   163</span>		}
+<span id="L164" class="ln">   164</span>		return
+<span id="L165" class="ln">   165</span>	}
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>	func marshalLength(out *forkableWriter, i int) (err error) {
+<span id="L168" class="ln">   168</span>		n := lengthLength(i)
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>		for ; n &gt; 0; n-- {
+<span id="L171" class="ln">   171</span>			err = out.WriteByte(byte(i &gt;&gt; uint((n-1)*8)))
+<span id="L172" class="ln">   172</span>			if err != nil {
+<span id="L173" class="ln">   173</span>				return
+<span id="L174" class="ln">   174</span>			}
+<span id="L175" class="ln">   175</span>		}
+<span id="L176" class="ln">   176</span>	
+<span id="L177" class="ln">   177</span>		return nil
+<span id="L178" class="ln">   178</span>	}
+<span id="L179" class="ln">   179</span>	
+<span id="L180" class="ln">   180</span>	func lengthLength(i int) (numBytes int) {
+<span id="L181" class="ln">   181</span>		numBytes = 1
+<span id="L182" class="ln">   182</span>		for i &gt; 255 {
+<span id="L183" class="ln">   183</span>			numBytes++
+<span id="L184" class="ln">   184</span>			i &gt;&gt;= 8
+<span id="L185" class="ln">   185</span>		}
+<span id="L186" class="ln">   186</span>		return
+<span id="L187" class="ln">   187</span>	}
+<span id="L188" class="ln">   188</span>	
+<span id="L189" class="ln">   189</span>	func marshalTagAndLength(out *forkableWriter, t tagAndLength) (err error) {
+<span id="L190" class="ln">   190</span>		b := uint8(t.class) &lt;&lt; 6
+<span id="L191" class="ln">   191</span>		if t.isCompound {
+<span id="L192" class="ln">   192</span>			b |= 0x20
+<span id="L193" class="ln">   193</span>		}
+<span id="L194" class="ln">   194</span>		if t.tag &gt;= 31 {
+<span id="L195" class="ln">   195</span>			b |= 0x1f
+<span id="L196" class="ln">   196</span>			err = out.WriteByte(b)
+<span id="L197" class="ln">   197</span>			if err != nil {
+<span id="L198" class="ln">   198</span>				return
+<span id="L199" class="ln">   199</span>			}
+<span id="L200" class="ln">   200</span>			err = marshalBase128Int(out, int64(t.tag))
+<span id="L201" class="ln">   201</span>			if err != nil {
+<span id="L202" class="ln">   202</span>				return
+<span id="L203" class="ln">   203</span>			}
+<span id="L204" class="ln">   204</span>		} else {
+<span id="L205" class="ln">   205</span>			b |= uint8(t.tag)
+<span id="L206" class="ln">   206</span>			err = out.WriteByte(b)
+<span id="L207" class="ln">   207</span>			if err != nil {
+<span id="L208" class="ln">   208</span>				return
+<span id="L209" class="ln">   209</span>			}
+<span id="L210" class="ln">   210</span>		}
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>		if t.length &gt;= 128 {
+<span id="L213" class="ln">   213</span>			l := lengthLength(t.length)
+<span id="L214" class="ln">   214</span>			err = out.WriteByte(0x80 | byte(l))
+<span id="L215" class="ln">   215</span>			if err != nil {
+<span id="L216" class="ln">   216</span>				return
+<span id="L217" class="ln">   217</span>			}
+<span id="L218" class="ln">   218</span>			err = marshalLength(out, t.length)
+<span id="L219" class="ln">   219</span>			if err != nil {
+<span id="L220" class="ln">   220</span>				return
+<span id="L221" class="ln">   221</span>			}
+<span id="L222" class="ln">   222</span>		} else {
+<span id="L223" class="ln">   223</span>			err = out.WriteByte(byte(t.length))
+<span id="L224" class="ln">   224</span>			if err != nil {
+<span id="L225" class="ln">   225</span>				return
+<span id="L226" class="ln">   226</span>			}
+<span id="L227" class="ln">   227</span>		}
+<span id="L228" class="ln">   228</span>	
+<span id="L229" class="ln">   229</span>		return nil
+<span id="L230" class="ln">   230</span>	}
+<span id="L231" class="ln">   231</span>	
+<span id="L232" class="ln">   232</span>	func marshalBitString(out *forkableWriter, b BitString) (err error) {
+<span id="L233" class="ln">   233</span>		paddingBits := byte((8 - b.BitLength%8) % 8)
+<span id="L234" class="ln">   234</span>		err = out.WriteByte(paddingBits)
+<span id="L235" class="ln">   235</span>		if err != nil {
+<span id="L236" class="ln">   236</span>			return
+<span id="L237" class="ln">   237</span>		}
+<span id="L238" class="ln">   238</span>		_, err = out.Write(b.Bytes)
+<span id="L239" class="ln">   239</span>		return
+<span id="L240" class="ln">   240</span>	}
+<span id="L241" class="ln">   241</span>	
+<span id="L242" class="ln">   242</span>	func marshalObjectIdentifier(out *forkableWriter, oid []int) (err error) {
+<span id="L243" class="ln">   243</span>		if len(oid) &lt; 2 || oid[0] &gt; 2 || (oid[0] &lt; 2 &amp;&amp; oid[1] &gt;= 40) {
+<span id="L244" class="ln">   244</span>			return StructuralError{&#34;invalid object identifier&#34;}
+<span id="L245" class="ln">   245</span>		}
+<span id="L246" class="ln">   246</span>	
+<span id="L247" class="ln">   247</span>		err = marshalBase128Int(out, int64(oid[0]*40+oid[1]))
+<span id="L248" class="ln">   248</span>		if err != nil {
+<span id="L249" class="ln">   249</span>			return
+<span id="L250" class="ln">   250</span>		}
+<span id="L251" class="ln">   251</span>		for i := 2; i &lt; len(oid); i++ {
+<span id="L252" class="ln">   252</span>			err = marshalBase128Int(out, int64(oid[i]))
+<span id="L253" class="ln">   253</span>			if err != nil {
+<span id="L254" class="ln">   254</span>				return
+<span id="L255" class="ln">   255</span>			}
+<span id="L256" class="ln">   256</span>		}
+<span id="L257" class="ln">   257</span>	
+<span id="L258" class="ln">   258</span>		return
+<span id="L259" class="ln">   259</span>	}
+<span id="L260" class="ln">   260</span>	
+<span id="L261" class="ln">   261</span>	func marshalPrintableString(out *forkableWriter, s string) (err error) {
+<span id="L262" class="ln">   262</span>		b := []byte(s)
+<span id="L263" class="ln">   263</span>		for _, c := range b {
+<span id="L264" class="ln">   264</span>			if !isPrintable(c) {
+<span id="L265" class="ln">   265</span>				return StructuralError{&#34;PrintableString contains invalid character&#34;}
+<span id="L266" class="ln">   266</span>			}
+<span id="L267" class="ln">   267</span>		}
+<span id="L268" class="ln">   268</span>	
+<span id="L269" class="ln">   269</span>		_, err = out.Write(b)
+<span id="L270" class="ln">   270</span>		return
+<span id="L271" class="ln">   271</span>	}
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>	func marshalIA5String(out *forkableWriter, s string) (err error) {
+<span id="L274" class="ln">   274</span>		b := []byte(s)
+<span id="L275" class="ln">   275</span>		for _, c := range b {
+<span id="L276" class="ln">   276</span>			if c &gt; 127 {
+<span id="L277" class="ln">   277</span>				return StructuralError{&#34;IA5String contains invalid character&#34;}
+<span id="L278" class="ln">   278</span>			}
+<span id="L279" class="ln">   279</span>		}
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>		_, err = out.Write(b)
+<span id="L282" class="ln">   282</span>		return
+<span id="L283" class="ln">   283</span>	}
+<span id="L284" class="ln">   284</span>	
+<span id="L285" class="ln">   285</span>	func marshalUTF8String(out *forkableWriter, s string) (err error) {
+<span id="L286" class="ln">   286</span>		_, err = out.Write([]byte(s))
+<span id="L287" class="ln">   287</span>		return
+<span id="L288" class="ln">   288</span>	}
+<span id="L289" class="ln">   289</span>	
+<span id="L290" class="ln">   290</span>	func marshalTwoDigits(out *forkableWriter, v int) (err error) {
+<span id="L291" class="ln">   291</span>		err = out.WriteByte(byte(&#39;0&#39; + (v/10)%10))
+<span id="L292" class="ln">   292</span>		if err != nil {
+<span id="L293" class="ln">   293</span>			return
+<span id="L294" class="ln">   294</span>		}
+<span id="L295" class="ln">   295</span>		return out.WriteByte(byte(&#39;0&#39; + v%10))
+<span id="L296" class="ln">   296</span>	}
+<span id="L297" class="ln">   297</span>	
+<span id="L298" class="ln">   298</span>	func marshalFourDigits(out *forkableWriter, v int) (err error) {
+<span id="L299" class="ln">   299</span>		var bytes [4]byte
+<span id="L300" class="ln">   300</span>		for i := range bytes {
+<span id="L301" class="ln">   301</span>			bytes[3-i] = &#39;0&#39; + byte(v%10)
+<span id="L302" class="ln">   302</span>			v /= 10
+<span id="L303" class="ln">   303</span>		}
+<span id="L304" class="ln">   304</span>		_, err = out.Write(bytes[:])
+<span id="L305" class="ln">   305</span>		return
+<span id="L306" class="ln">   306</span>	}
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>	func outsideUTCRange(t time.Time) bool {
+<span id="L309" class="ln">   309</span>		year := t.Year()
+<span id="L310" class="ln">   310</span>		return year &lt; 1950 || year &gt;= 2050
+<span id="L311" class="ln">   311</span>	}
+<span id="L312" class="ln">   312</span>	
+<span id="L313" class="ln">   313</span>	func marshalUTCTime(out *forkableWriter, t time.Time) (err error) {
+<span id="L314" class="ln">   314</span>		year := t.Year()
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		switch {
+<span id="L317" class="ln">   317</span>		case 1950 &lt;= year &amp;&amp; year &lt; 2000:
+<span id="L318" class="ln">   318</span>			err = marshalTwoDigits(out, int(year-1900))
+<span id="L319" class="ln">   319</span>		case 2000 &lt;= year &amp;&amp; year &lt; 2050:
+<span id="L320" class="ln">   320</span>			err = marshalTwoDigits(out, int(year-2000))
+<span id="L321" class="ln">   321</span>		default:
+<span id="L322" class="ln">   322</span>			return StructuralError{&#34;cannot represent time as UTCTime&#34;}
+<span id="L323" class="ln">   323</span>		}
+<span id="L324" class="ln">   324</span>		if err != nil {
+<span id="L325" class="ln">   325</span>			return
+<span id="L326" class="ln">   326</span>		}
+<span id="L327" class="ln">   327</span>	
+<span id="L328" class="ln">   328</span>		return marshalTimeCommon(out, t)
+<span id="L329" class="ln">   329</span>	}
+<span id="L330" class="ln">   330</span>	
+<span id="L331" class="ln">   331</span>	func marshalGeneralizedTime(out *forkableWriter, t time.Time) (err error) {
+<span id="L332" class="ln">   332</span>		year := t.Year()
+<span id="L333" class="ln">   333</span>		if year &lt; 0 || year &gt; 9999 {
+<span id="L334" class="ln">   334</span>			return StructuralError{&#34;cannot represent time as GeneralizedTime&#34;}
+<span id="L335" class="ln">   335</span>		}
+<span id="L336" class="ln">   336</span>		if err = marshalFourDigits(out, year); err != nil {
+<span id="L337" class="ln">   337</span>			return
+<span id="L338" class="ln">   338</span>		}
+<span id="L339" class="ln">   339</span>	
+<span id="L340" class="ln">   340</span>		return marshalTimeCommon(out, t)
+<span id="L341" class="ln">   341</span>	}
+<span id="L342" class="ln">   342</span>	
+<span id="L343" class="ln">   343</span>	func marshalTimeCommon(out *forkableWriter, t time.Time) (err error) {
+<span id="L344" class="ln">   344</span>		_, month, day := t.Date()
+<span id="L345" class="ln">   345</span>	
+<span id="L346" class="ln">   346</span>		err = marshalTwoDigits(out, int(month))
+<span id="L347" class="ln">   347</span>		if err != nil {
+<span id="L348" class="ln">   348</span>			return
+<span id="L349" class="ln">   349</span>		}
+<span id="L350" class="ln">   350</span>	
+<span id="L351" class="ln">   351</span>		err = marshalTwoDigits(out, day)
+<span id="L352" class="ln">   352</span>		if err != nil {
+<span id="L353" class="ln">   353</span>			return
+<span id="L354" class="ln">   354</span>		}
+<span id="L355" class="ln">   355</span>	
+<span id="L356" class="ln">   356</span>		hour, min, sec := t.Clock()
+<span id="L357" class="ln">   357</span>	
+<span id="L358" class="ln">   358</span>		err = marshalTwoDigits(out, hour)
+<span id="L359" class="ln">   359</span>		if err != nil {
+<span id="L360" class="ln">   360</span>			return
+<span id="L361" class="ln">   361</span>		}
+<span id="L362" class="ln">   362</span>	
+<span id="L363" class="ln">   363</span>		err = marshalTwoDigits(out, min)
+<span id="L364" class="ln">   364</span>		if err != nil {
+<span id="L365" class="ln">   365</span>			return
+<span id="L366" class="ln">   366</span>		}
+<span id="L367" class="ln">   367</span>	
+<span id="L368" class="ln">   368</span>		err = marshalTwoDigits(out, sec)
+<span id="L369" class="ln">   369</span>		if err != nil {
+<span id="L370" class="ln">   370</span>			return
+<span id="L371" class="ln">   371</span>		}
+<span id="L372" class="ln">   372</span>	
+<span id="L373" class="ln">   373</span>		_, offset := t.Zone()
+<span id="L374" class="ln">   374</span>	
+<span id="L375" class="ln">   375</span>		switch {
+<span id="L376" class="ln">   376</span>		case offset/60 == 0:
+<span id="L377" class="ln">   377</span>			err = out.WriteByte(&#39;Z&#39;)
+<span id="L378" class="ln">   378</span>			return
+<span id="L379" class="ln">   379</span>		case offset &gt; 0:
+<span id="L380" class="ln">   380</span>			err = out.WriteByte(&#39;+&#39;)
+<span id="L381" class="ln">   381</span>		case offset &lt; 0:
+<span id="L382" class="ln">   382</span>			err = out.WriteByte(&#39;-&#39;)
+<span id="L383" class="ln">   383</span>		}
+<span id="L384" class="ln">   384</span>	
+<span id="L385" class="ln">   385</span>		if err != nil {
+<span id="L386" class="ln">   386</span>			return
+<span id="L387" class="ln">   387</span>		}
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>		offsetMinutes := offset / 60
+<span id="L390" class="ln">   390</span>		if offsetMinutes &lt; 0 {
+<span id="L391" class="ln">   391</span>			offsetMinutes = -offsetMinutes
+<span id="L392" class="ln">   392</span>		}
+<span id="L393" class="ln">   393</span>	
+<span id="L394" class="ln">   394</span>		err = marshalTwoDigits(out, offsetMinutes/60)
+<span id="L395" class="ln">   395</span>		if err != nil {
+<span id="L396" class="ln">   396</span>			return
+<span id="L397" class="ln">   397</span>		}
+<span id="L398" class="ln">   398</span>	
+<span id="L399" class="ln">   399</span>		err = marshalTwoDigits(out, offsetMinutes%60)
+<span id="L400" class="ln">   400</span>		return
+<span id="L401" class="ln">   401</span>	}
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>	func stripTagAndLength(in []byte) []byte {
+<span id="L404" class="ln">   404</span>		_, offset, err := parseTagAndLength(in, 0)
+<span id="L405" class="ln">   405</span>		if err != nil {
+<span id="L406" class="ln">   406</span>			return in
+<span id="L407" class="ln">   407</span>		}
+<span id="L408" class="ln">   408</span>		return in[offset:]
+<span id="L409" class="ln">   409</span>	}
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>	func marshalBody(out *forkableWriter, value reflect.Value, params fieldParameters) (err error) {
+<span id="L412" class="ln">   412</span>		switch value.Type() {
+<span id="L413" class="ln">   413</span>		case timeType:
+<span id="L414" class="ln">   414</span>			t := value.Interface().(time.Time)
+<span id="L415" class="ln">   415</span>			if outsideUTCRange(t) {
+<span id="L416" class="ln">   416</span>				return marshalGeneralizedTime(out, t)
+<span id="L417" class="ln">   417</span>			} else {
+<span id="L418" class="ln">   418</span>				return marshalUTCTime(out, t)
+<span id="L419" class="ln">   419</span>			}
+<span id="L420" class="ln">   420</span>		case bitStringType:
+<span id="L421" class="ln">   421</span>			return marshalBitString(out, value.Interface().(BitString))
+<span id="L422" class="ln">   422</span>		case objectIdentifierType:
+<span id="L423" class="ln">   423</span>			return marshalObjectIdentifier(out, value.Interface().(ObjectIdentifier))
+<span id="L424" class="ln">   424</span>		case bigIntType:
+<span id="L425" class="ln">   425</span>			return marshalBigInt(out, value.Interface().(*big.Int))
+<span id="L426" class="ln">   426</span>		}
+<span id="L427" class="ln">   427</span>	
+<span id="L428" class="ln">   428</span>		switch v := value; v.Kind() {
+<span id="L429" class="ln">   429</span>		case reflect.Bool:
+<span id="L430" class="ln">   430</span>			if v.Bool() {
+<span id="L431" class="ln">   431</span>				return out.WriteByte(255)
+<span id="L432" class="ln">   432</span>			} else {
+<span id="L433" class="ln">   433</span>				return out.WriteByte(0)
+<span id="L434" class="ln">   434</span>			}
+<span id="L435" class="ln">   435</span>		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+<span id="L436" class="ln">   436</span>			return marshalInt64(out, int64(v.Int()))
+<span id="L437" class="ln">   437</span>		case reflect.Struct:
+<span id="L438" class="ln">   438</span>			t := v.Type()
+<span id="L439" class="ln">   439</span>	
+<span id="L440" class="ln">   440</span>			startingField := 0
+<span id="L441" class="ln">   441</span>	
+<span id="L442" class="ln">   442</span>			<span class="comment">// If the first element of the structure is a non-empty</span>
+<span id="L443" class="ln">   443</span>			<span class="comment">// RawContents, then we don&#39;t bother serializing the rest.</span>
+<span id="L444" class="ln">   444</span>			if t.NumField() &gt; 0 &amp;&amp; t.Field(0).Type == rawContentsType {
+<span id="L445" class="ln">   445</span>				s := v.Field(0)
+<span id="L446" class="ln">   446</span>				if s.Len() &gt; 0 {
+<span id="L447" class="ln">   447</span>					bytes := make([]byte, s.Len())
+<span id="L448" class="ln">   448</span>					for i := 0; i &lt; s.Len(); i++ {
+<span id="L449" class="ln">   449</span>						bytes[i] = uint8(s.Index(i).Uint())
+<span id="L450" class="ln">   450</span>					}
+<span id="L451" class="ln">   451</span>					<span class="comment">/* The RawContents will contain the tag and
+<span id="L452" class="ln">   452</span>					 * length fields but we&#39;ll also be writing
+<span id="L453" class="ln">   453</span>					 * those ourselves, so we strip them out of
+<span id="L454" class="ln">   454</span>					 * bytes */</span>
+<span id="L455" class="ln">   455</span>					_, err = out.Write(stripTagAndLength(bytes))
+<span id="L456" class="ln">   456</span>					return
+<span id="L457" class="ln">   457</span>				} else {
+<span id="L458" class="ln">   458</span>					startingField = 1
+<span id="L459" class="ln">   459</span>				}
+<span id="L460" class="ln">   460</span>			}
+<span id="L461" class="ln">   461</span>	
+<span id="L462" class="ln">   462</span>			for i := startingField; i &lt; t.NumField(); i++ {
+<span id="L463" class="ln">   463</span>				var pre *forkableWriter
+<span id="L464" class="ln">   464</span>				pre, out = out.fork()
+<span id="L465" class="ln">   465</span>				err = marshalField(pre, v.Field(i), parseFieldParameters(t.Field(i).Tag.Get(&#34;asn1&#34;)))
+<span id="L466" class="ln">   466</span>				if err != nil {
+<span id="L467" class="ln">   467</span>					return
+<span id="L468" class="ln">   468</span>				}
+<span id="L469" class="ln">   469</span>			}
+<span id="L470" class="ln">   470</span>			return
+<span id="L471" class="ln">   471</span>		case reflect.Slice:
+<span id="L472" class="ln">   472</span>			sliceType := v.Type()
+<span id="L473" class="ln">   473</span>			if sliceType.Elem().Kind() == reflect.Uint8 {
+<span id="L474" class="ln">   474</span>				bytes := make([]byte, v.Len())
+<span id="L475" class="ln">   475</span>				for i := 0; i &lt; v.Len(); i++ {
+<span id="L476" class="ln">   476</span>					bytes[i] = uint8(v.Index(i).Uint())
+<span id="L477" class="ln">   477</span>				}
+<span id="L478" class="ln">   478</span>				_, err = out.Write(bytes)
+<span id="L479" class="ln">   479</span>				return
+<span id="L480" class="ln">   480</span>			}
+<span id="L481" class="ln">   481</span>	
+<span id="L482" class="ln">   482</span>			var fp fieldParameters
+<span id="L483" class="ln">   483</span>			for i := 0; i &lt; v.Len(); i++ {
+<span id="L484" class="ln">   484</span>				var pre *forkableWriter
+<span id="L485" class="ln">   485</span>				pre, out = out.fork()
+<span id="L486" class="ln">   486</span>				err = marshalField(pre, v.Index(i), fp)
+<span id="L487" class="ln">   487</span>				if err != nil {
+<span id="L488" class="ln">   488</span>					return
+<span id="L489" class="ln">   489</span>				}
+<span id="L490" class="ln">   490</span>			}
+<span id="L491" class="ln">   491</span>			return
+<span id="L492" class="ln">   492</span>		case reflect.String:
+<span id="L493" class="ln">   493</span>			switch params.stringType {
+<span id="L494" class="ln">   494</span>			case tagIA5String:
+<span id="L495" class="ln">   495</span>				return marshalIA5String(out, v.String())
+<span id="L496" class="ln">   496</span>			case tagPrintableString:
+<span id="L497" class="ln">   497</span>				return marshalPrintableString(out, v.String())
+<span id="L498" class="ln">   498</span>			default:
+<span id="L499" class="ln">   499</span>				return marshalUTF8String(out, v.String())
+<span id="L500" class="ln">   500</span>			}
+<span id="L501" class="ln">   501</span>		}
+<span id="L502" class="ln">   502</span>	
+<span id="L503" class="ln">   503</span>		return StructuralError{&#34;unknown Go type&#34;}
+<span id="L504" class="ln">   504</span>	}
+<span id="L505" class="ln">   505</span>	
+<span id="L506" class="ln">   506</span>	func marshalField(out *forkableWriter, v reflect.Value, params fieldParameters) (err error) {
+<span id="L507" class="ln">   507</span>		<span class="comment">// If the field is an interface{} then recurse into it.</span>
+<span id="L508" class="ln">   508</span>		if v.Kind() == reflect.Interface &amp;&amp; v.Type().NumMethod() == 0 {
+<span id="L509" class="ln">   509</span>			return marshalField(out, v.Elem(), params)
+<span id="L510" class="ln">   510</span>		}
+<span id="L511" class="ln">   511</span>	
+<span id="L512" class="ln">   512</span>		if v.Kind() == reflect.Slice &amp;&amp; v.Len() == 0 &amp;&amp; params.omitEmpty {
+<span id="L513" class="ln">   513</span>			return
+<span id="L514" class="ln">   514</span>		}
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>		if params.optional &amp;&amp; reflect.DeepEqual(v.Interface(), reflect.Zero(v.Type()).Interface()) {
+<span id="L517" class="ln">   517</span>			return
+<span id="L518" class="ln">   518</span>		}
+<span id="L519" class="ln">   519</span>	
+<span id="L520" class="ln">   520</span>		if v.Type() == rawValueType {
+<span id="L521" class="ln">   521</span>			rv := v.Interface().(RawValue)
+<span id="L522" class="ln">   522</span>			if len(rv.FullBytes) != 0 {
+<span id="L523" class="ln">   523</span>				_, err = out.Write(rv.FullBytes)
+<span id="L524" class="ln">   524</span>			} else {
+<span id="L525" class="ln">   525</span>				err = marshalTagAndLength(out, tagAndLength{rv.Class, rv.Tag, len(rv.Bytes), rv.IsCompound})
+<span id="L526" class="ln">   526</span>				if err != nil {
+<span id="L527" class="ln">   527</span>					return
+<span id="L528" class="ln">   528</span>				}
+<span id="L529" class="ln">   529</span>				_, err = out.Write(rv.Bytes)
+<span id="L530" class="ln">   530</span>			}
+<span id="L531" class="ln">   531</span>			return
+<span id="L532" class="ln">   532</span>		}
+<span id="L533" class="ln">   533</span>	
+<span id="L534" class="ln">   534</span>		tag, isCompound, ok := getUniversalType(v.Type())
+<span id="L535" class="ln">   535</span>		if !ok {
+<span id="L536" class="ln">   536</span>			err = StructuralError{fmt.Sprintf(&#34;unknown Go type: %v&#34;, v.Type())}
+<span id="L537" class="ln">   537</span>			return
+<span id="L538" class="ln">   538</span>		}
+<span id="L539" class="ln">   539</span>		class := classUniversal
+<span id="L540" class="ln">   540</span>	
+<span id="L541" class="ln">   541</span>		if params.stringType != 0 &amp;&amp; tag != tagPrintableString {
+<span id="L542" class="ln">   542</span>			return StructuralError{&#34;explicit string type given to non-string member&#34;}
+<span id="L543" class="ln">   543</span>		}
+<span id="L544" class="ln">   544</span>	
+<span id="L545" class="ln">   545</span>		switch tag {
+<span id="L546" class="ln">   546</span>		case tagPrintableString:
+<span id="L547" class="ln">   547</span>			if params.stringType == 0 {
+<span id="L548" class="ln">   548</span>				<span class="comment">// This is a string without an explicit string type. We&#39;ll use</span>
+<span id="L549" class="ln">   549</span>				<span class="comment">// a PrintableString if the character set in the string is</span>
+<span id="L550" class="ln">   550</span>				<span class="comment">// sufficiently limited, otherwise we&#39;ll use a UTF8String.</span>
+<span id="L551" class="ln">   551</span>				for _, r := range v.String() {
+<span id="L552" class="ln">   552</span>					if r &gt;= utf8.RuneSelf || !isPrintable(byte(r)) {
+<span id="L553" class="ln">   553</span>						if !utf8.ValidString(v.String()) {
+<span id="L554" class="ln">   554</span>							return errors.New(&#34;asn1: string not valid UTF-8&#34;)
+<span id="L555" class="ln">   555</span>						}
+<span id="L556" class="ln">   556</span>						tag = tagUTF8String
+<span id="L557" class="ln">   557</span>						break
+<span id="L558" class="ln">   558</span>					}
+<span id="L559" class="ln">   559</span>				}
+<span id="L560" class="ln">   560</span>			} else {
+<span id="L561" class="ln">   561</span>				tag = params.stringType
+<span id="L562" class="ln">   562</span>			}
+<span id="L563" class="ln">   563</span>		case tagUTCTime:
+<span id="L564" class="ln">   564</span>			if outsideUTCRange(v.Interface().(time.Time)) {
+<span id="L565" class="ln">   565</span>				tag = tagGeneralizedTime
+<span id="L566" class="ln">   566</span>			}
+<span id="L567" class="ln">   567</span>		}
+<span id="L568" class="ln">   568</span>	
+<span id="L569" class="ln">   569</span>		if params.set {
+<span id="L570" class="ln">   570</span>			if tag != tagSequence {
+<span id="L571" class="ln">   571</span>				return StructuralError{&#34;non sequence tagged as set&#34;}
+<span id="L572" class="ln">   572</span>			}
+<span id="L573" class="ln">   573</span>			tag = tagSet
+<span id="L574" class="ln">   574</span>		}
+<span id="L575" class="ln">   575</span>	
+<span id="L576" class="ln">   576</span>		tags, body := out.fork()
+<span id="L577" class="ln">   577</span>	
+<span id="L578" class="ln">   578</span>		err = marshalBody(body, v, params)
+<span id="L579" class="ln">   579</span>		if err != nil {
+<span id="L580" class="ln">   580</span>			return
+<span id="L581" class="ln">   581</span>		}
+<span id="L582" class="ln">   582</span>	
+<span id="L583" class="ln">   583</span>		bodyLen := body.Len()
+<span id="L584" class="ln">   584</span>	
+<span id="L585" class="ln">   585</span>		var explicitTag *forkableWriter
+<span id="L586" class="ln">   586</span>		if params.explicit {
+<span id="L587" class="ln">   587</span>			explicitTag, tags = tags.fork()
+<span id="L588" class="ln">   588</span>		}
+<span id="L589" class="ln">   589</span>	
+<span id="L590" class="ln">   590</span>		if !params.explicit &amp;&amp; params.tag != nil {
+<span id="L591" class="ln">   591</span>			<span class="comment">// implicit tag.</span>
+<span id="L592" class="ln">   592</span>			tag = *params.tag
+<span id="L593" class="ln">   593</span>			class = classContextSpecific
+<span id="L594" class="ln">   594</span>		}
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>		err = marshalTagAndLength(tags, tagAndLength{class, tag, bodyLen, isCompound})
+<span id="L597" class="ln">   597</span>		if err != nil {
+<span id="L598" class="ln">   598</span>			return
+<span id="L599" class="ln">   599</span>		}
+<span id="L600" class="ln">   600</span>	
+<span id="L601" class="ln">   601</span>		if params.explicit {
+<span id="L602" class="ln">   602</span>			err = marshalTagAndLength(explicitTag, tagAndLength{
+<span id="L603" class="ln">   603</span>				class:      classContextSpecific,
+<span id="L604" class="ln">   604</span>				tag:        *params.tag,
+<span id="L605" class="ln">   605</span>				length:     bodyLen + tags.Len(),
+<span id="L606" class="ln">   606</span>				isCompound: true,
+<span id="L607" class="ln">   607</span>			})
+<span id="L608" class="ln">   608</span>		}
+<span id="L609" class="ln">   609</span>	
+<span id="L610" class="ln">   610</span>		return nil
+<span id="L611" class="ln">   611</span>	}
+<span id="L612" class="ln">   612</span>	
+<span id="L613" class="ln">   613</span>	<span class="comment">// Marshal returns the ASN.1 encoding of val.</span>
+<span id="L614" class="ln">   614</span>	<span class="comment">//</span>
+<span id="L615" class="ln">   615</span>	<span class="comment">// In addition to the struct tags recognised by Unmarshal, the following can be</span>
+<span id="L616" class="ln">   616</span>	<span class="comment">// used:</span>
+<span id="L617" class="ln">   617</span>	<span class="comment">//</span>
+<span id="L618" class="ln">   618</span>	<span class="comment">//	ia5:		causes strings to be marshaled as ASN.1, IA5 strings</span>
+<span id="L619" class="ln">   619</span>	<span class="comment">//	omitempty:	causes empty slices to be skipped</span>
+<span id="L620" class="ln">   620</span>	<span class="comment">//	printable:	causes strings to be marshaled as ASN.1, PrintableString strings.</span>
+<span id="L621" class="ln">   621</span>	<span class="comment">//	utf8:		causes strings to be marshaled as ASN.1, UTF8 strings</span>
+<span id="L622" class="ln">   622</span>	func Marshal(val interface{}) ([]byte, error) {
+<span id="L623" class="ln">   623</span>		var out bytes.Buffer
+<span id="L624" class="ln">   624</span>		v := reflect.ValueOf(val)
+<span id="L625" class="ln">   625</span>		f := newForkableWriter()
+<span id="L626" class="ln">   626</span>		err := marshalField(f, v, fieldParameters{})
+<span id="L627" class="ln">   627</span>		if err != nil {
+<span id="L628" class="ln">   628</span>			return nil, err
+<span id="L629" class="ln">   629</span>		}
+<span id="L630" class="ln">   630</span>		_, err = f.writeTo(&amp;out)
+<span id="L631" class="ln">   631</span>		return out.Bytes(), nil
+<span id="L632" class="ln">   632</span>	}
+<span id="L633" class="ln">   633</span>	
+</pre><p><a href="marshal.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

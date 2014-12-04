@@ -1,0 +1,542 @@
+
+ 
+
+
+
+ 
+ 
+ 
+
+
+
+ 
+ 
+ <!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link rel="icon" type="image/vnd.microsoft.icon" href="https://ssl.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <link rel="canonical" href="GoArm.html" />
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"assetHostPath": "https://ssl.gstatic.com/codesite/ph", "profileUrl": null, "relativeBaseUrl": "", "projectHomeUrl": "/p/go-wiki", "loggedInUserEmail": null, "projectName": "go-wiki", "domainName": null, "token": null, "assetVersionPath": "https://ssl.gstatic.com/codesite/ph/1729405847801014513"};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+ 
+ </script>
+ 
+ 
+ <title>GoArm - 
+ go-wiki -
+ 
+ Using Go on ARM powered machines - 
+ Go Language Community Wiki - Google Project Hosting
+ </title>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/ph_detail.css" >
+ 
+ 
+ 
+ <link type="application/atom+xml" rel="alternate" href="https://code.google.com/feeds/p/go-wiki/hgchanges/basic?path=/GoArm.wiki&amp;repo=wiki">
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ #maincol {
+ padding-top: 0;
+ padding-bottom: 0;
+ }
+
+ 
+ </style>
+</head>
+<body class="t6">
+<script type="text/javascript">
+ window.___gcfg = {lang: 'en'};
+ (function() 
+ {var po = document.createElement("script");
+ po.type = "text/javascript"; po.async = true;po.src = "https://apis.google.com/js/plusone.js";
+ var s = document.getElementsByTagName("script")[0];
+ s.parentNode.insertBefore(po, s);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ 
+ <a href="GoArm.html#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>&#9660;</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo-wiki%2Fwiki%2FGoArm&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo-wiki%2Fwiki%2FGoArm" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+ <table style="padding:0px; margin: 0px 0px 10px 0px; width:100%" cellpadding="0" cellspacing="0"
+ itemscope itemtype="http://schema.org/CreativeWork">
+ <tr style="height: 58px;">
+ 
+ 
+ 
+ <td id="plogo">
+ <link itemprop="url" href="https://code.google.com/p/go-wiki">
+ <a href="https://code.google.com/p/go-wiki/">
+ 
+ <img src="https://ssl.gstatic.com/codesite/ph/images/defaultlogo.png" alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em">
+ 
+ <div id="pname">
+ <a href="https://code.google.com/p/go-wiki/"><span itemprop="name">go-wiki</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link"
+ href="https://code.google.com/p/go-wiki/"><span itemprop="description">Go Language Community Wiki</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space:nowrap;text-align:right; vertical-align:bottom;">
+ 
+ <form action="https://code.google.com/hosting/search">
+ <input size="30" name="q" value="" type="text">
+ 
+ <input type="submit" name="projectsearch" value="Search projects" >
+ </form>
+ 
+ </tr>
+ </table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="https://code.google.com/p/go-wiki/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ 
+ 
+ <a href="../wiki.1.html" class="tab active">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <div class=gtbc></div>
+</div>
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" class="st">
+ <tr>
+ 
+ 
+ 
+ <td class="subt">
+ <div class="issueDetail">
+<div class="isf">
+ 
+ <span class="inIssueList"> 
+ <span>Search</span>
+ <form action="../wiki.1.html" method="GET" style="display:inline">
+ <select id="can" name="can" >
+ <option disabled="disabled">Search within:</option>
+ 
+ <option value="1" >&nbsp;All wiki pages</option>
+ <option value="3" >&nbsp;Featured pages</option>
+ <option value="2" selected="selected">&nbsp;Current pages</option>
+ 
+ 
+ <option value="4" >&nbsp;Deprecated pages</option>
+ 
+ </select>
+ <span>for</span>
+ <span id="qq"><input type="text" size="38" id="searchq" name="q" value=""
+ autocomplete="off" ></span>
+ 
+ 
+ 
+ <input type="submit" value="Search" >
+ </form>
+ </span>
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+</div>
+</div>
+
+ </td>
+ 
+ 
+ 
+ 
+ 
+ 
+ <td align="right" valign="top" class="bevel-right"></td>
+ </tr>
+</table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol"
+ 
+>
+
+ 
+
+
+
+
+
+
+
+ <style type="text/css">
+ .delcom { background: #e8e8e8 }
+ .commentcontent {
+ margin: 2em;
+ padding: 0px 10px;
+ width: 66em;
+ }
+ .artifactcomment {
+ border-top: 3px solid #c3d9ff;
+ }
+ #commentform {
+ border-top: 3px solid #c3d9ff;
+ }
+ </style>
+
+<div id="wikipage">
+<table>
+ <tr>
+ 
+ 
+ <td style="vertical-align:top; padding-left:5px">
+ 
+ <div id="wikiheader">
+ 
+ <span style="font-size:120%;font-weight:bold">GoArm</span>
+ &nbsp;
+ <div> 
+ 
+ <i>Using Go on ARM powered machines</i>
+ 
+ 
+ 
+ <div id="wikiauthor" style="float:right">
+ Updated <span title="Wed Dec  3 10:08:18 2014">
+ Yesterday (27 hours ago)</span>
+ 
+ by 
+
+ <a class="userlink"
+ href="https://code.google.com/u/101938517674731098705/">a...@mgk.ro</a
+>
+ 
+ </div>
+ </div>
+ </div>
+ 
+ <div id="wikicontent">
+ <div class="vt" id="wikimaincol">
+ <h1><a name="Introduction"></a>Introduction<a href="GoArm.html#Introduction" class="section_anchor"></a></h1><p>Go is fully supported on linux/arm. Any Go program that you can compile for x86/x86_64 should work on Arm.  </p><h1><a name="Supported_architectures"></a>Supported architectures<a href="GoArm.html#Supported_architectures" class="section_anchor"></a></h1><p>Go supports the following ARM architectural families.  </p><p><table class="wikitable"><tr><td style="border: 1px solid #ccc; padding: 5px;"> <strong>Architecture</strong> </td><td style="border: 1px solid #ccc; padding: 5px;"> <strong>Status</strong> </td><td style="border: 1px solid #ccc; padding: 5px;"> <strong>GOARM value</strong> </td><td style="border: 1px solid #ccc; padding: 5px;"> <strong>Notes</strong> </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> ARMv4 and below </td><td style="border: 1px solid #ccc; padding: 5px;"> sorry, not supported </td><td style="border: 1px solid #ccc; padding: 5px;"> n/a </td><td style="border: 1px solid #ccc; padding: 5px;"> </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> ARMv5 </td><td style="border: 1px solid #ccc; padding: 5px;"> supported </td><td style="border: 1px solid #ccc; padding: 5px;"> GOARM=5 </td><td style="border: 1px solid #ccc; padding: 5px;"> </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> ARMv6 </td><td style="border: 1px solid #ccc; padding: 5px;"> supported </td><td style="border: 1px solid #ccc; padding: 5px;"> </td><td style="border: 1px solid #ccc; padding: 5px;"> GOARM=6 is the default value</td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> ARMv7 </td><td style="border: 1px solid #ccc; padding: 5px;"> supported </td><td style="border: 1px solid #ccc; padding: 5px;"> GOARM=7 </td><td style="border: 1px solid #ccc; padding: 5px;"> </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> ARMv8 </td><td style="border: 1px solid #ccc; padding: 5px;"> work in progress </td><td style="border: 1px solid #ccc; padding: 5px;"> n/a </td><td style="border: 1px solid #ccc; padding: 5px;"> contact aram for details </td></tr> </table></p><p>Starting from Go 1.1, the appropriate GOARM value will be chosen if you compile Go from source on the target machine. In cross compilation situations, it is recommended that you always export an appropriate GOARM value. </p><h1><a name="Supported_operating_systems"></a>Supported operating systems<a href="GoArm.html#Supported_operating_systems" class="section_anchor"></a></h1><p>Go supports ARM on Linux. You must be running a <a href="http://wiki.debian.org/ArmEabiPort" rel="nofollow">EABI</a> kernel. These are generally known as <tt>armel</tt> for softfloat (compatible with ARMv5) or <tt>armhf</tt> for hardware floating point (ARMv6 and above). </p><h1><a name="Recommended_Go_version"></a>Recommended Go version<a href="GoArm.html#Recommended_Go_version" class="section_anchor"></a></h1><p>The recommended minimum version for running Go on arm systems is Go 1.1. </p><h1><a name="Tips_and_tricks"></a>Tips and tricks<a href="GoArm.html#Tips_and_tricks" class="section_anchor"></a></h1><h2><a name="/tmp_and_tmpfs"></a>/tmp and tmpfs<a href="GoArm.html#/tmp_and_tmpfs" class="section_anchor"></a></h2><p>The <tt>go</tt> build tool uses <tt>/tmp</tt> when compiling and testing, this can cause heavy wear and tear if <tt>/tmp</tt> lives on your SD card. To minimise this effect, either <tt>export TMPDIR</tt> to somewhere that lives on another filesystem. Alternatively if you have lots of physical memory you can mount a swap backed tmpfs filesystem on /tmp by adding this line to <tt>/etc/fstab</tt> </p><pre class="prettyprint">tmpfs /tmp tmpfs nodev,nosuid,mode=1777 0 0</pre><h2><a name="Swap"></a>Swap<a href="GoArm.html#Swap" class="section_anchor"></a></h2><p>Building Go from source requires at least 256mb of RAM. Running the tests requires at least 256mb of memory and at least 512mb of swap space. </p><h2><a name="Build_failures_due_to_lack_of_memory"></a>Build failures due to lack of memory<a href="GoArm.html#Build_failures_due_to_lack_of_memory" class="section_anchor"></a></h2><p>The Go tool will try to keep all your cpu cores busy when installing packages (during make.bash), this is normally preferable on PCs where memory is abundant. However, some powerful multicore ARM machines don&#x27;t have enough memory to support parallel builds utilizing all available cores, and you can work around that by using the <tt>taskset(1)</tt> utility to limit Go to only use one core without resorting to swaps. </p><pre class="prettyprint">taskset 1 ./make.bash # use 3 if you want to use two cores</pre><p>Note: the 1 here is a bitmask for cpu affinity and it&#x27;s not the number of cpu cores you&#x27;re willing to use, please refer to <tt>taskset(1)</tt> manual for details. </p><h1><a name="Known_issues"></a>Known issues<a href="GoArm.html#Known_issues" class="section_anchor"></a></h1><h2><a name="Lack_of_floating_point_hardware_on_ARMv5"></a>Lack of floating point hardware on ARMv5<a href="GoArm.html#Lack_of_floating_point_hardware_on_ARMv5" class="section_anchor"></a></h2><p>The major issue with ARMv5 is the lack of floating point support in common ARMv5 harware<sup>†</sup>. When compiled with the GOARM=5 environment variable, the 5l linker will insert a call to <tt>_sfloat</tt> before any block of floating point instructions to branch into the floating point emulator. This means that binaries produced with a Go installation that was compiled with soft float support will work on all supported architectures, but builds compiled without soft floating point support will not work on ARMv5. </p><p><sup>†</sup> This isn&#x27;t strictly true, there exist ARMv5 implementations which have VFP1 floating point. However the compiler doesn&#x27;t support VFP1 yet. </p><h2><a name="html/template_and_test/nilptr.go_test_fail_on_HTC_Android"></a>html/template and test/nilptr.go test fail on HTC Android<a href="GoArm.html#html/template_and_test/nilptr.go_test_fail_on_HTC_Android" class="section_anchor"></a></h2><p>html/template test and test/nilptr.go is known to fail on HTC&#x27;s Android kernels (<a href="http://www.mail-archive.com/android-developers@googlegroups.com/msg153389.html" rel="nofollow">ref</a>), because the kernel will kill  the application after 10 segfaults. </p><h2><a name="Potential_kernel_bug_in_2.6.32-5-kirkwood_on_QNAP_219P"></a>Potential kernel bug in 2.6.32-5-kirkwood on QNAP 219P<a href="GoArm.html#Potential_kernel_bug_in_2.6.32-5-kirkwood_on_QNAP_219P" class="section_anchor"></a></h2><p>See <a href="https://code.google.com/p/go/issues/detail?id=5466" rel="nofollow">Issue 5466</a> for details. Updating to 3.2.0-4-kirkwood solved the issue. </p><h1><a name="Success_stories"></a>Success stories<a href="GoArm.html#Success_stories" class="section_anchor"></a></h1><p>ARM hardware comes in a myriad of shapes and sizes. If you&#x27;ve had a success story building and running Go on your Arm system, please detail your results here. </p><h2><a name="Netgear_Stora"></a>Netgear Stora<a href="GoArm.html#Netgear_Stora" class="section_anchor"></a></h2><p>Architecture: ARMv5 </p><p>Operating System: Debian Sid </p><p>The Netgear Stora is an ARMv5 (Marvell Kirkwood) platform. I flashed mine with a Debian Sid distribution and it was, until Go1, a solid platform for Go development. The main drawback is the Stora only has 128mb of ram, which is not quite enough to run ./all.bash as 5l can use more than 100mb of ram when linking some commands. </p><p>Instructions for installing Debian on your Stora can be found on the OpenStora website, <a href="http://www.openstora.com/wiki/index.php?title=How_to_install_Debian_Linux_on_NETGEAR_Stora" rel="nofollow">http://www.openstora.com/wiki/index.php?title=How_to_install_Debian_Linux_on_NETGEAR_Stora</a>. </p><blockquote><i>-- dave cheney</i> 
+</blockquote><h2><a name="Qnap_TS-119P_II"></a>Qnap TS-119P II<a href="GoArm.html#Qnap_TS-119P_II" class="section_anchor"></a></h2><p>Architecture: ARMv5 </p><p>Operating System: Debian Squeeze </p><p>The Qnap TS series of NASs are excellent hackable little linux hosts. The TS-11P9 II is a 2Ghz Marvell Kirkwood ARMv5 processor with 512mb of ram and a single SATA drive bay.  </p><p>The kirkwood platform is supported by the native debian installer. <a href="http://www.cyrius.com/debian/kirkwood/qnap/ts-119/install.html" rel="nofollow">http://www.cyrius.com/debian/kirkwood/qnap/ts-119/install.html</a> </p><blockquote><i>-- dave cheney</i> 
+</blockquote><h2><a name="Pandaboard"></a>Pandaboard<a href="GoArm.html#Pandaboard" class="section_anchor"></a></h2><p>Architecture: ARMv7 </p><p>Operating System: Ubuntu 12.04LTS (armhf) </p><p>The Pandaboard is a dual core ARMv7 development board based on the Texas Instruments OMAP4 SoC platform. I run ubuntu 12.04 LTS server on mine, which is an excellent distribution for Arm development. The Pandaboard has a gig of ram which makes it excellent for development and benchmarking. </p><p>Instructions and SD card image can be found on on the Ubuntu wiki, <a href="https://wiki.ubuntu.com/ARM/Server/Install#Installing_pre-installed_OMAP4_Precise_.2812.04.29_Server_Images" rel="nofollow">https://wiki.ubuntu.com/ARM/Server/Install#Installing_pre-installed_OMAP4_Precise_.2812.04.29_Server_Images</a>. </p><blockquote><i>-- dave cheney</i> 
+</blockquote><h2><a name=""></a>BeagleBone</h2><p>Architecture: ARMv7 single core, Cortex-A8, 256MB RAM, 720 MHz </p><p>Operating System: Angstrom Linux </p><p>BeagleBone is similar to Beagleboard, but without the video components. Angstrom is a very small Linux distribution for ARM based systems. It is built on top of Yocto and OpenEmbedded with additional tools and recipes to make it even easier to build a distribution. You can think of Angstrom as Ubuntu and OpenEmbedded/Yocto as Debian. Angstrom is very light weight and fast compared to Ubuntu. It uses systemd instead of the sys5 scripts which help give you a very fast boot time of a few seconds. </p><p>BeagleBone is probably faster than a RasberryPI because of it&#x27;s newer Cortex-A8 dual-issue superscalar architecture, but the PI has the GPU which theoretically could be used with something like OpenCL to really run circles around the BeagleBone. However, for embedded applications the BeagleBone is easier to work with because it is ready out of the box with GPIO connections. </p><p>I&#x27;ve cross compiled for ARM with 5g from a Mac and so far I haven&#x27;t run into any problems. You can build on the BeagleBone, but cross compiling with Go is so easy that it is better to save wear and tear on the flash drive and just compile somewhere else.  </p><blockquote><i>-- hans stimer</i> 
+</blockquote><h3><a name="Zyxel_NSA_310"></a>Zyxel NSA 310<a href="GoArm.html#Zyxel_NSA_310" class="section_anchor"></a></h3><p>Architecture: ARM5 Platform: Debian Wheeze </p><p>Successfuly built default branch, going to write fan control daemon for this device in golang. </p><h3><a name="Raspberry_Pi"></a>Raspberry Pi<a href="GoArm.html#Raspberry_Pi" class="section_anchor"></a></h3><p>Architecture: ARM1176JZFS, with floating point, running at 700Mhz </p><p>Operating System: Debian Wheezy beta distribution (<a href="http://www.raspberrypi.org/archives/1435" rel="nofollow">http://www.raspberrypi.org/archives/1435</a>) reported as: </p><p><tt>Linux raspberrypi 3.1.9+ #125 PREEMPT Sun Jun 17 16:09:36 BST 2012 armv6l GNU/Linux</tt> </p><p><strong>Memory Split</strong>: the Pi shares its 256mb of memory between the CPU and the GPU. You should allocate as much memory as possible to the CPU for a successful compilation. The configuration for the memory split is stored on your SD card. This link has a script to adjust the configuration, <a href="http://sirlagz.net/?p=445" rel="nofollow">http://sirlagz.net/?p=445</a>. </p><p>Go version weekly.2012-03-27 +645947213cac, with timeout and GOARM 7 patches <a href="http://codereview.appspot.com/5987063/" rel="nofollow">http://codereview.appspot.com/5987063/</a>) builds with 2 test failures: encoding/gob fails with out of memory, and fmt fails the NaN test. </p><p>Successfully installed and run SVGo via go get github.com/ajstarks/svgo, tested with goplay: </p><p><img src="http://farm8.staticflickr.com/7139/7451061716_fbb585c55f.jpg" /> </p><p>Division benchmark via <a href="http://codereview.appspot.com/6258067:" rel="nofollow">http://codereview.appspot.com/6258067:</a> </p><pre class="prettyprint">$ cd $GOROOT/src/pkg/runtime
+$ go test -test.bench=BenchmarkUint
+
+
+BenchmarkUint32Div7	 5000000	       547 ns/op
+BenchmarkUint32Div37	 5000000	       547 ns/op
+BenchmarkUint32Div123	 5000000	       547 ns/op
+BenchmarkUint32Div763	 5000000	       547 ns/op
+BenchmarkUint32Div1247	 5000000	       547 ns/op
+BenchmarkUint32Div9305	 5000000	       547 ns/op
+BenchmarkUint32Div13307	 5000000	       547 ns/op
+BenchmarkUint32Div52513	 5000000	       547 ns/op
+BenchmarkUint32Div60978747	 5000000	       547 ns/op
+BenchmarkUint32Div106956295	 5000000	       547 ns/op
+BenchmarkUint32Mod7	 5000000	       547 ns/op
+BenchmarkUint32Mod37	 5000000	       547 ns/op
+BenchmarkUint32Mod123	 5000000	       547 ns/op
+BenchmarkUint32Mod763	 5000000	       547 ns/op
+BenchmarkUint32Mod1247	 5000000	       547 ns/op
+BenchmarkUint32Mod9305	 5000000	       547 ns/op
+BenchmarkUint32Mod13307	 5000000	       547 ns/op
+BenchmarkUint32Mod52513	 5000000	       547 ns/op
+BenchmarkUint32Mod60978747	 5000000	       547 ns/op
+BenchmarkUint32Mod106956295	 5000000	       547 ns/op</pre><p>Running the hardware floating point distribution, Raspbian &quot;pisces&quot; (<a href="http://www.raspbian.org/PiscesImages" rel="nofollow">http://www.raspbian.org/PiscesImages</a>) and applying the patches in <a href="https://gist.github.com/3116118" rel="nofollow">https://gist.github.com/3116118</a>, here are the results of the Eleanor McHugh gospeed benchmark: </p><pre class="prettyprint">raspbian@pisces:~/gowork/src/github.com/feyeleanor/gospeed$ uname -a
+Linux pisces 3.1.9+ #171 PREEMPT Tue Jul 17 01:08:22 BST 2012 armv6l GNU/Linux
+raspbian@pisces:~/gowork/src/github.com/feyeleanor/gospeed$ go test -test.bench=&quot;.*&quot;
+PASS
+BenchmarkBaselineCastInt32ToInt	100000000	        13.5 ns/op
+BenchmarkBaselineCastIntToInt32	100000000	        13.5 ns/op
+BenchmarkBaselineCastInt64ToUint64	100000000	        17.8 ns/op
+BenchmarkBaselineCastUint64ToInt64	100000000	        17.2 ns/op
+BenchmarkBaselineVariableGet	100000000	        13.4 ns/op
+BenchmarkBaselineVariableSet	100000000	        22.4 ns/op
+BenchmarkBaselineVariableGetInterface	100000000	        13.5 ns/op
+BenchmarkBaselineVariableSetInterface	50000000	        31.3 ns/op
+BenchmarkBaselineVariableIncrement	100000000	        23.9 ns/op
+BenchmarkBaselineVariableDecrement	100000000	        23.9 ns/op
+BenchmarkBaselineFieldGet	100000000	        13.5 ns/op
+BenchmarkBaselineFieldSet	100000000	        20.9 ns/op
+BenchmarkBaselineSliceGet	50000000	        32.9 ns/op
+BenchmarkBaselineSliceSet	50000000	        34.5 ns/op
+BenchmarkBaselineMapIntGet	 1000000	      1448 ns/op
+BenchmarkBaselineMapIntSet	 1000000	      1968 ns/op
+BenchmarkBaselineMapStringGet	 1000000	      1119 ns/op
+BenchmarkBaselineMapStringSet	 1000000	      1675 ns/op
+BenchmarkBaselineIf	100000000	        15.0 ns/op
+BenchmarkBaselineIfElse	100000000	        15.0 ns/op
+BenchmarkBaselineSwitchDefault	100000000	        13.5 ns/op
+BenchmarkBaselineSwitchOneCase	100000000	        15.0 ns/op
+BenchmarkBaselineSwitchTwoCases	100000000	        18.0 ns/op
+BenchmarkBaselineSwitchTwoCasesFallthrough	100000000	        18.0 ns/op
+BenchmarkBaselineForLoopIteration	50000000	        42.0 ns/op
+BenchmarkBaselineForReverseLoopIteration	50000000	        36.0 ns/op
+BenchmarkBaselineForRange	20000000	        80.9 ns/op
+BenchmarkBaselineForSliceLength	50000000	        39.0 ns/op
+BenchmarkBaselineForReverseSliceLength	50000000	        36.0 ns/op
+BenchmarkBaselineForLoopIteration10	20000000	       119 ns/op
+BenchmarkBaselineForReverseLoopIteration10	20000000	        92.9 ns/op
+BenchmarkBaselineForRange10	10000000	       215 ns/op
+BenchmarkBaselineForSliceLength10	20000000	       109 ns/op
+BenchmarkBaselineForReverseSliceLength10	20000000	        92.9 ns/op
+BenchmarkBaselineForLoopIteration100	 2000000	       929 ns/op
+BenchmarkBaselineForReverseLoopIteration100	 5000000	       700 ns/op
+BenchmarkBaselineForRange100	 1000000	      1567 ns/op
+BenchmarkBaselineForSliceLength100	 2000000	       853 ns/op
+BenchmarkBaselineForReverseSliceLength100	 5000000	       700 ns/op
+BenchmarkBaselineForLoopIteration10000	   10000	    106006 ns/op
+BenchmarkBaselineForReverseLoopIteration10000	   50000	     67480 ns/op
+BenchmarkBaselineForRange10000	   10000	    153841 ns/op
+BenchmarkBaselineForSliceLength10000	   20000	     85735 ns/op
+BenchmarkBaselineForReverseSliceLength10000	   50000	     69461 ns/op
+BenchmarkBaselineMakeChannelBoolUnbuffered	  200000	     10162 ns/op
+BenchmarkBaselineMakeChannelBool1	  200000	     12517 ns/op
+BenchmarkBaselineMakeChannelBool10	  200000	     12521 ns/op
+BenchmarkBaselineMakeChannelStringUnbuffered	  500000	     10369 ns/op
+BenchmarkBaselineMakeChannelString1	  200000	     12576 ns/op
+BenchmarkBaselineMakeChannelString10	  100000	     22358 ns/op
+BenchmarkBaselineGo	   50000	    367593 ns/op
+BenchmarkBaselineFunctionCall	50000000	        57.0 ns/op
+BenchmarkBaselineFunctionCallArg	20000000	        81.0 ns/op
+BenchmarkBaselineFunctionCall5VarArgs	  500000	      6852 ns/op
+BenchmarkBaselineFunctionCallInt	50000000	        60.3 ns/op
+BenchmarkBaselineFunctionCall5VarInts	 1000000	      3185 ns/op
+BenchmarkBaselineFunctionCallWithDefer	 1000000	      2330 ns/op
+BenchmarkBaselineFunctionCallPanicRecover	  500000	      6222 ns/op
+BenchmarkBaselineMethodCallDirect	20000000	        83.8 ns/op
+BenchmarkBaselineMethodCallDirect1Arg	20000000	       106 ns/op
+BenchmarkBaselineMethodCallDirect1Int	20000000	        85.2 ns/op
+BenchmarkBaselineMethodCallDirect5Args	 5000000	       368 ns/op
+BenchmarkBaselineMethodCallDirect5Ints	10000000	       233 ns/op
+BenchmarkBaselineMethodCallIndirect	100000000	        18.0 ns/op
+BenchmarkBaselineMethodCallIndirect1Arg	50000000	        42.0 ns/op
+BenchmarkBaselineMethodCallIndirect1Int	100000000	        19.5 ns/op
+BenchmarkBaselineMethodCallIndirect5Args	 5000000	       309 ns/op
+BenchmarkBaselineMethodCallIndirect5Ints	10000000	       168 ns/op
+BenchmarkBaselineTypeAssertion	10000000	       218 ns/op
+BenchmarkBaselineTypeAssertionEmptyInterface	20000000	       106 ns/op
+BenchmarkBaselineTypeAssertionInterface1	 5000000	       576 ns/op
+BenchmarkBaselineTypeAssertionInterface2	 5000000	       579 ns/op
+BenchmarkBaselineTypeReflectPrimitiveToValue	 5000000	       425 ns/op
+BenchmarkBaselineTypeReflectSliceToValue	 1000000	      3218 ns/op
+BenchmarkBaselineTypeReflectStructToValue	  500000	      4760 ns/op
+BenchmarkBaselineTypeCheck	10000000	       189 ns/op
+BenchmarkBaselineTypeCheckEmptyInterface	20000000	        93.1 ns/op
+BenchmarkBaselineTypeCheckInterface1	 5000000	       511 ns/op
+BenchmarkBaselineTypeCheckInterface2	 5000000	       516 ns/op
+BenchmarkBaselineTypeSwitchOneCase	10000000	       262 ns/op
+BenchmarkBaselineTypeSwitchBasicTypesCase	10000000	       295 ns/op
+BenchmarkBaselineTypeSwitchEmptyInterface	10000000	       163 ns/op
+BenchmarkBaselineTypeSwitchInterface1	 5000000	       588 ns/op
+BenchmarkBaselineTypeSwitchInterface2	 5000000	       602 ns/op
+BenchmarkBaselineNewStructureLiteral	20000000	        84.0 ns/op
+BenchmarkBaselineNewStructure	20000000	       127 ns/op
+BenchmarkBaselineNewSliceLiteral	50000000	        54.2 ns/op
+BenchmarkBaselineNewSlice	 1000000	      3124 ns/op
+BenchmarkBaselineNewMapLiteralIntToInt	  500000	      9083 ns/op
+BenchmarkBaselineNewMapLiteralIntToInterface	  500000	      9807 ns/op
+BenchmarkBaselineNewMapLiteralStringToInt	  500000	      9792 ns/op
+BenchmarkBaselineNewMapLiteralStringToInterface	  500000	     10595 ns/op
+BenchmarkBaselineNewMapLiteralIntToInt2Item	  200000	     14265 ns/op
+BenchmarkBaselineNewMapLiteralIntToInterface2Item	  200000	     14669 ns/op
+BenchmarkBaselineNewMapLiteralStringToInt2Item	  200000	     14025 ns/op
+BenchmarkBaselineNewMapLiteralStringToInterface2Item	  200000	     15086 ns/op
+BenchmarkBaselineNewMapIntToInt	  500000	      9025 ns/op
+BenchmarkBaselineNewMapIntToInterface	  500000	      9753 ns/op
+BenchmarkBaselineNewMapStringToInt	  500000	      9740 ns/op
+BenchmarkBaselineNewMapStringToInterface	  500000	     10486 ns/op
+BenchmarkBaselineSliceCopy	 5000000	       300 ns/op
+BenchmarkBaselineNewSliceAppendElement1	 1000000	      3318 ns/op
+BenchmarkBaselineNewSliceAppendElement10	 1000000	      5174 ns/op
+ok  	github.com/feyeleanor/gospeed	417.296s</pre><p><i>-- anthony starks</i> </p><h2><a name="ODROID-X"></a>ODROID-X<a href="GoArm.html#ODROID-X" class="section_anchor"></a></h2><p>Architecture: ARMv7 quad-core Cortex-A9 (Samsung Exynos 4412 1.4GHz), 1GB RAM, Mali graphics (untested). </p><p>Operating System: <a href="http://archlinuxarm.org/" rel="nofollow">Archlinux ARM</a> </p><p>Go pre-1.1 compiles out of the box. The four cores make it particularly suited to Go multi-threaded programs. An ODROID-X2 is coming (Nov 2012) with more RAM. </p><p><i>-- Rémy Oudompheng</i> </p><h2><a name="BananaPi"></a>BananaPi<a href="GoArm.html#BananaPi" class="section_anchor"></a></h2><p><a href="http://bananapi.org" rel="nofollow">BananaPi</a> has a few enhanced hardware components compare with Raspberry Pi. </p><p><table class="wikitable"><tr><td style="border: 1px solid #ccc; padding: 5px;"> <strong>Architecture</strong> </td><td style="border: 1px solid #ccc; padding: 5px;"> <strong>Comments</strong> </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> <a href="http://www.allwinnertech.com/en/clq/processora/A20.html" rel="nofollow">Allwinner A20(ARM Cortex-A7 Dual-core, 1GHz, Mali400MP2 GPU)</a> </td><td style="border: 1px solid #ccc; padding: 5px;"> tbc</td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> eSATA </td><td style="border: 1px solid #ccc; padding: 5px;"> No worry to wear out your root SD Card</td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> Onboard Microphone </td><td style="border: 1px solid #ccc; padding: 5px;"> tbc </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> 1G Etherenet </td><td style="border: 1px solid #ccc; padding: 5px;"> tbc </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> 1G RAM </td><td style="border: 1px solid #ccc; padding: 5px;"> tbc </td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> Reset Switch </td><td style="border: 1px solid #ccc; padding: 5px;"> To reset the board ?</td></tr> <tr><td style="border: 1px solid #ccc; padding: 5px;"> Power Switch </td><td style="border: 1px solid #ccc; padding: 5px;"> To power cycle the board ?</td></tr> </table></p><pre class="prettyprint">
+root@bpi01:/data/go13/src# cat ./buildgo.bash
+#!/bin/bash
+# use 1 CPU to avoid out of memory compilation issue.
+time taskset 2 ./make.bash
+
+root@bpi01:/data/go13/src# ./buildgo.bash
+
+&lt;snipped&gt;
+
+Installed Go for linux/arm in /data/go1.3
+Installed commands in /data/go1.3/bin
+
+real    9m9.222s
+user    8m18.960s
+sys     0m40.920s
+root@bpi01:/data/go1.3/src#</pre><p><i>--T.J. Yang</i> </p><h2><a name="X-Gene_(ARMv8)"></a>AppliedMicro X-Gene (ARMv8)<a href="GoArm.html#X-Gene_(ARMv8)" class="section_anchor"></a></h2><p>Architecture: ARMv8 (64-bit) 8-core, 2.4GHz, 16GB RAM </p><p>Operating System: Linux </p><p>The linux/arm64 Go port is not functional yet, but you can run the linux/arm port. </p><pre class="prettyprint">$ sudo apt-get install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+$ 
+$ cd go/src &amp;&amp; CC=&#x27;arm-linux-gnueabihf-gcc -static&#x27; GO_DISTFLAGS=-s GOHOSTARCH=arm GOARM=7 CGO_ENABLED=0 ./make.bash
+$ 
+$ uname -a
+Linux xgene 3.16.0-25-generic #33-Ubuntu SMP Tue Nov 4 12:06:56 UTC 2014 aarch64 aarch64 aarch64 GNU/Linux
+$ go version
+go version devel +6a8045fd9da9 Wed Dec 03 18:33:35 2014 +0100 linux/arm
+$ go env
+GOARCH=&quot;arm&quot;
+GOBIN=&quot;&quot;
+GOCHAR=&quot;5&quot;
+GOEXE=&quot;&quot;
+GOHOSTARCH=&quot;arm&quot;
+GOHOSTOS=&quot;linux&quot;
+GOOS=&quot;linux&quot;
+GOPATH=&quot;/home/aram&quot;
+GORACE=&quot;&quot;
+GOROOT=&quot;/home/aram/go&quot;
+GOTOOLDIR=&quot;/home/aram/go/pkg/tool/linux_arm&quot;
+CC=&quot;arm-linux-gnueabihf-gcc&quot;
+GOGCCFLAGS=&quot;-static -fPIC -marm -pthread -fmessage-length=0&quot;
+CXX=&quot;g++&quot;
+CGO_ENABLED=&quot;1&quot;</pre><p>A static toolchain is required as arm64 Linux distributions don&#x27;t ship the necessary 32-bit arm libraries (except in a sysroot). <tt>GO_DISTFLAGS=-s</tt> is not enough, <tt>CC=&#x27;arm-linux-gnueabihf-gcc -static&#x27;</tt> is required to build a static dist tool. </p><p><i>-- Aram Hăvărneanu</i> </p>
+ </div>
+ </div>
+ </td><tr>
+</table>
+ </div>
+
+
+ 
+ 
+ 
+ <form name="delcom" action="https://code.google.com/p/go-wiki/w/delComment.do" method="POST">
+ <input type="hidden" name="sequence_num" value="" >
+ <input type="hidden" name="create_time" value="" >
+ <input type="hidden" name="mode" value="" >
+ <input type="hidden" name="pagename" value="GoArm" >
+ <input type="hidden" name="token" value="" >
+ </form>
+
+
+ <script src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/prettify/prettify.js"></script>
+ <script type="text/javascript">
+ prettyPrint();
+ </script>
+
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/dit_scripts.js"></script>
+
+
+
+  
+ 
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_core.js"></script>
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_dwiki.js"></script>
+ 
+ 
+ 
+ 
+</div> 
+
+<div id="footer" dir="ltr">
+ <div class="text">
+ <a href="https://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="https://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+
+ 
+ 
+
+
+ 
+ </body>
+</html>
+
+

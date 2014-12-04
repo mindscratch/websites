@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/iface.goc - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/iface.goc</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Copyright 2009 The Go Authors. All rights reserved.
+<span id="L2" class="ln">     2</span>	// Use of this source code is governed by a BSD-style
+<span id="L3" class="ln">     3</span>	// license that can be found in the LICENSE file.
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package runtime
+<span id="L6" class="ln">     6</span>	#include &#34;runtime.h&#34;
+<span id="L7" class="ln">     7</span>	#include &#34;arch_GOARCH.h&#34;
+<span id="L8" class="ln">     8</span>	#include &#34;type.h&#34;
+<span id="L9" class="ln">     9</span>	#include &#34;typekind.h&#34;
+<span id="L10" class="ln">    10</span>	#include &#34;malloc.h&#34;
+<span id="L11" class="ln">    11</span>	#include &#34;../../cmd/ld/textflag.h&#34;
+<span id="L12" class="ln">    12</span>	
+<span id="L13" class="ln">    13</span>	func printiface(i Iface) {
+<span id="L14" class="ln">    14</span>		runtime·printf(&#34;(%p,%p)&#34;, i.tab, i.data);
+<span id="L15" class="ln">    15</span>	}
+<span id="L16" class="ln">    16</span>	
+<span id="L17" class="ln">    17</span>	func printeface(e Eface) {
+<span id="L18" class="ln">    18</span>		runtime·printf(&#34;(%p,%p)&#34;, e.type, e.data);
+<span id="L19" class="ln">    19</span>	}
+<span id="L20" class="ln">    20</span>	
+<span id="L21" class="ln">    21</span>	static	Itab*	hash[1009];
+<span id="L22" class="ln">    22</span>	static	Lock	ifacelock;
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>	static Itab*
+<span id="L25" class="ln">    25</span>	itab(InterfaceType *inter, Type *type, int32 canfail)
+<span id="L26" class="ln">    26</span>	{
+<span id="L27" class="ln">    27</span>		int32 locked;
+<span id="L28" class="ln">    28</span>		int32 ni;
+<span id="L29" class="ln">    29</span>		Method *t, *et;
+<span id="L30" class="ln">    30</span>		IMethod *i, *ei;
+<span id="L31" class="ln">    31</span>		uint32 h;
+<span id="L32" class="ln">    32</span>		String *iname, *ipkgPath;
+<span id="L33" class="ln">    33</span>		Itab *m;
+<span id="L34" class="ln">    34</span>		UncommonType *x;
+<span id="L35" class="ln">    35</span>		Type *itype;
+<span id="L36" class="ln">    36</span>		Eface err;
+<span id="L37" class="ln">    37</span>	
+<span id="L38" class="ln">    38</span>		if(inter-&gt;mhdr.len == 0)
+<span id="L39" class="ln">    39</span>			runtime·throw(&#34;internal error - misuse of itab&#34;);
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>		locked = 0;
+<span id="L42" class="ln">    42</span>	
+<span id="L43" class="ln">    43</span>		// easy case
+<span id="L44" class="ln">    44</span>		x = type-&gt;x;
+<span id="L45" class="ln">    45</span>		if(x == nil) {
+<span id="L46" class="ln">    46</span>			if(canfail)
+<span id="L47" class="ln">    47</span>				return nil;
+<span id="L48" class="ln">    48</span>			iname = inter-&gt;m[0].name;
+<span id="L49" class="ln">    49</span>			goto throw;
+<span id="L50" class="ln">    50</span>		}
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>		// compiler has provided some good hash codes for us.
+<span id="L53" class="ln">    53</span>		h = inter-&gt;hash;
+<span id="L54" class="ln">    54</span>		h += 17 * type-&gt;hash;
+<span id="L55" class="ln">    55</span>		// TODO(rsc): h += 23 * x-&gt;mhash ?
+<span id="L56" class="ln">    56</span>		h %= nelem(hash);
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>		// look twice - once without lock, once with.
+<span id="L59" class="ln">    59</span>		// common case will be no lock contention.
+<span id="L60" class="ln">    60</span>		for(locked=0; locked&lt;2; locked++) {
+<span id="L61" class="ln">    61</span>			if(locked)
+<span id="L62" class="ln">    62</span>				runtime·lock(&amp;ifacelock);
+<span id="L63" class="ln">    63</span>			for(m=runtime·atomicloadp(&amp;hash[h]); m!=nil; m=m-&gt;link) {
+<span id="L64" class="ln">    64</span>				if(m-&gt;inter == inter &amp;&amp; m-&gt;type == type) {
+<span id="L65" class="ln">    65</span>					if(m-&gt;bad) {
+<span id="L66" class="ln">    66</span>						m = nil;
+<span id="L67" class="ln">    67</span>						if(!canfail) {
+<span id="L68" class="ln">    68</span>							// this can only happen if the conversion
+<span id="L69" class="ln">    69</span>							// was already done once using the , ok form
+<span id="L70" class="ln">    70</span>							// and we have a cached negative result.
+<span id="L71" class="ln">    71</span>							// the cached result doesn&#39;t record which
+<span id="L72" class="ln">    72</span>							// interface function was missing, so jump
+<span id="L73" class="ln">    73</span>							// down to the interface check, which will
+<span id="L74" class="ln">    74</span>							// do more work but give a better error.
+<span id="L75" class="ln">    75</span>							goto search;
+<span id="L76" class="ln">    76</span>						}
+<span id="L77" class="ln">    77</span>					}
+<span id="L78" class="ln">    78</span>					if(locked)
+<span id="L79" class="ln">    79</span>						runtime·unlock(&amp;ifacelock);
+<span id="L80" class="ln">    80</span>					return m;
+<span id="L81" class="ln">    81</span>				}
+<span id="L82" class="ln">    82</span>			}
+<span id="L83" class="ln">    83</span>		}
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>		ni = inter-&gt;mhdr.len;
+<span id="L86" class="ln">    86</span>		m = runtime·persistentalloc(sizeof(*m) + ni*sizeof m-&gt;fun[0], 0, &amp;mstats.other_sys);
+<span id="L87" class="ln">    87</span>		m-&gt;inter = inter;
+<span id="L88" class="ln">    88</span>		m-&gt;type = type;
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	search:
+<span id="L91" class="ln">    91</span>		// both inter and type have method sorted by name,
+<span id="L92" class="ln">    92</span>		// and interface names are unique,
+<span id="L93" class="ln">    93</span>		// so can iterate over both in lock step;
+<span id="L94" class="ln">    94</span>		// the loop is O(ni+nt) not O(ni*nt).
+<span id="L95" class="ln">    95</span>		i = inter-&gt;m;
+<span id="L96" class="ln">    96</span>		ei = i + inter-&gt;mhdr.len;
+<span id="L97" class="ln">    97</span>		t = x-&gt;m;
+<span id="L98" class="ln">    98</span>		et = t + x-&gt;mhdr.len;
+<span id="L99" class="ln">    99</span>		for(; i &lt; ei; i++) {
+<span id="L100" class="ln">   100</span>			itype = i-&gt;type;
+<span id="L101" class="ln">   101</span>			iname = i-&gt;name;
+<span id="L102" class="ln">   102</span>			ipkgPath = i-&gt;pkgPath;
+<span id="L103" class="ln">   103</span>			for(;; t++) {
+<span id="L104" class="ln">   104</span>				if(t &gt;= et) {
+<span id="L105" class="ln">   105</span>					if(!canfail) {
+<span id="L106" class="ln">   106</span>					throw:
+<span id="L107" class="ln">   107</span>						// didn&#39;t find method
+<span id="L108" class="ln">   108</span>						runtime·newTypeAssertionError(
+<span id="L109" class="ln">   109</span>							nil, type-&gt;string, inter-&gt;string,
+<span id="L110" class="ln">   110</span>							iname, &amp;err);
+<span id="L111" class="ln">   111</span>						if(locked)
+<span id="L112" class="ln">   112</span>							runtime·unlock(&amp;ifacelock);
+<span id="L113" class="ln">   113</span>						runtime·panic(err);
+<span id="L114" class="ln">   114</span>						return nil;	// not reached
+<span id="L115" class="ln">   115</span>					}
+<span id="L116" class="ln">   116</span>					m-&gt;bad = 1;
+<span id="L117" class="ln">   117</span>					goto out;
+<span id="L118" class="ln">   118</span>				}
+<span id="L119" class="ln">   119</span>				if(t-&gt;mtyp == itype &amp;&amp; t-&gt;name == iname &amp;&amp; t-&gt;pkgPath == ipkgPath)
+<span id="L120" class="ln">   120</span>					break;
+<span id="L121" class="ln">   121</span>			}
+<span id="L122" class="ln">   122</span>			if(m)
+<span id="L123" class="ln">   123</span>				m-&gt;fun[i - inter-&gt;m] = t-&gt;ifn;
+<span id="L124" class="ln">   124</span>		}
+<span id="L125" class="ln">   125</span>	
+<span id="L126" class="ln">   126</span>	out:
+<span id="L127" class="ln">   127</span>		if(!locked)
+<span id="L128" class="ln">   128</span>			runtime·panicstring(&#34;invalid itab locking&#34;);
+<span id="L129" class="ln">   129</span>		m-&gt;link = hash[h];
+<span id="L130" class="ln">   130</span>		runtime·atomicstorep(&amp;hash[h], m);
+<span id="L131" class="ln">   131</span>		runtime·unlock(&amp;ifacelock);
+<span id="L132" class="ln">   132</span>		if(m-&gt;bad)
+<span id="L133" class="ln">   133</span>			return nil;
+<span id="L134" class="ln">   134</span>		return m;
+<span id="L135" class="ln">   135</span>	}
+<span id="L136" class="ln">   136</span>	
+<span id="L137" class="ln">   137</span>	// call the callback for every itab that is currently allocated.
+<span id="L138" class="ln">   138</span>	void
+<span id="L139" class="ln">   139</span>	runtime·iterate_itabs(void (*callback)(Itab*))
+<span id="L140" class="ln">   140</span>	{
+<span id="L141" class="ln">   141</span>		int32 i;
+<span id="L142" class="ln">   142</span>		Itab *tab;
+<span id="L143" class="ln">   143</span>	
+<span id="L144" class="ln">   144</span>		for(i = 0; i &lt; nelem(hash); i++) {
+<span id="L145" class="ln">   145</span>			for(tab = hash[i]; tab != nil; tab = tab-&gt;link) {
+<span id="L146" class="ln">   146</span>				callback(tab);
+<span id="L147" class="ln">   147</span>			}
+<span id="L148" class="ln">   148</span>		}
+<span id="L149" class="ln">   149</span>	}
+<span id="L150" class="ln">   150</span>	
+<span id="L151" class="ln">   151</span>	static void
+<span id="L152" class="ln">   152</span>	copyin(Type *t, void *src, void **dst)
+<span id="L153" class="ln">   153</span>	{
+<span id="L154" class="ln">   154</span>		uintptr size;
+<span id="L155" class="ln">   155</span>		void *p;
+<span id="L156" class="ln">   156</span>		Alg *alg;
+<span id="L157" class="ln">   157</span>	
+<span id="L158" class="ln">   158</span>		size = t-&gt;size;
+<span id="L159" class="ln">   159</span>		alg = t-&gt;alg;
+<span id="L160" class="ln">   160</span>	
+<span id="L161" class="ln">   161</span>		if(size &lt;= sizeof(*dst))
+<span id="L162" class="ln">   162</span>			alg-&gt;copy(size, dst, src);
+<span id="L163" class="ln">   163</span>		else {
+<span id="L164" class="ln">   164</span>			p = runtime·cnew(t);
+<span id="L165" class="ln">   165</span>			alg-&gt;copy(size, p, src);
+<span id="L166" class="ln">   166</span>			*dst = p;
+<span id="L167" class="ln">   167</span>		}
+<span id="L168" class="ln">   168</span>	}
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>	static void
+<span id="L171" class="ln">   171</span>	copyout(Type *t, void **src, void *dst)
+<span id="L172" class="ln">   172</span>	{
+<span id="L173" class="ln">   173</span>		uintptr size;
+<span id="L174" class="ln">   174</span>		Alg *alg;
+<span id="L175" class="ln">   175</span>	
+<span id="L176" class="ln">   176</span>		size = t-&gt;size;
+<span id="L177" class="ln">   177</span>		alg = t-&gt;alg;
+<span id="L178" class="ln">   178</span>	
+<span id="L179" class="ln">   179</span>		if(size &lt;= sizeof(*src))
+<span id="L180" class="ln">   180</span>			alg-&gt;copy(size, dst, src);
+<span id="L181" class="ln">   181</span>		else
+<span id="L182" class="ln">   182</span>			alg-&gt;copy(size, dst, *src);
+<span id="L183" class="ln">   183</span>	}
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>	#pragma textflag NOSPLIT
+<span id="L186" class="ln">   186</span>	func typ2Itab(t *Type, inter *InterfaceType, cache **Itab) (tab *Itab) {
+<span id="L187" class="ln">   187</span>		tab = itab(inter, t, 0);
+<span id="L188" class="ln">   188</span>		runtime·atomicstorep(cache, tab);
+<span id="L189" class="ln">   189</span>	}
+<span id="L190" class="ln">   190</span>	
+<span id="L191" class="ln">   191</span>	#pragma textflag NOSPLIT
+<span id="L192" class="ln">   192</span>	func convT2I(t *Type, inter *InterfaceType, cache **Itab, elem *byte) (ret Iface) {
+<span id="L193" class="ln">   193</span>		Itab *tab;
+<span id="L194" class="ln">   194</span>	
+<span id="L195" class="ln">   195</span>		tab = runtime·atomicloadp(cache);
+<span id="L196" class="ln">   196</span>		if(!tab) {
+<span id="L197" class="ln">   197</span>			tab = itab(inter, t, 0);
+<span id="L198" class="ln">   198</span>			runtime·atomicstorep(cache, tab);
+<span id="L199" class="ln">   199</span>		}
+<span id="L200" class="ln">   200</span>		ret.tab = tab;
+<span id="L201" class="ln">   201</span>		copyin(t, elem, &amp;ret.data);
+<span id="L202" class="ln">   202</span>	}
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>	#pragma textflag NOSPLIT
+<span id="L205" class="ln">   205</span>	func convT2E(t *Type, elem *byte) (ret Eface) {
+<span id="L206" class="ln">   206</span>		ret.type = t;
+<span id="L207" class="ln">   207</span>		copyin(t, elem, &amp;ret.data);
+<span id="L208" class="ln">   208</span>	}
+<span id="L209" class="ln">   209</span>	
+<span id="L210" class="ln">   210</span>	static void assertI2Tret(Type *t, Iface i, byte *ret);
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>	/*
+<span id="L213" class="ln">   213</span>	 * NOTE: Cannot use &#39;func&#39; here, because we have to declare
+<span id="L214" class="ln">   214</span>	 * a return value, the only types we have are at least 1 byte large,
+<span id="L215" class="ln">   215</span>	 * goc2c will zero the return value, and the actual return value
+<span id="L216" class="ln">   216</span>	 * might have size 0 bytes, in which case the zeroing of the
+<span id="L217" class="ln">   217</span>	 * 1 or more bytes would be wrong.
+<span id="L218" class="ln">   218</span>	 * Using C lets us control (avoid) the initial zeroing.
+<span id="L219" class="ln">   219</span>	 */
+<span id="L220" class="ln">   220</span>	#pragma textflag NOSPLIT
+<span id="L221" class="ln">   221</span>	void
+<span id="L222" class="ln">   222</span>	runtime·assertI2T(Type *t, Iface i, GoOutput retbase)
+<span id="L223" class="ln">   223</span>	{
+<span id="L224" class="ln">   224</span>		assertI2Tret(t, i, (byte*)&amp;retbase);
+<span id="L225" class="ln">   225</span>	}
+<span id="L226" class="ln">   226</span>	
+<span id="L227" class="ln">   227</span>	static void
+<span id="L228" class="ln">   228</span>	assertI2Tret(Type *t, Iface i, byte *ret)
+<span id="L229" class="ln">   229</span>	{
+<span id="L230" class="ln">   230</span>		Itab *tab;
+<span id="L231" class="ln">   231</span>		Eface err;
+<span id="L232" class="ln">   232</span>	
+<span id="L233" class="ln">   233</span>		tab = i.tab;
+<span id="L234" class="ln">   234</span>		if(tab == nil) {
+<span id="L235" class="ln">   235</span>			runtime·newTypeAssertionError(
+<span id="L236" class="ln">   236</span>				nil, nil, t-&gt;string,
+<span id="L237" class="ln">   237</span>				nil, &amp;err);
+<span id="L238" class="ln">   238</span>			runtime·panic(err);
+<span id="L239" class="ln">   239</span>		}
+<span id="L240" class="ln">   240</span>		if(tab-&gt;type != t) {
+<span id="L241" class="ln">   241</span>			runtime·newTypeAssertionError(
+<span id="L242" class="ln">   242</span>				tab-&gt;inter-&gt;string, tab-&gt;type-&gt;string, t-&gt;string,
+<span id="L243" class="ln">   243</span>				nil, &amp;err);
+<span id="L244" class="ln">   244</span>			runtime·panic(err);
+<span id="L245" class="ln">   245</span>		}
+<span id="L246" class="ln">   246</span>		copyout(t, &amp;i.data, ret);
+<span id="L247" class="ln">   247</span>	}
+<span id="L248" class="ln">   248</span>	
+<span id="L249" class="ln">   249</span>	#pragma textflag NOSPLIT
+<span id="L250" class="ln">   250</span>	func assertI2T2(t *Type, i Iface) (ret byte, ...) {
+<span id="L251" class="ln">   251</span>		bool *ok;
+<span id="L252" class="ln">   252</span>		int32 wid;
+<span id="L253" class="ln">   253</span>	
+<span id="L254" class="ln">   254</span>		wid = t-&gt;size;
+<span id="L255" class="ln">   255</span>		ok = (bool*)(&amp;ret + wid);
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>		if(i.tab == nil || i.tab-&gt;type != t) {
+<span id="L258" class="ln">   258</span>			*ok = false;
+<span id="L259" class="ln">   259</span>			runtime·memclr(&amp;ret, wid);
+<span id="L260" class="ln">   260</span>			return;
+<span id="L261" class="ln">   261</span>		}
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>		*ok = true;
+<span id="L264" class="ln">   264</span>		copyout(t, &amp;i.data, &amp;ret);
+<span id="L265" class="ln">   265</span>	}
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>	func assertI2TOK(t *Type, i Iface) (ok bool) {
+<span id="L268" class="ln">   268</span>		ok = i.tab!=nil &amp;&amp; i.tab-&gt;type==t;
+<span id="L269" class="ln">   269</span>	}
+<span id="L270" class="ln">   270</span>	
+<span id="L271" class="ln">   271</span>	static void assertE2Tret(Type *t, Eface e, byte *ret);
+<span id="L272" class="ln">   272</span>	
+<span id="L273" class="ln">   273</span>	/*
+<span id="L274" class="ln">   274</span>	 * NOTE: Cannot use &#39;func&#39; here. See assertI2T above.
+<span id="L275" class="ln">   275</span>	 */
+<span id="L276" class="ln">   276</span>	#pragma textflag NOSPLIT
+<span id="L277" class="ln">   277</span>	void
+<span id="L278" class="ln">   278</span>	runtime·assertE2T(Type *t, Eface e, GoOutput retbase)
+<span id="L279" class="ln">   279</span>	{
+<span id="L280" class="ln">   280</span>		assertE2Tret(t, e, (byte*)&amp;retbase);
+<span id="L281" class="ln">   281</span>	}
+<span id="L282" class="ln">   282</span>	
+<span id="L283" class="ln">   283</span>	static void
+<span id="L284" class="ln">   284</span>	assertE2Tret(Type *t, Eface e, byte *ret)
+<span id="L285" class="ln">   285</span>	{
+<span id="L286" class="ln">   286</span>		Eface err;
+<span id="L287" class="ln">   287</span>	
+<span id="L288" class="ln">   288</span>		if(e.type == nil) {
+<span id="L289" class="ln">   289</span>			runtime·newTypeAssertionError(
+<span id="L290" class="ln">   290</span>				nil, nil, t-&gt;string,
+<span id="L291" class="ln">   291</span>				nil, &amp;err);
+<span id="L292" class="ln">   292</span>			runtime·panic(err);
+<span id="L293" class="ln">   293</span>		}
+<span id="L294" class="ln">   294</span>		if(e.type != t) {
+<span id="L295" class="ln">   295</span>			runtime·newTypeAssertionError(
+<span id="L296" class="ln">   296</span>				nil, e.type-&gt;string, t-&gt;string,
+<span id="L297" class="ln">   297</span>				nil, &amp;err);
+<span id="L298" class="ln">   298</span>			runtime·panic(err);
+<span id="L299" class="ln">   299</span>		}
+<span id="L300" class="ln">   300</span>		copyout(t, &amp;e.data, ret);
+<span id="L301" class="ln">   301</span>	}
+<span id="L302" class="ln">   302</span>	
+<span id="L303" class="ln">   303</span>	#pragma textflag NOSPLIT
+<span id="L304" class="ln">   304</span>	func assertE2T2(t *Type, e Eface) (ret byte, ...) {
+<span id="L305" class="ln">   305</span>		bool *ok;
+<span id="L306" class="ln">   306</span>		int32 wid;
+<span id="L307" class="ln">   307</span>	
+<span id="L308" class="ln">   308</span>		wid = t-&gt;size;
+<span id="L309" class="ln">   309</span>		ok = (bool*)(&amp;ret + wid);
+<span id="L310" class="ln">   310</span>	
+<span id="L311" class="ln">   311</span>		if(t != e.type) {
+<span id="L312" class="ln">   312</span>			*ok = false;
+<span id="L313" class="ln">   313</span>			runtime·memclr(&amp;ret, wid);
+<span id="L314" class="ln">   314</span>			return;
+<span id="L315" class="ln">   315</span>		}
+<span id="L316" class="ln">   316</span>	
+<span id="L317" class="ln">   317</span>		*ok = true;
+<span id="L318" class="ln">   318</span>		copyout(t, &amp;e.data, &amp;ret);
+<span id="L319" class="ln">   319</span>	}
+<span id="L320" class="ln">   320</span>	
+<span id="L321" class="ln">   321</span>	func assertE2TOK(t *Type, e Eface) (ok bool) {
+<span id="L322" class="ln">   322</span>		ok = t==e.type;
+<span id="L323" class="ln">   323</span>	}
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>	func convI2E(i Iface) (ret Eface) {
+<span id="L326" class="ln">   326</span>		Itab *tab;
+<span id="L327" class="ln">   327</span>	
+<span id="L328" class="ln">   328</span>		ret.data = i.data;
+<span id="L329" class="ln">   329</span>		if((tab = i.tab) == nil)
+<span id="L330" class="ln">   330</span>			ret.type = nil;
+<span id="L331" class="ln">   331</span>		else
+<span id="L332" class="ln">   332</span>			ret.type = tab-&gt;type;
+<span id="L333" class="ln">   333</span>	}
+<span id="L334" class="ln">   334</span>	
+<span id="L335" class="ln">   335</span>	func assertI2E(inter *InterfaceType, i Iface) (ret Eface) {
+<span id="L336" class="ln">   336</span>		Itab *tab;
+<span id="L337" class="ln">   337</span>		Eface err;
+<span id="L338" class="ln">   338</span>	
+<span id="L339" class="ln">   339</span>		tab = i.tab;
+<span id="L340" class="ln">   340</span>		if(tab == nil) {
+<span id="L341" class="ln">   341</span>			// explicit conversions require non-nil interface value.
+<span id="L342" class="ln">   342</span>			runtime·newTypeAssertionError(
+<span id="L343" class="ln">   343</span>				nil, nil, inter-&gt;string,
+<span id="L344" class="ln">   344</span>				nil, &amp;err);
+<span id="L345" class="ln">   345</span>			runtime·panic(err);
+<span id="L346" class="ln">   346</span>		}
+<span id="L347" class="ln">   347</span>		ret.data = i.data;
+<span id="L348" class="ln">   348</span>		ret.type = tab-&gt;type;
+<span id="L349" class="ln">   349</span>	}
+<span id="L350" class="ln">   350</span>	
+<span id="L351" class="ln">   351</span>	func assertI2E2(inter *InterfaceType, i Iface) (ret Eface, ok bool) {
+<span id="L352" class="ln">   352</span>		Itab *tab;
+<span id="L353" class="ln">   353</span>	
+<span id="L354" class="ln">   354</span>		USED(inter);
+<span id="L355" class="ln">   355</span>		tab = i.tab;
+<span id="L356" class="ln">   356</span>		if(tab == nil) {
+<span id="L357" class="ln">   357</span>			ret.type = nil;
+<span id="L358" class="ln">   358</span>			ok = 0;
+<span id="L359" class="ln">   359</span>		} else {
+<span id="L360" class="ln">   360</span>			ret.type = tab-&gt;type;
+<span id="L361" class="ln">   361</span>			ok = 1;
+<span id="L362" class="ln">   362</span>		}
+<span id="L363" class="ln">   363</span>		ret.data = i.data;
+<span id="L364" class="ln">   364</span>	}
+<span id="L365" class="ln">   365</span>	
+<span id="L366" class="ln">   366</span>	func convI2I(inter *InterfaceType, i Iface) (ret Iface) {
+<span id="L367" class="ln">   367</span>		Itab *tab;
+<span id="L368" class="ln">   368</span>	
+<span id="L369" class="ln">   369</span>		ret.data = i.data;
+<span id="L370" class="ln">   370</span>		if((tab = i.tab) == nil)
+<span id="L371" class="ln">   371</span>			ret.tab = nil;
+<span id="L372" class="ln">   372</span>		else if(tab-&gt;inter == inter)
+<span id="L373" class="ln">   373</span>			ret.tab = tab;
+<span id="L374" class="ln">   374</span>		else
+<span id="L375" class="ln">   375</span>			ret.tab = itab(inter, tab-&gt;type, 0);
+<span id="L376" class="ln">   376</span>	}
+<span id="L377" class="ln">   377</span>	
+<span id="L378" class="ln">   378</span>	void
+<span id="L379" class="ln">   379</span>	runtime·ifaceI2I(InterfaceType *inter, Iface i, Iface *ret)
+<span id="L380" class="ln">   380</span>	{
+<span id="L381" class="ln">   381</span>		Itab *tab;
+<span id="L382" class="ln">   382</span>		Eface err;
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>		tab = i.tab;
+<span id="L385" class="ln">   385</span>		if(tab == nil) {
+<span id="L386" class="ln">   386</span>			// explicit conversions require non-nil interface value.
+<span id="L387" class="ln">   387</span>			runtime·newTypeAssertionError(
+<span id="L388" class="ln">   388</span>				nil, nil, inter-&gt;string,
+<span id="L389" class="ln">   389</span>				nil, &amp;err);
+<span id="L390" class="ln">   390</span>			runtime·panic(err);
+<span id="L391" class="ln">   391</span>		}
+<span id="L392" class="ln">   392</span>		ret-&gt;data = i.data;
+<span id="L393" class="ln">   393</span>		ret-&gt;tab = itab(inter, tab-&gt;type, 0);
+<span id="L394" class="ln">   394</span>	}
+<span id="L395" class="ln">   395</span>	
+<span id="L396" class="ln">   396</span>	func assertI2I(inter *InterfaceType, i Iface) (ret Iface) {
+<span id="L397" class="ln">   397</span>		runtime·ifaceI2I(inter, i, &amp;ret);
+<span id="L398" class="ln">   398</span>	}
+<span id="L399" class="ln">   399</span>	
+<span id="L400" class="ln">   400</span>	func assertI2I2(inter *InterfaceType, i Iface) (ret Iface, ok bool) {
+<span id="L401" class="ln">   401</span>		Itab *tab;
+<span id="L402" class="ln">   402</span>	
+<span id="L403" class="ln">   403</span>		tab = i.tab;
+<span id="L404" class="ln">   404</span>		if(tab != nil &amp;&amp; (tab-&gt;inter == inter || (tab = itab(inter, tab-&gt;type, 1)) != nil)) {
+<span id="L405" class="ln">   405</span>			ret.data = i.data;
+<span id="L406" class="ln">   406</span>			ret.tab = tab;
+<span id="L407" class="ln">   407</span>			ok = 1;
+<span id="L408" class="ln">   408</span>		} else {
+<span id="L409" class="ln">   409</span>			ret.data = 0;
+<span id="L410" class="ln">   410</span>			ret.tab = 0;
+<span id="L411" class="ln">   411</span>			ok = 0;
+<span id="L412" class="ln">   412</span>		}
+<span id="L413" class="ln">   413</span>	}
+<span id="L414" class="ln">   414</span>	
+<span id="L415" class="ln">   415</span>	void
+<span id="L416" class="ln">   416</span>	runtime·ifaceE2I(InterfaceType *inter, Eface e, Iface *ret)
+<span id="L417" class="ln">   417</span>	{
+<span id="L418" class="ln">   418</span>		Type *t;
+<span id="L419" class="ln">   419</span>		Eface err;
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>		t = e.type;
+<span id="L422" class="ln">   422</span>		if(t == nil) {
+<span id="L423" class="ln">   423</span>			// explicit conversions require non-nil interface value.
+<span id="L424" class="ln">   424</span>			runtime·newTypeAssertionError(
+<span id="L425" class="ln">   425</span>				nil, nil, inter-&gt;string,
+<span id="L426" class="ln">   426</span>				nil, &amp;err);
+<span id="L427" class="ln">   427</span>			runtime·panic(err);
+<span id="L428" class="ln">   428</span>		}
+<span id="L429" class="ln">   429</span>		ret-&gt;data = e.data;
+<span id="L430" class="ln">   430</span>		ret-&gt;tab = itab(inter, t, 0);
+<span id="L431" class="ln">   431</span>	}
+<span id="L432" class="ln">   432</span>	
+<span id="L433" class="ln">   433</span>	bool
+<span id="L434" class="ln">   434</span>	runtime·ifaceE2I2(InterfaceType *inter, Eface e, Iface *ret)
+<span id="L435" class="ln">   435</span>	{
+<span id="L436" class="ln">   436</span>		ret-&gt;tab = itab(inter, e.type, 1);
+<span id="L437" class="ln">   437</span>		if(ret-&gt;tab == nil)
+<span id="L438" class="ln">   438</span>			return false;
+<span id="L439" class="ln">   439</span>		ret-&gt;data = e.data;
+<span id="L440" class="ln">   440</span>		return true;
+<span id="L441" class="ln">   441</span>	}
+<span id="L442" class="ln">   442</span>	
+<span id="L443" class="ln">   443</span>	func reflect·ifaceE2I(inter *InterfaceType, e Eface, dst *Iface) {
+<span id="L444" class="ln">   444</span>		runtime·ifaceE2I(inter, e, dst);
+<span id="L445" class="ln">   445</span>	}
+<span id="L446" class="ln">   446</span>	
+<span id="L447" class="ln">   447</span>	func assertE2I(inter *InterfaceType, e Eface) (ret Iface) {
+<span id="L448" class="ln">   448</span>		runtime·ifaceE2I(inter, e, &amp;ret);
+<span id="L449" class="ln">   449</span>	}
+<span id="L450" class="ln">   450</span>	
+<span id="L451" class="ln">   451</span>	func assertE2I2(inter *InterfaceType, e Eface) (ret Iface, ok bool) {
+<span id="L452" class="ln">   452</span>		if(e.type == nil) {
+<span id="L453" class="ln">   453</span>			ok = 0;
+<span id="L454" class="ln">   454</span>			ret.data = nil;
+<span id="L455" class="ln">   455</span>			ret.tab = nil;
+<span id="L456" class="ln">   456</span>		} else if((ret.tab = itab(inter, e.type, 1)) == nil) {
+<span id="L457" class="ln">   457</span>			ok = 0;
+<span id="L458" class="ln">   458</span>			ret.data = nil;
+<span id="L459" class="ln">   459</span>		} else {
+<span id="L460" class="ln">   460</span>			ok = 1;
+<span id="L461" class="ln">   461</span>			ret.data = e.data;
+<span id="L462" class="ln">   462</span>		}
+<span id="L463" class="ln">   463</span>	}
+<span id="L464" class="ln">   464</span>	
+<span id="L465" class="ln">   465</span>	func assertE2E(inter *InterfaceType, e Eface) (ret Eface) {
+<span id="L466" class="ln">   466</span>		Type *t;
+<span id="L467" class="ln">   467</span>		Eface err;
+<span id="L468" class="ln">   468</span>	
+<span id="L469" class="ln">   469</span>		t = e.type;
+<span id="L470" class="ln">   470</span>		if(t == nil) {
+<span id="L471" class="ln">   471</span>			// explicit conversions require non-nil interface value.
+<span id="L472" class="ln">   472</span>			runtime·newTypeAssertionError(
+<span id="L473" class="ln">   473</span>				nil, nil, inter-&gt;string,
+<span id="L474" class="ln">   474</span>				nil, &amp;err);
+<span id="L475" class="ln">   475</span>			runtime·panic(err);
+<span id="L476" class="ln">   476</span>		}
+<span id="L477" class="ln">   477</span>		ret = e;
+<span id="L478" class="ln">   478</span>	}
+<span id="L479" class="ln">   479</span>	
+<span id="L480" class="ln">   480</span>	func assertE2E2(inter *InterfaceType, e Eface) (ret Eface, ok bool) {
+<span id="L481" class="ln">   481</span>		USED(inter);
+<span id="L482" class="ln">   482</span>		ret = e;
+<span id="L483" class="ln">   483</span>		ok = e.type != nil;
+<span id="L484" class="ln">   484</span>	}
+<span id="L485" class="ln">   485</span>	
+<span id="L486" class="ln">   486</span>	static uintptr
+<span id="L487" class="ln">   487</span>	ifacehash1(void *data, Type *t, uintptr h)
+<span id="L488" class="ln">   488</span>	{
+<span id="L489" class="ln">   489</span>		Alg *alg;
+<span id="L490" class="ln">   490</span>		uintptr size;
+<span id="L491" class="ln">   491</span>		Eface err;
+<span id="L492" class="ln">   492</span>	
+<span id="L493" class="ln">   493</span>		if(t == nil)
+<span id="L494" class="ln">   494</span>			return 0;
+<span id="L495" class="ln">   495</span>	
+<span id="L496" class="ln">   496</span>		alg = t-&gt;alg;
+<span id="L497" class="ln">   497</span>		size = t-&gt;size;
+<span id="L498" class="ln">   498</span>		if(alg-&gt;hash == runtime·nohash) {
+<span id="L499" class="ln">   499</span>			// calling nohash will panic too,
+<span id="L500" class="ln">   500</span>			// but we can print a better error.
+<span id="L501" class="ln">   501</span>			runtime·newErrorString(runtime·catstring(runtime·gostringnocopy((byte*)&#34;hash of unhashable type &#34;), *t-&gt;string), &amp;err);
+<span id="L502" class="ln">   502</span>			runtime·panic(err);
+<span id="L503" class="ln">   503</span>		}
+<span id="L504" class="ln">   504</span>		if(size &lt;= sizeof(data))
+<span id="L505" class="ln">   505</span>			alg-&gt;hash(&amp;h, size, &amp;data);
+<span id="L506" class="ln">   506</span>		else
+<span id="L507" class="ln">   507</span>			alg-&gt;hash(&amp;h, size, data);
+<span id="L508" class="ln">   508</span>		return h;
+<span id="L509" class="ln">   509</span>	}
+<span id="L510" class="ln">   510</span>	
+<span id="L511" class="ln">   511</span>	uintptr
+<span id="L512" class="ln">   512</span>	runtime·ifacehash(Iface a, uintptr h)
+<span id="L513" class="ln">   513</span>	{
+<span id="L514" class="ln">   514</span>		if(a.tab == nil)
+<span id="L515" class="ln">   515</span>			return h;
+<span id="L516" class="ln">   516</span>		return ifacehash1(a.data, a.tab-&gt;type, h);
+<span id="L517" class="ln">   517</span>	}
+<span id="L518" class="ln">   518</span>	
+<span id="L519" class="ln">   519</span>	uintptr
+<span id="L520" class="ln">   520</span>	runtime·efacehash(Eface a, uintptr h)
+<span id="L521" class="ln">   521</span>	{
+<span id="L522" class="ln">   522</span>		return ifacehash1(a.data, a.type, h);
+<span id="L523" class="ln">   523</span>	}
+<span id="L524" class="ln">   524</span>	
+<span id="L525" class="ln">   525</span>	static bool
+<span id="L526" class="ln">   526</span>	ifaceeq1(void *data1, void *data2, Type *t)
+<span id="L527" class="ln">   527</span>	{
+<span id="L528" class="ln">   528</span>		uintptr size;
+<span id="L529" class="ln">   529</span>		Alg *alg;
+<span id="L530" class="ln">   530</span>		Eface err;
+<span id="L531" class="ln">   531</span>		bool eq;
+<span id="L532" class="ln">   532</span>	
+<span id="L533" class="ln">   533</span>		alg = t-&gt;alg;
+<span id="L534" class="ln">   534</span>		size = t-&gt;size;
+<span id="L535" class="ln">   535</span>	
+<span id="L536" class="ln">   536</span>		if(alg-&gt;equal == runtime·noequal) {
+<span id="L537" class="ln">   537</span>			// calling noequal will panic too,
+<span id="L538" class="ln">   538</span>			// but we can print a better error.
+<span id="L539" class="ln">   539</span>			runtime·newErrorString(runtime·catstring(runtime·gostringnocopy((byte*)&#34;comparing uncomparable type &#34;), *t-&gt;string), &amp;err);
+<span id="L540" class="ln">   540</span>			runtime·panic(err);
+<span id="L541" class="ln">   541</span>		}
+<span id="L542" class="ln">   542</span>	
+<span id="L543" class="ln">   543</span>		eq = 0;
+<span id="L544" class="ln">   544</span>		if(size &lt;= sizeof(data1))
+<span id="L545" class="ln">   545</span>			alg-&gt;equal(&amp;eq, size, &amp;data1, &amp;data2);
+<span id="L546" class="ln">   546</span>		else
+<span id="L547" class="ln">   547</span>			alg-&gt;equal(&amp;eq, size, data1, data2);
+<span id="L548" class="ln">   548</span>		return eq;
+<span id="L549" class="ln">   549</span>	}
+<span id="L550" class="ln">   550</span>	
+<span id="L551" class="ln">   551</span>	bool
+<span id="L552" class="ln">   552</span>	runtime·ifaceeq_c(Iface i1, Iface i2)
+<span id="L553" class="ln">   553</span>	{
+<span id="L554" class="ln">   554</span>		if(i1.tab != i2.tab)
+<span id="L555" class="ln">   555</span>			return false;
+<span id="L556" class="ln">   556</span>		if(i1.tab == nil)
+<span id="L557" class="ln">   557</span>			return true;
+<span id="L558" class="ln">   558</span>		return ifaceeq1(i1.data, i2.data, i1.tab-&gt;type);
+<span id="L559" class="ln">   559</span>	}
+<span id="L560" class="ln">   560</span>	
+<span id="L561" class="ln">   561</span>	bool
+<span id="L562" class="ln">   562</span>	runtime·efaceeq_c(Eface e1, Eface e2)
+<span id="L563" class="ln">   563</span>	{
+<span id="L564" class="ln">   564</span>		if(e1.type != e2.type)
+<span id="L565" class="ln">   565</span>			return false;
+<span id="L566" class="ln">   566</span>		if(e1.type == nil)
+<span id="L567" class="ln">   567</span>			return true;
+<span id="L568" class="ln">   568</span>		return ifaceeq1(e1.data, e2.data, e1.type);
+<span id="L569" class="ln">   569</span>	}
+<span id="L570" class="ln">   570</span>	
+<span id="L571" class="ln">   571</span>	func ifaceeq(i1 Iface, i2 Iface) (ret bool) {
+<span id="L572" class="ln">   572</span>		ret = runtime·ifaceeq_c(i1, i2);
+<span id="L573" class="ln">   573</span>	}
+<span id="L574" class="ln">   574</span>	
+<span id="L575" class="ln">   575</span>	func efaceeq(e1 Eface, e2 Eface) (ret bool) {
+<span id="L576" class="ln">   576</span>		ret = runtime·efaceeq_c(e1, e2);
+<span id="L577" class="ln">   577</span>	}
+<span id="L578" class="ln">   578</span>	
+<span id="L579" class="ln">   579</span>	func ifacethash(i1 Iface) (ret uint32) {
+<span id="L580" class="ln">   580</span>		Itab *tab;
+<span id="L581" class="ln">   581</span>	
+<span id="L582" class="ln">   582</span>		ret = 0;
+<span id="L583" class="ln">   583</span>		tab = i1.tab;
+<span id="L584" class="ln">   584</span>		if(tab != nil)
+<span id="L585" class="ln">   585</span>			ret = tab-&gt;type-&gt;hash;
+<span id="L586" class="ln">   586</span>	}
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>	func efacethash(e1 Eface) (ret uint32) {
+<span id="L589" class="ln">   589</span>		Type *t;
+<span id="L590" class="ln">   590</span>	
+<span id="L591" class="ln">   591</span>		ret = 0;
+<span id="L592" class="ln">   592</span>		t = e1.type;
+<span id="L593" class="ln">   593</span>		if(t != nil)
+<span id="L594" class="ln">   594</span>			ret = t-&gt;hash;
+<span id="L595" class="ln">   595</span>	}
+<span id="L596" class="ln">   596</span>	
+<span id="L597" class="ln">   597</span>	func reflect·unsafe_Typeof(e Eface) (ret Eface) {
+<span id="L598" class="ln">   598</span>		if(e.type == nil) {
+<span id="L599" class="ln">   599</span>			ret.type = nil;
+<span id="L600" class="ln">   600</span>			ret.data = nil;
+<span id="L601" class="ln">   601</span>		} else {
+<span id="L602" class="ln">   602</span>			ret = *(Eface*)(e.type);
+<span id="L603" class="ln">   603</span>		}
+<span id="L604" class="ln">   604</span>	}
+<span id="L605" class="ln">   605</span>	
+<span id="L606" class="ln">   606</span>	func reflect·unsafe_New(t *Type) (ret *byte) {
+<span id="L607" class="ln">   607</span>		ret = runtime·cnew(t);
+<span id="L608" class="ln">   608</span>	}
+<span id="L609" class="ln">   609</span>	
+<span id="L610" class="ln">   610</span>	func reflect·unsafe_NewArray(t *Type, n int) (ret *byte) {
+<span id="L611" class="ln">   611</span>		ret = runtime·cnewarray(t, n);
+<span id="L612" class="ln">   612</span>	}
+<span id="L613" class="ln">   613</span>	
+<span id="L614" class="ln">   614</span>	func reflect·typelinks() (ret Slice) {
+<span id="L615" class="ln">   615</span>		extern Type *typelink[], *etypelink[];
+<span id="L616" class="ln">   616</span>		static int32 first = 1;
+<span id="L617" class="ln">   617</span>		ret.array = (byte*)typelink;
+<span id="L618" class="ln">   618</span>		ret.len = etypelink - typelink;
+<span id="L619" class="ln">   619</span>		ret.cap = ret.len;
+<span id="L620" class="ln">   620</span>	}
+</pre><p><a href="http://golang.org/src/pkg/runtime/iface.goc?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

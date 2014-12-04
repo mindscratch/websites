@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/bytes/buffer_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/bytes/buffer_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package bytes_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		. &#34;bytes&#34;
+<span id="L9" class="ln">     9</span>		&#34;io&#34;
+<span id="L10" class="ln">    10</span>		&#34;math/rand&#34;
+<span id="L11" class="ln">    11</span>		&#34;runtime&#34;
+<span id="L12" class="ln">    12</span>		&#34;testing&#34;
+<span id="L13" class="ln">    13</span>		&#34;unicode/utf8&#34;
+<span id="L14" class="ln">    14</span>	)
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	const N = 10000      <span class="comment">// make this bigger for a larger (and slower) test</span>
+<span id="L17" class="ln">    17</span>	var data string      <span class="comment">// test data for write tests</span>
+<span id="L18" class="ln">    18</span>	var testBytes []byte <span class="comment">// test data; same as data but as a slice.</span>
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	func init() {
+<span id="L21" class="ln">    21</span>		testBytes = make([]byte, N)
+<span id="L22" class="ln">    22</span>		for i := 0; i &lt; N; i++ {
+<span id="L23" class="ln">    23</span>			testBytes[i] = &#39;a&#39; + byte(i%26)
+<span id="L24" class="ln">    24</span>		}
+<span id="L25" class="ln">    25</span>		data = string(testBytes)
+<span id="L26" class="ln">    26</span>	}
+<span id="L27" class="ln">    27</span>	
+<span id="L28" class="ln">    28</span>	<span class="comment">// Verify that contents of buf match the string s.</span>
+<span id="L29" class="ln">    29</span>	func check(t *testing.T, testname string, buf *Buffer, s string) {
+<span id="L30" class="ln">    30</span>		bytes := buf.Bytes()
+<span id="L31" class="ln">    31</span>		str := buf.String()
+<span id="L32" class="ln">    32</span>		if buf.Len() != len(bytes) {
+<span id="L33" class="ln">    33</span>			t.Errorf(&#34;%s: buf.Len() == %d, len(buf.Bytes()) == %d&#34;, testname, buf.Len(), len(bytes))
+<span id="L34" class="ln">    34</span>		}
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>		if buf.Len() != len(str) {
+<span id="L37" class="ln">    37</span>			t.Errorf(&#34;%s: buf.Len() == %d, len(buf.String()) == %d&#34;, testname, buf.Len(), len(str))
+<span id="L38" class="ln">    38</span>		}
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>		if buf.Len() != len(s) {
+<span id="L41" class="ln">    41</span>			t.Errorf(&#34;%s: buf.Len() == %d, len(s) == %d&#34;, testname, buf.Len(), len(s))
+<span id="L42" class="ln">    42</span>		}
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>		if string(bytes) != s {
+<span id="L45" class="ln">    45</span>			t.Errorf(&#34;%s: string(buf.Bytes()) == %q, s == %q&#34;, testname, string(bytes), s)
+<span id="L46" class="ln">    46</span>		}
+<span id="L47" class="ln">    47</span>	}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	<span class="comment">// Fill buf through n writes of string fus.</span>
+<span id="L50" class="ln">    50</span>	<span class="comment">// The initial contents of buf corresponds to the string s;</span>
+<span id="L51" class="ln">    51</span>	<span class="comment">// the result is the final contents of buf returned as a string.</span>
+<span id="L52" class="ln">    52</span>	func fillString(t *testing.T, testname string, buf *Buffer, s string, n int, fus string) string {
+<span id="L53" class="ln">    53</span>		check(t, testname+&#34; (fill 1)&#34;, buf, s)
+<span id="L54" class="ln">    54</span>		for ; n &gt; 0; n-- {
+<span id="L55" class="ln">    55</span>			m, err := buf.WriteString(fus)
+<span id="L56" class="ln">    56</span>			if m != len(fus) {
+<span id="L57" class="ln">    57</span>				t.Errorf(testname+&#34; (fill 2): m == %d, expected %d&#34;, m, len(fus))
+<span id="L58" class="ln">    58</span>			}
+<span id="L59" class="ln">    59</span>			if err != nil {
+<span id="L60" class="ln">    60</span>				t.Errorf(testname+&#34; (fill 3): err should always be nil, found err == %s&#34;, err)
+<span id="L61" class="ln">    61</span>			}
+<span id="L62" class="ln">    62</span>			s += fus
+<span id="L63" class="ln">    63</span>			check(t, testname+&#34; (fill 4)&#34;, buf, s)
+<span id="L64" class="ln">    64</span>		}
+<span id="L65" class="ln">    65</span>		return s
+<span id="L66" class="ln">    66</span>	}
+<span id="L67" class="ln">    67</span>	
+<span id="L68" class="ln">    68</span>	<span class="comment">// Fill buf through n writes of byte slice fub.</span>
+<span id="L69" class="ln">    69</span>	<span class="comment">// The initial contents of buf corresponds to the string s;</span>
+<span id="L70" class="ln">    70</span>	<span class="comment">// the result is the final contents of buf returned as a string.</span>
+<span id="L71" class="ln">    71</span>	func fillBytes(t *testing.T, testname string, buf *Buffer, s string, n int, fub []byte) string {
+<span id="L72" class="ln">    72</span>		check(t, testname+&#34; (fill 1)&#34;, buf, s)
+<span id="L73" class="ln">    73</span>		for ; n &gt; 0; n-- {
+<span id="L74" class="ln">    74</span>			m, err := buf.Write(fub)
+<span id="L75" class="ln">    75</span>			if m != len(fub) {
+<span id="L76" class="ln">    76</span>				t.Errorf(testname+&#34; (fill 2): m == %d, expected %d&#34;, m, len(fub))
+<span id="L77" class="ln">    77</span>			}
+<span id="L78" class="ln">    78</span>			if err != nil {
+<span id="L79" class="ln">    79</span>				t.Errorf(testname+&#34; (fill 3): err should always be nil, found err == %s&#34;, err)
+<span id="L80" class="ln">    80</span>			}
+<span id="L81" class="ln">    81</span>			s += string(fub)
+<span id="L82" class="ln">    82</span>			check(t, testname+&#34; (fill 4)&#34;, buf, s)
+<span id="L83" class="ln">    83</span>		}
+<span id="L84" class="ln">    84</span>		return s
+<span id="L85" class="ln">    85</span>	}
+<span id="L86" class="ln">    86</span>	
+<span id="L87" class="ln">    87</span>	func TestNewBuffer(t *testing.T) {
+<span id="L88" class="ln">    88</span>		buf := NewBuffer(testBytes)
+<span id="L89" class="ln">    89</span>		check(t, &#34;NewBuffer&#34;, buf, data)
+<span id="L90" class="ln">    90</span>	}
+<span id="L91" class="ln">    91</span>	
+<span id="L92" class="ln">    92</span>	func TestNewBufferString(t *testing.T) {
+<span id="L93" class="ln">    93</span>		buf := NewBufferString(data)
+<span id="L94" class="ln">    94</span>		check(t, &#34;NewBufferString&#34;, buf, data)
+<span id="L95" class="ln">    95</span>	}
+<span id="L96" class="ln">    96</span>	
+<span id="L97" class="ln">    97</span>	<span class="comment">// Empty buf through repeated reads into fub.</span>
+<span id="L98" class="ln">    98</span>	<span class="comment">// The initial contents of buf corresponds to the string s.</span>
+<span id="L99" class="ln">    99</span>	func empty(t *testing.T, testname string, buf *Buffer, s string, fub []byte) {
+<span id="L100" class="ln">   100</span>		check(t, testname+&#34; (empty 1)&#34;, buf, s)
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>		for {
+<span id="L103" class="ln">   103</span>			n, err := buf.Read(fub)
+<span id="L104" class="ln">   104</span>			if n == 0 {
+<span id="L105" class="ln">   105</span>				break
+<span id="L106" class="ln">   106</span>			}
+<span id="L107" class="ln">   107</span>			if err != nil {
+<span id="L108" class="ln">   108</span>				t.Errorf(testname+&#34; (empty 2): err should always be nil, found err == %s&#34;, err)
+<span id="L109" class="ln">   109</span>			}
+<span id="L110" class="ln">   110</span>			s = s[n:]
+<span id="L111" class="ln">   111</span>			check(t, testname+&#34; (empty 3)&#34;, buf, s)
+<span id="L112" class="ln">   112</span>		}
+<span id="L113" class="ln">   113</span>	
+<span id="L114" class="ln">   114</span>		check(t, testname+&#34; (empty 4)&#34;, buf, &#34;&#34;)
+<span id="L115" class="ln">   115</span>	}
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>	func TestBasicOperations(t *testing.T) {
+<span id="L118" class="ln">   118</span>		var buf Buffer
+<span id="L119" class="ln">   119</span>	
+<span id="L120" class="ln">   120</span>		for i := 0; i &lt; 5; i++ {
+<span id="L121" class="ln">   121</span>			check(t, &#34;TestBasicOperations (1)&#34;, &amp;buf, &#34;&#34;)
+<span id="L122" class="ln">   122</span>	
+<span id="L123" class="ln">   123</span>			buf.Reset()
+<span id="L124" class="ln">   124</span>			check(t, &#34;TestBasicOperations (2)&#34;, &amp;buf, &#34;&#34;)
+<span id="L125" class="ln">   125</span>	
+<span id="L126" class="ln">   126</span>			buf.Truncate(0)
+<span id="L127" class="ln">   127</span>			check(t, &#34;TestBasicOperations (3)&#34;, &amp;buf, &#34;&#34;)
+<span id="L128" class="ln">   128</span>	
+<span id="L129" class="ln">   129</span>			n, err := buf.Write([]byte(data[0:1]))
+<span id="L130" class="ln">   130</span>			if n != 1 {
+<span id="L131" class="ln">   131</span>				t.Errorf(&#34;wrote 1 byte, but n == %d&#34;, n)
+<span id="L132" class="ln">   132</span>			}
+<span id="L133" class="ln">   133</span>			if err != nil {
+<span id="L134" class="ln">   134</span>				t.Errorf(&#34;err should always be nil, but err == %s&#34;, err)
+<span id="L135" class="ln">   135</span>			}
+<span id="L136" class="ln">   136</span>			check(t, &#34;TestBasicOperations (4)&#34;, &amp;buf, &#34;a&#34;)
+<span id="L137" class="ln">   137</span>	
+<span id="L138" class="ln">   138</span>			buf.WriteByte(data[1])
+<span id="L139" class="ln">   139</span>			check(t, &#34;TestBasicOperations (5)&#34;, &amp;buf, &#34;ab&#34;)
+<span id="L140" class="ln">   140</span>	
+<span id="L141" class="ln">   141</span>			n, err = buf.Write([]byte(data[2:26]))
+<span id="L142" class="ln">   142</span>			if n != 24 {
+<span id="L143" class="ln">   143</span>				t.Errorf(&#34;wrote 25 bytes, but n == %d&#34;, n)
+<span id="L144" class="ln">   144</span>			}
+<span id="L145" class="ln">   145</span>			check(t, &#34;TestBasicOperations (6)&#34;, &amp;buf, string(data[0:26]))
+<span id="L146" class="ln">   146</span>	
+<span id="L147" class="ln">   147</span>			buf.Truncate(26)
+<span id="L148" class="ln">   148</span>			check(t, &#34;TestBasicOperations (7)&#34;, &amp;buf, string(data[0:26]))
+<span id="L149" class="ln">   149</span>	
+<span id="L150" class="ln">   150</span>			buf.Truncate(20)
+<span id="L151" class="ln">   151</span>			check(t, &#34;TestBasicOperations (8)&#34;, &amp;buf, string(data[0:20]))
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>			empty(t, &#34;TestBasicOperations (9)&#34;, &amp;buf, string(data[0:20]), make([]byte, 5))
+<span id="L154" class="ln">   154</span>			empty(t, &#34;TestBasicOperations (10)&#34;, &amp;buf, &#34;&#34;, make([]byte, 100))
+<span id="L155" class="ln">   155</span>	
+<span id="L156" class="ln">   156</span>			buf.WriteByte(data[1])
+<span id="L157" class="ln">   157</span>			c, err := buf.ReadByte()
+<span id="L158" class="ln">   158</span>			if err != nil {
+<span id="L159" class="ln">   159</span>				t.Error(&#34;ReadByte unexpected eof&#34;)
+<span id="L160" class="ln">   160</span>			}
+<span id="L161" class="ln">   161</span>			if c != data[1] {
+<span id="L162" class="ln">   162</span>				t.Errorf(&#34;ReadByte wrong value c=%v&#34;, c)
+<span id="L163" class="ln">   163</span>			}
+<span id="L164" class="ln">   164</span>			c, err = buf.ReadByte()
+<span id="L165" class="ln">   165</span>			if err == nil {
+<span id="L166" class="ln">   166</span>				t.Error(&#34;ReadByte unexpected not eof&#34;)
+<span id="L167" class="ln">   167</span>			}
+<span id="L168" class="ln">   168</span>		}
+<span id="L169" class="ln">   169</span>	}
+<span id="L170" class="ln">   170</span>	
+<span id="L171" class="ln">   171</span>	func TestLargeStringWrites(t *testing.T) {
+<span id="L172" class="ln">   172</span>		var buf Buffer
+<span id="L173" class="ln">   173</span>		limit := 30
+<span id="L174" class="ln">   174</span>		if testing.Short() {
+<span id="L175" class="ln">   175</span>			limit = 9
+<span id="L176" class="ln">   176</span>		}
+<span id="L177" class="ln">   177</span>		for i := 3; i &lt; limit; i += 3 {
+<span id="L178" class="ln">   178</span>			s := fillString(t, &#34;TestLargeWrites (1)&#34;, &amp;buf, &#34;&#34;, 5, data)
+<span id="L179" class="ln">   179</span>			empty(t, &#34;TestLargeStringWrites (2)&#34;, &amp;buf, s, make([]byte, len(data)/i))
+<span id="L180" class="ln">   180</span>		}
+<span id="L181" class="ln">   181</span>		check(t, &#34;TestLargeStringWrites (3)&#34;, &amp;buf, &#34;&#34;)
+<span id="L182" class="ln">   182</span>	}
+<span id="L183" class="ln">   183</span>	
+<span id="L184" class="ln">   184</span>	func TestLargeByteWrites(t *testing.T) {
+<span id="L185" class="ln">   185</span>		var buf Buffer
+<span id="L186" class="ln">   186</span>		limit := 30
+<span id="L187" class="ln">   187</span>		if testing.Short() {
+<span id="L188" class="ln">   188</span>			limit = 9
+<span id="L189" class="ln">   189</span>		}
+<span id="L190" class="ln">   190</span>		for i := 3; i &lt; limit; i += 3 {
+<span id="L191" class="ln">   191</span>			s := fillBytes(t, &#34;TestLargeWrites (1)&#34;, &amp;buf, &#34;&#34;, 5, testBytes)
+<span id="L192" class="ln">   192</span>			empty(t, &#34;TestLargeByteWrites (2)&#34;, &amp;buf, s, make([]byte, len(data)/i))
+<span id="L193" class="ln">   193</span>		}
+<span id="L194" class="ln">   194</span>		check(t, &#34;TestLargeByteWrites (3)&#34;, &amp;buf, &#34;&#34;)
+<span id="L195" class="ln">   195</span>	}
+<span id="L196" class="ln">   196</span>	
+<span id="L197" class="ln">   197</span>	func TestLargeStringReads(t *testing.T) {
+<span id="L198" class="ln">   198</span>		var buf Buffer
+<span id="L199" class="ln">   199</span>		for i := 3; i &lt; 30; i += 3 {
+<span id="L200" class="ln">   200</span>			s := fillString(t, &#34;TestLargeReads (1)&#34;, &amp;buf, &#34;&#34;, 5, data[0:len(data)/i])
+<span id="L201" class="ln">   201</span>			empty(t, &#34;TestLargeReads (2)&#34;, &amp;buf, s, make([]byte, len(data)))
+<span id="L202" class="ln">   202</span>		}
+<span id="L203" class="ln">   203</span>		check(t, &#34;TestLargeStringReads (3)&#34;, &amp;buf, &#34;&#34;)
+<span id="L204" class="ln">   204</span>	}
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	func TestLargeByteReads(t *testing.T) {
+<span id="L207" class="ln">   207</span>		var buf Buffer
+<span id="L208" class="ln">   208</span>		for i := 3; i &lt; 30; i += 3 {
+<span id="L209" class="ln">   209</span>			s := fillBytes(t, &#34;TestLargeReads (1)&#34;, &amp;buf, &#34;&#34;, 5, testBytes[0:len(testBytes)/i])
+<span id="L210" class="ln">   210</span>			empty(t, &#34;TestLargeReads (2)&#34;, &amp;buf, s, make([]byte, len(data)))
+<span id="L211" class="ln">   211</span>		}
+<span id="L212" class="ln">   212</span>		check(t, &#34;TestLargeByteReads (3)&#34;, &amp;buf, &#34;&#34;)
+<span id="L213" class="ln">   213</span>	}
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>	func TestMixedReadsAndWrites(t *testing.T) {
+<span id="L216" class="ln">   216</span>		var buf Buffer
+<span id="L217" class="ln">   217</span>		s := &#34;&#34;
+<span id="L218" class="ln">   218</span>		for i := 0; i &lt; 50; i++ {
+<span id="L219" class="ln">   219</span>			wlen := rand.Intn(len(data))
+<span id="L220" class="ln">   220</span>			if i%2 == 0 {
+<span id="L221" class="ln">   221</span>				s = fillString(t, &#34;TestMixedReadsAndWrites (1)&#34;, &amp;buf, s, 1, data[0:wlen])
+<span id="L222" class="ln">   222</span>			} else {
+<span id="L223" class="ln">   223</span>				s = fillBytes(t, &#34;TestMixedReadsAndWrites (1)&#34;, &amp;buf, s, 1, testBytes[0:wlen])
+<span id="L224" class="ln">   224</span>			}
+<span id="L225" class="ln">   225</span>	
+<span id="L226" class="ln">   226</span>			rlen := rand.Intn(len(data))
+<span id="L227" class="ln">   227</span>			fub := make([]byte, rlen)
+<span id="L228" class="ln">   228</span>			n, _ := buf.Read(fub)
+<span id="L229" class="ln">   229</span>			s = s[n:]
+<span id="L230" class="ln">   230</span>		}
+<span id="L231" class="ln">   231</span>		empty(t, &#34;TestMixedReadsAndWrites (2)&#34;, &amp;buf, s, make([]byte, buf.Len()))
+<span id="L232" class="ln">   232</span>	}
+<span id="L233" class="ln">   233</span>	
+<span id="L234" class="ln">   234</span>	func TestNil(t *testing.T) {
+<span id="L235" class="ln">   235</span>		var b *Buffer
+<span id="L236" class="ln">   236</span>		if b.String() != &#34;&lt;nil&gt;&#34; {
+<span id="L237" class="ln">   237</span>			t.Errorf(&#34;expected &lt;nil&gt;; got %q&#34;, b.String())
+<span id="L238" class="ln">   238</span>		}
+<span id="L239" class="ln">   239</span>	}
+<span id="L240" class="ln">   240</span>	
+<span id="L241" class="ln">   241</span>	func TestReadFrom(t *testing.T) {
+<span id="L242" class="ln">   242</span>		var buf Buffer
+<span id="L243" class="ln">   243</span>		for i := 3; i &lt; 30; i += 3 {
+<span id="L244" class="ln">   244</span>			s := fillBytes(t, &#34;TestReadFrom (1)&#34;, &amp;buf, &#34;&#34;, 5, testBytes[0:len(testBytes)/i])
+<span id="L245" class="ln">   245</span>			var b Buffer
+<span id="L246" class="ln">   246</span>			b.ReadFrom(&amp;buf)
+<span id="L247" class="ln">   247</span>			empty(t, &#34;TestReadFrom (2)&#34;, &amp;b, s, make([]byte, len(data)))
+<span id="L248" class="ln">   248</span>		}
+<span id="L249" class="ln">   249</span>	}
+<span id="L250" class="ln">   250</span>	
+<span id="L251" class="ln">   251</span>	func TestWriteTo(t *testing.T) {
+<span id="L252" class="ln">   252</span>		var buf Buffer
+<span id="L253" class="ln">   253</span>		for i := 3; i &lt; 30; i += 3 {
+<span id="L254" class="ln">   254</span>			s := fillBytes(t, &#34;TestWriteTo (1)&#34;, &amp;buf, &#34;&#34;, 5, testBytes[0:len(testBytes)/i])
+<span id="L255" class="ln">   255</span>			var b Buffer
+<span id="L256" class="ln">   256</span>			buf.WriteTo(&amp;b)
+<span id="L257" class="ln">   257</span>			empty(t, &#34;TestWriteTo (2)&#34;, &amp;b, s, make([]byte, len(data)))
+<span id="L258" class="ln">   258</span>		}
+<span id="L259" class="ln">   259</span>	}
+<span id="L260" class="ln">   260</span>	
+<span id="L261" class="ln">   261</span>	func TestRuneIO(t *testing.T) {
+<span id="L262" class="ln">   262</span>		const NRune = 1000
+<span id="L263" class="ln">   263</span>		<span class="comment">// Built a test slice while we write the data</span>
+<span id="L264" class="ln">   264</span>		b := make([]byte, utf8.UTFMax*NRune)
+<span id="L265" class="ln">   265</span>		var buf Buffer
+<span id="L266" class="ln">   266</span>		n := 0
+<span id="L267" class="ln">   267</span>		for r := rune(0); r &lt; NRune; r++ {
+<span id="L268" class="ln">   268</span>			size := utf8.EncodeRune(b[n:], r)
+<span id="L269" class="ln">   269</span>			nbytes, err := buf.WriteRune(r)
+<span id="L270" class="ln">   270</span>			if err != nil {
+<span id="L271" class="ln">   271</span>				t.Fatalf(&#34;WriteRune(%U) error: %s&#34;, r, err)
+<span id="L272" class="ln">   272</span>			}
+<span id="L273" class="ln">   273</span>			if nbytes != size {
+<span id="L274" class="ln">   274</span>				t.Fatalf(&#34;WriteRune(%U) expected %d, got %d&#34;, r, size, nbytes)
+<span id="L275" class="ln">   275</span>			}
+<span id="L276" class="ln">   276</span>			n += size
+<span id="L277" class="ln">   277</span>		}
+<span id="L278" class="ln">   278</span>		b = b[0:n]
+<span id="L279" class="ln">   279</span>	
+<span id="L280" class="ln">   280</span>		<span class="comment">// Check the resulting bytes</span>
+<span id="L281" class="ln">   281</span>		if !Equal(buf.Bytes(), b) {
+<span id="L282" class="ln">   282</span>			t.Fatalf(&#34;incorrect result from WriteRune: %q not %q&#34;, buf.Bytes(), b)
+<span id="L283" class="ln">   283</span>		}
+<span id="L284" class="ln">   284</span>	
+<span id="L285" class="ln">   285</span>		p := make([]byte, utf8.UTFMax)
+<span id="L286" class="ln">   286</span>		<span class="comment">// Read it back with ReadRune</span>
+<span id="L287" class="ln">   287</span>		for r := rune(0); r &lt; NRune; r++ {
+<span id="L288" class="ln">   288</span>			size := utf8.EncodeRune(p, r)
+<span id="L289" class="ln">   289</span>			nr, nbytes, err := buf.ReadRune()
+<span id="L290" class="ln">   290</span>			if nr != r || nbytes != size || err != nil {
+<span id="L291" class="ln">   291</span>				t.Fatalf(&#34;ReadRune(%U) got %U,%d not %U,%d (err=%s)&#34;, r, nr, nbytes, r, size, err)
+<span id="L292" class="ln">   292</span>			}
+<span id="L293" class="ln">   293</span>		}
+<span id="L294" class="ln">   294</span>	
+<span id="L295" class="ln">   295</span>		<span class="comment">// Check that UnreadRune works</span>
+<span id="L296" class="ln">   296</span>		buf.Reset()
+<span id="L297" class="ln">   297</span>		buf.Write(b)
+<span id="L298" class="ln">   298</span>		for r := rune(0); r &lt; NRune; r++ {
+<span id="L299" class="ln">   299</span>			r1, size, _ := buf.ReadRune()
+<span id="L300" class="ln">   300</span>			if err := buf.UnreadRune(); err != nil {
+<span id="L301" class="ln">   301</span>				t.Fatalf(&#34;UnreadRune(%U) got error %q&#34;, r, err)
+<span id="L302" class="ln">   302</span>			}
+<span id="L303" class="ln">   303</span>			r2, nbytes, err := buf.ReadRune()
+<span id="L304" class="ln">   304</span>			if r1 != r2 || r1 != r || nbytes != size || err != nil {
+<span id="L305" class="ln">   305</span>				t.Fatalf(&#34;ReadRune(%U) after UnreadRune got %U,%d not %U,%d (err=%s)&#34;, r, r2, nbytes, r, size, err)
+<span id="L306" class="ln">   306</span>			}
+<span id="L307" class="ln">   307</span>		}
+<span id="L308" class="ln">   308</span>	}
+<span id="L309" class="ln">   309</span>	
+<span id="L310" class="ln">   310</span>	func TestNext(t *testing.T) {
+<span id="L311" class="ln">   311</span>		b := []byte{0, 1, 2, 3, 4}
+<span id="L312" class="ln">   312</span>		tmp := make([]byte, 5)
+<span id="L313" class="ln">   313</span>		for i := 0; i &lt;= 5; i++ {
+<span id="L314" class="ln">   314</span>			for j := i; j &lt;= 5; j++ {
+<span id="L315" class="ln">   315</span>				for k := 0; k &lt;= 6; k++ {
+<span id="L316" class="ln">   316</span>					<span class="comment">// 0 &lt;= i &lt;= j &lt;= 5; 0 &lt;= k &lt;= 6</span>
+<span id="L317" class="ln">   317</span>					<span class="comment">// Check that if we start with a buffer</span>
+<span id="L318" class="ln">   318</span>					<span class="comment">// of length j at offset i and ask for</span>
+<span id="L319" class="ln">   319</span>					<span class="comment">// Next(k), we get the right bytes.</span>
+<span id="L320" class="ln">   320</span>					buf := NewBuffer(b[0:j])
+<span id="L321" class="ln">   321</span>					n, _ := buf.Read(tmp[0:i])
+<span id="L322" class="ln">   322</span>					if n != i {
+<span id="L323" class="ln">   323</span>						t.Fatalf(&#34;Read %d returned %d&#34;, i, n)
+<span id="L324" class="ln">   324</span>					}
+<span id="L325" class="ln">   325</span>					bb := buf.Next(k)
+<span id="L326" class="ln">   326</span>					want := k
+<span id="L327" class="ln">   327</span>					if want &gt; j-i {
+<span id="L328" class="ln">   328</span>						want = j - i
+<span id="L329" class="ln">   329</span>					}
+<span id="L330" class="ln">   330</span>					if len(bb) != want {
+<span id="L331" class="ln">   331</span>						t.Fatalf(&#34;in %d,%d: len(Next(%d)) == %d&#34;, i, j, k, len(bb))
+<span id="L332" class="ln">   332</span>					}
+<span id="L333" class="ln">   333</span>					for l, v := range bb {
+<span id="L334" class="ln">   334</span>						if v != byte(l+i) {
+<span id="L335" class="ln">   335</span>							t.Fatalf(&#34;in %d,%d: Next(%d)[%d] = %d, want %d&#34;, i, j, k, l, v, l+i)
+<span id="L336" class="ln">   336</span>						}
+<span id="L337" class="ln">   337</span>					}
+<span id="L338" class="ln">   338</span>				}
+<span id="L339" class="ln">   339</span>			}
+<span id="L340" class="ln">   340</span>		}
+<span id="L341" class="ln">   341</span>	}
+<span id="L342" class="ln">   342</span>	
+<span id="L343" class="ln">   343</span>	var readBytesTests = []struct {
+<span id="L344" class="ln">   344</span>		buffer   string
+<span id="L345" class="ln">   345</span>		delim    byte
+<span id="L346" class="ln">   346</span>		expected []string
+<span id="L347" class="ln">   347</span>		err      error
+<span id="L348" class="ln">   348</span>	}{
+<span id="L349" class="ln">   349</span>		{&#34;&#34;, 0, []string{&#34;&#34;}, io.EOF},
+<span id="L350" class="ln">   350</span>		{&#34;a\x00&#34;, 0, []string{&#34;a\x00&#34;}, nil},
+<span id="L351" class="ln">   351</span>		{&#34;abbbaaaba&#34;, &#39;b&#39;, []string{&#34;ab&#34;, &#34;b&#34;, &#34;b&#34;, &#34;aaab&#34;}, nil},
+<span id="L352" class="ln">   352</span>		{&#34;hello\x01world&#34;, 1, []string{&#34;hello\x01&#34;}, nil},
+<span id="L353" class="ln">   353</span>		{&#34;foo\nbar&#34;, 0, []string{&#34;foo\nbar&#34;}, io.EOF},
+<span id="L354" class="ln">   354</span>		{&#34;alpha\nbeta\ngamma\n&#34;, &#39;\n&#39;, []string{&#34;alpha\n&#34;, &#34;beta\n&#34;, &#34;gamma\n&#34;}, nil},
+<span id="L355" class="ln">   355</span>		{&#34;alpha\nbeta\ngamma&#34;, &#39;\n&#39;, []string{&#34;alpha\n&#34;, &#34;beta\n&#34;, &#34;gamma&#34;}, io.EOF},
+<span id="L356" class="ln">   356</span>	}
+<span id="L357" class="ln">   357</span>	
+<span id="L358" class="ln">   358</span>	func TestReadBytes(t *testing.T) {
+<span id="L359" class="ln">   359</span>		for _, test := range readBytesTests {
+<span id="L360" class="ln">   360</span>			buf := NewBufferString(test.buffer)
+<span id="L361" class="ln">   361</span>			var err error
+<span id="L362" class="ln">   362</span>			for _, expected := range test.expected {
+<span id="L363" class="ln">   363</span>				var bytes []byte
+<span id="L364" class="ln">   364</span>				bytes, err = buf.ReadBytes(test.delim)
+<span id="L365" class="ln">   365</span>				if string(bytes) != expected {
+<span id="L366" class="ln">   366</span>					t.Errorf(&#34;expected %q, got %q&#34;, expected, bytes)
+<span id="L367" class="ln">   367</span>				}
+<span id="L368" class="ln">   368</span>				if err != nil {
+<span id="L369" class="ln">   369</span>					break
+<span id="L370" class="ln">   370</span>				}
+<span id="L371" class="ln">   371</span>			}
+<span id="L372" class="ln">   372</span>			if err != test.err {
+<span id="L373" class="ln">   373</span>				t.Errorf(&#34;expected error %v, got %v&#34;, test.err, err)
+<span id="L374" class="ln">   374</span>			}
+<span id="L375" class="ln">   375</span>		}
+<span id="L376" class="ln">   376</span>	}
+<span id="L377" class="ln">   377</span>	
+<span id="L378" class="ln">   378</span>	func TestReadString(t *testing.T) {
+<span id="L379" class="ln">   379</span>		for _, test := range readBytesTests {
+<span id="L380" class="ln">   380</span>			buf := NewBufferString(test.buffer)
+<span id="L381" class="ln">   381</span>			var err error
+<span id="L382" class="ln">   382</span>			for _, expected := range test.expected {
+<span id="L383" class="ln">   383</span>				var s string
+<span id="L384" class="ln">   384</span>				s, err = buf.ReadString(test.delim)
+<span id="L385" class="ln">   385</span>				if s != expected {
+<span id="L386" class="ln">   386</span>					t.Errorf(&#34;expected %q, got %q&#34;, expected, s)
+<span id="L387" class="ln">   387</span>				}
+<span id="L388" class="ln">   388</span>				if err != nil {
+<span id="L389" class="ln">   389</span>					break
+<span id="L390" class="ln">   390</span>				}
+<span id="L391" class="ln">   391</span>			}
+<span id="L392" class="ln">   392</span>			if err != test.err {
+<span id="L393" class="ln">   393</span>				t.Errorf(&#34;expected error %v, got %v&#34;, test.err, err)
+<span id="L394" class="ln">   394</span>			}
+<span id="L395" class="ln">   395</span>		}
+<span id="L396" class="ln">   396</span>	}
+<span id="L397" class="ln">   397</span>	
+<span id="L398" class="ln">   398</span>	func BenchmarkReadString(b *testing.B) {
+<span id="L399" class="ln">   399</span>		const n = 32 &lt;&lt; 10
+<span id="L400" class="ln">   400</span>	
+<span id="L401" class="ln">   401</span>		data := make([]byte, n)
+<span id="L402" class="ln">   402</span>		data[n-1] = &#39;x&#39;
+<span id="L403" class="ln">   403</span>		b.SetBytes(int64(n))
+<span id="L404" class="ln">   404</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L405" class="ln">   405</span>			buf := NewBuffer(data)
+<span id="L406" class="ln">   406</span>			_, err := buf.ReadString(&#39;x&#39;)
+<span id="L407" class="ln">   407</span>			if err != nil {
+<span id="L408" class="ln">   408</span>				b.Fatal(err)
+<span id="L409" class="ln">   409</span>			}
+<span id="L410" class="ln">   410</span>		}
+<span id="L411" class="ln">   411</span>	}
+<span id="L412" class="ln">   412</span>	
+<span id="L413" class="ln">   413</span>	func TestGrow(t *testing.T) {
+<span id="L414" class="ln">   414</span>		x := []byte{&#39;x&#39;}
+<span id="L415" class="ln">   415</span>		y := []byte{&#39;y&#39;}
+<span id="L416" class="ln">   416</span>		tmp := make([]byte, 72)
+<span id="L417" class="ln">   417</span>		for _, startLen := range []int{0, 100, 1000, 10000, 100000} {
+<span id="L418" class="ln">   418</span>			xBytes := Repeat(x, startLen)
+<span id="L419" class="ln">   419</span>			for _, growLen := range []int{0, 100, 1000, 10000, 100000} {
+<span id="L420" class="ln">   420</span>				buf := NewBuffer(xBytes)
+<span id="L421" class="ln">   421</span>				<span class="comment">// If we read, this affects buf.off, which is good to test.</span>
+<span id="L422" class="ln">   422</span>				readBytes, _ := buf.Read(tmp)
+<span id="L423" class="ln">   423</span>				buf.Grow(growLen)
+<span id="L424" class="ln">   424</span>				yBytes := Repeat(y, growLen)
+<span id="L425" class="ln">   425</span>				<span class="comment">// Check no allocation occurs in write, as long as we&#39;re single-threaded.</span>
+<span id="L426" class="ln">   426</span>				var m1, m2 runtime.MemStats
+<span id="L427" class="ln">   427</span>				runtime.ReadMemStats(&amp;m1)
+<span id="L428" class="ln">   428</span>				buf.Write(yBytes)
+<span id="L429" class="ln">   429</span>				runtime.ReadMemStats(&amp;m2)
+<span id="L430" class="ln">   430</span>				if runtime.GOMAXPROCS(-1) == 1 &amp;&amp; m1.Mallocs != m2.Mallocs {
+<span id="L431" class="ln">   431</span>					t.Errorf(&#34;allocation occurred during write&#34;)
+<span id="L432" class="ln">   432</span>				}
+<span id="L433" class="ln">   433</span>				<span class="comment">// Check that buffer has correct data.</span>
+<span id="L434" class="ln">   434</span>				if !Equal(buf.Bytes()[0:startLen-readBytes], xBytes[readBytes:]) {
+<span id="L435" class="ln">   435</span>					t.Errorf(&#34;bad initial data at %d %d&#34;, startLen, growLen)
+<span id="L436" class="ln">   436</span>				}
+<span id="L437" class="ln">   437</span>				if !Equal(buf.Bytes()[startLen-readBytes:startLen-readBytes+growLen], yBytes) {
+<span id="L438" class="ln">   438</span>					t.Errorf(&#34;bad written data at %d %d&#34;, startLen, growLen)
+<span id="L439" class="ln">   439</span>				}
+<span id="L440" class="ln">   440</span>			}
+<span id="L441" class="ln">   441</span>		}
+<span id="L442" class="ln">   442</span>	}
+<span id="L443" class="ln">   443</span>	
+<span id="L444" class="ln">   444</span>	<span class="comment">// Was a bug: used to give EOF reading empty slice at EOF.</span>
+<span id="L445" class="ln">   445</span>	func TestReadEmptyAtEOF(t *testing.T) {
+<span id="L446" class="ln">   446</span>		b := new(Buffer)
+<span id="L447" class="ln">   447</span>		slice := make([]byte, 0)
+<span id="L448" class="ln">   448</span>		n, err := b.Read(slice)
+<span id="L449" class="ln">   449</span>		if err != nil {
+<span id="L450" class="ln">   450</span>			t.Errorf(&#34;read error: %v&#34;, err)
+<span id="L451" class="ln">   451</span>		}
+<span id="L452" class="ln">   452</span>		if n != 0 {
+<span id="L453" class="ln">   453</span>			t.Errorf(&#34;wrong count; got %d want 0&#34;, n)
+<span id="L454" class="ln">   454</span>		}
+<span id="L455" class="ln">   455</span>	}
+<span id="L456" class="ln">   456</span>	
+<span id="L457" class="ln">   457</span>	func TestUnreadByte(t *testing.T) {
+<span id="L458" class="ln">   458</span>		b := new(Buffer)
+<span id="L459" class="ln">   459</span>		b.WriteString(&#34;abcdefghijklmnopqrstuvwxyz&#34;)
+<span id="L460" class="ln">   460</span>	
+<span id="L461" class="ln">   461</span>		_, err := b.ReadBytes(&#39;m&#39;)
+<span id="L462" class="ln">   462</span>		if err != nil {
+<span id="L463" class="ln">   463</span>			t.Fatalf(&#34;ReadBytes: %v&#34;, err)
+<span id="L464" class="ln">   464</span>		}
+<span id="L465" class="ln">   465</span>	
+<span id="L466" class="ln">   466</span>		err = b.UnreadByte()
+<span id="L467" class="ln">   467</span>		if err != nil {
+<span id="L468" class="ln">   468</span>			t.Fatalf(&#34;UnreadByte: %v&#34;, err)
+<span id="L469" class="ln">   469</span>		}
+<span id="L470" class="ln">   470</span>		c, err := b.ReadByte()
+<span id="L471" class="ln">   471</span>		if err != nil {
+<span id="L472" class="ln">   472</span>			t.Fatalf(&#34;ReadByte: %v&#34;, err)
+<span id="L473" class="ln">   473</span>		}
+<span id="L474" class="ln">   474</span>		if c != &#39;m&#39; {
+<span id="L475" class="ln">   475</span>			t.Errorf(&#34;ReadByte = %q; want %q&#34;, c, &#39;m&#39;)
+<span id="L476" class="ln">   476</span>		}
+<span id="L477" class="ln">   477</span>	}
+<span id="L478" class="ln">   478</span>	
+<span id="L479" class="ln">   479</span>	<span class="comment">// Tests that we occasionally compact. Issue 5154.</span>
+<span id="L480" class="ln">   480</span>	func TestBufferGrowth(t *testing.T) {
+<span id="L481" class="ln">   481</span>		var b Buffer
+<span id="L482" class="ln">   482</span>		buf := make([]byte, 1024)
+<span id="L483" class="ln">   483</span>		b.Write(buf[0:1])
+<span id="L484" class="ln">   484</span>		var cap0 int
+<span id="L485" class="ln">   485</span>		for i := 0; i &lt; 5&lt;&lt;10; i++ {
+<span id="L486" class="ln">   486</span>			b.Write(buf)
+<span id="L487" class="ln">   487</span>			b.Read(buf)
+<span id="L488" class="ln">   488</span>			if i == 0 {
+<span id="L489" class="ln">   489</span>				cap0 = b.Cap()
+<span id="L490" class="ln">   490</span>			}
+<span id="L491" class="ln">   491</span>		}
+<span id="L492" class="ln">   492</span>		cap1 := b.Cap()
+<span id="L493" class="ln">   493</span>		<span class="comment">// (*Buffer).grow allows for 2x capacity slop before sliding,</span>
+<span id="L494" class="ln">   494</span>		<span class="comment">// so set our error threshold at 3x.</span>
+<span id="L495" class="ln">   495</span>		if cap1 &gt; cap0*3 {
+<span id="L496" class="ln">   496</span>			t.Errorf(&#34;buffer cap = %d; too big (grew from %d)&#34;, cap1, cap0)
+<span id="L497" class="ln">   497</span>		}
+<span id="L498" class="ln">   498</span>	}
+<span id="L499" class="ln">   499</span>	
+<span id="L500" class="ln">   500</span>	<span class="comment">// From Issue 5154.</span>
+<span id="L501" class="ln">   501</span>	func BenchmarkBufferNotEmptyWriteRead(b *testing.B) {
+<span id="L502" class="ln">   502</span>		buf := make([]byte, 1024)
+<span id="L503" class="ln">   503</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L504" class="ln">   504</span>			var b Buffer
+<span id="L505" class="ln">   505</span>			b.Write(buf[0:1])
+<span id="L506" class="ln">   506</span>			for i := 0; i &lt; 5&lt;&lt;10; i++ {
+<span id="L507" class="ln">   507</span>				b.Write(buf)
+<span id="L508" class="ln">   508</span>				b.Read(buf)
+<span id="L509" class="ln">   509</span>			}
+<span id="L510" class="ln">   510</span>		}
+<span id="L511" class="ln">   511</span>	}
+<span id="L512" class="ln">   512</span>	
+<span id="L513" class="ln">   513</span>	<span class="comment">// Check that we don&#39;t compact too often. From Issue 5154.</span>
+<span id="L514" class="ln">   514</span>	func BenchmarkBufferFullSmallReads(b *testing.B) {
+<span id="L515" class="ln">   515</span>		buf := make([]byte, 1024)
+<span id="L516" class="ln">   516</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L517" class="ln">   517</span>			var b Buffer
+<span id="L518" class="ln">   518</span>			b.Write(buf)
+<span id="L519" class="ln">   519</span>			for b.Len()+20 &lt; b.Cap() {
+<span id="L520" class="ln">   520</span>				b.Write(buf[:10])
+<span id="L521" class="ln">   521</span>			}
+<span id="L522" class="ln">   522</span>			for i := 0; i &lt; 5&lt;&lt;10; i++ {
+<span id="L523" class="ln">   523</span>				b.Read(buf[:1])
+<span id="L524" class="ln">   524</span>				b.Write(buf[:1])
+<span id="L525" class="ln">   525</span>			}
+<span id="L526" class="ln">   526</span>		}
+<span id="L527" class="ln">   527</span>	}
+<span id="L528" class="ln">   528</span>	
+</pre><p><a href="http://golang.org/src/pkg/bytes/buffer_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

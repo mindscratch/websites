@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/text/template/doc.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/text/template/doc.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">/*
+<span id="L6" class="ln">     6</span>	Package template implements data-driven templates for generating textual output.
+<span id="L7" class="ln">     7</span>	
+<span id="L8" class="ln">     8</span>	To generate HTML output, see package html/template, which has the same interface
+<span id="L9" class="ln">     9</span>	as this package but automatically secures HTML output against certain attacks.
+<span id="L10" class="ln">    10</span>	
+<span id="L11" class="ln">    11</span>	Templates are executed by applying them to a data structure. Annotations in the
+<span id="L12" class="ln">    12</span>	template refer to elements of the data structure (typically a field of a struct
+<span id="L13" class="ln">    13</span>	or a key in a map) to control execution and derive values to be displayed.
+<span id="L14" class="ln">    14</span>	Execution of the template walks the structure and sets the cursor, represented
+<span id="L15" class="ln">    15</span>	by a period &#39;.&#39; and called &#34;dot&#34;, to the value at the current location in the
+<span id="L16" class="ln">    16</span>	structure as execution proceeds.
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>	The input text for a template is UTF-8-encoded text in any format.
+<span id="L19" class="ln">    19</span>	&#34;Actions&#34;--data evaluations or control structures--are delimited by
+<span id="L20" class="ln">    20</span>	&#34;{{&#34; and &#34;}}&#34;; all text outside actions is copied to the output unchanged.
+<span id="L21" class="ln">    21</span>	Actions may not span newlines, although comments can.
+<span id="L22" class="ln">    22</span>	
+<span id="L23" class="ln">    23</span>	Once parsed, a template may be executed safely in parallel.
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>	Here is a trivial example that prints &#34;17 items are made of wool&#34;.
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>		type Inventory struct {
+<span id="L28" class="ln">    28</span>			Material string
+<span id="L29" class="ln">    29</span>			Count    uint
+<span id="L30" class="ln">    30</span>		}
+<span id="L31" class="ln">    31</span>		sweaters := Inventory{&#34;wool&#34;, 17}
+<span id="L32" class="ln">    32</span>		tmpl, err := template.New(&#34;test&#34;).Parse(&#34;{{.Count}} items are made of {{.Material}}&#34;)
+<span id="L33" class="ln">    33</span>		if err != nil { panic(err) }
+<span id="L34" class="ln">    34</span>		err = tmpl.Execute(os.Stdout, sweaters)
+<span id="L35" class="ln">    35</span>		if err != nil { panic(err) }
+<span id="L36" class="ln">    36</span>	
+<span id="L37" class="ln">    37</span>	More intricate examples appear below.
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>	Actions
+<span id="L40" class="ln">    40</span>	
+<span id="L41" class="ln">    41</span>	Here is the list of actions. &#34;Arguments&#34; and &#34;pipelines&#34; are evaluations of
+<span id="L42" class="ln">    42</span>	data, defined in detail below.
+<span id="L43" class="ln">    43</span>	
+<span id="L44" class="ln">    44</span>	*/</span>
+<span id="L45" class="ln">    45</span>	<span class="comment">//	{{/* a comment */}}</span>
+<span id="L46" class="ln">    46</span>	<span class="comment">//		A comment; discarded. May contain newlines.</span>
+<span id="L47" class="ln">    47</span>	<span class="comment">//		Comments do not nest and must start and end at the</span>
+<span id="L48" class="ln">    48</span>	<span class="comment">//		delimiters, as shown here.</span>
+<span id="L49" class="ln">    49</span>	<span class="comment">/*
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>		{{pipeline}}
+<span id="L52" class="ln">    52</span>			The default textual representation of the value of the pipeline
+<span id="L53" class="ln">    53</span>			is copied to the output.
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>		{{if pipeline}} T1 {{end}}
+<span id="L56" class="ln">    56</span>			If the value of the pipeline is empty, no output is generated;
+<span id="L57" class="ln">    57</span>			otherwise, T1 is executed.  The empty values are false, 0, any
+<span id="L58" class="ln">    58</span>			nil pointer or interface value, and any array, slice, map, or
+<span id="L59" class="ln">    59</span>			string of length zero.
+<span id="L60" class="ln">    60</span>			Dot is unaffected.
+<span id="L61" class="ln">    61</span>	
+<span id="L62" class="ln">    62</span>		{{if pipeline}} T1 {{else}} T0 {{end}}
+<span id="L63" class="ln">    63</span>			If the value of the pipeline is empty, T0 is executed;
+<span id="L64" class="ln">    64</span>			otherwise, T1 is executed.  Dot is unaffected.
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>		{{if pipeline}} T1 {{else if pipeline}} T0 {{end}}
+<span id="L67" class="ln">    67</span>			To simplify the appearance of if-else chains, the else action
+<span id="L68" class="ln">    68</span>			of an if may include another if directly; the effect is exactly
+<span id="L69" class="ln">    69</span>			the same as writing
+<span id="L70" class="ln">    70</span>				{{if pipeline}} T1 {{else}}{{if pipeline}} T0 {{end}}{{end}}
+<span id="L71" class="ln">    71</span>	
+<span id="L72" class="ln">    72</span>		{{range pipeline}} T1 {{end}}
+<span id="L73" class="ln">    73</span>			The value of the pipeline must be an array, slice, map, or channel.
+<span id="L74" class="ln">    74</span>			If the value of the pipeline has length zero, nothing is output;
+<span id="L75" class="ln">    75</span>			otherwise, dot is set to the successive elements of the array,
+<span id="L76" class="ln">    76</span>			slice, or map and T1 is executed. If the value is a map and the
+<span id="L77" class="ln">    77</span>			keys are of basic type with a defined order (&#34;comparable&#34;), the
+<span id="L78" class="ln">    78</span>			elements will be visited in sorted key order.
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>		{{range pipeline}} T1 {{else}} T0 {{end}}
+<span id="L81" class="ln">    81</span>			The value of the pipeline must be an array, slice, map, or channel.
+<span id="L82" class="ln">    82</span>			If the value of the pipeline has length zero, dot is unaffected and
+<span id="L83" class="ln">    83</span>			T0 is executed; otherwise, dot is set to the successive elements
+<span id="L84" class="ln">    84</span>			of the array, slice, or map and T1 is executed.
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>		{{template &#34;name&#34;}}
+<span id="L87" class="ln">    87</span>			The template with the specified name is executed with nil data.
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		{{template &#34;name&#34; pipeline}}
+<span id="L90" class="ln">    90</span>			The template with the specified name is executed with dot set
+<span id="L91" class="ln">    91</span>			to the value of the pipeline.
+<span id="L92" class="ln">    92</span>	
+<span id="L93" class="ln">    93</span>		{{with pipeline}} T1 {{end}}
+<span id="L94" class="ln">    94</span>			If the value of the pipeline is empty, no output is generated;
+<span id="L95" class="ln">    95</span>			otherwise, dot is set to the value of the pipeline and T1 is
+<span id="L96" class="ln">    96</span>			executed.
+<span id="L97" class="ln">    97</span>	
+<span id="L98" class="ln">    98</span>		{{with pipeline}} T1 {{else}} T0 {{end}}
+<span id="L99" class="ln">    99</span>			If the value of the pipeline is empty, dot is unaffected and T0
+<span id="L100" class="ln">   100</span>			is executed; otherwise, dot is set to the value of the pipeline
+<span id="L101" class="ln">   101</span>			and T1 is executed.
+<span id="L102" class="ln">   102</span>	
+<span id="L103" class="ln">   103</span>	Arguments
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>	An argument is a simple value, denoted by one of the following.
+<span id="L106" class="ln">   106</span>	
+<span id="L107" class="ln">   107</span>		- A boolean, string, character, integer, floating-point, imaginary
+<span id="L108" class="ln">   108</span>		  or complex constant in Go syntax. These behave like Go&#39;s untyped
+<span id="L109" class="ln">   109</span>		  constants, although raw strings may not span newlines.
+<span id="L110" class="ln">   110</span>		- The keyword nil, representing an untyped Go nil.
+<span id="L111" class="ln">   111</span>		- The character &#39;.&#39; (period):
+<span id="L112" class="ln">   112</span>			.
+<span id="L113" class="ln">   113</span>		  The result is the value of dot.
+<span id="L114" class="ln">   114</span>		- A variable name, which is a (possibly empty) alphanumeric string
+<span id="L115" class="ln">   115</span>		  preceded by a dollar sign, such as
+<span id="L116" class="ln">   116</span>			$piOver2
+<span id="L117" class="ln">   117</span>		  or
+<span id="L118" class="ln">   118</span>			$
+<span id="L119" class="ln">   119</span>		  The result is the value of the variable.
+<span id="L120" class="ln">   120</span>		  Variables are described below.
+<span id="L121" class="ln">   121</span>		- The name of a field of the data, which must be a struct, preceded
+<span id="L122" class="ln">   122</span>		  by a period, such as
+<span id="L123" class="ln">   123</span>			.Field
+<span id="L124" class="ln">   124</span>		  The result is the value of the field. Field invocations may be
+<span id="L125" class="ln">   125</span>		  chained:
+<span id="L126" class="ln">   126</span>		    .Field1.Field2
+<span id="L127" class="ln">   127</span>		  Fields can also be evaluated on variables, including chaining:
+<span id="L128" class="ln">   128</span>		    $x.Field1.Field2
+<span id="L129" class="ln">   129</span>		- The name of a key of the data, which must be a map, preceded
+<span id="L130" class="ln">   130</span>		  by a period, such as
+<span id="L131" class="ln">   131</span>			.Key
+<span id="L132" class="ln">   132</span>		  The result is the map element value indexed by the key.
+<span id="L133" class="ln">   133</span>		  Key invocations may be chained and combined with fields to any
+<span id="L134" class="ln">   134</span>		  depth:
+<span id="L135" class="ln">   135</span>		    .Field1.Key1.Field2.Key2
+<span id="L136" class="ln">   136</span>		  Although the key must be an alphanumeric identifier, unlike with
+<span id="L137" class="ln">   137</span>		  field names they do not need to start with an upper case letter.
+<span id="L138" class="ln">   138</span>		  Keys can also be evaluated on variables, including chaining:
+<span id="L139" class="ln">   139</span>		    $x.key1.key2
+<span id="L140" class="ln">   140</span>		- The name of a niladic method of the data, preceded by a period,
+<span id="L141" class="ln">   141</span>		  such as
+<span id="L142" class="ln">   142</span>			.Method
+<span id="L143" class="ln">   143</span>		  The result is the value of invoking the method with dot as the
+<span id="L144" class="ln">   144</span>		  receiver, dot.Method(). Such a method must have one return value (of
+<span id="L145" class="ln">   145</span>		  any type) or two return values, the second of which is an error.
+<span id="L146" class="ln">   146</span>		  If it has two and the returned error is non-nil, execution terminates
+<span id="L147" class="ln">   147</span>		  and an error is returned to the caller as the value of Execute.
+<span id="L148" class="ln">   148</span>		  Method invocations may be chained and combined with fields and keys
+<span id="L149" class="ln">   149</span>		  to any depth:
+<span id="L150" class="ln">   150</span>		    .Field1.Key1.Method1.Field2.Key2.Method2
+<span id="L151" class="ln">   151</span>		  Methods can also be evaluated on variables, including chaining:
+<span id="L152" class="ln">   152</span>		    $x.Method1.Field
+<span id="L153" class="ln">   153</span>		- The name of a niladic function, such as
+<span id="L154" class="ln">   154</span>			fun
+<span id="L155" class="ln">   155</span>		  The result is the value of invoking the function, fun(). The return
+<span id="L156" class="ln">   156</span>		  types and values behave as in methods. Functions and function
+<span id="L157" class="ln">   157</span>		  names are described below.
+<span id="L158" class="ln">   158</span>		- A parenthesized instance of one the above, for grouping. The result
+<span id="L159" class="ln">   159</span>		  may be accessed by a field or map key invocation.
+<span id="L160" class="ln">   160</span>			print (.F1 arg1) (.F2 arg2)
+<span id="L161" class="ln">   161</span>			(.StructValuedMethod &#34;arg&#34;).Field
+<span id="L162" class="ln">   162</span>	
+<span id="L163" class="ln">   163</span>	Arguments may evaluate to any type; if they are pointers the implementation
+<span id="L164" class="ln">   164</span>	automatically indirects to the base type when required.
+<span id="L165" class="ln">   165</span>	If an evaluation yields a function value, such as a function-valued
+<span id="L166" class="ln">   166</span>	field of a struct, the function is not invoked automatically, but it
+<span id="L167" class="ln">   167</span>	can be used as a truth value for an if action and the like. To invoke
+<span id="L168" class="ln">   168</span>	it, use the call function, defined below.
+<span id="L169" class="ln">   169</span>	
+<span id="L170" class="ln">   170</span>	A pipeline is a possibly chained sequence of &#34;commands&#34;. A command is a simple
+<span id="L171" class="ln">   171</span>	value (argument) or a function or method call, possibly with multiple arguments:
+<span id="L172" class="ln">   172</span>	
+<span id="L173" class="ln">   173</span>		Argument
+<span id="L174" class="ln">   174</span>			The result is the value of evaluating the argument.
+<span id="L175" class="ln">   175</span>		.Method [Argument...]
+<span id="L176" class="ln">   176</span>			The method can be alone or the last element of a chain but,
+<span id="L177" class="ln">   177</span>			unlike methods in the middle of a chain, it can take arguments.
+<span id="L178" class="ln">   178</span>			The result is the value of calling the method with the
+<span id="L179" class="ln">   179</span>			arguments:
+<span id="L180" class="ln">   180</span>				dot.Method(Argument1, etc.)
+<span id="L181" class="ln">   181</span>		functionName [Argument...]
+<span id="L182" class="ln">   182</span>			The result is the value of calling the function associated
+<span id="L183" class="ln">   183</span>			with the name:
+<span id="L184" class="ln">   184</span>				function(Argument1, etc.)
+<span id="L185" class="ln">   185</span>			Functions and function names are described below.
+<span id="L186" class="ln">   186</span>	
+<span id="L187" class="ln">   187</span>	Pipelines
+<span id="L188" class="ln">   188</span>	
+<span id="L189" class="ln">   189</span>	A pipeline may be &#34;chained&#34; by separating a sequence of commands with pipeline
+<span id="L190" class="ln">   190</span>	characters &#39;|&#39;. In a chained pipeline, the result of the each command is
+<span id="L191" class="ln">   191</span>	passed as the last argument of the following command. The output of the final
+<span id="L192" class="ln">   192</span>	command in the pipeline is the value of the pipeline.
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>	The output of a command will be either one value or two values, the second of
+<span id="L195" class="ln">   195</span>	which has type error. If that second value is present and evaluates to
+<span id="L196" class="ln">   196</span>	non-nil, execution terminates and the error is returned to the caller of
+<span id="L197" class="ln">   197</span>	Execute.
+<span id="L198" class="ln">   198</span>	
+<span id="L199" class="ln">   199</span>	Variables
+<span id="L200" class="ln">   200</span>	
+<span id="L201" class="ln">   201</span>	A pipeline inside an action may initialize a variable to capture the result.
+<span id="L202" class="ln">   202</span>	The initialization has syntax
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>		$variable := pipeline
+<span id="L205" class="ln">   205</span>	
+<span id="L206" class="ln">   206</span>	where $variable is the name of the variable. An action that declares a
+<span id="L207" class="ln">   207</span>	variable produces no output.
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	If a &#34;range&#34; action initializes a variable, the variable is set to the
+<span id="L210" class="ln">   210</span>	successive elements of the iteration.  Also, a &#34;range&#34; may declare two
+<span id="L211" class="ln">   211</span>	variables, separated by a comma:
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>		range $index, $element := pipeline
+<span id="L214" class="ln">   214</span>	
+<span id="L215" class="ln">   215</span>	in which case $index and $element are set to the successive values of the
+<span id="L216" class="ln">   216</span>	array/slice index or map key and element, respectively.  Note that if there is
+<span id="L217" class="ln">   217</span>	only one variable, it is assigned the element; this is opposite to the
+<span id="L218" class="ln">   218</span>	convention in Go range clauses.
+<span id="L219" class="ln">   219</span>	
+<span id="L220" class="ln">   220</span>	A variable&#39;s scope extends to the &#34;end&#34; action of the control structure (&#34;if&#34;,
+<span id="L221" class="ln">   221</span>	&#34;with&#34;, or &#34;range&#34;) in which it is declared, or to the end of the template if
+<span id="L222" class="ln">   222</span>	there is no such control structure.  A template invocation does not inherit
+<span id="L223" class="ln">   223</span>	variables from the point of its invocation.
+<span id="L224" class="ln">   224</span>	
+<span id="L225" class="ln">   225</span>	When execution begins, $ is set to the data argument passed to Execute, that is,
+<span id="L226" class="ln">   226</span>	to the starting value of dot.
+<span id="L227" class="ln">   227</span>	
+<span id="L228" class="ln">   228</span>	Examples
+<span id="L229" class="ln">   229</span>	
+<span id="L230" class="ln">   230</span>	Here are some example one-line templates demonstrating pipelines and variables.
+<span id="L231" class="ln">   231</span>	All produce the quoted word &#34;output&#34;:
+<span id="L232" class="ln">   232</span>	
+<span id="L233" class="ln">   233</span>		{{&#34;\&#34;output\&#34;&#34;}}
+<span id="L234" class="ln">   234</span>			A string constant.
+<span id="L235" class="ln">   235</span>		{{`&#34;output&#34;`}}
+<span id="L236" class="ln">   236</span>			A raw string constant.
+<span id="L237" class="ln">   237</span>		{{printf &#34;%q&#34; &#34;output&#34;}}
+<span id="L238" class="ln">   238</span>			A function call.
+<span id="L239" class="ln">   239</span>		{{&#34;output&#34; | printf &#34;%q&#34;}}
+<span id="L240" class="ln">   240</span>			A function call whose final argument comes from the previous
+<span id="L241" class="ln">   241</span>			command.
+<span id="L242" class="ln">   242</span>		{{printf &#34;%q&#34; (print &#34;out&#34; &#34;put&#34;)}}
+<span id="L243" class="ln">   243</span>			A parenthesized argument.
+<span id="L244" class="ln">   244</span>		{{&#34;put&#34; | printf &#34;%s%s&#34; &#34;out&#34; | printf &#34;%q&#34;}}
+<span id="L245" class="ln">   245</span>			A more elaborate call.
+<span id="L246" class="ln">   246</span>		{{&#34;output&#34; | printf &#34;%s&#34; | printf &#34;%q&#34;}}
+<span id="L247" class="ln">   247</span>			A longer chain.
+<span id="L248" class="ln">   248</span>		{{with &#34;output&#34;}}{{printf &#34;%q&#34; .}}{{end}}
+<span id="L249" class="ln">   249</span>			A with action using dot.
+<span id="L250" class="ln">   250</span>		{{with $x := &#34;output&#34; | printf &#34;%q&#34;}}{{$x}}{{end}}
+<span id="L251" class="ln">   251</span>			A with action that creates and uses a variable.
+<span id="L252" class="ln">   252</span>		{{with $x := &#34;output&#34;}}{{printf &#34;%q&#34; $x}}{{end}}
+<span id="L253" class="ln">   253</span>			A with action that uses the variable in another action.
+<span id="L254" class="ln">   254</span>		{{with $x := &#34;output&#34;}}{{$x | printf &#34;%q&#34;}}{{end}}
+<span id="L255" class="ln">   255</span>			The same, but pipelined.
+<span id="L256" class="ln">   256</span>	
+<span id="L257" class="ln">   257</span>	Functions
+<span id="L258" class="ln">   258</span>	
+<span id="L259" class="ln">   259</span>	During execution functions are found in two function maps: first in the
+<span id="L260" class="ln">   260</span>	template, then in the global function map. By default, no functions are defined
+<span id="L261" class="ln">   261</span>	in the template but the Funcs method can be used to add them.
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>	Predefined global functions are named as follows.
+<span id="L264" class="ln">   264</span>	
+<span id="L265" class="ln">   265</span>		and
+<span id="L266" class="ln">   266</span>			Returns the boolean AND of its arguments by returning the
+<span id="L267" class="ln">   267</span>			first empty argument or the last argument, that is,
+<span id="L268" class="ln">   268</span>			&#34;and x y&#34; behaves as &#34;if x then y else x&#34;. All the
+<span id="L269" class="ln">   269</span>			arguments are evaluated.
+<span id="L270" class="ln">   270</span>		call
+<span id="L271" class="ln">   271</span>			Returns the result of calling the first argument, which
+<span id="L272" class="ln">   272</span>			must be a function, with the remaining arguments as parameters.
+<span id="L273" class="ln">   273</span>			Thus &#34;call .X.Y 1 2&#34; is, in Go notation, dot.X.Y(1, 2) where
+<span id="L274" class="ln">   274</span>			Y is a func-valued field, map entry, or the like.
+<span id="L275" class="ln">   275</span>			The first argument must be the result of an evaluation
+<span id="L276" class="ln">   276</span>			that yields a value of function type (as distinct from
+<span id="L277" class="ln">   277</span>			a predefined function such as print). The function must
+<span id="L278" class="ln">   278</span>			return either one or two result values, the second of which
+<span id="L279" class="ln">   279</span>			is of type error. If the arguments don&#39;t match the function
+<span id="L280" class="ln">   280</span>			or the returned error value is non-nil, execution stops.
+<span id="L281" class="ln">   281</span>		html
+<span id="L282" class="ln">   282</span>			Returns the escaped HTML equivalent of the textual
+<span id="L283" class="ln">   283</span>			representation of its arguments.
+<span id="L284" class="ln">   284</span>		index
+<span id="L285" class="ln">   285</span>			Returns the result of indexing its first argument by the
+<span id="L286" class="ln">   286</span>			following arguments. Thus &#34;index x 1 2 3&#34; is, in Go syntax,
+<span id="L287" class="ln">   287</span>			x[1][2][3]. Each indexed item must be a map, slice, or array.
+<span id="L288" class="ln">   288</span>		js
+<span id="L289" class="ln">   289</span>			Returns the escaped JavaScript equivalent of the textual
+<span id="L290" class="ln">   290</span>			representation of its arguments.
+<span id="L291" class="ln">   291</span>		len
+<span id="L292" class="ln">   292</span>			Returns the integer length of its argument.
+<span id="L293" class="ln">   293</span>		not
+<span id="L294" class="ln">   294</span>			Returns the boolean negation of its single argument.
+<span id="L295" class="ln">   295</span>		or
+<span id="L296" class="ln">   296</span>			Returns the boolean OR of its arguments by returning the
+<span id="L297" class="ln">   297</span>			first non-empty argument or the last argument, that is,
+<span id="L298" class="ln">   298</span>			&#34;or x y&#34; behaves as &#34;if x then x else y&#34;. All the
+<span id="L299" class="ln">   299</span>			arguments are evaluated.
+<span id="L300" class="ln">   300</span>		print
+<span id="L301" class="ln">   301</span>			An alias for fmt.Sprint
+<span id="L302" class="ln">   302</span>		printf
+<span id="L303" class="ln">   303</span>			An alias for fmt.Sprintf
+<span id="L304" class="ln">   304</span>		println
+<span id="L305" class="ln">   305</span>			An alias for fmt.Sprintln
+<span id="L306" class="ln">   306</span>		urlquery
+<span id="L307" class="ln">   307</span>			Returns the escaped value of the textual representation of
+<span id="L308" class="ln">   308</span>			its arguments in a form suitable for embedding in a URL query.
+<span id="L309" class="ln">   309</span>	
+<span id="L310" class="ln">   310</span>	The boolean functions take any zero value to be false and a non-zero
+<span id="L311" class="ln">   311</span>	value to be true.
+<span id="L312" class="ln">   312</span>	
+<span id="L313" class="ln">   313</span>	There is also a set of binary comparison operators defined as
+<span id="L314" class="ln">   314</span>	functions:
+<span id="L315" class="ln">   315</span>	
+<span id="L316" class="ln">   316</span>		eq
+<span id="L317" class="ln">   317</span>			Returns the boolean truth of arg1 == arg2
+<span id="L318" class="ln">   318</span>		ne
+<span id="L319" class="ln">   319</span>			Returns the boolean truth of arg1 != arg2
+<span id="L320" class="ln">   320</span>		lt
+<span id="L321" class="ln">   321</span>			Returns the boolean truth of arg1 &lt; arg2
+<span id="L322" class="ln">   322</span>		le
+<span id="L323" class="ln">   323</span>			Returns the boolean truth of arg1 &lt;= arg2
+<span id="L324" class="ln">   324</span>		gt
+<span id="L325" class="ln">   325</span>			Returns the boolean truth of arg1 &gt; arg2
+<span id="L326" class="ln">   326</span>		ge
+<span id="L327" class="ln">   327</span>			Returns the boolean truth of arg1 &gt;= arg2
+<span id="L328" class="ln">   328</span>	
+<span id="L329" class="ln">   329</span>	For simpler multi-way equality tests, eq (only) accepts two or more
+<span id="L330" class="ln">   330</span>	arguments and compares the second and subsequent to the first,
+<span id="L331" class="ln">   331</span>	returning in effect
+<span id="L332" class="ln">   332</span>	
+<span id="L333" class="ln">   333</span>		arg1==arg2 || arg1==arg3 || arg1==arg4 ...
+<span id="L334" class="ln">   334</span>	
+<span id="L335" class="ln">   335</span>	(Unlike with || in Go, however, eq is a function call and all the
+<span id="L336" class="ln">   336</span>	arguments will be evaluated.)
+<span id="L337" class="ln">   337</span>	
+<span id="L338" class="ln">   338</span>	The comparison functions work on basic types only (or named basic
+<span id="L339" class="ln">   339</span>	types, such as &#34;type Celsius float32&#34;). They implement the Go rules
+<span id="L340" class="ln">   340</span>	for comparison of values, except that size and exact type are
+<span id="L341" class="ln">   341</span>	ignored, so any integer value may be compared with any other integer
+<span id="L342" class="ln">   342</span>	value, any unsigned integer value may be compared with any other
+<span id="L343" class="ln">   343</span>	unsigned integer value, and so on. However, as usual, one may not
+<span id="L344" class="ln">   344</span>	compare an int with a float32 and so on.
+<span id="L345" class="ln">   345</span>	
+<span id="L346" class="ln">   346</span>	Associated templates
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>	Each template is named by a string specified when it is created. Also, each
+<span id="L349" class="ln">   349</span>	template is associated with zero or more other templates that it may invoke by
+<span id="L350" class="ln">   350</span>	name; such associations are transitive and form a name space of templates.
+<span id="L351" class="ln">   351</span>	
+<span id="L352" class="ln">   352</span>	A template may use a template invocation to instantiate another associated
+<span id="L353" class="ln">   353</span>	template; see the explanation of the &#34;template&#34; action above. The name must be
+<span id="L354" class="ln">   354</span>	that of a template associated with the template that contains the invocation.
+<span id="L355" class="ln">   355</span>	
+<span id="L356" class="ln">   356</span>	Nested template definitions
+<span id="L357" class="ln">   357</span>	
+<span id="L358" class="ln">   358</span>	When parsing a template, another template may be defined and associated with the
+<span id="L359" class="ln">   359</span>	template being parsed. Template definitions must appear at the top level of the
+<span id="L360" class="ln">   360</span>	template, much like global variables in a Go program.
+<span id="L361" class="ln">   361</span>	
+<span id="L362" class="ln">   362</span>	The syntax of such definitions is to surround each template declaration with a
+<span id="L363" class="ln">   363</span>	&#34;define&#34; and &#34;end&#34; action.
+<span id="L364" class="ln">   364</span>	
+<span id="L365" class="ln">   365</span>	The define action names the template being created by providing a string
+<span id="L366" class="ln">   366</span>	constant. Here is a simple example:
+<span id="L367" class="ln">   367</span>	
+<span id="L368" class="ln">   368</span>		`{{define &#34;T1&#34;}}ONE{{end}}
+<span id="L369" class="ln">   369</span>		{{define &#34;T2&#34;}}TWO{{end}}
+<span id="L370" class="ln">   370</span>		{{define &#34;T3&#34;}}{{template &#34;T1&#34;}} {{template &#34;T2&#34;}}{{end}}
+<span id="L371" class="ln">   371</span>		{{template &#34;T3&#34;}}`
+<span id="L372" class="ln">   372</span>	
+<span id="L373" class="ln">   373</span>	This defines two templates, T1 and T2, and a third T3 that invokes the other two
+<span id="L374" class="ln">   374</span>	when it is executed. Finally it invokes T3. If executed this template will
+<span id="L375" class="ln">   375</span>	produce the text
+<span id="L376" class="ln">   376</span>	
+<span id="L377" class="ln">   377</span>		ONE TWO
+<span id="L378" class="ln">   378</span>	
+<span id="L379" class="ln">   379</span>	By construction, a template may reside in only one association. If it&#39;s
+<span id="L380" class="ln">   380</span>	necessary to have a template addressable from multiple associations, the
+<span id="L381" class="ln">   381</span>	template definition must be parsed multiple times to create distinct *Template
+<span id="L382" class="ln">   382</span>	values, or must be copied with the Clone or AddParseTree method.
+<span id="L383" class="ln">   383</span>	
+<span id="L384" class="ln">   384</span>	Parse may be called multiple times to assemble the various associated templates;
+<span id="L385" class="ln">   385</span>	see the ParseFiles and ParseGlob functions and methods for simple ways to parse
+<span id="L386" class="ln">   386</span>	related templates stored in files.
+<span id="L387" class="ln">   387</span>	
+<span id="L388" class="ln">   388</span>	A template may be executed directly or through ExecuteTemplate, which executes
+<span id="L389" class="ln">   389</span>	an associated template identified by name. To invoke our example above, we
+<span id="L390" class="ln">   390</span>	might write,
+<span id="L391" class="ln">   391</span>	
+<span id="L392" class="ln">   392</span>		err := tmpl.Execute(os.Stdout, &#34;no data needed&#34;)
+<span id="L393" class="ln">   393</span>		if err != nil {
+<span id="L394" class="ln">   394</span>			log.Fatalf(&#34;execution failed: %s&#34;, err)
+<span id="L395" class="ln">   395</span>		}
+<span id="L396" class="ln">   396</span>	
+<span id="L397" class="ln">   397</span>	or to invoke a particular template explicitly by name,
+<span id="L398" class="ln">   398</span>	
+<span id="L399" class="ln">   399</span>		err := tmpl.ExecuteTemplate(os.Stdout, &#34;T2&#34;, &#34;no data needed&#34;)
+<span id="L400" class="ln">   400</span>		if err != nil {
+<span id="L401" class="ln">   401</span>			log.Fatalf(&#34;execution failed: %s&#34;, err)
+<span id="L402" class="ln">   402</span>		}
+<span id="L403" class="ln">   403</span>	
+<span id="L404" class="ln">   404</span>	*/</span>
+<span id="L405" class="ln">   405</span>	package template
+<span id="L406" class="ln">   406</span>	
+</pre><p><a href="doc.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

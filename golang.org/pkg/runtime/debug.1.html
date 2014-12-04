@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>debug - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Package debug</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+        document.ANALYSIS_DATA = null;
+        document.CALLGRAPH = null;
+        </script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "runtime/debug"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="debug.1.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="debug.1.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>
+Package debug contains facilities for programs to debug themselves while
+they are running.
+</p>
+
+			</div>
+		</div>
+		
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="debug.1.html#FreeOSMemory">func FreeOSMemory()</a></dd>
+			
+				
+				<dd><a href="debug.1.html#PrintStack">func PrintStack()</a></dd>
+			
+				
+				<dd><a href="debug.1.html#ReadGCStats">func ReadGCStats(stats *GCStats)</a></dd>
+			
+				
+				<dd><a href="debug.1.html#SetGCPercent">func SetGCPercent(percent int) int</a></dd>
+			
+				
+				<dd><a href="debug.1.html#SetMaxStack">func SetMaxStack(bytes int) int</a></dd>
+			
+				
+				<dd><a href="debug.1.html#SetMaxThreads">func SetMaxThreads(threads int) int</a></dd>
+			
+				
+				<dd><a href="debug.1.html#SetPanicOnFault">func SetPanicOnFault(enabled bool) bool</a></dd>
+			
+				
+				<dd><a href="debug.1.html#Stack">func Stack() []byte</a></dd>
+			
+				
+				<dd><a href="debug.1.html#WriteHeapDump">func WriteHeapDump(fd uintptr)</a></dd>
+			
+			
+				
+				<dd><a href="debug.1.html#GCStats">type GCStats</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h4>Package files</h4>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/pkg/runtime/debug/garbage.go.html">garbage.go</a>
+			
+				<a href="../../src/pkg/runtime/debug/stack.go.html">stack.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		<div id="pkg-callgraph" class="toggle" style="display: none">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Internal Call Graph section">Internal call graph ▹</h2>
+		</div> <!-- .expanded -->
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Internal Call Graph section">Internal call graph ▾</h2>
+                        <p>
+                          In the call graph viewer below, each node
+                          is a function belonging to this package
+                          and its children are the functions it
+                          calls&mdash;perhaps dynamically.
+                        </p>
+                        <p>
+                          The root nodes are the entry points of the
+                          package: functions that may be called from
+                          outside the package.  
+                          There may be non-exported or anonymous
+                          functions among them if they are called
+                          dynamically from another package.
+                        </p>
+                        <p>
+                          Click a node to visit that function's source code.
+                          From there you can visit its callers by
+                          clicking its declaring <code>func</code>
+                          token.
+                        </p>
+                        <p>
+                          Functions may be omitted if they were
+                          determined to be unreachable in the
+                          particular programs or tests that were
+                          analyzed.
+                        </p>
+                        <!-- Zero means show all package entry points. -->
+                        <ul style="margin-left: 0.5in" id="callgraph-0" class="treeview"></ul>
+                        </script>                        
+		</div>
+		</div> <!-- #pkg-callgraph -->
+
+		
+		
+		
+			
+			
+			<h2 id="FreeOSMemory">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=3814:3833.html#L93">FreeOSMemory</a></h2>
+			<pre>func FreeOSMemory()</pre>
+			<p>
+FreeOSMemory forces a garbage collection followed by an
+attempt to return as much memory to the operating system
+as possible. (Even if this is not called, the runtime gradually
+returns memory to the operating system in a background task.)
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="PrintStack">func <a href="../../src/pkg/runtime/debug/stack.go%3Fs=516:533.html#L15">PrintStack</a></h2>
+			<pre>func PrintStack()</pre>
+			<p>
+PrintStack prints to standard error the stack trace returned by Stack.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="ReadGCStats">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=1326:1358.html#L28">ReadGCStats</a></h2>
+			<pre>func ReadGCStats(stats *<a href="debug.1.html#GCStats">GCStats</a>)</pre>
+			<p>
+ReadGCStats reads statistics about garbage collection into stats.
+The number of entries in the pause history is system-dependent;
+stats.Pause slice will be reused if large enough, reallocated otherwise.
+ReadGCStats may use the full capacity of the stats.Pause slice.
+If stats.PauseQuantiles is non-empty, ReadGCStats fills it with quantiles
+summarizing the distribution of pause time. For example, if
+len(stats.PauseQuantiles) is 5, it will be filled with the minimum,
+25%, 50%, 75%, and maximum pause times.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetGCPercent">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=3467:3501.html#L83">SetGCPercent</a></h2>
+			<pre>func SetGCPercent(percent <a href="http://golang.org/pkg/builtin/#int">int</a>) <a href="http://golang.org/pkg/builtin/#int">int</a></pre>
+			<p>
+SetGCPercent sets the garbage collection target percentage:
+a collection is triggered when the ratio of freshly allocated data
+to live data remaining after the previous collection reaches this percentage.
+SetGCPercent returns the previous setting.
+The initial setting is the value of the GOGC environment variable
+at startup, or 100 if the variable is not set.
+A negative percentage disables garbage collection.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetMaxStack">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=4316:4347.html#L107">SetMaxStack</a></h2>
+			<pre>func SetMaxStack(bytes <a href="http://golang.org/pkg/builtin/#int">int</a>) <a href="http://golang.org/pkg/builtin/#int">int</a></pre>
+			<p>
+SetMaxStack sets the maximum amount of memory that
+can be used by a single goroutine stack.
+If any goroutine exceeds this limit while growing its stack,
+the program crashes.
+SetMaxStack returns the previous setting.
+The initial setting is 1 GB on 64-bit systems, 250 MB on 32-bit systems.
+</p>
+<p>
+SetMaxStack is useful mainly for limiting the damage done by
+goroutines that enter an infinite recursion. It only limits future
+stack growth.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetMaxThreads">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=5160:5195.html#L125">SetMaxThreads</a></h2>
+			<pre>func SetMaxThreads(threads <a href="http://golang.org/pkg/builtin/#int">int</a>) <a href="http://golang.org/pkg/builtin/#int">int</a></pre>
+			<p>
+SetMaxThreads sets the maximum number of operating system
+threads that the Go program can use. If it attempts to use more than
+this many, the program crashes.
+SetMaxThreads returns the previous setting.
+The initial setting is 10,000 threads.
+</p>
+<p>
+The limit controls the number of operating system threads, not the number
+of goroutines. A Go program creates a new thread only when a goroutine
+is ready to run but all the existing threads are blocked in system calls, cgo calls,
+or are locked to other goroutines due to use of runtime.LockOSThread.
+</p>
+<p>
+SetMaxThreads is useful mainly for limiting the damage done by
+programs that create an unbounded number of threads. The idea is
+to take down the program before it takes down the operating system.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetPanicOnFault">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=5820:5859.html#L138">SetPanicOnFault</a></h2>
+			<pre>func SetPanicOnFault(enabled <a href="http://golang.org/pkg/builtin/#bool">bool</a>) <a href="http://golang.org/pkg/builtin/#bool">bool</a></pre>
+			<p>
+SetPanicOnFault controls the runtime&#39;s behavior when a program faults
+at an unexpected (non-nil) address. Such faults are typically caused by
+bugs such as runtime memory corruption, so the default response is to crash
+the program. Programs working with memory-mapped files or unsafe
+manipulation of memory may cause faults at non-nil addresses in less
+dramatic situations; SetPanicOnFault allows such programs to request
+that the runtime trigger only a panic, not a crash.
+SetPanicOnFault applies only to the current goroutine.
+It returns the previous setting.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="Stack">func <a href="../../src/pkg/runtime/debug/stack.go%3Fs=919:938.html#L25">Stack</a></h2>
+			<pre>func Stack() []<a href="http://golang.org/pkg/builtin/#byte">byte</a></pre>
+			<p>
+Stack returns a formatted stack trace of the goroutine that calls it.
+For each routine, it includes the source line information and PC value,
+then attempts to discover, for Go functions, the calling function or
+method and the text of the line containing the invocation.
+</p>
+<p>
+This function is deprecated. Use package runtime&#39;s Stack instead.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="WriteHeapDump">func <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=6038:6068.html#L143">WriteHeapDump</a></h2>
+			<pre>func WriteHeapDump(fd <a href="http://golang.org/pkg/builtin/#uintptr">uintptr</a>)</pre>
+			<p>
+WriteHeapDump writes a description of the heap and the objects in
+it to the given file descriptor.
+The heap dump format is defined at <a href="../../s/go13heapdump.html">http://golang.org/s/go13heapdump</a>.
+</p>
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="GCStats">type <a href="../../src/pkg/runtime/debug/garbage.go%3Fs=280:594.html#L4">GCStats</a></h2>
+			<pre>type GCStats struct {
+        LastGC         <a href="http://golang.org/pkg/time/">time</a>.<a href="http://golang.org/pkg/time/#Time">Time</a>       <span class="comment">// time of last collection</span>
+        NumGC          <a href="http://golang.org/pkg/builtin/#int64">int64</a>           <span class="comment">// number of garbage collections</span>
+        PauseTotal     <a href="http://golang.org/pkg/time/">time</a>.<a href="http://golang.org/pkg/time/#Duration">Duration</a>   <span class="comment">// total pause for all collections</span>
+        Pause          []<a href="http://golang.org/pkg/time/">time</a>.<a href="http://golang.org/pkg/time/#Duration">Duration</a> <span class="comment">// pause history, most recent first</span>
+        PauseQuantiles []<a href="http://golang.org/pkg/time/">time</a>.<a href="http://golang.org/pkg/time/#Duration">Duration</a>
+}</pre>
+			<p>
+GCStats collect information about recent garbage collections.
+</p>
+
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

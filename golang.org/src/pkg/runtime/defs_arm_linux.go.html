@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/defs_arm_linux.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/runtime/defs_arm_linux.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// +build ignore</span>
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	<span class="comment">/*
+<span id="L8" class="ln">     8</span>	Input to cgo.
+<span id="L9" class="ln">     9</span>	On a Debian Lenny arm linux distribution:
+<span id="L10" class="ln">    10</span>	
+<span id="L11" class="ln">    11</span>	cgo -cdefs defs_arm.c &gt;arm/defs.h
+<span id="L12" class="ln">    12</span>	*/</span>
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>	package runtime
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	<span class="comment">/*
+<span id="L17" class="ln">    17</span>	#cgo CFLAGS: -I/usr/src/linux-headers-2.6.26-2-versatile/include
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	#define __ARCH_SI_UID_T int
+<span id="L20" class="ln">    20</span>	#include &lt;asm/signal.h&gt;
+<span id="L21" class="ln">    21</span>	#include &lt;asm/mman.h&gt;
+<span id="L22" class="ln">    22</span>	#include &lt;asm/sigcontext.h&gt;
+<span id="L23" class="ln">    23</span>	#include &lt;asm/ucontext.h&gt;
+<span id="L24" class="ln">    24</span>	#include &lt;asm/siginfo.h&gt;
+<span id="L25" class="ln">    25</span>	#include &lt;linux/time.h&gt;
+<span id="L26" class="ln">    26</span>	
+<span id="L27" class="ln">    27</span>	struct xsiginfo {
+<span id="L28" class="ln">    28</span>		int si_signo;
+<span id="L29" class="ln">    29</span>		int si_errno;
+<span id="L30" class="ln">    30</span>		int si_code;
+<span id="L31" class="ln">    31</span>		char _sifields[4];
+<span id="L32" class="ln">    32</span>	};
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	#undef sa_handler
+<span id="L35" class="ln">    35</span>	#undef sa_flags
+<span id="L36" class="ln">    36</span>	#undef sa_restorer
+<span id="L37" class="ln">    37</span>	#undef sa_mask
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>	struct xsigaction {
+<span id="L40" class="ln">    40</span>		void (*sa_handler)(void);
+<span id="L41" class="ln">    41</span>		unsigned long sa_flags;
+<span id="L42" class="ln">    42</span>		void (*sa_restorer)(void);
+<span id="L43" class="ln">    43</span>		unsigned int sa_mask;		// mask last for extensibility
+<span id="L44" class="ln">    44</span>	};
+<span id="L45" class="ln">    45</span>	*/</span>
+<span id="L46" class="ln">    46</span>	import &#34;C&#34;
+<span id="L47" class="ln">    47</span>	
+<span id="L48" class="ln">    48</span>	const (
+<span id="L49" class="ln">    49</span>		PROT_NONE  = C.PROT_NONE
+<span id="L50" class="ln">    50</span>		PROT_READ  = C.PROT_READ
+<span id="L51" class="ln">    51</span>		PROT_WRITE = C.PROT_WRITE
+<span id="L52" class="ln">    52</span>		PROT_EXEC  = C.PROT_EXEC
+<span id="L53" class="ln">    53</span>	
+<span id="L54" class="ln">    54</span>		MAP_ANON    = C.MAP_ANONYMOUS
+<span id="L55" class="ln">    55</span>		MAP_PRIVATE = C.MAP_PRIVATE
+<span id="L56" class="ln">    56</span>		MAP_FIXED   = C.MAP_FIXED
+<span id="L57" class="ln">    57</span>	
+<span id="L58" class="ln">    58</span>		MADV_DONTNEED = C.MADV_DONTNEED
+<span id="L59" class="ln">    59</span>	
+<span id="L60" class="ln">    60</span>		SA_RESTART  = C.SA_RESTART
+<span id="L61" class="ln">    61</span>		SA_ONSTACK  = C.SA_ONSTACK
+<span id="L62" class="ln">    62</span>		SA_RESTORER = C.SA_RESTORER
+<span id="L63" class="ln">    63</span>		SA_SIGINFO  = C.SA_SIGINFO
+<span id="L64" class="ln">    64</span>	
+<span id="L65" class="ln">    65</span>		SIGHUP    = C.SIGHUP
+<span id="L66" class="ln">    66</span>		SIGINT    = C.SIGINT
+<span id="L67" class="ln">    67</span>		SIGQUIT   = C.SIGQUIT
+<span id="L68" class="ln">    68</span>		SIGILL    = C.SIGILL
+<span id="L69" class="ln">    69</span>		SIGTRAP   = C.SIGTRAP
+<span id="L70" class="ln">    70</span>		SIGABRT   = C.SIGABRT
+<span id="L71" class="ln">    71</span>		SIGBUS    = C.SIGBUS
+<span id="L72" class="ln">    72</span>		SIGFPE    = C.SIGFPE
+<span id="L73" class="ln">    73</span>		SIGKILL   = C.SIGKILL
+<span id="L74" class="ln">    74</span>		SIGUSR1   = C.SIGUSR1
+<span id="L75" class="ln">    75</span>		SIGSEGV   = C.SIGSEGV
+<span id="L76" class="ln">    76</span>		SIGUSR2   = C.SIGUSR2
+<span id="L77" class="ln">    77</span>		SIGPIPE   = C.SIGPIPE
+<span id="L78" class="ln">    78</span>		SIGALRM   = C.SIGALRM
+<span id="L79" class="ln">    79</span>		SIGSTKFLT = C.SIGSTKFLT
+<span id="L80" class="ln">    80</span>		SIGCHLD   = C.SIGCHLD
+<span id="L81" class="ln">    81</span>		SIGCONT   = C.SIGCONT
+<span id="L82" class="ln">    82</span>		SIGSTOP   = C.SIGSTOP
+<span id="L83" class="ln">    83</span>		SIGTSTP   = C.SIGTSTP
+<span id="L84" class="ln">    84</span>		SIGTTIN   = C.SIGTTIN
+<span id="L85" class="ln">    85</span>		SIGTTOU   = C.SIGTTOU
+<span id="L86" class="ln">    86</span>		SIGURG    = C.SIGURG
+<span id="L87" class="ln">    87</span>		SIGXCPU   = C.SIGXCPU
+<span id="L88" class="ln">    88</span>		SIGXFSZ   = C.SIGXFSZ
+<span id="L89" class="ln">    89</span>		SIGVTALRM = C.SIGVTALRM
+<span id="L90" class="ln">    90</span>		SIGPROF   = C.SIGPROF
+<span id="L91" class="ln">    91</span>		SIGWINCH  = C.SIGWINCH
+<span id="L92" class="ln">    92</span>		SIGIO     = C.SIGIO
+<span id="L93" class="ln">    93</span>		SIGPWR    = C.SIGPWR
+<span id="L94" class="ln">    94</span>		SIGSYS    = C.SIGSYS
+<span id="L95" class="ln">    95</span>	
+<span id="L96" class="ln">    96</span>		FPE_INTDIV = C.FPE_INTDIV &amp; 0xFFFF
+<span id="L97" class="ln">    97</span>		FPE_INTOVF = C.FPE_INTOVF &amp; 0xFFFF
+<span id="L98" class="ln">    98</span>		FPE_FLTDIV = C.FPE_FLTDIV &amp; 0xFFFF
+<span id="L99" class="ln">    99</span>		FPE_FLTOVF = C.FPE_FLTOVF &amp; 0xFFFF
+<span id="L100" class="ln">   100</span>		FPE_FLTUND = C.FPE_FLTUND &amp; 0xFFFF
+<span id="L101" class="ln">   101</span>		FPE_FLTRES = C.FPE_FLTRES &amp; 0xFFFF
+<span id="L102" class="ln">   102</span>		FPE_FLTINV = C.FPE_FLTINV &amp; 0xFFFF
+<span id="L103" class="ln">   103</span>		FPE_FLTSUB = C.FPE_FLTSUB &amp; 0xFFFF
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>		BUS_ADRALN = C.BUS_ADRALN &amp; 0xFFFF
+<span id="L106" class="ln">   106</span>		BUS_ADRERR = C.BUS_ADRERR &amp; 0xFFFF
+<span id="L107" class="ln">   107</span>		BUS_OBJERR = C.BUS_OBJERR &amp; 0xFFFF
+<span id="L108" class="ln">   108</span>	
+<span id="L109" class="ln">   109</span>		SEGV_MAPERR = C.SEGV_MAPERR &amp; 0xFFFF
+<span id="L110" class="ln">   110</span>		SEGV_ACCERR = C.SEGV_ACCERR &amp; 0xFFFF
+<span id="L111" class="ln">   111</span>	
+<span id="L112" class="ln">   112</span>		ITIMER_REAL    = C.ITIMER_REAL
+<span id="L113" class="ln">   113</span>		ITIMER_PROF    = C.ITIMER_PROF
+<span id="L114" class="ln">   114</span>		ITIMER_VIRTUAL = C.ITIMER_VIRTUAL
+<span id="L115" class="ln">   115</span>	)
+<span id="L116" class="ln">   116</span>	
+<span id="L117" class="ln">   117</span>	type Timespec C.struct_timespec
+<span id="L118" class="ln">   118</span>	type Sigaltstack C.struct_sigaltstack
+<span id="L119" class="ln">   119</span>	type Sigcontext C.struct_sigcontext
+<span id="L120" class="ln">   120</span>	type Ucontext C.struct_ucontext
+<span id="L121" class="ln">   121</span>	type Timeval C.struct_timeval
+<span id="L122" class="ln">   122</span>	type Itimerval C.struct_itimerval
+<span id="L123" class="ln">   123</span>	type Siginfo C.struct_xsiginfo
+<span id="L124" class="ln">   124</span>	type Sigaction C.struct_xsigaction
+<span id="L125" class="ln">   125</span>	
+</pre><p><a href="http://golang.org/src/pkg/runtime/defs_arm_linux.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

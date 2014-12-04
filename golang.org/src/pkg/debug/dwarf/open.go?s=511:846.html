@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/debug/dwarf/open.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/debug/dwarf/open.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors.  All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	<span class="comment">// Package dwarf provides access to DWARF debugging information loaded from</span>
+<span id="L6" class="ln">     6</span>	<span class="comment">// executable files, as defined in the DWARF 2.0 Standard at</span>
+<span id="L7" class="ln">     7</span>	<span class="comment">// http://dwarfstd.org/doc/dwarf-2.0.0.pdf</span>
+<span id="L8" class="ln">     8</span>	package dwarf
+<span id="L9" class="ln">     9</span>	
+<span id="L10" class="ln">    10</span>	import &#34;encoding/binary&#34;
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	<span class="comment">// Data represents the DWARF debugging information</span>
+<span id="L13" class="ln">    13</span>	<span class="comment">// loaded from an executable file (for example, an ELF or Mach-O executable).</span>
+<span id="L14" class="ln">    14</span>	<span class="selection">type Data struct {
+<span id="L15" class="ln">    15</span>		</span><span class="selection-comment">// raw data</span><span class="selection">
+<span id="L16" class="ln">    16</span>		abbrev   []byte
+<span id="L17" class="ln">    17</span>		aranges  []byte
+<span id="L18" class="ln">    18</span>		frame    []byte
+<span id="L19" class="ln">    19</span>		info     []byte
+<span id="L20" class="ln">    20</span>		line     []byte
+<span id="L21" class="ln">    21</span>		pubnames []byte
+<span id="L22" class="ln">    22</span>		ranges   []byte
+<span id="L23" class="ln">    23</span>		str      []byte
+<span id="L24" class="ln">    24</span>	
+<span id="L25" class="ln">    25</span>		</span><span class="selection-comment">// parsed data</span><span class="selection">
+<span id="L26" class="ln">    26</span>		abbrevCache map[uint32]abbrevTable
+<span id="L27" class="ln">    27</span>		order       binary.ByteOrder
+<span id="L28" class="ln">    28</span>		typeCache   map[Offset]Type
+<span id="L29" class="ln">    29</span>		typeSigs    map[uint64]*typeUnit
+<span id="L30" class="ln">    30</span>		unit        []unit
+<span id="L31" class="ln">    31</span>	}</span>
+<span id="L32" class="ln">    32</span>	
+<span id="L33" class="ln">    33</span>	<span class="comment">// New returns a new Data object initialized from the given parameters.</span>
+<span id="L34" class="ln">    34</span>	<span class="comment">// Rather than calling this function directly, clients should typically use</span>
+<span id="L35" class="ln">    35</span>	<span class="comment">// the DWARF method of the File type of the appropriate package debug/elf,</span>
+<span id="L36" class="ln">    36</span>	<span class="comment">// debug/macho, or debug/pe.</span>
+<span id="L37" class="ln">    37</span>	<span class="comment">//</span>
+<span id="L38" class="ln">    38</span>	<span class="comment">// The []byte arguments are the data from the corresponding debug section</span>
+<span id="L39" class="ln">    39</span>	<span class="comment">// in the object file; for example, for an ELF object, abbrev is the contents of</span>
+<span id="L40" class="ln">    40</span>	<span class="comment">// the &#34;.debug_abbrev&#34; section.</span>
+<span id="L41" class="ln">    41</span>	func New(abbrev, aranges, frame, info, line, pubnames, ranges, str []byte) (*Data, error) {
+<span id="L42" class="ln">    42</span>		d := &amp;Data{
+<span id="L43" class="ln">    43</span>			abbrev:      abbrev,
+<span id="L44" class="ln">    44</span>			aranges:     aranges,
+<span id="L45" class="ln">    45</span>			frame:       frame,
+<span id="L46" class="ln">    46</span>			info:        info,
+<span id="L47" class="ln">    47</span>			line:        line,
+<span id="L48" class="ln">    48</span>			pubnames:    pubnames,
+<span id="L49" class="ln">    49</span>			ranges:      ranges,
+<span id="L50" class="ln">    50</span>			str:         str,
+<span id="L51" class="ln">    51</span>			abbrevCache: make(map[uint32]abbrevTable),
+<span id="L52" class="ln">    52</span>			typeCache:   make(map[Offset]Type),
+<span id="L53" class="ln">    53</span>			typeSigs:    make(map[uint64]*typeUnit),
+<span id="L54" class="ln">    54</span>		}
+<span id="L55" class="ln">    55</span>	
+<span id="L56" class="ln">    56</span>		<span class="comment">// Sniff .debug_info to figure out byte order.</span>
+<span id="L57" class="ln">    57</span>		<span class="comment">// bytes 4:6 are the version, a tiny 16-bit number (1, 2, 3).</span>
+<span id="L58" class="ln">    58</span>		if len(d.info) &lt; 6 {
+<span id="L59" class="ln">    59</span>			return nil, DecodeError{&#34;info&#34;, Offset(len(d.info)), &#34;too short&#34;}
+<span id="L60" class="ln">    60</span>		}
+<span id="L61" class="ln">    61</span>		x, y := d.info[4], d.info[5]
+<span id="L62" class="ln">    62</span>		switch {
+<span id="L63" class="ln">    63</span>		case x == 0 &amp;&amp; y == 0:
+<span id="L64" class="ln">    64</span>			return nil, DecodeError{&#34;info&#34;, 4, &#34;unsupported version 0&#34;}
+<span id="L65" class="ln">    65</span>		case x == 0:
+<span id="L66" class="ln">    66</span>			d.order = binary.BigEndian
+<span id="L67" class="ln">    67</span>		case y == 0:
+<span id="L68" class="ln">    68</span>			d.order = binary.LittleEndian
+<span id="L69" class="ln">    69</span>		default:
+<span id="L70" class="ln">    70</span>			return nil, DecodeError{&#34;info&#34;, 4, &#34;cannot determine byte order&#34;}
+<span id="L71" class="ln">    71</span>		}
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>		u, err := d.parseUnits()
+<span id="L74" class="ln">    74</span>		if err != nil {
+<span id="L75" class="ln">    75</span>			return nil, err
+<span id="L76" class="ln">    76</span>		}
+<span id="L77" class="ln">    77</span>		d.unit = u
+<span id="L78" class="ln">    78</span>		return d, nil
+<span id="L79" class="ln">    79</span>	}
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>	<span class="comment">// AddTypes will add one .debug_types section to the DWARF data.  A</span>
+<span id="L82" class="ln">    82</span>	<span class="comment">// typical object with DWARF version 4 debug info will have multiple</span>
+<span id="L83" class="ln">    83</span>	<span class="comment">// .debug_types sections.  The name is used for error reporting only,</span>
+<span id="L84" class="ln">    84</span>	<span class="comment">// and serves to distinguish one .debug_types section from another.</span>
+<span id="L85" class="ln">    85</span>	func (d *Data) AddTypes(name string, types []byte) error {
+<span id="L86" class="ln">    86</span>		return d.parseTypes(name, types)
+<span id="L87" class="ln">    87</span>	}
+<span id="L88" class="ln">    88</span>	
+</pre><p><a href="open.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

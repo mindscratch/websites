@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/sort/sort_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/sort/sort_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package sort_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;fmt&#34;
+<span id="L9" class="ln">     9</span>		&#34;math&#34;
+<span id="L10" class="ln">    10</span>		&#34;math/rand&#34;
+<span id="L11" class="ln">    11</span>		. &#34;sort&#34;
+<span id="L12" class="ln">    12</span>		&#34;strconv&#34;
+<span id="L13" class="ln">    13</span>		&#34;testing&#34;
+<span id="L14" class="ln">    14</span>	)
+<span id="L15" class="ln">    15</span>	
+<span id="L16" class="ln">    16</span>	var ints = [...]int{74, 59, 238, -784, 9845, 959, 905, 0, 0, 42, 7586, -5467984, 7586}
+<span id="L17" class="ln">    17</span>	var float64s = [...]float64{74.3, 59.0, math.Inf(1), 238.2, -784.0, 2.3, math.NaN(), math.NaN(), math.Inf(-1), 9845.768, -959.7485, 905, 7.8, 7.8}
+<span id="L18" class="ln">    18</span>	var strings = [...]string{&#34;&#34;, &#34;Hello&#34;, &#34;foo&#34;, &#34;bar&#34;, &#34;foo&#34;, &#34;f00&#34;, &#34;%*&amp;^*&amp;^&amp;&#34;, &#34;***&#34;}
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>	func TestSortIntSlice(t *testing.T) {
+<span id="L21" class="ln">    21</span>		data := ints
+<span id="L22" class="ln">    22</span>		a := IntSlice(data[0:])
+<span id="L23" class="ln">    23</span>		Sort(a)
+<span id="L24" class="ln">    24</span>		if !IsSorted(a) {
+<span id="L25" class="ln">    25</span>			t.Errorf(&#34;sorted %v&#34;, ints)
+<span id="L26" class="ln">    26</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L27" class="ln">    27</span>		}
+<span id="L28" class="ln">    28</span>	}
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	func TestSortFloat64Slice(t *testing.T) {
+<span id="L31" class="ln">    31</span>		data := float64s
+<span id="L32" class="ln">    32</span>		a := Float64Slice(data[0:])
+<span id="L33" class="ln">    33</span>		Sort(a)
+<span id="L34" class="ln">    34</span>		if !IsSorted(a) {
+<span id="L35" class="ln">    35</span>			t.Errorf(&#34;sorted %v&#34;, float64s)
+<span id="L36" class="ln">    36</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L37" class="ln">    37</span>		}
+<span id="L38" class="ln">    38</span>	}
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>	func TestSortStringSlice(t *testing.T) {
+<span id="L41" class="ln">    41</span>		data := strings
+<span id="L42" class="ln">    42</span>		a := StringSlice(data[0:])
+<span id="L43" class="ln">    43</span>		Sort(a)
+<span id="L44" class="ln">    44</span>		if !IsSorted(a) {
+<span id="L45" class="ln">    45</span>			t.Errorf(&#34;sorted %v&#34;, strings)
+<span id="L46" class="ln">    46</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L47" class="ln">    47</span>		}
+<span id="L48" class="ln">    48</span>	}
+<span id="L49" class="ln">    49</span>	
+<span id="L50" class="ln">    50</span>	func TestInts(t *testing.T) {
+<span id="L51" class="ln">    51</span>		data := ints
+<span id="L52" class="ln">    52</span>		Ints(data[0:])
+<span id="L53" class="ln">    53</span>		if !IntsAreSorted(data[0:]) {
+<span id="L54" class="ln">    54</span>			t.Errorf(&#34;sorted %v&#34;, ints)
+<span id="L55" class="ln">    55</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L56" class="ln">    56</span>		}
+<span id="L57" class="ln">    57</span>	}
+<span id="L58" class="ln">    58</span>	
+<span id="L59" class="ln">    59</span>	func TestFloat64s(t *testing.T) {
+<span id="L60" class="ln">    60</span>		data := float64s
+<span id="L61" class="ln">    61</span>		Float64s(data[0:])
+<span id="L62" class="ln">    62</span>		if !Float64sAreSorted(data[0:]) {
+<span id="L63" class="ln">    63</span>			t.Errorf(&#34;sorted %v&#34;, float64s)
+<span id="L64" class="ln">    64</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L65" class="ln">    65</span>		}
+<span id="L66" class="ln">    66</span>	}
+<span id="L67" class="ln">    67</span>	
+<span id="L68" class="ln">    68</span>	func TestStrings(t *testing.T) {
+<span id="L69" class="ln">    69</span>		data := strings
+<span id="L70" class="ln">    70</span>		Strings(data[0:])
+<span id="L71" class="ln">    71</span>		if !StringsAreSorted(data[0:]) {
+<span id="L72" class="ln">    72</span>			t.Errorf(&#34;sorted %v&#34;, strings)
+<span id="L73" class="ln">    73</span>			t.Errorf(&#34;   got %v&#34;, data)
+<span id="L74" class="ln">    74</span>		}
+<span id="L75" class="ln">    75</span>	}
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>	func TestSortLarge_Random(t *testing.T) {
+<span id="L78" class="ln">    78</span>		n := 1000000
+<span id="L79" class="ln">    79</span>		if testing.Short() {
+<span id="L80" class="ln">    80</span>			n /= 100
+<span id="L81" class="ln">    81</span>		}
+<span id="L82" class="ln">    82</span>		data := make([]int, n)
+<span id="L83" class="ln">    83</span>		for i := 0; i &lt; len(data); i++ {
+<span id="L84" class="ln">    84</span>			data[i] = rand.Intn(100)
+<span id="L85" class="ln">    85</span>		}
+<span id="L86" class="ln">    86</span>		if IntsAreSorted(data) {
+<span id="L87" class="ln">    87</span>			t.Fatalf(&#34;terrible rand.rand&#34;)
+<span id="L88" class="ln">    88</span>		}
+<span id="L89" class="ln">    89</span>		Ints(data)
+<span id="L90" class="ln">    90</span>		if !IntsAreSorted(data) {
+<span id="L91" class="ln">    91</span>			t.Errorf(&#34;sort didn&#39;t sort - 1M ints&#34;)
+<span id="L92" class="ln">    92</span>		}
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	func TestReverseSortIntSlice(t *testing.T) {
+<span id="L96" class="ln">    96</span>		data := ints
+<span id="L97" class="ln">    97</span>		data1 := ints
+<span id="L98" class="ln">    98</span>		a := IntSlice(data[0:])
+<span id="L99" class="ln">    99</span>		Sort(a)
+<span id="L100" class="ln">   100</span>		r := IntSlice(data1[0:])
+<span id="L101" class="ln">   101</span>		Sort(Reverse(r))
+<span id="L102" class="ln">   102</span>		for i := 0; i &lt; len(data); i++ {
+<span id="L103" class="ln">   103</span>			if a[i] != r[len(data)-1-i] {
+<span id="L104" class="ln">   104</span>				t.Errorf(&#34;reverse sort didn&#39;t sort&#34;)
+<span id="L105" class="ln">   105</span>			}
+<span id="L106" class="ln">   106</span>			if i &gt; len(data)/2 {
+<span id="L107" class="ln">   107</span>				break
+<span id="L108" class="ln">   108</span>			}
+<span id="L109" class="ln">   109</span>		}
+<span id="L110" class="ln">   110</span>	}
+<span id="L111" class="ln">   111</span>	
+<span id="L112" class="ln">   112</span>	func BenchmarkSortString1K(b *testing.B) {
+<span id="L113" class="ln">   113</span>		b.StopTimer()
+<span id="L114" class="ln">   114</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L115" class="ln">   115</span>			data := make([]string, 1&lt;&lt;10)
+<span id="L116" class="ln">   116</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L117" class="ln">   117</span>				data[i] = strconv.Itoa(i ^ 0x2cc)
+<span id="L118" class="ln">   118</span>			}
+<span id="L119" class="ln">   119</span>			b.StartTimer()
+<span id="L120" class="ln">   120</span>			Strings(data)
+<span id="L121" class="ln">   121</span>			b.StopTimer()
+<span id="L122" class="ln">   122</span>		}
+<span id="L123" class="ln">   123</span>	}
+<span id="L124" class="ln">   124</span>	
+<span id="L125" class="ln">   125</span>	func BenchmarkStableString1K(b *testing.B) {
+<span id="L126" class="ln">   126</span>		b.StopTimer()
+<span id="L127" class="ln">   127</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L128" class="ln">   128</span>			data := make([]string, 1&lt;&lt;10)
+<span id="L129" class="ln">   129</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L130" class="ln">   130</span>				data[i] = strconv.Itoa(i ^ 0x2cc)
+<span id="L131" class="ln">   131</span>			}
+<span id="L132" class="ln">   132</span>			b.StartTimer()
+<span id="L133" class="ln">   133</span>			Stable(StringSlice(data))
+<span id="L134" class="ln">   134</span>			b.StopTimer()
+<span id="L135" class="ln">   135</span>		}
+<span id="L136" class="ln">   136</span>	}
+<span id="L137" class="ln">   137</span>	
+<span id="L138" class="ln">   138</span>	func BenchmarkSortInt1K(b *testing.B) {
+<span id="L139" class="ln">   139</span>		b.StopTimer()
+<span id="L140" class="ln">   140</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L141" class="ln">   141</span>			data := make([]int, 1&lt;&lt;10)
+<span id="L142" class="ln">   142</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L143" class="ln">   143</span>				data[i] = i ^ 0x2cc
+<span id="L144" class="ln">   144</span>			}
+<span id="L145" class="ln">   145</span>			b.StartTimer()
+<span id="L146" class="ln">   146</span>			Ints(data)
+<span id="L147" class="ln">   147</span>			b.StopTimer()
+<span id="L148" class="ln">   148</span>		}
+<span id="L149" class="ln">   149</span>	}
+<span id="L150" class="ln">   150</span>	
+<span id="L151" class="ln">   151</span>	func BenchmarkStableInt1K(b *testing.B) {
+<span id="L152" class="ln">   152</span>		b.StopTimer()
+<span id="L153" class="ln">   153</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L154" class="ln">   154</span>			data := make([]int, 1&lt;&lt;10)
+<span id="L155" class="ln">   155</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L156" class="ln">   156</span>				data[i] = i ^ 0x2cc
+<span id="L157" class="ln">   157</span>			}
+<span id="L158" class="ln">   158</span>			b.StartTimer()
+<span id="L159" class="ln">   159</span>			Stable(IntSlice(data))
+<span id="L160" class="ln">   160</span>			b.StopTimer()
+<span id="L161" class="ln">   161</span>		}
+<span id="L162" class="ln">   162</span>	}
+<span id="L163" class="ln">   163</span>	
+<span id="L164" class="ln">   164</span>	func BenchmarkSortInt64K(b *testing.B) {
+<span id="L165" class="ln">   165</span>		b.StopTimer()
+<span id="L166" class="ln">   166</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L167" class="ln">   167</span>			data := make([]int, 1&lt;&lt;16)
+<span id="L168" class="ln">   168</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L169" class="ln">   169</span>				data[i] = i ^ 0xcccc
+<span id="L170" class="ln">   170</span>			}
+<span id="L171" class="ln">   171</span>			b.StartTimer()
+<span id="L172" class="ln">   172</span>			Ints(data)
+<span id="L173" class="ln">   173</span>			b.StopTimer()
+<span id="L174" class="ln">   174</span>		}
+<span id="L175" class="ln">   175</span>	}
+<span id="L176" class="ln">   176</span>	
+<span id="L177" class="ln">   177</span>	func BenchmarkStableInt64K(b *testing.B) {
+<span id="L178" class="ln">   178</span>		b.StopTimer()
+<span id="L179" class="ln">   179</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L180" class="ln">   180</span>			data := make([]int, 1&lt;&lt;16)
+<span id="L181" class="ln">   181</span>			for i := 0; i &lt; len(data); i++ {
+<span id="L182" class="ln">   182</span>				data[i] = i ^ 0xcccc
+<span id="L183" class="ln">   183</span>			}
+<span id="L184" class="ln">   184</span>			b.StartTimer()
+<span id="L185" class="ln">   185</span>			Stable(IntSlice(data))
+<span id="L186" class="ln">   186</span>			b.StopTimer()
+<span id="L187" class="ln">   187</span>		}
+<span id="L188" class="ln">   188</span>	}
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>	const (
+<span id="L191" class="ln">   191</span>		_Sawtooth = iota
+<span id="L192" class="ln">   192</span>		_Rand
+<span id="L193" class="ln">   193</span>		_Stagger
+<span id="L194" class="ln">   194</span>		_Plateau
+<span id="L195" class="ln">   195</span>		_Shuffle
+<span id="L196" class="ln">   196</span>		_NDist
+<span id="L197" class="ln">   197</span>	)
+<span id="L198" class="ln">   198</span>	
+<span id="L199" class="ln">   199</span>	const (
+<span id="L200" class="ln">   200</span>		_Copy = iota
+<span id="L201" class="ln">   201</span>		_Reverse
+<span id="L202" class="ln">   202</span>		_ReverseFirstHalf
+<span id="L203" class="ln">   203</span>		_ReverseSecondHalf
+<span id="L204" class="ln">   204</span>		_Sorted
+<span id="L205" class="ln">   205</span>		_Dither
+<span id="L206" class="ln">   206</span>		_NMode
+<span id="L207" class="ln">   207</span>	)
+<span id="L208" class="ln">   208</span>	
+<span id="L209" class="ln">   209</span>	type testingData struct {
+<span id="L210" class="ln">   210</span>		desc        string
+<span id="L211" class="ln">   211</span>		t           *testing.T
+<span id="L212" class="ln">   212</span>		data        []int
+<span id="L213" class="ln">   213</span>		maxswap     int <span class="comment">// number of swaps allowed</span>
+<span id="L214" class="ln">   214</span>		ncmp, nswap int
+<span id="L215" class="ln">   215</span>	}
+<span id="L216" class="ln">   216</span>	
+<span id="L217" class="ln">   217</span>	func (d *testingData) Len() int { return len(d.data) }
+<span id="L218" class="ln">   218</span>	func (d *testingData) Less(i, j int) bool {
+<span id="L219" class="ln">   219</span>		d.ncmp++
+<span id="L220" class="ln">   220</span>		return d.data[i] &lt; d.data[j]
+<span id="L221" class="ln">   221</span>	}
+<span id="L222" class="ln">   222</span>	func (d *testingData) Swap(i, j int) {
+<span id="L223" class="ln">   223</span>		if d.nswap &gt;= d.maxswap {
+<span id="L224" class="ln">   224</span>			d.t.Errorf(&#34;%s: used %d swaps sorting slice of %d&#34;, d.desc, d.nswap, len(d.data))
+<span id="L225" class="ln">   225</span>			d.t.FailNow()
+<span id="L226" class="ln">   226</span>		}
+<span id="L227" class="ln">   227</span>		d.nswap++
+<span id="L228" class="ln">   228</span>		d.data[i], d.data[j] = d.data[j], d.data[i]
+<span id="L229" class="ln">   229</span>	}
+<span id="L230" class="ln">   230</span>	
+<span id="L231" class="ln">   231</span>	func min(a, b int) int {
+<span id="L232" class="ln">   232</span>		if a &lt; b {
+<span id="L233" class="ln">   233</span>			return a
+<span id="L234" class="ln">   234</span>		}
+<span id="L235" class="ln">   235</span>		return b
+<span id="L236" class="ln">   236</span>	}
+<span id="L237" class="ln">   237</span>	
+<span id="L238" class="ln">   238</span>	func lg(n int) int {
+<span id="L239" class="ln">   239</span>		i := 0
+<span id="L240" class="ln">   240</span>		for 1&lt;&lt;uint(i) &lt; n {
+<span id="L241" class="ln">   241</span>			i++
+<span id="L242" class="ln">   242</span>		}
+<span id="L243" class="ln">   243</span>		return i
+<span id="L244" class="ln">   244</span>	}
+<span id="L245" class="ln">   245</span>	
+<span id="L246" class="ln">   246</span>	func testBentleyMcIlroy(t *testing.T, sort func(Interface), maxswap func(int) int) {
+<span id="L247" class="ln">   247</span>		sizes := []int{100, 1023, 1024, 1025}
+<span id="L248" class="ln">   248</span>		if testing.Short() {
+<span id="L249" class="ln">   249</span>			sizes = []int{100, 127, 128, 129}
+<span id="L250" class="ln">   250</span>		}
+<span id="L251" class="ln">   251</span>		dists := []string{&#34;sawtooth&#34;, &#34;rand&#34;, &#34;stagger&#34;, &#34;plateau&#34;, &#34;shuffle&#34;}
+<span id="L252" class="ln">   252</span>		modes := []string{&#34;copy&#34;, &#34;reverse&#34;, &#34;reverse1&#34;, &#34;reverse2&#34;, &#34;sort&#34;, &#34;dither&#34;}
+<span id="L253" class="ln">   253</span>		var tmp1, tmp2 [1025]int
+<span id="L254" class="ln">   254</span>		for _, n := range sizes {
+<span id="L255" class="ln">   255</span>			for m := 1; m &lt; 2*n; m *= 2 {
+<span id="L256" class="ln">   256</span>				for dist := 0; dist &lt; _NDist; dist++ {
+<span id="L257" class="ln">   257</span>					j := 0
+<span id="L258" class="ln">   258</span>					k := 1
+<span id="L259" class="ln">   259</span>					data := tmp1[0:n]
+<span id="L260" class="ln">   260</span>					for i := 0; i &lt; n; i++ {
+<span id="L261" class="ln">   261</span>						switch dist {
+<span id="L262" class="ln">   262</span>						case _Sawtooth:
+<span id="L263" class="ln">   263</span>							data[i] = i % m
+<span id="L264" class="ln">   264</span>						case _Rand:
+<span id="L265" class="ln">   265</span>							data[i] = rand.Intn(m)
+<span id="L266" class="ln">   266</span>						case _Stagger:
+<span id="L267" class="ln">   267</span>							data[i] = (i*m + i) % n
+<span id="L268" class="ln">   268</span>						case _Plateau:
+<span id="L269" class="ln">   269</span>							data[i] = min(i, m)
+<span id="L270" class="ln">   270</span>						case _Shuffle:
+<span id="L271" class="ln">   271</span>							if rand.Intn(m) != 0 {
+<span id="L272" class="ln">   272</span>								j += 2
+<span id="L273" class="ln">   273</span>								data[i] = j
+<span id="L274" class="ln">   274</span>							} else {
+<span id="L275" class="ln">   275</span>								k += 2
+<span id="L276" class="ln">   276</span>								data[i] = k
+<span id="L277" class="ln">   277</span>							}
+<span id="L278" class="ln">   278</span>						}
+<span id="L279" class="ln">   279</span>					}
+<span id="L280" class="ln">   280</span>	
+<span id="L281" class="ln">   281</span>					mdata := tmp2[0:n]
+<span id="L282" class="ln">   282</span>					for mode := 0; mode &lt; _NMode; mode++ {
+<span id="L283" class="ln">   283</span>						switch mode {
+<span id="L284" class="ln">   284</span>						case _Copy:
+<span id="L285" class="ln">   285</span>							for i := 0; i &lt; n; i++ {
+<span id="L286" class="ln">   286</span>								mdata[i] = data[i]
+<span id="L287" class="ln">   287</span>							}
+<span id="L288" class="ln">   288</span>						case _Reverse:
+<span id="L289" class="ln">   289</span>							for i := 0; i &lt; n; i++ {
+<span id="L290" class="ln">   290</span>								mdata[i] = data[n-i-1]
+<span id="L291" class="ln">   291</span>							}
+<span id="L292" class="ln">   292</span>						case _ReverseFirstHalf:
+<span id="L293" class="ln">   293</span>							for i := 0; i &lt; n/2; i++ {
+<span id="L294" class="ln">   294</span>								mdata[i] = data[n/2-i-1]
+<span id="L295" class="ln">   295</span>							}
+<span id="L296" class="ln">   296</span>							for i := n / 2; i &lt; n; i++ {
+<span id="L297" class="ln">   297</span>								mdata[i] = data[i]
+<span id="L298" class="ln">   298</span>							}
+<span id="L299" class="ln">   299</span>						case _ReverseSecondHalf:
+<span id="L300" class="ln">   300</span>							for i := 0; i &lt; n/2; i++ {
+<span id="L301" class="ln">   301</span>								mdata[i] = data[i]
+<span id="L302" class="ln">   302</span>							}
+<span id="L303" class="ln">   303</span>							for i := n / 2; i &lt; n; i++ {
+<span id="L304" class="ln">   304</span>								mdata[i] = data[n-(i-n/2)-1]
+<span id="L305" class="ln">   305</span>							}
+<span id="L306" class="ln">   306</span>						case _Sorted:
+<span id="L307" class="ln">   307</span>							for i := 0; i &lt; n; i++ {
+<span id="L308" class="ln">   308</span>								mdata[i] = data[i]
+<span id="L309" class="ln">   309</span>							}
+<span id="L310" class="ln">   310</span>							<span class="comment">// Ints is known to be correct</span>
+<span id="L311" class="ln">   311</span>							<span class="comment">// because mode Sort runs after mode _Copy.</span>
+<span id="L312" class="ln">   312</span>							Ints(mdata)
+<span id="L313" class="ln">   313</span>						case _Dither:
+<span id="L314" class="ln">   314</span>							for i := 0; i &lt; n; i++ {
+<span id="L315" class="ln">   315</span>								mdata[i] = data[i] + i%5
+<span id="L316" class="ln">   316</span>							}
+<span id="L317" class="ln">   317</span>						}
+<span id="L318" class="ln">   318</span>	
+<span id="L319" class="ln">   319</span>						desc := fmt.Sprintf(&#34;n=%d m=%d dist=%s mode=%s&#34;, n, m, dists[dist], modes[mode])
+<span id="L320" class="ln">   320</span>						d := &amp;testingData{desc: desc, t: t, data: mdata[0:n], maxswap: maxswap(n)}
+<span id="L321" class="ln">   321</span>						sort(d)
+<span id="L322" class="ln">   322</span>						<span class="comment">// Uncomment if you are trying to improve the number of compares/swaps.</span>
+<span id="L323" class="ln">   323</span>						<span class="comment">//t.Logf(&#34;%s: ncmp=%d, nswp=%d&#34;, desc, d.ncmp, d.nswap)</span>
+<span id="L324" class="ln">   324</span>	
+<span id="L325" class="ln">   325</span>						<span class="comment">// If we were testing C qsort, we&#39;d have to make a copy</span>
+<span id="L326" class="ln">   326</span>						<span class="comment">// of the slice and sort it ourselves and then compare</span>
+<span id="L327" class="ln">   327</span>						<span class="comment">// x against it, to ensure that qsort was only permuting</span>
+<span id="L328" class="ln">   328</span>						<span class="comment">// the data, not (for example) overwriting it with zeros.</span>
+<span id="L329" class="ln">   329</span>						<span class="comment">//</span>
+<span id="L330" class="ln">   330</span>						<span class="comment">// In go, we don&#39;t have to be so paranoid: since the only</span>
+<span id="L331" class="ln">   331</span>						<span class="comment">// mutating method Sort can call is TestingData.swap,</span>
+<span id="L332" class="ln">   332</span>						<span class="comment">// it suffices here just to check that the final slice is sorted.</span>
+<span id="L333" class="ln">   333</span>						if !IntsAreSorted(mdata) {
+<span id="L334" class="ln">   334</span>							t.Errorf(&#34;%s: ints not sorted&#34;, desc)
+<span id="L335" class="ln">   335</span>							t.Errorf(&#34;\t%v&#34;, mdata)
+<span id="L336" class="ln">   336</span>							t.FailNow()
+<span id="L337" class="ln">   337</span>						}
+<span id="L338" class="ln">   338</span>					}
+<span id="L339" class="ln">   339</span>				}
+<span id="L340" class="ln">   340</span>			}
+<span id="L341" class="ln">   341</span>		}
+<span id="L342" class="ln">   342</span>	}
+<span id="L343" class="ln">   343</span>	
+<span id="L344" class="ln">   344</span>	func TestSortBM(t *testing.T) {
+<span id="L345" class="ln">   345</span>		testBentleyMcIlroy(t, Sort, func(n int) int { return n * lg(n) * 12 / 10 })
+<span id="L346" class="ln">   346</span>	}
+<span id="L347" class="ln">   347</span>	
+<span id="L348" class="ln">   348</span>	func TestHeapsortBM(t *testing.T) {
+<span id="L349" class="ln">   349</span>		testBentleyMcIlroy(t, Heapsort, func(n int) int { return n * lg(n) * 12 / 10 })
+<span id="L350" class="ln">   350</span>	}
+<span id="L351" class="ln">   351</span>	
+<span id="L352" class="ln">   352</span>	func TestStableBM(t *testing.T) {
+<span id="L353" class="ln">   353</span>		testBentleyMcIlroy(t, Stable, func(n int) int { return n * lg(n) * lg(n) / 3 })
+<span id="L354" class="ln">   354</span>	}
+<span id="L355" class="ln">   355</span>	
+<span id="L356" class="ln">   356</span>	<span class="comment">// This is based on the &#34;antiquicksort&#34; implementation by M. Douglas McIlroy.</span>
+<span id="L357" class="ln">   357</span>	<span class="comment">// See http://www.cs.dartmouth.edu/~doug/mdmspe.pdf for more info.</span>
+<span id="L358" class="ln">   358</span>	type adversaryTestingData struct {
+<span id="L359" class="ln">   359</span>		data      []int
+<span id="L360" class="ln">   360</span>		keys      map[int]int
+<span id="L361" class="ln">   361</span>		candidate int
+<span id="L362" class="ln">   362</span>	}
+<span id="L363" class="ln">   363</span>	
+<span id="L364" class="ln">   364</span>	func (d *adversaryTestingData) Len() int { return len(d.data) }
+<span id="L365" class="ln">   365</span>	
+<span id="L366" class="ln">   366</span>	func (d *adversaryTestingData) Less(i, j int) bool {
+<span id="L367" class="ln">   367</span>		if _, present := d.keys[i]; !present {
+<span id="L368" class="ln">   368</span>			if _, present := d.keys[j]; !present {
+<span id="L369" class="ln">   369</span>				if i == d.candidate {
+<span id="L370" class="ln">   370</span>					d.keys[i] = len(d.keys)
+<span id="L371" class="ln">   371</span>				} else {
+<span id="L372" class="ln">   372</span>					d.keys[j] = len(d.keys)
+<span id="L373" class="ln">   373</span>				}
+<span id="L374" class="ln">   374</span>			}
+<span id="L375" class="ln">   375</span>		}
+<span id="L376" class="ln">   376</span>	
+<span id="L377" class="ln">   377</span>		if _, present := d.keys[i]; !present {
+<span id="L378" class="ln">   378</span>			d.candidate = i
+<span id="L379" class="ln">   379</span>			return false
+<span id="L380" class="ln">   380</span>		}
+<span id="L381" class="ln">   381</span>		if _, present := d.keys[j]; !present {
+<span id="L382" class="ln">   382</span>			d.candidate = j
+<span id="L383" class="ln">   383</span>			return true
+<span id="L384" class="ln">   384</span>		}
+<span id="L385" class="ln">   385</span>	
+<span id="L386" class="ln">   386</span>		return d.keys[i] &gt;= d.keys[j]
+<span id="L387" class="ln">   387</span>	}
+<span id="L388" class="ln">   388</span>	
+<span id="L389" class="ln">   389</span>	func (d *adversaryTestingData) Swap(i, j int) {
+<span id="L390" class="ln">   390</span>		d.data[i], d.data[j] = d.data[j], d.data[i]
+<span id="L391" class="ln">   391</span>	}
+<span id="L392" class="ln">   392</span>	
+<span id="L393" class="ln">   393</span>	func TestAdversary(t *testing.T) {
+<span id="L394" class="ln">   394</span>		const size = 100
+<span id="L395" class="ln">   395</span>		data := make([]int, size)
+<span id="L396" class="ln">   396</span>		for i := 0; i &lt; size; i++ {
+<span id="L397" class="ln">   397</span>			data[i] = i
+<span id="L398" class="ln">   398</span>		}
+<span id="L399" class="ln">   399</span>	
+<span id="L400" class="ln">   400</span>		d := &amp;adversaryTestingData{data, make(map[int]int), 0}
+<span id="L401" class="ln">   401</span>		Sort(d) <span class="comment">// This should degenerate to heapsort.</span>
+<span id="L402" class="ln">   402</span>	}
+<span id="L403" class="ln">   403</span>	
+<span id="L404" class="ln">   404</span>	func TestStableInts(t *testing.T) {
+<span id="L405" class="ln">   405</span>		data := ints
+<span id="L406" class="ln">   406</span>		Stable(IntSlice(data[0:]))
+<span id="L407" class="ln">   407</span>		if !IntsAreSorted(data[0:]) {
+<span id="L408" class="ln">   408</span>			t.Errorf(&#34;nsorted %v\n   got %v&#34;, ints, data)
+<span id="L409" class="ln">   409</span>		}
+<span id="L410" class="ln">   410</span>	}
+<span id="L411" class="ln">   411</span>	
+<span id="L412" class="ln">   412</span>	type intPairs []struct {
+<span id="L413" class="ln">   413</span>		a, b int
+<span id="L414" class="ln">   414</span>	}
+<span id="L415" class="ln">   415</span>	
+<span id="L416" class="ln">   416</span>	<span class="comment">// IntPairs compare on a only.</span>
+<span id="L417" class="ln">   417</span>	func (d intPairs) Len() int           { return len(d) }
+<span id="L418" class="ln">   418</span>	func (d intPairs) Less(i, j int) bool { return d[i].a &lt; d[j].a }
+<span id="L419" class="ln">   419</span>	func (d intPairs) Swap(i, j int)      { d[i], d[j] = d[j], d[i] }
+<span id="L420" class="ln">   420</span>	
+<span id="L421" class="ln">   421</span>	<span class="comment">// Record initial order in B.</span>
+<span id="L422" class="ln">   422</span>	func (d intPairs) initB() {
+<span id="L423" class="ln">   423</span>		for i := range d {
+<span id="L424" class="ln">   424</span>			d[i].b = i
+<span id="L425" class="ln">   425</span>		}
+<span id="L426" class="ln">   426</span>	}
+<span id="L427" class="ln">   427</span>	
+<span id="L428" class="ln">   428</span>	<span class="comment">// InOrder checks if a-equal elements were not reordered.</span>
+<span id="L429" class="ln">   429</span>	func (d intPairs) inOrder() bool {
+<span id="L430" class="ln">   430</span>		lastA, lastB := -1, 0
+<span id="L431" class="ln">   431</span>		for i := 0; i &lt; len(d); i++ {
+<span id="L432" class="ln">   432</span>			if lastA != d[i].a {
+<span id="L433" class="ln">   433</span>				lastA = d[i].a
+<span id="L434" class="ln">   434</span>				lastB = d[i].b
+<span id="L435" class="ln">   435</span>				continue
+<span id="L436" class="ln">   436</span>			}
+<span id="L437" class="ln">   437</span>			if d[i].b &lt;= lastB {
+<span id="L438" class="ln">   438</span>				return false
+<span id="L439" class="ln">   439</span>			}
+<span id="L440" class="ln">   440</span>			lastB = d[i].b
+<span id="L441" class="ln">   441</span>		}
+<span id="L442" class="ln">   442</span>		return true
+<span id="L443" class="ln">   443</span>	}
+<span id="L444" class="ln">   444</span>	
+<span id="L445" class="ln">   445</span>	func TestStability(t *testing.T) {
+<span id="L446" class="ln">   446</span>		n, m := 100000, 1000
+<span id="L447" class="ln">   447</span>		if testing.Short() {
+<span id="L448" class="ln">   448</span>			n, m = 1000, 100
+<span id="L449" class="ln">   449</span>		}
+<span id="L450" class="ln">   450</span>		data := make(intPairs, n)
+<span id="L451" class="ln">   451</span>	
+<span id="L452" class="ln">   452</span>		<span class="comment">// random distribution</span>
+<span id="L453" class="ln">   453</span>		for i := 0; i &lt; len(data); i++ {
+<span id="L454" class="ln">   454</span>			data[i].a = rand.Intn(m)
+<span id="L455" class="ln">   455</span>		}
+<span id="L456" class="ln">   456</span>		if IsSorted(data) {
+<span id="L457" class="ln">   457</span>			t.Fatalf(&#34;terrible rand.rand&#34;)
+<span id="L458" class="ln">   458</span>		}
+<span id="L459" class="ln">   459</span>		data.initB()
+<span id="L460" class="ln">   460</span>		Stable(data)
+<span id="L461" class="ln">   461</span>		if !IsSorted(data) {
+<span id="L462" class="ln">   462</span>			t.Errorf(&#34;Stable didn&#39;t sort %d ints&#34;, n)
+<span id="L463" class="ln">   463</span>		}
+<span id="L464" class="ln">   464</span>		if !data.inOrder() {
+<span id="L465" class="ln">   465</span>			t.Errorf(&#34;Stable wasn&#39;t stable on %d ints&#34;, n)
+<span id="L466" class="ln">   466</span>		}
+<span id="L467" class="ln">   467</span>	
+<span id="L468" class="ln">   468</span>		<span class="comment">// already sorted</span>
+<span id="L469" class="ln">   469</span>		data.initB()
+<span id="L470" class="ln">   470</span>		Stable(data)
+<span id="L471" class="ln">   471</span>		if !IsSorted(data) {
+<span id="L472" class="ln">   472</span>			t.Errorf(&#34;Stable shuffeled sorted %d ints (order)&#34;, n)
+<span id="L473" class="ln">   473</span>		}
+<span id="L474" class="ln">   474</span>		if !data.inOrder() {
+<span id="L475" class="ln">   475</span>			t.Errorf(&#34;Stable shuffeled sorted %d ints (stability)&#34;, n)
+<span id="L476" class="ln">   476</span>		}
+<span id="L477" class="ln">   477</span>	
+<span id="L478" class="ln">   478</span>		<span class="comment">// sorted reversed</span>
+<span id="L479" class="ln">   479</span>		for i := 0; i &lt; len(data); i++ {
+<span id="L480" class="ln">   480</span>			data[i].a = len(data) - i
+<span id="L481" class="ln">   481</span>		}
+<span id="L482" class="ln">   482</span>		data.initB()
+<span id="L483" class="ln">   483</span>		Stable(data)
+<span id="L484" class="ln">   484</span>		if !IsSorted(data) {
+<span id="L485" class="ln">   485</span>			t.Errorf(&#34;Stable didn&#39;t sort %d ints&#34;, n)
+<span id="L486" class="ln">   486</span>		}
+<span id="L487" class="ln">   487</span>		if !data.inOrder() {
+<span id="L488" class="ln">   488</span>			t.Errorf(&#34;Stable wasn&#39;t stable on %d ints&#34;, n)
+<span id="L489" class="ln">   489</span>		}
+<span id="L490" class="ln">   490</span>	}
+<span id="L491" class="ln">   491</span>	
+<span id="L492" class="ln">   492</span>	var countOpsSizes = []int{1e2, 3e2, 1e3, 3e3, 1e4, 3e4, 1e5, 3e5, 1e6}
+<span id="L493" class="ln">   493</span>	
+<span id="L494" class="ln">   494</span>	func countOps(t *testing.T, algo func(Interface), name string) {
+<span id="L495" class="ln">   495</span>		sizes := countOpsSizes
+<span id="L496" class="ln">   496</span>		if testing.Short() {
+<span id="L497" class="ln">   497</span>			sizes = sizes[:5]
+<span id="L498" class="ln">   498</span>		}
+<span id="L499" class="ln">   499</span>		if !testing.Verbose() {
+<span id="L500" class="ln">   500</span>			t.Skip(&#34;Counting skipped as non-verbose mode.&#34;)
+<span id="L501" class="ln">   501</span>		}
+<span id="L502" class="ln">   502</span>		for _, n := range sizes {
+<span id="L503" class="ln">   503</span>			td := testingData{
+<span id="L504" class="ln">   504</span>				desc:    name,
+<span id="L505" class="ln">   505</span>				t:       t,
+<span id="L506" class="ln">   506</span>				data:    make([]int, n),
+<span id="L507" class="ln">   507</span>				maxswap: 1&lt;&lt;31 - 1,
+<span id="L508" class="ln">   508</span>			}
+<span id="L509" class="ln">   509</span>			for i := 0; i &lt; n; i++ {
+<span id="L510" class="ln">   510</span>				td.data[i] = rand.Intn(n / 5)
+<span id="L511" class="ln">   511</span>			}
+<span id="L512" class="ln">   512</span>			algo(&amp;td)
+<span id="L513" class="ln">   513</span>			t.Logf(&#34;%s %8d elements: %11d Swap, %10d Less&#34;, name, n, td.nswap, td.ncmp)
+<span id="L514" class="ln">   514</span>		}
+<span id="L515" class="ln">   515</span>	}
+<span id="L516" class="ln">   516</span>	
+<span id="L517" class="ln">   517</span>	func TestCountStableOps(t *testing.T) { countOps(t, Stable, &#34;Stable&#34;) }
+<span id="L518" class="ln">   518</span>	func TestCountSortOps(t *testing.T)   { countOps(t, Sort, &#34;Sort  &#34;) }
+<span id="L519" class="ln">   519</span>	
+<span id="L520" class="ln">   520</span>	func bench(b *testing.B, size int, algo func(Interface), name string) {
+<span id="L521" class="ln">   521</span>		b.StopTimer()
+<span id="L522" class="ln">   522</span>		data := make(intPairs, size)
+<span id="L523" class="ln">   523</span>		x := ^uint32(0)
+<span id="L524" class="ln">   524</span>		for i := 0; i &lt; b.N; i++ {
+<span id="L525" class="ln">   525</span>			for n := size - 3; n &lt;= size+3; n++ {
+<span id="L526" class="ln">   526</span>				for i := 0; i &lt; len(data); i++ {
+<span id="L527" class="ln">   527</span>					x += x
+<span id="L528" class="ln">   528</span>					x ^= 1
+<span id="L529" class="ln">   529</span>					if int32(x) &lt; 0 {
+<span id="L530" class="ln">   530</span>						x ^= 0x88888eef
+<span id="L531" class="ln">   531</span>					}
+<span id="L532" class="ln">   532</span>					data[i].a = int(x % uint32(n/5))
+<span id="L533" class="ln">   533</span>				}
+<span id="L534" class="ln">   534</span>				data.initB()
+<span id="L535" class="ln">   535</span>				b.StartTimer()
+<span id="L536" class="ln">   536</span>				algo(data)
+<span id="L537" class="ln">   537</span>				b.StopTimer()
+<span id="L538" class="ln">   538</span>				if !IsSorted(data) {
+<span id="L539" class="ln">   539</span>					b.Errorf(&#34;%s did not sort %d ints&#34;, name, n)
+<span id="L540" class="ln">   540</span>				}
+<span id="L541" class="ln">   541</span>				if name == &#34;Stable&#34; &amp;&amp; !data.inOrder() {
+<span id="L542" class="ln">   542</span>					b.Errorf(&#34;%s unstable on %d ints&#34;, name, n)
+<span id="L543" class="ln">   543</span>				}
+<span id="L544" class="ln">   544</span>			}
+<span id="L545" class="ln">   545</span>		}
+<span id="L546" class="ln">   546</span>	}
+<span id="L547" class="ln">   547</span>	
+<span id="L548" class="ln">   548</span>	func BenchmarkSort1e2(b *testing.B)   { bench(b, 1e2, Sort, &#34;Sort&#34;) }
+<span id="L549" class="ln">   549</span>	func BenchmarkStable1e2(b *testing.B) { bench(b, 1e2, Stable, &#34;Stable&#34;) }
+<span id="L550" class="ln">   550</span>	func BenchmarkSort1e4(b *testing.B)   { bench(b, 1e4, Sort, &#34;Sort&#34;) }
+<span id="L551" class="ln">   551</span>	func BenchmarkStable1e4(b *testing.B) { bench(b, 1e4, Stable, &#34;Stable&#34;) }
+<span id="L552" class="ln">   552</span>	func BenchmarkSort1e6(b *testing.B)   { bench(b, 1e6, Sort, &#34;Sort&#34;) }
+<span id="L553" class="ln">   553</span>	func BenchmarkStable1e6(b *testing.B) { bench(b, 1e6, Stable, &#34;Stable&#34;) }
+<span id="L554" class="ln">   554</span>	
+</pre><p><a href="http://golang.org/src/pkg/sort/sort_test.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

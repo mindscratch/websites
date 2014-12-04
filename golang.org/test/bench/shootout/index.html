@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>test/bench/shootout/ - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Directory test/bench/shootout/</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+<p>
+<table class="layout">
+<tr>
+	<th align="left">File</th>
+	<td width="25">&nbsp;</td>
+	<th align="right">Bytes</th>
+	<td width="25">&nbsp;</td>
+	<th align="left">Modified</th>
+</tr>
+<tr>
+	<td><a href="../index.html">..</a></td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="binary-tree-freelist.go.html">binary-tree-freelist.go</a></td>
+	<td></td>
+	<td align="right">3464</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="binary-tree-freelist.txt.html">binary-tree-freelist.txt</a></td>
+	<td></td>
+	<td align="right">298</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="binary-tree.c.html">binary-tree.c</a></td>
+	<td></td>
+	<td align="right">4358</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="binary-tree.go.html">binary-tree.go</a></td>
+	<td></td>
+	<td align="right">2907</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="binary-tree.txt.html">binary-tree.txt</a></td>
+	<td></td>
+	<td align="right">298</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="chameneosredux.c.html">chameneosredux.c</a></td>
+	<td></td>
+	<td align="right">7585</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="chameneosredux.go.html">chameneosredux.go</a></td>
+	<td></td>
+	<td align="right">5207</td>
+	<td></td>
+	<td align="left">2014-11-26 15:38:00 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="chameneosredux.txt.html">chameneosredux.txt</a></td>
+	<td></td>
+	<td align="right">417</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fannkuch-parallel.go.html">fannkuch-parallel.go</a></td>
+	<td></td>
+	<td align="right">4669</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fannkuch-parallel.txt.html">fannkuch-parallel.txt</a></td>
+	<td></td>
+	<td align="right">260</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fannkuch.c.html">fannkuch.c</a></td>
+	<td></td>
+	<td align="right">3523</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fannkuch.go.html">fannkuch.go</a></td>
+	<td></td>
+	<td align="right">3072</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fannkuch.txt.html">fannkuch.txt</a></td>
+	<td></td>
+	<td align="right">260</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fasta-1000.out.html">fasta-1000.out</a></td>
+	<td></td>
+	<td align="right">10245</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fasta.c.html">fasta.c</a></td>
+	<td></td>
+	<td align="right">5990</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fasta.go.html">fasta.go</a></td>
+	<td></td>
+	<td align="right">4709</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="fasta.txt.html">fasta.txt</a></td>
+	<td></td>
+	<td align="right">10245</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="k-nucleotide-parallel.go.html">k-nucleotide-parallel.go</a></td>
+	<td></td>
+	<td align="right">4011</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="k-nucleotide-parallel.txt.html">k-nucleotide-parallel.txt</a></td>
+	<td></td>
+	<td align="right">242</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="k-nucleotide.c.html">k-nucleotide.c</a></td>
+	<td></td>
+	<td align="right">5585</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="k-nucleotide.go.html">k-nucleotide.go</a></td>
+	<td></td>
+	<td align="right">3612</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="k-nucleotide.txt.html">k-nucleotide.txt</a></td>
+	<td></td>
+	<td align="right">242</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mandelbrot.c.html">mandelbrot.c</a></td>
+	<td></td>
+	<td align="right">2961</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mandelbrot.go.html">mandelbrot.go</a></td>
+	<td></td>
+	<td align="right">2667</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="mandelbrot.txt">mandelbrot.txt</a></td>
+	<td></td>
+	<td align="right">5011</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="meteor-contest.c.html">meteor-contest.c</a></td>
+	<td></td>
+	<td align="right">19955</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="meteor-contest.go.html">meteor-contest.go</a></td>
+	<td></td>
+	<td align="right">17945</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="meteor-contest.txt.html">meteor-contest.txt</a></td>
+	<td></td>
+	<td align="right">254</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="nbody.c.html">nbody.c</a></td>
+	<td></td>
+	<td align="right">5320</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="nbody.go.html">nbody.go</a></td>
+	<td></td>
+	<td align="right">5009</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="nbody.txt.html">nbody.txt</a></td>
+	<td></td>
+	<td align="right">26</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="pidigits.c.html">pidigits.c</a></td>
+	<td></td>
+	<td align="right">3312</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="pidigits.go.html">pidigits.go</a></td>
+	<td></td>
+	<td align="right">3343</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="pidigits.txt.html">pidigits.txt</a></td>
+	<td></td>
+	<td align="right">45</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regex-dna-parallel.go.html">regex-dna-parallel.go</a></td>
+	<td></td>
+	<td align="right">3373</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regex-dna-parallel.txt.html">regex-dna-parallel.txt</a></td>
+	<td></td>
+	<td align="right">263</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regex-dna.c.html">regex-dna.c</a></td>
+	<td></td>
+	<td align="right">4928</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regex-dna.go.html">regex-dna.go</a></td>
+	<td></td>
+	<td align="right">3084</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="regex-dna.txt.html">regex-dna.txt</a></td>
+	<td></td>
+	<td align="right">263</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="reverse-complement.c.html">reverse-complement.c</a></td>
+	<td></td>
+	<td align="right">4194</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="reverse-complement.go.html">reverse-complement.go</a></td>
+	<td></td>
+	<td align="right">3028</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="reverse-complement.txt.html">reverse-complement.txt</a></td>
+	<td></td>
+	<td align="right">10245</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="spectral-norm-parallel.go.html">spectral-norm-parallel.go</a></td>
+	<td></td>
+	<td align="right">3002</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="spectral-norm.c.html">spectral-norm.c</a></td>
+	<td></td>
+	<td align="right">2636</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="spectral-norm.go.html">spectral-norm.go</a></td>
+	<td></td>
+	<td align="right">2605</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="spectral-norm.txt.html">spectral-norm.txt</a></td>
+	<td></td>
+	<td align="right">12</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="threadring.c.html">threadring.c</a></td>
+	<td></td>
+	<td align="right">3324</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="threadring.go.html">threadring.go</a></td>
+	<td></td>
+	<td align="right">2216</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="threadring.txt.html">threadring.txt</a></td>
+	<td></td>
+	<td align="right">4</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="timing.log.html">timing.log</a></td>
+	<td></td>
+	<td align="right">40617</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+<tr>
+	
+	<td align="left"><a href="timing.sh.html">timing.sh</a></td>
+	<td></td>
+	<td align="right">5581</td>
+	<td></td>
+	<td align="left">2014-11-26 15:37:56 +0000 UTC</td>
+</tr>
+
+
+</table>
+</p>
+
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

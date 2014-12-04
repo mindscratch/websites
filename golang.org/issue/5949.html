@@ -1,0 +1,990 @@
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link rel="icon" type="image/vnd.microsoft.icon" href="https://ssl.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"projectName": "go", "loggedInUserEmail": null, "token": null, "profileUrl": null, "relativeBaseUrl": "", "assetVersionPath": "https://ssl.gstatic.com/codesite/ph/1729405847801014513", "domainName": null, "assetHostPath": "https://ssl.gstatic.com/codesite/ph", "projectHomeUrl": "/p/go"};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ _gaq.push(
+ ['projectTracker._setAccount', 'UA-11222381-1'],
+ ['projectTracker._trackPageview']);
+ 
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+ 
+ </script>
+ 
+ 
+ <title>Issue 5949 - 
+ go -
+ 
+ syscall: prlimit argument error for Getrlimit and Setrlimit on linux/386 - 
+ The Go Programming Language - Google Project Hosting
+ </title>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/ph_detail.css" >
+ 
+ 
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="https://ssl.gstatic.com/codesite/ph/1729405847801014513/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(https://ssl.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ .attachments { width:33%; border-top:2px solid #999; padding-top: 3px; margin-left: .7em;}
+ .attachments table { margin-bottom: 0.75em; }
+ .attachments table tr td { padding: 0; margin: 0; font-size: 95%; }
+ .preview { border: 2px solid #c3d9ff; padding: 1px; }
+ .preview:hover { border: 2px solid blue; }
+ .label { white-space: nowrap; }
+ .derived { font-style:italic }
+ .cursor_on .author {
+ background: url(https://ssl.gstatic.com/codesite/ph/images/show-arrow.gif) no-repeat 2px;
+ }
+ .hiddenform {
+ display: none;
+ }
+
+ 
+ </style>
+</head>
+<body class="t3">
+<script type="text/javascript">
+ window.___gcfg = {lang: 'en'};
+ (function() 
+ {var po = document.createElement("script");
+ po.type = "text/javascript"; po.async = true;po.src = "https://apis.google.com/js/plusone.js";
+ var s = document.getElementsByTagName("script")[0];
+ s.parentNode.insertBefore(po, s);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ 
+ <a href="5949.html#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>&#9660;</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+ <table style="padding:0px; margin: 0px 0px 10px 0px; width:100%" cellpadding="0" cellspacing="0"
+ itemscope itemtype="http://schema.org/CreativeWork">
+ <tr style="height: 58px;">
+ 
+ 
+ 
+ <td id="plogo">
+ <link itemprop="url" href="https://code.google.com/p/go">
+ <a href="https://code.google.com/p/go/">
+ 
+ 
+ <img src="https://code.google.com/p/go/logo?cct=1413989036"
+ alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em">
+ 
+ <div id="pname">
+ <a href="https://code.google.com/p/go/"><span itemprop="name">go</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link"
+ href="https://code.google.com/p/go/"><span itemprop="description">The Go Programming Language</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space:nowrap;text-align:right; vertical-align:bottom;">
+ 
+ <form action="https://code.google.com/hosting/search">
+ <input size="30" name="q" value="" type="text">
+ 
+ <input type="submit" name="projectsearch" value="Search projects" >
+ </form>
+ 
+ </tr>
+ </table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="https://code.google.com/p/go/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Downloads?tm=2" class="tab ">Downloads</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/WikiIndex?tm=6" class="tab ">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="../issue.1.html"
+ class="tab active">Issues</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/wiki/Source?tm=4"
+ class="tab ">Source</a>
+ 
+ 
+ 
+ <a href="https://code.google.com/p/go/codesearch" class="tab">Code Search</a>
+ 
+ 
+ 
+ 
+ 
+ <div class=gtbc></div>
+</div>
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0" class="st">
+ <tr>
+ 
+ 
+ 
+ 
+ 
+ <td class="subt">
+ <div class="issueDetail">
+<div class="isf">
+ 
+ 
+ <span class="inIssueEntry">
+ <a class="buttonify" href="https://code.google.com/p/go/issues/entry" onclick="return _newIssuePrompt();">New issue</a>
+ </span> &nbsp;
+ 
+ <span class="inIssueList">
+ <span>Search</span>
+ <form action="../issue.1.html" method="GET" style="display:inline">
+ <select id="can" name="can">
+ 
+<option disabled="disabled">Search within:</option>
+<option value="1" >&nbsp;All issues</option>
+<option value="2" selected=selected>&nbsp;Open issues</option>
+
+<option value="6" >&nbsp;New issues</option>
+<option value="7" >&nbsp;Issues to verify</option>
+
+ </select>
+ <span>for</span>
+ <span id="qq"><input type="text" size="38" id="searchq" name="q"
+ value="" autocomplete="off"
+ 
+ onkeydown="_blurOnEsc(event)"></span>
+ 
+ 
+ <span id="search_colspec"><input type="hidden" name="colspec" value="ID Status Stars Release Owner Repo Summary" ></span>
+ 
+ 
+ 
+ <input type="hidden" name="cells" value="tiles" >
+ <input type="submit" value="Search">
+ </form>
+ </span> &nbsp;
+ <span class="inIssueAdvSearch">
+ <a href="https://code.google.com/p/go/issues/advsearch">Advanced search</a>
+ </span> &nbsp;
+ <span class="inIssueSearchTips">
+ <a href="https://code.google.com/p/go/issues/searchtips">Search tips</a>
+ </span> &nbsp;
+ <span class="inIssueSubscriptions">
+ <a href="https://code.google.com/p/go/issues/subscriptions">Subscriptions</a>
+ </span>
+</div>
+</div>
+ </td>
+ 
+ 
+ 
+ 
+ <td align="right" valign="top" class="bevel-right"></td>
+ </tr>
+</table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol"
+ 
+>
+
+ 
+
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ 
+
+<div id="color_control" class="closed_colors">
+<div id="issueheader">
+<table cellpadding="0" cellspacing="0" width="100%"><tbody>
+ <tr>
+ <td class="vt h3" nowrap="nowrap" style="padding:0 5px">
+ 
+ 
+ Issue <a href="5949.html">5949</a>:
+ </td>
+ <td width="90%" class="vt">
+ <span class="h3" >syscall: prlimit argument error for Getrlimit and Setrlimit on linux/386</span>
+ </td>
+ <td>
+ 
+ </td>
+ </tr>
+ <tr>
+ <td></td>
+ <td nowrap="nowrap">
+ 
+ 
+ 2 people starred this issue and may be notified of changes.
+ 
+ 
+ 
+ </td>
+ <td align="center" nowrap="nowrap">
+ 
+ <a href="https://code.google.com/p/go/issues/list?cursor=go%3A5949">Back to list</a>
+ 
+ </td>
+ </tr>
+ 
+</tbody></table>
+</div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" class="issuepage" id="meta-container">
+<tbody class="collapse"> 
+ <tr>
+ <td id="issuemeta">
+ <div id="meta-float">
+ 
+<table cellspacing="0" cellpadding="0">
+ <tr><th align="left">Status:&nbsp;</th>
+ <td width="100%">
+ 
+ <span title="Developer made source code changes">Fixed</span>
+ 
+ </td>
+ </tr>
+ 
+ 
+ 
+ 
+ <tr><th align="left">Owner:&nbsp;</th><td>
+ 
+ 
+ ----
+ 
+ 
+ </td>
+ </tr>
+ 
+ 
+ <tr><th align="left" valign="top">Closed:&nbsp;</th>
+ <td align="left" valign="top" width="100%">
+ Jul 2013
+ </td>
+ </tr>
+ 
+ 
+ 
+ <tr><th class="vt" align="left">Cc:&nbsp;</th><td>
+ 
+ 
+ 
+  <i title="Derived">
+
+ <a class="userlink"
+ href="https://code.google.com/u/109539344873567177682/">i...@golang.org</a
+></i> 
+ </td></tr>
+ 
+ 
+ <tr><td colspan="2">
+ 
+ 
+ 
+ <div style="padding-top:2px">
+ 
+ <a href="https://code.google.com/p/go/issues/list?q=label:Priority-Soon"
+ title=""
+ class="label"><b>Priority-</b>Soon</a>
+ 
+ </div>
+ 
+ 
+ 
+ 
+ <div style="padding-top:2px">
+ 
+ <a href="https://code.google.com/p/go/issues/list?q=label:Go1.1.2"
+ title=""
+ class="label">Go1.1.2</a>
+ 
+ </div>
+ 
+ 
+ </td></tr>
+ 
+</table>
+<div class="rel_issues">
+ 
+ 
+ 
+</div>
+
+
+ <br><br>
+ 
+ 
+ <div style="white-space:nowrap"><a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949">Sign in</a> to add a comment</div>
+ 
+ 
+
+
+ 
+ </div>&nbsp;
+ </td>
+ <td class="vt issuedescription" width="100%" id="cursorarea" >
+ 
+<div class="cursor_off vt issuedescription" id="hc0">
+ 
+ 
+ <div class="author">
+ 
+ Reported by
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/115240430286370627629/">go.peter...@gmail.com</a
+>,
+ <span class="date" title="Wed Jul 24 11:56:50 2013">Jul 24, 2013</span>
+ 
+ </div>
+<pre>
+$ go version
+go version devel +5990f8211e89 Wed Jul 24 13:48:04 2013 -0400 linux/386
+
+$ ulimit -Sn
+1024
+$ ulimit -Hn
+4096
+
+$ cat rlimit.go
+package main
+
+import (
+	&quot;fmt&quot;
+	&quot;syscall&quot;
+)
+
+func main() {
+	var rlimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &amp;rlimit)
+	if err != nil {
+		fmt.Println(rlimit, err)
+		return
+	}
+	fmt.Println(rlimit)
+	rlimit.Cur = rlimit.Max
+	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &amp;rlimit)
+	if err != nil {
+		fmt.Println(rlimit, err)
+		return
+	}
+	err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &amp;rlimit)
+	if err != nil {
+		fmt.Println(rlimit, err)
+		return
+	}
+	fmt.Println(rlimit)
+}
+
+Want:
+
+$ go run rlimit.go
+{1024 4096}
+{4096 4096}
+
+Got:
+
+$ go run rlimit.go
+{0 0}
+{0 0}
+
+Fix:
+
+diff --git a/src/pkg/syscall/syscall_linux_386.go b/src/pkg/syscall/syscall_linux_386.go
+--- a/src/pkg/syscall/syscall_linux_386.go
++++ b/src/pkg/syscall/syscall_linux_386.go
+@@ -78,7 +78,7 @@
+ const rlimInf64 = ^uint64(0)
+ 
+ func Getrlimit(resource int, rlim *Rlimit) (err error) {
+-	err = prlimit(0, resource, rlim, nil)
++	err = prlimit(0, resource, nil, rlim)
+ 	if err != ENOSYS {
+ 		return err
+ 	}
+@@ -106,7 +106,7 @@
+ //sysnb setrlimit(resource int, rlim *rlimit32) (err error) = SYS_SETRLIMIT
+ 
+ func Setrlimit(resource int, rlim *Rlimit) (err error) {
+-	err = prlimit(0, resource, nil, rlim)
++	err = prlimit(0, resource, rlim, nil)
+ 	if err != ENOSYS {
+ 		return err
+ 	}
+
+prlimit:
+
+$ man prlimit
+
+   prlimit()
+       The Linux-specific prlimit() system call combines and extends the func‐
+       tionality  of  setrlimit() and getrlimit().  It can be used to both set
+       and get the resource limits of an arbitrary process.
+
+       The resource argument has the same meaning as for setrlimit() and getr‐
+       limit().
+
+       If  the  new_limit argument is a not NULL, then the rlimit structure to
+       which it points is used to set new values for the soft and hard  limits
+       for resource.  If the old_limit argument is a not NULL, then a success‐
+       ful call to prlimit() places the previous  soft  and  hard  limits  for
+       resource in the rlimit structure pointed to by old_limit.
+
+       The  pid  argument specifies the ID of the process on which the call is
+       to operate.  If pid is 0, then the call applies to the calling process.
+       To  set or get the resources of a process other than itself, the caller
+       must have the CAP_SYS_RESOURCE capability, or the real, effective,  and
+       saved set user IDs of the target process must match the real user ID of
+       the caller and the real, effective, and saved set group IDs of the tar‐
+       get process must match the real group ID of the caller.
+</pre>
+
+ <div class="attachments">
+ 
+ 
+ 
+
+
+
+
+ <table cellspacing="3" cellpadding="2" border="0">
+ <tr><td width="20">
+ <a href="https://go.googlecode.com/issues/attachment?aid=59490000000&amp;name=rlimit.go&amp;token=ABZ6GAdBHFTn_-_e_zbhgiD1GkHyFRlE_Q%3A1417730096224">
+ <img width="15" height="15" src="https://ssl.gstatic.com/codesite/ph/images/paperclip.gif" border="0" >
+ </a>
+ </td>
+ <td style="min-width:16em" valign="top">
+ 
+ <b >rlimit.go</b>
+ <br>
+ 494 bytes
+ 
+ 
+ &nbsp; <a href="https://code.google.com/p/go/issues/attachmentText?id=5949&amp;aid=59490000000&amp;name=rlimit.go&amp;token=ABZ6GAdBHFTn_-_e_zbhgiD1GkHyFRlE_Q%3A1417730096224" target="_blank">View</a>
+ 
+ &nbsp; <a href="https://go.googlecode.com/issues/attachment?aid=59490000000&amp;name=rlimit.go&amp;token=ABZ6GAdBHFTn_-_e_zbhgiD1GkHyFRlE_Q%3A1417730096224">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </table>
+
+
+ 
+ 
+ 
+
+
+
+
+ <table cellspacing="3" cellpadding="2" border="0">
+ <tr><td width="20">
+ <a href="https://go.googlecode.com/issues/attachment?aid=59490000001&amp;name=rlimit.diff&amp;token=ABZ6GAfvDwj9vgJSlmg1hlpkglOpeW1QUw%3A1417730096224">
+ <img width="15" height="15" src="https://ssl.gstatic.com/codesite/ph/images/paperclip.gif" border="0" >
+ </a>
+ </td>
+ <td style="min-width:16em" valign="top">
+ 
+ <b >rlimit.diff</b>
+ <br>
+ 678 bytes
+ 
+ 
+ &nbsp; <a href="https://code.google.com/p/go/issues/attachmentText?id=5949&amp;aid=59490000001&amp;name=rlimit.diff&amp;token=ABZ6GAfvDwj9vgJSlmg1hlpkglOpeW1QUw%3A1417730096224" target="_blank">View</a>
+ 
+ &nbsp; <a href="https://go.googlecode.com/issues/attachment?aid=59490000001&amp;name=rlimit.diff&amp;token=ABZ6GAfvDwj9vgJSlmg1hlpkglOpeW1QUw%3A1417730096224">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </table>
+
+
+ 
+ </div>
+
+</div>
+
+ 
+
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc1">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jul 24 12:15:46 2013">
+ Jul 24, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ 
+ <a name="c1" href="5949.html#c1">#1</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/115240430286370627629/">go.peter...@gmail.com</a
+></span>
+ 
+<pre>
+It's likely that arm has the same issue: syscall_linux_arm.go.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc2">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jul 24 13:02:40 2013">
+ Jul 24, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c2" href="5949.html#c2">#2</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/109539344873567177682/">i...@golang.org</a
+></span>
+ 
+<pre>
+Looks right to me; can you send a CL?
+
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Status:</b>
+ Accepted
+ 
+ <br>
+ 
+ <b>Labels:</b>
+ -Priority-Triage Priority-Soon Go1.1.2
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc3">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jul 24 13:21:55 2013">
+ Jul 24, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ 
+ <a name="c3" href="5949.html#c3">#3</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/115240430286370627629/">go.peter...@gmail.com</a
+></span>
+ 
+<pre>
+Will do.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc4">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Wed Jul 24 18:14:40 2013">
+ Jul 24, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ 
+ <a name="c4" href="5949.html#c4">#4</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/115240430286370627629/">go.peter...@gmail.com</a
+></span>
+ 
+<pre>
+CL: <a href="https://codereview.appspot.com/11803043" rel="nofollow">https://codereview.appspot.com/11803043</a>
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc5">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Thu Jul 25 06:56:16 2013">
+ Jul 25, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c5" href="5949.html#c5">#5</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/rsc@golang.org/">rsc@golang.org</a
+></span>
+ 
+<pre>
+This issue was closed by <a href="https://code.google.com/p/go/source/detail?r=ba52f6399462">revision ba52f6399462</a>.
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ 
+ <b>Status:</b>
+ Fixed
+ 
+ <br>
+ 
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment"
+ id="hc6">
+ <div style="float:right; margin-right:.3em; text-align:right">
+ <span class="date" title="Sun Jul 28 17:34:56 2013">
+ Jul 28, 2013
+ </span>
+ 
+ 
+ 
+ </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <span class="author">
+ <span class="role_label">Project Member</span>
+ <a name="c6" href="5949.html#c6">#6</a>
+ 
+
+ <a class="userlink"
+ href="https://code.google.com/u/106387542691710977843/">a...@golang.org</a
+></span>
+ 
+<pre>
+This issue was closed by <a href="../change/55ac276af5a7.html">revision 55ac276af5a7</a>.
+</pre>
+ 
+ 
+ </div>
+ 
+
+
+ 
+
+
+ </td>
+ </tr>
+
+ 
+ <tr>
+ <td></td>
+ <td class="vt issuecomment">
+ <span class="indicator">&#9658;</span> <a href="https://www.google.com/accounts/ServiceLogin?service=code&ltmpl=phosting&continue=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949&amp;followup=https%3A%2F%2Fcode.google.com%2Fp%2Fgo%2Fissues%2Fdetail%3Fid%3D5949"
+ >Sign in</a> to add a comment
+ </td>
+ </tr>
+ 
+
+</tbody>
+</table>
+<br>
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/dit_scripts.js"></script>
+
+
+
+ 
+
+</div> 
+<form name="delcom" action="https://code.google.com/p/go/issues/delComment.do?q=&amp;can=2&amp;groupby=&amp;sort=&amp;colspec=ID+Status+Stars+Release+Owner+Repo+Summary" method="POST">
+ <input type="hidden" name="sequence_num" value="">
+ <input type="hidden" name="mode" value="">
+ <input type="hidden" name="id" value="5949">
+ <input type="hidden" name="token" value="">
+</form>
+
+<div id="helparea"></div>
+<script type="text/javascript">
+ _onload();
+ function delComment(sequence_num, delete_mode) {
+ var f = document.forms["delcom"];
+ f.sequence_num.value = sequence_num;
+ f.mode.value = delete_mode;
+ 
+ f.submit();
+ return false;
+ }
+ 
+ _floatMetadata();
+</script>
+<script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/kibbles.js"></script>
+<script type="text/javascript">
+ _setupKibblesOnDetailPage(
+ 'https://code.google.com/p/go/issues/list?cursor\x3dgo%3A5949',
+ '/p/go/issues/entry',
+ '',
+ '',
+ '', 'go', 5949,
+ false, false, codesite_token);
+</script>
+ 
+ 
+ 
+ <script type="text/javascript" src="https://ssl.gstatic.com/codesite/ph/1729405847801014513/js/ph_core.js"></script>
+ 
+ 
+ 
+ 
+</div> 
+
+<div id="footer" dir="ltr">
+ <div class="text">
+ <a href="https://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="https://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+
+ 
+ 
+
+
+ 
+ </body>
+</html>
+

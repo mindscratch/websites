@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/fmt/fmt_test.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/fmt/fmt_test.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package fmt_test
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import (
+<span id="L8" class="ln">     8</span>		&#34;bytes&#34;
+<span id="L9" class="ln">     9</span>		. &#34;fmt&#34;
+<span id="L10" class="ln">    10</span>		&#34;io&#34;
+<span id="L11" class="ln">    11</span>		&#34;math&#34;
+<span id="L12" class="ln">    12</span>		&#34;runtime&#34;
+<span id="L13" class="ln">    13</span>		&#34;strings&#34;
+<span id="L14" class="ln">    14</span>		&#34;testing&#34;
+<span id="L15" class="ln">    15</span>		&#34;time&#34;
+<span id="L16" class="ln">    16</span>		&#34;unicode&#34;
+<span id="L17" class="ln">    17</span>	)
+<span id="L18" class="ln">    18</span>	
+<span id="L19" class="ln">    19</span>	type (
+<span id="L20" class="ln">    20</span>		renamedBool       bool
+<span id="L21" class="ln">    21</span>		renamedInt        int
+<span id="L22" class="ln">    22</span>		renamedInt8       int8
+<span id="L23" class="ln">    23</span>		renamedInt16      int16
+<span id="L24" class="ln">    24</span>		renamedInt32      int32
+<span id="L25" class="ln">    25</span>		renamedInt64      int64
+<span id="L26" class="ln">    26</span>		renamedUint       uint
+<span id="L27" class="ln">    27</span>		renamedUint8      uint8
+<span id="L28" class="ln">    28</span>		renamedUint16     uint16
+<span id="L29" class="ln">    29</span>		renamedUint32     uint32
+<span id="L30" class="ln">    30</span>		renamedUint64     uint64
+<span id="L31" class="ln">    31</span>		renamedUintptr    uintptr
+<span id="L32" class="ln">    32</span>		renamedString     string
+<span id="L33" class="ln">    33</span>		renamedBytes      []byte
+<span id="L34" class="ln">    34</span>		renamedFloat32    float32
+<span id="L35" class="ln">    35</span>		renamedFloat64    float64
+<span id="L36" class="ln">    36</span>		renamedComplex64  complex64
+<span id="L37" class="ln">    37</span>		renamedComplex128 complex128
+<span id="L38" class="ln">    38</span>	)
+<span id="L39" class="ln">    39</span>	
+<span id="L40" class="ln">    40</span>	func TestFmtInterface(t *testing.T) {
+<span id="L41" class="ln">    41</span>		var i1 interface{}
+<span id="L42" class="ln">    42</span>		i1 = &#34;abc&#34;
+<span id="L43" class="ln">    43</span>		s := Sprintf(&#34;%s&#34;, i1)
+<span id="L44" class="ln">    44</span>		if s != &#34;abc&#34; {
+<span id="L45" class="ln">    45</span>			t.Errorf(`Sprintf(&#34;%%s&#34;, empty(&#34;abc&#34;)) = %q want %q`, s, &#34;abc&#34;)
+<span id="L46" class="ln">    46</span>		}
+<span id="L47" class="ln">    47</span>	}
+<span id="L48" class="ln">    48</span>	
+<span id="L49" class="ln">    49</span>	const b32 uint32 = 1&lt;&lt;32 - 1
+<span id="L50" class="ln">    50</span>	const b64 uint64 = 1&lt;&lt;64 - 1
+<span id="L51" class="ln">    51</span>	
+<span id="L52" class="ln">    52</span>	var array = [5]int{1, 2, 3, 4, 5}
+<span id="L53" class="ln">    53</span>	var iarray = [4]interface{}{1, &#34;hello&#34;, 2.5, nil}
+<span id="L54" class="ln">    54</span>	var slice = array[:]
+<span id="L55" class="ln">    55</span>	var islice = iarray[:]
+<span id="L56" class="ln">    56</span>	
+<span id="L57" class="ln">    57</span>	type A struct {
+<span id="L58" class="ln">    58</span>		i int
+<span id="L59" class="ln">    59</span>		j uint
+<span id="L60" class="ln">    60</span>		s string
+<span id="L61" class="ln">    61</span>		x []int
+<span id="L62" class="ln">    62</span>	}
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>	type I int
+<span id="L65" class="ln">    65</span>	
+<span id="L66" class="ln">    66</span>	func (i I) String() string { return Sprintf(&#34;&lt;%d&gt;&#34;, int(i)) }
+<span id="L67" class="ln">    67</span>	
+<span id="L68" class="ln">    68</span>	type B struct {
+<span id="L69" class="ln">    69</span>		I I
+<span id="L70" class="ln">    70</span>		j int
+<span id="L71" class="ln">    71</span>	}
+<span id="L72" class="ln">    72</span>	
+<span id="L73" class="ln">    73</span>	type C struct {
+<span id="L74" class="ln">    74</span>		i int
+<span id="L75" class="ln">    75</span>		B
+<span id="L76" class="ln">    76</span>	}
+<span id="L77" class="ln">    77</span>	
+<span id="L78" class="ln">    78</span>	type F int
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>	func (f F) Format(s State, c rune) {
+<span id="L81" class="ln">    81</span>		Fprintf(s, &#34;&lt;%c=F(%d)&gt;&#34;, c, int(f))
+<span id="L82" class="ln">    82</span>	}
+<span id="L83" class="ln">    83</span>	
+<span id="L84" class="ln">    84</span>	type G int
+<span id="L85" class="ln">    85</span>	
+<span id="L86" class="ln">    86</span>	func (g G) GoString() string {
+<span id="L87" class="ln">    87</span>		return Sprintf(&#34;GoString(%d)&#34;, int(g))
+<span id="L88" class="ln">    88</span>	}
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	type S struct {
+<span id="L91" class="ln">    91</span>		F F <span class="comment">// a struct field that Formats</span>
+<span id="L92" class="ln">    92</span>		G G <span class="comment">// a struct field that GoStrings</span>
+<span id="L93" class="ln">    93</span>	}
+<span id="L94" class="ln">    94</span>	
+<span id="L95" class="ln">    95</span>	type SI struct {
+<span id="L96" class="ln">    96</span>		I interface{}
+<span id="L97" class="ln">    97</span>	}
+<span id="L98" class="ln">    98</span>	
+<span id="L99" class="ln">    99</span>	<span class="comment">// P is a type with a String method with pointer receiver for testing %p.</span>
+<span id="L100" class="ln">   100</span>	type P int
+<span id="L101" class="ln">   101</span>	
+<span id="L102" class="ln">   102</span>	var pValue P
+<span id="L103" class="ln">   103</span>	
+<span id="L104" class="ln">   104</span>	func (p *P) String() string {
+<span id="L105" class="ln">   105</span>		return &#34;String(p)&#34;
+<span id="L106" class="ln">   106</span>	}
+<span id="L107" class="ln">   107</span>	
+<span id="L108" class="ln">   108</span>	var barray = [5]renamedUint8{1, 2, 3, 4, 5}
+<span id="L109" class="ln">   109</span>	var bslice = barray[:]
+<span id="L110" class="ln">   110</span>	
+<span id="L111" class="ln">   111</span>	var b byte
+<span id="L112" class="ln">   112</span>	
+<span id="L113" class="ln">   113</span>	var fmtTests = []struct {
+<span id="L114" class="ln">   114</span>		fmt string
+<span id="L115" class="ln">   115</span>		val interface{}
+<span id="L116" class="ln">   116</span>		out string
+<span id="L117" class="ln">   117</span>	}{
+<span id="L118" class="ln">   118</span>		{&#34;%d&#34;, 12345, &#34;12345&#34;},
+<span id="L119" class="ln">   119</span>		{&#34;%v&#34;, 12345, &#34;12345&#34;},
+<span id="L120" class="ln">   120</span>		{&#34;%t&#34;, true, &#34;true&#34;},
+<span id="L121" class="ln">   121</span>	
+<span id="L122" class="ln">   122</span>		<span class="comment">// basic string</span>
+<span id="L123" class="ln">   123</span>		{&#34;%s&#34;, &#34;abc&#34;, &#34;abc&#34;},
+<span id="L124" class="ln">   124</span>		{&#34;%x&#34;, &#34;abc&#34;, &#34;616263&#34;},
+<span id="L125" class="ln">   125</span>		{&#34;%x&#34;, &#34;xyz&#34;, &#34;78797a&#34;},
+<span id="L126" class="ln">   126</span>		{&#34;%X&#34;, &#34;xyz&#34;, &#34;78797A&#34;},
+<span id="L127" class="ln">   127</span>		{&#34;%q&#34;, &#34;abc&#34;, `&#34;abc&#34;`},
+<span id="L128" class="ln">   128</span>	
+<span id="L129" class="ln">   129</span>		<span class="comment">// basic bytes</span>
+<span id="L130" class="ln">   130</span>		{&#34;%s&#34;, []byte(&#34;abc&#34;), &#34;abc&#34;},
+<span id="L131" class="ln">   131</span>		{&#34;%x&#34;, []byte(&#34;abc&#34;), &#34;616263&#34;},
+<span id="L132" class="ln">   132</span>		{&#34;% x&#34;, []byte(&#34;abc\xff&#34;), &#34;61 62 63 ff&#34;},
+<span id="L133" class="ln">   133</span>		{&#34;%#x&#34;, []byte(&#34;abc\xff&#34;), &#34;0x610x620x630xff&#34;},
+<span id="L134" class="ln">   134</span>		{&#34;%#X&#34;, []byte(&#34;abc\xff&#34;), &#34;0X610X620X630XFF&#34;},
+<span id="L135" class="ln">   135</span>		{&#34;%# x&#34;, []byte(&#34;abc\xff&#34;), &#34;0x61 0x62 0x63 0xff&#34;},
+<span id="L136" class="ln">   136</span>		{&#34;%# X&#34;, []byte(&#34;abc\xff&#34;), &#34;0X61 0X62 0X63 0XFF&#34;},
+<span id="L137" class="ln">   137</span>		{&#34;% X&#34;, []byte(&#34;abc\xff&#34;), &#34;61 62 63 FF&#34;},
+<span id="L138" class="ln">   138</span>		{&#34;%x&#34;, []byte(&#34;xyz&#34;), &#34;78797a&#34;},
+<span id="L139" class="ln">   139</span>		{&#34;%X&#34;, []byte(&#34;xyz&#34;), &#34;78797A&#34;},
+<span id="L140" class="ln">   140</span>		{&#34;%q&#34;, []byte(&#34;abc&#34;), `&#34;abc&#34;`},
+<span id="L141" class="ln">   141</span>	
+<span id="L142" class="ln">   142</span>		<span class="comment">// escaped strings</span>
+<span id="L143" class="ln">   143</span>		{&#34;%#q&#34;, `abc`, &#34;`abc`&#34;},
+<span id="L144" class="ln">   144</span>		{&#34;%#q&#34;, `&#34;`, &#34;`\&#34;`&#34;},
+<span id="L145" class="ln">   145</span>		{&#34;1 %#q&#34;, `\n`, &#34;1 `\\n`&#34;},
+<span id="L146" class="ln">   146</span>		{&#34;2 %#q&#34;, &#34;\n&#34;, `2 &#34;\n&#34;`},
+<span id="L147" class="ln">   147</span>		{&#34;%q&#34;, `&#34;`, `&#34;\&#34;&#34;`},
+<span id="L148" class="ln">   148</span>		{&#34;%q&#34;, &#34;\a\b\f\r\n\t\v&#34;, `&#34;\a\b\f\r\n\t\v&#34;`},
+<span id="L149" class="ln">   149</span>		{&#34;%q&#34;, &#34;abc\xffdef&#34;, `&#34;abc\xffdef&#34;`},
+<span id="L150" class="ln">   150</span>		{&#34;%q&#34;, &#34;\u263a&#34;, `&#34;☺&#34;`},
+<span id="L151" class="ln">   151</span>		{&#34;%+q&#34;, &#34;\u263a&#34;, `&#34;\u263a&#34;`},
+<span id="L152" class="ln">   152</span>		{&#34;%q&#34;, &#34;\U0010ffff&#34;, `&#34;\U0010ffff&#34;`},
+<span id="L153" class="ln">   153</span>	
+<span id="L154" class="ln">   154</span>		<span class="comment">// escaped characters</span>
+<span id="L155" class="ln">   155</span>		{&#34;%q&#34;, &#39;x&#39;, `&#39;x&#39;`},
+<span id="L156" class="ln">   156</span>		{&#34;%q&#34;, 0, `&#39;\x00&#39;`},
+<span id="L157" class="ln">   157</span>		{&#34;%q&#34;, &#39;\n&#39;, `&#39;\n&#39;`},
+<span id="L158" class="ln">   158</span>		{&#34;%q&#34;, &#39;\u0e00&#39;, `&#39;\u0e00&#39;`},         <span class="comment">// not a printable rune.</span>
+<span id="L159" class="ln">   159</span>		{&#34;%q&#34;, &#39;\U000c2345&#39;, `&#39;\U000c2345&#39;`}, <span class="comment">// not a printable rune.</span>
+<span id="L160" class="ln">   160</span>		{&#34;%q&#34;, int64(0x7FFFFFFF), `%!q(int64=2147483647)`},
+<span id="L161" class="ln">   161</span>		{&#34;%q&#34;, uint64(0xFFFFFFFF), `%!q(uint64=4294967295)`},
+<span id="L162" class="ln">   162</span>		{&#34;%q&#34;, &#39;&#34;&#39;, `&#39;&#34;&#39;`},
+<span id="L163" class="ln">   163</span>		{&#34;%q&#34;, &#39;\&#39;&#39;, `&#39;\&#39;&#39;`},
+<span id="L164" class="ln">   164</span>		{&#34;%q&#34;, &#34;\u263a&#34;, `&#34;☺&#34;`},
+<span id="L165" class="ln">   165</span>		{&#34;%+q&#34;, &#34;\u263a&#34;, `&#34;\u263a&#34;`},
+<span id="L166" class="ln">   166</span>	
+<span id="L167" class="ln">   167</span>		<span class="comment">// width</span>
+<span id="L168" class="ln">   168</span>		{&#34;%5s&#34;, &#34;abc&#34;, &#34;  abc&#34;},
+<span id="L169" class="ln">   169</span>		{&#34;%2s&#34;, &#34;\u263a&#34;, &#34; ☺&#34;},
+<span id="L170" class="ln">   170</span>		{&#34;%-5s&#34;, &#34;abc&#34;, &#34;abc  &#34;},
+<span id="L171" class="ln">   171</span>		{&#34;%-8q&#34;, &#34;abc&#34;, `&#34;abc&#34;   `},
+<span id="L172" class="ln">   172</span>		{&#34;%05s&#34;, &#34;abc&#34;, &#34;00abc&#34;},
+<span id="L173" class="ln">   173</span>		{&#34;%08q&#34;, &#34;abc&#34;, `000&#34;abc&#34;`},
+<span id="L174" class="ln">   174</span>		{&#34;%5s&#34;, &#34;abcdefghijklmnopqrstuvwxyz&#34;, &#34;abcdefghijklmnopqrstuvwxyz&#34;},
+<span id="L175" class="ln">   175</span>		{&#34;%.5s&#34;, &#34;abcdefghijklmnopqrstuvwxyz&#34;, &#34;abcde&#34;},
+<span id="L176" class="ln">   176</span>		{&#34;%.5s&#34;, &#34;日本語日本語&#34;, &#34;日本語日本&#34;},
+<span id="L177" class="ln">   177</span>		{&#34;%.5s&#34;, []byte(&#34;日本語日本語&#34;), &#34;日本語日本&#34;},
+<span id="L178" class="ln">   178</span>		{&#34;%.5q&#34;, &#34;abcdefghijklmnopqrstuvwxyz&#34;, `&#34;abcde&#34;`},
+<span id="L179" class="ln">   179</span>		{&#34;%.3q&#34;, &#34;日本語日本語&#34;, `&#34;日本語&#34;`},
+<span id="L180" class="ln">   180</span>		{&#34;%.3q&#34;, []byte(&#34;日本語日本語&#34;), `&#34;日本語&#34;`},
+<span id="L181" class="ln">   181</span>		{&#34;%10.1q&#34;, &#34;日本語日本語&#34;, `       &#34;日&#34;`},
+<span id="L182" class="ln">   182</span>		{&#34;%10v&#34;, nil, &#34;     &lt;nil&gt;&#34;},
+<span id="L183" class="ln">   183</span>		{&#34;%-10v&#34;, nil, &#34;&lt;nil&gt;     &#34;},
+<span id="L184" class="ln">   184</span>	
+<span id="L185" class="ln">   185</span>		<span class="comment">// integers</span>
+<span id="L186" class="ln">   186</span>		{&#34;%d&#34;, 12345, &#34;12345&#34;},
+<span id="L187" class="ln">   187</span>		{&#34;%d&#34;, -12345, &#34;-12345&#34;},
+<span id="L188" class="ln">   188</span>		{&#34;%10d&#34;, 12345, &#34;     12345&#34;},
+<span id="L189" class="ln">   189</span>		{&#34;%10d&#34;, -12345, &#34;    -12345&#34;},
+<span id="L190" class="ln">   190</span>		{&#34;%+10d&#34;, 12345, &#34;    +12345&#34;},
+<span id="L191" class="ln">   191</span>		{&#34;%010d&#34;, 12345, &#34;0000012345&#34;},
+<span id="L192" class="ln">   192</span>		{&#34;%010d&#34;, -12345, &#34;-000012345&#34;},
+<span id="L193" class="ln">   193</span>		{&#34;%-10d&#34;, 12345, &#34;12345     &#34;},
+<span id="L194" class="ln">   194</span>		{&#34;%010.3d&#34;, 1, &#34;       001&#34;},
+<span id="L195" class="ln">   195</span>		{&#34;%010.3d&#34;, -1, &#34;      -001&#34;},
+<span id="L196" class="ln">   196</span>		{&#34;%+d&#34;, 12345, &#34;+12345&#34;},
+<span id="L197" class="ln">   197</span>		{&#34;%+d&#34;, -12345, &#34;-12345&#34;},
+<span id="L198" class="ln">   198</span>		{&#34;%+d&#34;, 0, &#34;+0&#34;},
+<span id="L199" class="ln">   199</span>		{&#34;% d&#34;, 0, &#34; 0&#34;},
+<span id="L200" class="ln">   200</span>		{&#34;% d&#34;, 12345, &#34; 12345&#34;},
+<span id="L201" class="ln">   201</span>		{&#34;%.0d&#34;, 0, &#34;&#34;},
+<span id="L202" class="ln">   202</span>		{&#34;%.d&#34;, 0, &#34;&#34;},
+<span id="L203" class="ln">   203</span>	
+<span id="L204" class="ln">   204</span>		<span class="comment">// unicode format</span>
+<span id="L205" class="ln">   205</span>		{&#34;%U&#34;, 0x1, &#34;U+0001&#34;},
+<span id="L206" class="ln">   206</span>		{&#34;%U&#34;, uint(0x1), &#34;U+0001&#34;},
+<span id="L207" class="ln">   207</span>		{&#34;%.8U&#34;, 0x2, &#34;U+00000002&#34;},
+<span id="L208" class="ln">   208</span>		{&#34;%U&#34;, 0x1234, &#34;U+1234&#34;},
+<span id="L209" class="ln">   209</span>		{&#34;%U&#34;, 0x12345, &#34;U+12345&#34;},
+<span id="L210" class="ln">   210</span>		{&#34;%10.6U&#34;, 0xABC, &#34;  U+000ABC&#34;},
+<span id="L211" class="ln">   211</span>		{&#34;%-10.6U&#34;, 0xABC, &#34;U+000ABC  &#34;},
+<span id="L212" class="ln">   212</span>		{&#34;%U&#34;, &#39;\n&#39;, `U+000A`},
+<span id="L213" class="ln">   213</span>		{&#34;%#U&#34;, &#39;\n&#39;, `U+000A`},
+<span id="L214" class="ln">   214</span>		{&#34;%U&#34;, &#39;x&#39;, `U+0078`},
+<span id="L215" class="ln">   215</span>		{&#34;%#U&#34;, &#39;x&#39;, `U+0078 &#39;x&#39;`},
+<span id="L216" class="ln">   216</span>		{&#34;%U&#34;, &#39;\u263a&#39;, `U+263A`},
+<span id="L217" class="ln">   217</span>		{&#34;%#U&#34;, &#39;\u263a&#39;, `U+263A &#39;☺&#39;`},
+<span id="L218" class="ln">   218</span>	
+<span id="L219" class="ln">   219</span>		<span class="comment">// floats</span>
+<span id="L220" class="ln">   220</span>		{&#34;%+.3e&#34;, 0.0, &#34;+0.000e+00&#34;},
+<span id="L221" class="ln">   221</span>		{&#34;%+.3e&#34;, 1.0, &#34;+1.000e+00&#34;},
+<span id="L222" class="ln">   222</span>		{&#34;%+.3f&#34;, -1.0, &#34;-1.000&#34;},
+<span id="L223" class="ln">   223</span>		{&#34;%+.3F&#34;, -1.0, &#34;-1.000&#34;},
+<span id="L224" class="ln">   224</span>		{&#34;%+.3F&#34;, float32(-1.0), &#34;-1.000&#34;},
+<span id="L225" class="ln">   225</span>		{&#34;%+07.2f&#34;, 1.0, &#34;+001.00&#34;},
+<span id="L226" class="ln">   226</span>		{&#34;%+07.2f&#34;, -1.0, &#34;-001.00&#34;},
+<span id="L227" class="ln">   227</span>		{&#34;%+10.2f&#34;, +1.0, &#34;     +1.00&#34;},
+<span id="L228" class="ln">   228</span>		{&#34;%+10.2f&#34;, -1.0, &#34;     -1.00&#34;},
+<span id="L229" class="ln">   229</span>		{&#34;% .3E&#34;, -1.0, &#34;-1.000E+00&#34;},
+<span id="L230" class="ln">   230</span>		{&#34;% .3e&#34;, 1.0, &#34; 1.000e+00&#34;},
+<span id="L231" class="ln">   231</span>		{&#34;%+.3g&#34;, 0.0, &#34;+0&#34;},
+<span id="L232" class="ln">   232</span>		{&#34;%+.3g&#34;, 1.0, &#34;+1&#34;},
+<span id="L233" class="ln">   233</span>		{&#34;%+.3g&#34;, -1.0, &#34;-1&#34;},
+<span id="L234" class="ln">   234</span>		{&#34;% .3g&#34;, -1.0, &#34;-1&#34;},
+<span id="L235" class="ln">   235</span>		{&#34;% .3g&#34;, 1.0, &#34; 1&#34;},
+<span id="L236" class="ln">   236</span>		{&#34;%b&#34;, float32(1.0), &#34;8388608p-23&#34;},
+<span id="L237" class="ln">   237</span>		{&#34;%b&#34;, 1.0, &#34;4503599627370496p-52&#34;},
+<span id="L238" class="ln">   238</span>	
+<span id="L239" class="ln">   239</span>		<span class="comment">// complex values</span>
+<span id="L240" class="ln">   240</span>		{&#34;%+.3e&#34;, 0i, &#34;(+0.000e+00+0.000e+00i)&#34;},
+<span id="L241" class="ln">   241</span>		{&#34;%+.3f&#34;, 0i, &#34;(+0.000+0.000i)&#34;},
+<span id="L242" class="ln">   242</span>		{&#34;%+.3g&#34;, 0i, &#34;(+0+0i)&#34;},
+<span id="L243" class="ln">   243</span>		{&#34;%+.3e&#34;, 1 + 2i, &#34;(+1.000e+00+2.000e+00i)&#34;},
+<span id="L244" class="ln">   244</span>		{&#34;%+.3f&#34;, 1 + 2i, &#34;(+1.000+2.000i)&#34;},
+<span id="L245" class="ln">   245</span>		{&#34;%+.3g&#34;, 1 + 2i, &#34;(+1+2i)&#34;},
+<span id="L246" class="ln">   246</span>		{&#34;%.3e&#34;, 0i, &#34;(0.000e+00+0.000e+00i)&#34;},
+<span id="L247" class="ln">   247</span>		{&#34;%.3f&#34;, 0i, &#34;(0.000+0.000i)&#34;},
+<span id="L248" class="ln">   248</span>		{&#34;%.3F&#34;, 0i, &#34;(0.000+0.000i)&#34;},
+<span id="L249" class="ln">   249</span>		{&#34;%.3F&#34;, complex64(0i), &#34;(0.000+0.000i)&#34;},
+<span id="L250" class="ln">   250</span>		{&#34;%.3g&#34;, 0i, &#34;(0+0i)&#34;},
+<span id="L251" class="ln">   251</span>		{&#34;%.3e&#34;, 1 + 2i, &#34;(1.000e+00+2.000e+00i)&#34;},
+<span id="L252" class="ln">   252</span>		{&#34;%.3f&#34;, 1 + 2i, &#34;(1.000+2.000i)&#34;},
+<span id="L253" class="ln">   253</span>		{&#34;%.3g&#34;, 1 + 2i, &#34;(1+2i)&#34;},
+<span id="L254" class="ln">   254</span>		{&#34;%.3e&#34;, -1 - 2i, &#34;(-1.000e+00-2.000e+00i)&#34;},
+<span id="L255" class="ln">   255</span>		{&#34;%.3f&#34;, -1 - 2i, &#34;(-1.000-2.000i)&#34;},
+<span id="L256" class="ln">   256</span>		{&#34;%.3g&#34;, -1 - 2i, &#34;(-1-2i)&#34;},
+<span id="L257" class="ln">   257</span>		{&#34;% .3E&#34;, -1 - 2i, &#34;(-1.000E+00-2.000E+00i)&#34;},
+<span id="L258" class="ln">   258</span>		{&#34;%+.3g&#34;, complex64(1 + 2i), &#34;(+1+2i)&#34;},
+<span id="L259" class="ln">   259</span>		{&#34;%+.3g&#34;, complex128(1 + 2i), &#34;(+1+2i)&#34;},
+<span id="L260" class="ln">   260</span>		{&#34;%b&#34;, complex64(1 + 2i), &#34;(8388608p-23+8388608p-22i)&#34;},
+<span id="L261" class="ln">   261</span>		{&#34;%b&#34;, 1 + 2i, &#34;(4503599627370496p-52+4503599627370496p-51i)&#34;},
+<span id="L262" class="ln">   262</span>	
+<span id="L263" class="ln">   263</span>		<span class="comment">// erroneous formats</span>
+<span id="L264" class="ln">   264</span>		{&#34;&#34;, 2, &#34;%!(EXTRA int=2)&#34;},
+<span id="L265" class="ln">   265</span>		{&#34;%d&#34;, &#34;hello&#34;, &#34;%!d(string=hello)&#34;},
+<span id="L266" class="ln">   266</span>	
+<span id="L267" class="ln">   267</span>		<span class="comment">// old test/fmt_test.go</span>
+<span id="L268" class="ln">   268</span>		{&#34;%d&#34;, 1234, &#34;1234&#34;},
+<span id="L269" class="ln">   269</span>		{&#34;%d&#34;, -1234, &#34;-1234&#34;},
+<span id="L270" class="ln">   270</span>		{&#34;%d&#34;, uint(1234), &#34;1234&#34;},
+<span id="L271" class="ln">   271</span>		{&#34;%d&#34;, uint32(b32), &#34;4294967295&#34;},
+<span id="L272" class="ln">   272</span>		{&#34;%d&#34;, uint64(b64), &#34;18446744073709551615&#34;},
+<span id="L273" class="ln">   273</span>		{&#34;%o&#34;, 01234, &#34;1234&#34;},
+<span id="L274" class="ln">   274</span>		{&#34;%#o&#34;, 01234, &#34;01234&#34;},
+<span id="L275" class="ln">   275</span>		{&#34;%o&#34;, uint32(b32), &#34;37777777777&#34;},
+<span id="L276" class="ln">   276</span>		{&#34;%o&#34;, uint64(b64), &#34;1777777777777777777777&#34;},
+<span id="L277" class="ln">   277</span>		{&#34;%x&#34;, 0x1234abcd, &#34;1234abcd&#34;},
+<span id="L278" class="ln">   278</span>		{&#34;%#x&#34;, 0x1234abcd, &#34;0x1234abcd&#34;},
+<span id="L279" class="ln">   279</span>		{&#34;%x&#34;, b32 - 0x1234567, &#34;fedcba98&#34;},
+<span id="L280" class="ln">   280</span>		{&#34;%X&#34;, 0x1234abcd, &#34;1234ABCD&#34;},
+<span id="L281" class="ln">   281</span>		{&#34;%X&#34;, b32 - 0x1234567, &#34;FEDCBA98&#34;},
+<span id="L282" class="ln">   282</span>		{&#34;%#X&#34;, 0, &#34;0X0&#34;},
+<span id="L283" class="ln">   283</span>		{&#34;%x&#34;, b64, &#34;ffffffffffffffff&#34;},
+<span id="L284" class="ln">   284</span>		{&#34;%b&#34;, 7, &#34;111&#34;},
+<span id="L285" class="ln">   285</span>		{&#34;%b&#34;, b64, &#34;1111111111111111111111111111111111111111111111111111111111111111&#34;},
+<span id="L286" class="ln">   286</span>		{&#34;%b&#34;, -6, &#34;-110&#34;},
+<span id="L287" class="ln">   287</span>		{&#34;%e&#34;, 1.0, &#34;1.000000e+00&#34;},
+<span id="L288" class="ln">   288</span>		{&#34;%e&#34;, 1234.5678e3, &#34;1.234568e+06&#34;},
+<span id="L289" class="ln">   289</span>		{&#34;%e&#34;, 1234.5678e-8, &#34;1.234568e-05&#34;},
+<span id="L290" class="ln">   290</span>		{&#34;%e&#34;, -7.0, &#34;-7.000000e+00&#34;},
+<span id="L291" class="ln">   291</span>		{&#34;%e&#34;, -1e-9, &#34;-1.000000e-09&#34;},
+<span id="L292" class="ln">   292</span>		{&#34;%f&#34;, 1234.5678e3, &#34;1234567.800000&#34;},
+<span id="L293" class="ln">   293</span>		{&#34;%f&#34;, 1234.5678e-8, &#34;0.000012&#34;},
+<span id="L294" class="ln">   294</span>		{&#34;%f&#34;, -7.0, &#34;-7.000000&#34;},
+<span id="L295" class="ln">   295</span>		{&#34;%f&#34;, -1e-9, &#34;-0.000000&#34;},
+<span id="L296" class="ln">   296</span>		{&#34;%g&#34;, 1234.5678e3, &#34;1.2345678e+06&#34;},
+<span id="L297" class="ln">   297</span>		{&#34;%g&#34;, float32(1234.5678e3), &#34;1.2345678e+06&#34;},
+<span id="L298" class="ln">   298</span>		{&#34;%g&#34;, 1234.5678e-8, &#34;1.2345678e-05&#34;},
+<span id="L299" class="ln">   299</span>		{&#34;%g&#34;, -7.0, &#34;-7&#34;},
+<span id="L300" class="ln">   300</span>		{&#34;%g&#34;, -1e-9, &#34;-1e-09&#34;},
+<span id="L301" class="ln">   301</span>		{&#34;%g&#34;, float32(-1e-9), &#34;-1e-09&#34;},
+<span id="L302" class="ln">   302</span>		{&#34;%E&#34;, 1.0, &#34;1.000000E+00&#34;},
+<span id="L303" class="ln">   303</span>		{&#34;%E&#34;, 1234.5678e3, &#34;1.234568E+06&#34;},
+<span id="L304" class="ln">   304</span>		{&#34;%E&#34;, 1234.5678e-8, &#34;1.234568E-05&#34;},
+<span id="L305" class="ln">   305</span>		{&#34;%E&#34;, -7.0, &#34;-7.000000E+00&#34;},
+<span id="L306" class="ln">   306</span>		{&#34;%E&#34;, -1e-9, &#34;-1.000000E-09&#34;},
+<span id="L307" class="ln">   307</span>		{&#34;%G&#34;, 1234.5678e3, &#34;1.2345678E+06&#34;},
+<span id="L308" class="ln">   308</span>		{&#34;%G&#34;, float32(1234.5678e3), &#34;1.2345678E+06&#34;},
+<span id="L309" class="ln">   309</span>		{&#34;%G&#34;, 1234.5678e-8, &#34;1.2345678E-05&#34;},
+<span id="L310" class="ln">   310</span>		{&#34;%G&#34;, -7.0, &#34;-7&#34;},
+<span id="L311" class="ln">   311</span>		{&#34;%G&#34;, -1e-9, &#34;-1E-09&#34;},
+<span id="L312" class="ln">   312</span>		{&#34;%G&#34;, float32(-1e-9), &#34;-1E-09&#34;},
+<span id="L313" class="ln">   313</span>		{&#34;%c&#34;, &#39;x&#39;, &#34;x&#34;},
+<span id="L314" class="ln">   314</span>		{&#34;%c&#34;, 0xe4, &#34;ä&#34;},
+<span id="L315" class="ln">   315</span>		{&#34;%c&#34;, 0x672c, &#34;本&#34;},
+<span id="L316" class="ln">   316</span>		{&#34;%c&#34;, &#39;日&#39;, &#34;日&#34;},
+<span id="L317" class="ln">   317</span>		{&#34;%20.8d&#34;, 1234, &#34;            00001234&#34;},
+<span id="L318" class="ln">   318</span>		{&#34;%20.8d&#34;, -1234, &#34;           -00001234&#34;},
+<span id="L319" class="ln">   319</span>		{&#34;%20d&#34;, 1234, &#34;                1234&#34;},
+<span id="L320" class="ln">   320</span>		{&#34;%-20.8d&#34;, 1234, &#34;00001234            &#34;},
+<span id="L321" class="ln">   321</span>		{&#34;%-20.8d&#34;, -1234, &#34;-00001234           &#34;},
+<span id="L322" class="ln">   322</span>		{&#34;%-#20.8x&#34;, 0x1234abc, &#34;0x01234abc          &#34;},
+<span id="L323" class="ln">   323</span>		{&#34;%-#20.8X&#34;, 0x1234abc, &#34;0X01234ABC          &#34;},
+<span id="L324" class="ln">   324</span>		{&#34;%-#20.8o&#34;, 01234, &#34;00001234            &#34;},
+<span id="L325" class="ln">   325</span>		{&#34;%.20b&#34;, 7, &#34;00000000000000000111&#34;},
+<span id="L326" class="ln">   326</span>		{&#34;%20.5s&#34;, &#34;qwertyuiop&#34;, &#34;               qwert&#34;},
+<span id="L327" class="ln">   327</span>		{&#34;%.5s&#34;, &#34;qwertyuiop&#34;, &#34;qwert&#34;},
+<span id="L328" class="ln">   328</span>		{&#34;%-20.5s&#34;, &#34;qwertyuiop&#34;, &#34;qwert               &#34;},
+<span id="L329" class="ln">   329</span>		{&#34;%20c&#34;, &#39;x&#39;, &#34;                   x&#34;},
+<span id="L330" class="ln">   330</span>		{&#34;%-20c&#34;, &#39;x&#39;, &#34;x                   &#34;},
+<span id="L331" class="ln">   331</span>		{&#34;%20.6e&#34;, 1.2345e3, &#34;        1.234500e+03&#34;},
+<span id="L332" class="ln">   332</span>		{&#34;%20.6e&#34;, 1.2345e-3, &#34;        1.234500e-03&#34;},
+<span id="L333" class="ln">   333</span>		{&#34;%20e&#34;, 1.2345e3, &#34;        1.234500e+03&#34;},
+<span id="L334" class="ln">   334</span>		{&#34;%20e&#34;, 1.2345e-3, &#34;        1.234500e-03&#34;},
+<span id="L335" class="ln">   335</span>		{&#34;%20.8e&#34;, 1.2345e3, &#34;      1.23450000e+03&#34;},
+<span id="L336" class="ln">   336</span>		{&#34;%20f&#34;, 1.23456789e3, &#34;         1234.567890&#34;},
+<span id="L337" class="ln">   337</span>		{&#34;%20f&#34;, 1.23456789e-3, &#34;            0.001235&#34;},
+<span id="L338" class="ln">   338</span>		{&#34;%20f&#34;, 12345678901.23456789, &#34;  12345678901.234568&#34;},
+<span id="L339" class="ln">   339</span>		{&#34;%-20f&#34;, 1.23456789e3, &#34;1234.567890         &#34;},
+<span id="L340" class="ln">   340</span>		{&#34;%20.8f&#34;, 1.23456789e3, &#34;       1234.56789000&#34;},
+<span id="L341" class="ln">   341</span>		{&#34;%20.8f&#34;, 1.23456789e-3, &#34;          0.00123457&#34;},
+<span id="L342" class="ln">   342</span>		{&#34;%g&#34;, 1.23456789e3, &#34;1234.56789&#34;},
+<span id="L343" class="ln">   343</span>		{&#34;%g&#34;, 1.23456789e-3, &#34;0.00123456789&#34;},
+<span id="L344" class="ln">   344</span>		{&#34;%g&#34;, 1.23456789e20, &#34;1.23456789e+20&#34;},
+<span id="L345" class="ln">   345</span>		{&#34;%20e&#34;, math.Inf(1), &#34;                +Inf&#34;},
+<span id="L346" class="ln">   346</span>		{&#34;%-20f&#34;, math.Inf(-1), &#34;-Inf                &#34;},
+<span id="L347" class="ln">   347</span>		{&#34;%20g&#34;, math.NaN(), &#34;                 NaN&#34;},
+<span id="L348" class="ln">   348</span>	
+<span id="L349" class="ln">   349</span>		<span class="comment">// arrays</span>
+<span id="L350" class="ln">   350</span>		{&#34;%v&#34;, array, &#34;[1 2 3 4 5]&#34;},
+<span id="L351" class="ln">   351</span>		{&#34;%v&#34;, iarray, &#34;[1 hello 2.5 &lt;nil&gt;]&#34;},
+<span id="L352" class="ln">   352</span>		{&#34;%v&#34;, barray, &#34;[1 2 3 4 5]&#34;},
+<span id="L353" class="ln">   353</span>		{&#34;%v&#34;, &amp;array, &#34;&amp;[1 2 3 4 5]&#34;},
+<span id="L354" class="ln">   354</span>		{&#34;%v&#34;, &amp;iarray, &#34;&amp;[1 hello 2.5 &lt;nil&gt;]&#34;},
+<span id="L355" class="ln">   355</span>		{&#34;%v&#34;, &amp;barray, &#34;&amp;[1 2 3 4 5]&#34;},
+<span id="L356" class="ln">   356</span>	
+<span id="L357" class="ln">   357</span>		<span class="comment">// slices</span>
+<span id="L358" class="ln">   358</span>		{&#34;%v&#34;, slice, &#34;[1 2 3 4 5]&#34;},
+<span id="L359" class="ln">   359</span>		{&#34;%v&#34;, islice, &#34;[1 hello 2.5 &lt;nil&gt;]&#34;},
+<span id="L360" class="ln">   360</span>		{&#34;%v&#34;, bslice, &#34;[1 2 3 4 5]&#34;},
+<span id="L361" class="ln">   361</span>		{&#34;%v&#34;, &amp;slice, &#34;&amp;[1 2 3 4 5]&#34;},
+<span id="L362" class="ln">   362</span>		{&#34;%v&#34;, &amp;islice, &#34;&amp;[1 hello 2.5 &lt;nil&gt;]&#34;},
+<span id="L363" class="ln">   363</span>		{&#34;%v&#34;, &amp;bslice, &#34;&amp;[1 2 3 4 5]&#34;},
+<span id="L364" class="ln">   364</span>	
+<span id="L365" class="ln">   365</span>		<span class="comment">// complexes with %v</span>
+<span id="L366" class="ln">   366</span>		{&#34;%v&#34;, 1 + 2i, &#34;(1+2i)&#34;},
+<span id="L367" class="ln">   367</span>		{&#34;%v&#34;, complex64(1 + 2i), &#34;(1+2i)&#34;},
+<span id="L368" class="ln">   368</span>		{&#34;%v&#34;, complex128(1 + 2i), &#34;(1+2i)&#34;},
+<span id="L369" class="ln">   369</span>	
+<span id="L370" class="ln">   370</span>		<span class="comment">// structs</span>
+<span id="L371" class="ln">   371</span>		{&#34;%v&#34;, A{1, 2, &#34;a&#34;, []int{1, 2}}, `{1 2 a [1 2]}`},
+<span id="L372" class="ln">   372</span>		{&#34;%+v&#34;, A{1, 2, &#34;a&#34;, []int{1, 2}}, `{i:1 j:2 s:a x:[1 2]}`},
+<span id="L373" class="ln">   373</span>	
+<span id="L374" class="ln">   374</span>		<span class="comment">// +v on structs with Stringable items</span>
+<span id="L375" class="ln">   375</span>		{&#34;%+v&#34;, B{1, 2}, `{I:&lt;1&gt; j:2}`},
+<span id="L376" class="ln">   376</span>		{&#34;%+v&#34;, C{1, B{2, 3}}, `{i:1 B:{I:&lt;2&gt; j:3}}`},
+<span id="L377" class="ln">   377</span>	
+<span id="L378" class="ln">   378</span>		<span class="comment">// other formats on Stringable items</span>
+<span id="L379" class="ln">   379</span>		{&#34;%s&#34;, I(23), `&lt;23&gt;`},
+<span id="L380" class="ln">   380</span>		{&#34;%q&#34;, I(23), `&#34;&lt;23&gt;&#34;`},
+<span id="L381" class="ln">   381</span>		{&#34;%x&#34;, I(23), `3c32333e`},
+<span id="L382" class="ln">   382</span>		{&#34;%#x&#34;, I(23), `0x3c0x320x330x3e`},
+<span id="L383" class="ln">   383</span>		{&#34;%# x&#34;, I(23), `0x3c 0x32 0x33 0x3e`},
+<span id="L384" class="ln">   384</span>		{&#34;%d&#34;, I(23), `23`}, <span class="comment">// Stringer applies only to string formats.</span>
+<span id="L385" class="ln">   385</span>	
+<span id="L386" class="ln">   386</span>		<span class="comment">// go syntax</span>
+<span id="L387" class="ln">   387</span>		{&#34;%#v&#34;, A{1, 2, &#34;a&#34;, []int{1, 2}}, `fmt_test.A{i:1, j:0x2, s:&#34;a&#34;, x:[]int{1, 2}}`},
+<span id="L388" class="ln">   388</span>		{&#34;%#v&#34;, &amp;b, &#34;(*uint8)(0xPTR)&#34;},
+<span id="L389" class="ln">   389</span>		{&#34;%#v&#34;, TestFmtInterface, &#34;(func(*testing.T))(0xPTR)&#34;},
+<span id="L390" class="ln">   390</span>		{&#34;%#v&#34;, make(chan int), &#34;(chan int)(0xPTR)&#34;},
+<span id="L391" class="ln">   391</span>		{&#34;%#v&#34;, uint64(1&lt;&lt;64 - 1), &#34;0xffffffffffffffff&#34;},
+<span id="L392" class="ln">   392</span>		{&#34;%#v&#34;, 1000000000, &#34;1000000000&#34;},
+<span id="L393" class="ln">   393</span>		{&#34;%#v&#34;, map[string]int{&#34;a&#34;: 1}, `map[string]int{&#34;a&#34;:1}`},
+<span id="L394" class="ln">   394</span>		{&#34;%#v&#34;, map[string]B{&#34;a&#34;: {1, 2}}, `map[string]fmt_test.B{&#34;a&#34;:fmt_test.B{I:1, j:2}}`},
+<span id="L395" class="ln">   395</span>		{&#34;%#v&#34;, []string{&#34;a&#34;, &#34;b&#34;}, `[]string{&#34;a&#34;, &#34;b&#34;}`},
+<span id="L396" class="ln">   396</span>		{&#34;%#v&#34;, SI{}, `fmt_test.SI{I:interface {}(nil)}`},
+<span id="L397" class="ln">   397</span>		{&#34;%#v&#34;, []int(nil), `[]int(nil)`},
+<span id="L398" class="ln">   398</span>		{&#34;%#v&#34;, []int{}, `[]int{}`},
+<span id="L399" class="ln">   399</span>		{&#34;%#v&#34;, array, `[5]int{1, 2, 3, 4, 5}`},
+<span id="L400" class="ln">   400</span>		{&#34;%#v&#34;, &amp;array, `&amp;[5]int{1, 2, 3, 4, 5}`},
+<span id="L401" class="ln">   401</span>		{&#34;%#v&#34;, iarray, `[4]interface {}{1, &#34;hello&#34;, 2.5, interface {}(nil)}`},
+<span id="L402" class="ln">   402</span>		{&#34;%#v&#34;, &amp;iarray, `&amp;[4]interface {}{1, &#34;hello&#34;, 2.5, interface {}(nil)}`},
+<span id="L403" class="ln">   403</span>		{&#34;%#v&#34;, map[int]byte(nil), `map[int]uint8(nil)`},
+<span id="L404" class="ln">   404</span>		{&#34;%#v&#34;, map[int]byte{}, `map[int]uint8{}`},
+<span id="L405" class="ln">   405</span>		{&#34;%#v&#34;, &#34;foo&#34;, `&#34;foo&#34;`},
+<span id="L406" class="ln">   406</span>		{&#34;%#v&#34;, barray, `[5]fmt_test.renamedUint8{0x1, 0x2, 0x3, 0x4, 0x5}`},
+<span id="L407" class="ln">   407</span>		{&#34;%#v&#34;, bslice, `[]fmt_test.renamedUint8{0x1, 0x2, 0x3, 0x4, 0x5}`},
+<span id="L408" class="ln">   408</span>		{&#34;%#v&#34;, []byte(nil), &#34;[]byte(nil)&#34;},
+<span id="L409" class="ln">   409</span>		{&#34;%#v&#34;, []int32(nil), &#34;[]int32(nil)&#34;},
+<span id="L410" class="ln">   410</span>	
+<span id="L411" class="ln">   411</span>		<span class="comment">// slices with other formats</span>
+<span id="L412" class="ln">   412</span>		{&#34;%#x&#34;, []int{1, 2, 15}, `[0x1 0x2 0xf]`},
+<span id="L413" class="ln">   413</span>		{&#34;%x&#34;, []int{1, 2, 15}, `[1 2 f]`},
+<span id="L414" class="ln">   414</span>		{&#34;%d&#34;, []int{1, 2, 15}, `[1 2 15]`},
+<span id="L415" class="ln">   415</span>		{&#34;%d&#34;, []byte{1, 2, 15}, `[1 2 15]`},
+<span id="L416" class="ln">   416</span>		{&#34;%q&#34;, []string{&#34;a&#34;, &#34;b&#34;}, `[&#34;a&#34; &#34;b&#34;]`},
+<span id="L417" class="ln">   417</span>	
+<span id="L418" class="ln">   418</span>		<span class="comment">// renamings</span>
+<span id="L419" class="ln">   419</span>		{&#34;%v&#34;, renamedBool(true), &#34;true&#34;},
+<span id="L420" class="ln">   420</span>		{&#34;%d&#34;, renamedBool(true), &#34;%!d(fmt_test.renamedBool=true)&#34;},
+<span id="L421" class="ln">   421</span>		{&#34;%o&#34;, renamedInt(8), &#34;10&#34;},
+<span id="L422" class="ln">   422</span>		{&#34;%d&#34;, renamedInt8(-9), &#34;-9&#34;},
+<span id="L423" class="ln">   423</span>		{&#34;%v&#34;, renamedInt16(10), &#34;10&#34;},
+<span id="L424" class="ln">   424</span>		{&#34;%v&#34;, renamedInt32(-11), &#34;-11&#34;},
+<span id="L425" class="ln">   425</span>		{&#34;%X&#34;, renamedInt64(255), &#34;FF&#34;},
+<span id="L426" class="ln">   426</span>		{&#34;%v&#34;, renamedUint(13), &#34;13&#34;},
+<span id="L427" class="ln">   427</span>		{&#34;%o&#34;, renamedUint8(14), &#34;16&#34;},
+<span id="L428" class="ln">   428</span>		{&#34;%X&#34;, renamedUint16(15), &#34;F&#34;},
+<span id="L429" class="ln">   429</span>		{&#34;%d&#34;, renamedUint32(16), &#34;16&#34;},
+<span id="L430" class="ln">   430</span>		{&#34;%X&#34;, renamedUint64(17), &#34;11&#34;},
+<span id="L431" class="ln">   431</span>		{&#34;%o&#34;, renamedUintptr(18), &#34;22&#34;},
+<span id="L432" class="ln">   432</span>		{&#34;%x&#34;, renamedString(&#34;thing&#34;), &#34;7468696e67&#34;},
+<span id="L433" class="ln">   433</span>		{&#34;%d&#34;, renamedBytes([]byte{1, 2, 15}), `[1 2 15]`},
+<span id="L434" class="ln">   434</span>		{&#34;%q&#34;, renamedBytes([]byte(&#34;hello&#34;)), `&#34;hello&#34;`},
+<span id="L435" class="ln">   435</span>		{&#34;%x&#34;, []renamedUint8{&#39;a&#39;, &#39;b&#39;, &#39;c&#39;}, &#34;616263&#34;},
+<span id="L436" class="ln">   436</span>		{&#34;%s&#34;, []renamedUint8{&#39;h&#39;, &#39;e&#39;, &#39;l&#39;, &#39;l&#39;, &#39;o&#39;}, &#34;hello&#34;},
+<span id="L437" class="ln">   437</span>		{&#34;%q&#34;, []renamedUint8{&#39;h&#39;, &#39;e&#39;, &#39;l&#39;, &#39;l&#39;, &#39;o&#39;}, `&#34;hello&#34;`},
+<span id="L438" class="ln">   438</span>		{&#34;%v&#34;, renamedFloat32(22), &#34;22&#34;},
+<span id="L439" class="ln">   439</span>		{&#34;%v&#34;, renamedFloat64(33), &#34;33&#34;},
+<span id="L440" class="ln">   440</span>		{&#34;%v&#34;, renamedComplex64(3 + 4i), &#34;(3+4i)&#34;},
+<span id="L441" class="ln">   441</span>		{&#34;%v&#34;, renamedComplex128(4 - 3i), &#34;(4-3i)&#34;},
+<span id="L442" class="ln">   442</span>	
+<span id="L443" class="ln">   443</span>		<span class="comment">// Formatter</span>
+<span id="L444" class="ln">   444</span>		{&#34;%x&#34;, F(1), &#34;&lt;x=F(1)&gt;&#34;},
+<span id="L445" class="ln">   445</span>		{&#34;%x&#34;, G(2), &#34;2&#34;},
+<span id="L446" class="ln">   446</span>		{&#34;%+v&#34;, S{F(4), G(5)}, &#34;{F:&lt;v=F(4)&gt; G:5}&#34;},
+<span id="L447" class="ln">   447</span>	
+<span id="L448" class="ln">   448</span>		<span class="comment">// GoStringer</span>
+<span id="L449" class="ln">   449</span>		{&#34;%#v&#34;, G(6), &#34;GoString(6)&#34;},
+<span id="L450" class="ln">   450</span>		{&#34;%#v&#34;, S{F(7), G(8)}, &#34;fmt_test.S{F:&lt;v=F(7)&gt;, G:GoString(8)}&#34;},
+<span id="L451" class="ln">   451</span>	
+<span id="L452" class="ln">   452</span>		<span class="comment">// %T</span>
+<span id="L453" class="ln">   453</span>		{&#34;%T&#34;, (4 - 3i), &#34;complex128&#34;},
+<span id="L454" class="ln">   454</span>		{&#34;%T&#34;, renamedComplex128(4 - 3i), &#34;fmt_test.renamedComplex128&#34;},
+<span id="L455" class="ln">   455</span>		{&#34;%T&#34;, intVal, &#34;int&#34;},
+<span id="L456" class="ln">   456</span>		{&#34;%6T&#34;, &amp;intVal, &#34;  *int&#34;},
+<span id="L457" class="ln">   457</span>		{&#34;%10T&#34;, nil, &#34;     &lt;nil&gt;&#34;},
+<span id="L458" class="ln">   458</span>		{&#34;%-10T&#34;, nil, &#34;&lt;nil&gt;     &#34;},
+<span id="L459" class="ln">   459</span>	
+<span id="L460" class="ln">   460</span>		<span class="comment">// %p</span>
+<span id="L461" class="ln">   461</span>		{&#34;p0=%p&#34;, new(int), &#34;p0=0xPTR&#34;},
+<span id="L462" class="ln">   462</span>		{&#34;p1=%s&#34;, &amp;pValue, &#34;p1=String(p)&#34;}, <span class="comment">// String method...</span>
+<span id="L463" class="ln">   463</span>		{&#34;p2=%p&#34;, &amp;pValue, &#34;p2=0xPTR&#34;},     <span class="comment">// ... not called with %p</span>
+<span id="L464" class="ln">   464</span>		{&#34;p3=%p&#34;, (*int)(nil), &#34;p3=0x0&#34;},
+<span id="L465" class="ln">   465</span>		{&#34;p4=%#p&#34;, new(int), &#34;p4=PTR&#34;},
+<span id="L466" class="ln">   466</span>	
+<span id="L467" class="ln">   467</span>		<span class="comment">// %p on non-pointers</span>
+<span id="L468" class="ln">   468</span>		{&#34;%p&#34;, make(chan int), &#34;0xPTR&#34;},
+<span id="L469" class="ln">   469</span>		{&#34;%p&#34;, make(map[int]int), &#34;0xPTR&#34;},
+<span id="L470" class="ln">   470</span>		{&#34;%p&#34;, make([]int, 1), &#34;0xPTR&#34;},
+<span id="L471" class="ln">   471</span>		{&#34;%p&#34;, 27, &#34;%!p(int=27)&#34;}, <span class="comment">// not a pointer at all</span>
+<span id="L472" class="ln">   472</span>	
+<span id="L473" class="ln">   473</span>		<span class="comment">// %q on pointers</span>
+<span id="L474" class="ln">   474</span>		{&#34;%q&#34;, (*int)(nil), &#34;%!q(*int=&lt;nil&gt;)&#34;},
+<span id="L475" class="ln">   475</span>		{&#34;%q&#34;, new(int), &#34;%!q(*int=0xPTR)&#34;},
+<span id="L476" class="ln">   476</span>	
+<span id="L477" class="ln">   477</span>		<span class="comment">// %v on pointers formats 0 as &lt;nil&gt;</span>
+<span id="L478" class="ln">   478</span>		{&#34;%v&#34;, (*int)(nil), &#34;&lt;nil&gt;&#34;},
+<span id="L479" class="ln">   479</span>		{&#34;%v&#34;, new(int), &#34;0xPTR&#34;},
+<span id="L480" class="ln">   480</span>	
+<span id="L481" class="ln">   481</span>		<span class="comment">// %d etc. pointers use specified base.</span>
+<span id="L482" class="ln">   482</span>		{&#34;%d&#34;, new(int), &#34;PTR_d&#34;},
+<span id="L483" class="ln">   483</span>		{&#34;%o&#34;, new(int), &#34;PTR_o&#34;},
+<span id="L484" class="ln">   484</span>		{&#34;%x&#34;, new(int), &#34;PTR_x&#34;},
+<span id="L485" class="ln">   485</span>	
+<span id="L486" class="ln">   486</span>		<span class="comment">// %d on Stringer should give integer if possible</span>
+<span id="L487" class="ln">   487</span>		{&#34;%s&#34;, time.Time{}.Month(), &#34;January&#34;},
+<span id="L488" class="ln">   488</span>		{&#34;%d&#34;, time.Time{}.Month(), &#34;1&#34;},
+<span id="L489" class="ln">   489</span>	
+<span id="L490" class="ln">   490</span>		<span class="comment">// erroneous things</span>
+<span id="L491" class="ln">   491</span>		{&#34;%s %&#34;, &#34;hello&#34;, &#34;hello %!(NOVERB)&#34;},
+<span id="L492" class="ln">   492</span>		{&#34;%s %.2&#34;, &#34;hello&#34;, &#34;hello %!(NOVERB)&#34;},
+<span id="L493" class="ln">   493</span>		{&#34;%d&#34;, &#34;hello&#34;, &#34;%!d(string=hello)&#34;},
+<span id="L494" class="ln">   494</span>		{&#34;no args&#34;, &#34;hello&#34;, &#34;no args%!(EXTRA string=hello)&#34;},
+<span id="L495" class="ln">   495</span>		{&#34;%s&#34;, nil, &#34;%!s(&lt;nil&gt;)&#34;},
+<span id="L496" class="ln">   496</span>		{&#34;%T&#34;, nil, &#34;&lt;nil&gt;&#34;},
+<span id="L497" class="ln">   497</span>		{&#34;%-1&#34;, 100, &#34;%!(NOVERB)%!(EXTRA int=100)&#34;},
+<span id="L498" class="ln">   498</span>	
+<span id="L499" class="ln">   499</span>		<span class="comment">// The &#34;&lt;nil&gt;&#34; show up because maps are printed by</span>
+<span id="L500" class="ln">   500</span>		<span class="comment">// first obtaining a list of keys and then looking up</span>
+<span id="L501" class="ln">   501</span>		<span class="comment">// each key.  Since NaNs can be map keys but cannot</span>
+<span id="L502" class="ln">   502</span>		<span class="comment">// be fetched directly, the lookup fails and returns a</span>
+<span id="L503" class="ln">   503</span>		<span class="comment">// zero reflect.Value, which formats as &lt;nil&gt;.</span>
+<span id="L504" class="ln">   504</span>		<span class="comment">// This test is just to check that it shows the two NaNs at all.</span>
+<span id="L505" class="ln">   505</span>		{&#34;%v&#34;, map[float64]int{math.NaN(): 1, math.NaN(): 2}, &#34;map[NaN:&lt;nil&gt; NaN:&lt;nil&gt;]&#34;},
+<span id="L506" class="ln">   506</span>	
+<span id="L507" class="ln">   507</span>		<span class="comment">// Used to crash because nByte didn&#39;t allow for a sign.</span>
+<span id="L508" class="ln">   508</span>		{&#34;%b&#34;, int64(-1 &lt;&lt; 63), zeroFill(&#34;-1&#34;, 63, &#34;&#34;)},
+<span id="L509" class="ln">   509</span>	
+<span id="L510" class="ln">   510</span>		<span class="comment">// Used to panic.</span>
+<span id="L511" class="ln">   511</span>		{&#34;%0100d&#34;, 1, zeroFill(&#34;&#34;, 100, &#34;1&#34;)},
+<span id="L512" class="ln">   512</span>		{&#34;%0100d&#34;, -1, zeroFill(&#34;-&#34;, 99, &#34;1&#34;)},
+<span id="L513" class="ln">   513</span>		{&#34;%0.100f&#34;, 1.0, zeroFill(&#34;1.&#34;, 100, &#34;&#34;)},
+<span id="L514" class="ln">   514</span>		{&#34;%0.100f&#34;, -1.0, zeroFill(&#34;-1.&#34;, 100, &#34;&#34;)},
+<span id="L515" class="ln">   515</span>	
+<span id="L516" class="ln">   516</span>		<span class="comment">// Comparison of padding rules with C printf.</span>
+<span id="L517" class="ln">   517</span>		<span class="comment">/*
+<span id="L518" class="ln">   518</span>			C program:
+<span id="L519" class="ln">   519</span>			#include &lt;stdio.h&gt;
+<span id="L520" class="ln">   520</span>	
+<span id="L521" class="ln">   521</span>			char *format[] = {
+<span id="L522" class="ln">   522</span>				&#34;[%.2f]&#34;,
+<span id="L523" class="ln">   523</span>				&#34;[% .2f]&#34;,
+<span id="L524" class="ln">   524</span>				&#34;[%+.2f]&#34;,
+<span id="L525" class="ln">   525</span>				&#34;[%7.2f]&#34;,
+<span id="L526" class="ln">   526</span>				&#34;[% 7.2f]&#34;,
+<span id="L527" class="ln">   527</span>				&#34;[%+7.2f]&#34;,
+<span id="L528" class="ln">   528</span>				&#34;[%07.2f]&#34;,
+<span id="L529" class="ln">   529</span>				&#34;[% 07.2f]&#34;,
+<span id="L530" class="ln">   530</span>				&#34;[%+07.2f]&#34;,
+<span id="L531" class="ln">   531</span>			};
+<span id="L532" class="ln">   532</span>	
+<span id="L533" class="ln">   533</span>			int main(void) {
+<span id="L534" class="ln">   534</span>				int i;
+<span id="L535" class="ln">   535</span>				for(i = 0; i &lt; 9; i++) {
+<span id="L536" class="ln">   536</span>					printf(&#34;%s: &#34;, format[i]);
+<span id="L537" class="ln">   537</span>					printf(format[i], 1.0);
+<span id="L538" class="ln">   538</span>					printf(&#34; &#34;);
+<span id="L539" class="ln">   539</span>					printf(format[i], -1.0);
+<span id="L540" class="ln">   540</span>					printf(&#34;\n&#34;);
+<span id="L541" class="ln">   541</span>				}
+<span id="L542" class="ln">   542</span>			}
+<span id="L543" class="ln">   543</span>	
+<span id="L544" class="ln">   544</span>			Output:
+<span id="L545" class="ln">   545</span>				[%.2f]: [1.00] [-1.00]
+<span id="L546" class="ln">   546</span>				[% .2f]: [ 1.00] [-1.00]
+<span id="L547" class="ln">   547</span>				[%+.2f]: [+1.00] [-1.00]
+<span id="L548" class="ln">   548</span>				[%7.2f]: [   1.00] [  -1.00]
+<span id="L549" class="ln">   549</span>				[% 7.2f]: [   1.00] [  -1.00]
+<span id="L550" class="ln">   550</span>				[%+7.2f]: [  +1.00] [  -1.00]
+<span id="L551" class="ln">   551</span>				[%07.2f]: [0001.00] [-001.00]
+<span id="L552" class="ln">   552</span>				[% 07.2f]: [ 001.00] [-001.00]
+<span id="L553" class="ln">   553</span>				[%+07.2f]: [+001.00] [-001.00]
+<span id="L554" class="ln">   554</span>		*/</span>
+<span id="L555" class="ln">   555</span>		{&#34;%.2f&#34;, 1.0, &#34;1.00&#34;},
+<span id="L556" class="ln">   556</span>		{&#34;%.2f&#34;, -1.0, &#34;-1.00&#34;},
+<span id="L557" class="ln">   557</span>		{&#34;% .2f&#34;, 1.0, &#34; 1.00&#34;},
+<span id="L558" class="ln">   558</span>		{&#34;% .2f&#34;, -1.0, &#34;-1.00&#34;},
+<span id="L559" class="ln">   559</span>		{&#34;%+.2f&#34;, 1.0, &#34;+1.00&#34;},
+<span id="L560" class="ln">   560</span>		{&#34;%+.2f&#34;, -1.0, &#34;-1.00&#34;},
+<span id="L561" class="ln">   561</span>		{&#34;%7.2f&#34;, 1.0, &#34;   1.00&#34;},
+<span id="L562" class="ln">   562</span>		{&#34;%7.2f&#34;, -1.0, &#34;  -1.00&#34;},
+<span id="L563" class="ln">   563</span>		{&#34;% 7.2f&#34;, 1.0, &#34;   1.00&#34;},
+<span id="L564" class="ln">   564</span>		{&#34;% 7.2f&#34;, -1.0, &#34;  -1.00&#34;},
+<span id="L565" class="ln">   565</span>		{&#34;%+7.2f&#34;, 1.0, &#34;  +1.00&#34;},
+<span id="L566" class="ln">   566</span>		{&#34;%+7.2f&#34;, -1.0, &#34;  -1.00&#34;},
+<span id="L567" class="ln">   567</span>		{&#34;%07.2f&#34;, 1.0, &#34;0001.00&#34;},
+<span id="L568" class="ln">   568</span>		{&#34;%07.2f&#34;, -1.0, &#34;-001.00&#34;},
+<span id="L569" class="ln">   569</span>		{&#34;% 07.2f&#34;, 1.0, &#34; 001.00&#34;},
+<span id="L570" class="ln">   570</span>		{&#34;% 07.2f&#34;, -1.0, &#34;-001.00&#34;},
+<span id="L571" class="ln">   571</span>		{&#34;%+07.2f&#34;, 1.0, &#34;+001.00&#34;},
+<span id="L572" class="ln">   572</span>		{&#34;%+07.2f&#34;, -1.0, &#34;-001.00&#34;},
+<span id="L573" class="ln">   573</span>	
+<span id="L574" class="ln">   574</span>		<span class="comment">// Complex numbers: exhaustively tested in TestComplexFormatting.</span>
+<span id="L575" class="ln">   575</span>		{&#34;%7.2f&#34;, 1 + 2i, &#34;(   1.00  +2.00i)&#34;},
+<span id="L576" class="ln">   576</span>		{&#34;%+07.2f&#34;, -1 - 2i, &#34;(-001.00-002.00i)&#34;},
+<span id="L577" class="ln">   577</span>		<span class="comment">// Zero padding does not apply to infinities.</span>
+<span id="L578" class="ln">   578</span>		{&#34;%020f&#34;, math.Inf(-1), &#34;                -Inf&#34;},
+<span id="L579" class="ln">   579</span>		{&#34;%020f&#34;, math.Inf(+1), &#34;                +Inf&#34;},
+<span id="L580" class="ln">   580</span>		{&#34;% 020f&#34;, math.Inf(-1), &#34;                -Inf&#34;},
+<span id="L581" class="ln">   581</span>		{&#34;% 020f&#34;, math.Inf(+1), &#34;                 Inf&#34;},
+<span id="L582" class="ln">   582</span>		{&#34;%+020f&#34;, math.Inf(-1), &#34;                -Inf&#34;},
+<span id="L583" class="ln">   583</span>		{&#34;%+020f&#34;, math.Inf(+1), &#34;                +Inf&#34;},
+<span id="L584" class="ln">   584</span>		{&#34;%20f&#34;, -1.0, &#34;           -1.000000&#34;},
+<span id="L585" class="ln">   585</span>		<span class="comment">// Make sure we can handle very large widths.</span>
+<span id="L586" class="ln">   586</span>		{&#34;%0100f&#34;, -1.0, zeroFill(&#34;-&#34;, 99, &#34;1.000000&#34;)},
+<span id="L587" class="ln">   587</span>	
+<span id="L588" class="ln">   588</span>		<span class="comment">// Complex fmt used to leave the plus flag set for future entries in the array</span>
+<span id="L589" class="ln">   589</span>		<span class="comment">// causing +2+0i and +3+0i instead of 2+0i and 3+0i.</span>
+<span id="L590" class="ln">   590</span>		{&#34;%v&#34;, []complex64{1, 2, 3}, &#34;[(1+0i) (2+0i) (3+0i)]&#34;},
+<span id="L591" class="ln">   591</span>		{&#34;%v&#34;, []complex128{1, 2, 3}, &#34;[(1+0i) (2+0i) (3+0i)]&#34;},
+<span id="L592" class="ln">   592</span>	
+<span id="L593" class="ln">   593</span>		<span class="comment">// Incomplete format specification caused crash.</span>
+<span id="L594" class="ln">   594</span>		{&#34;%.&#34;, 3, &#34;%!.(int=3)&#34;},
+<span id="L595" class="ln">   595</span>	
+<span id="L596" class="ln">   596</span>		<span class="comment">// Used to panic with out-of-bounds for very large numeric representations.</span>
+<span id="L597" class="ln">   597</span>		<span class="comment">// nByte is set to handle one bit per uint64 in %b format, with a negative number.</span>
+<span id="L598" class="ln">   598</span>		<span class="comment">// See issue 6777.</span>
+<span id="L599" class="ln">   599</span>		{&#34;%#064x&#34;, 1, zeroFill(&#34;0x&#34;, 64, &#34;1&#34;)},
+<span id="L600" class="ln">   600</span>		{&#34;%#064x&#34;, -1, zeroFill(&#34;-0x&#34;, 63, &#34;1&#34;)},
+<span id="L601" class="ln">   601</span>		{&#34;%#064b&#34;, 1, zeroFill(&#34;&#34;, 64, &#34;1&#34;)},
+<span id="L602" class="ln">   602</span>		{&#34;%#064b&#34;, -1, zeroFill(&#34;-&#34;, 63, &#34;1&#34;)},
+<span id="L603" class="ln">   603</span>		{&#34;%#064o&#34;, 1, zeroFill(&#34;&#34;, 64, &#34;1&#34;)},
+<span id="L604" class="ln">   604</span>		{&#34;%#064o&#34;, -1, zeroFill(&#34;-&#34;, 63, &#34;1&#34;)},
+<span id="L605" class="ln">   605</span>		{&#34;%#064d&#34;, 1, zeroFill(&#34;&#34;, 64, &#34;1&#34;)},
+<span id="L606" class="ln">   606</span>		{&#34;%#064d&#34;, -1, zeroFill(&#34;-&#34;, 63, &#34;1&#34;)},
+<span id="L607" class="ln">   607</span>		<span class="comment">// Test that we handle the crossover above the size of uint64</span>
+<span id="L608" class="ln">   608</span>		{&#34;%#072x&#34;, 1, zeroFill(&#34;0x&#34;, 72, &#34;1&#34;)},
+<span id="L609" class="ln">   609</span>		{&#34;%#072x&#34;, -1, zeroFill(&#34;-0x&#34;, 71, &#34;1&#34;)},
+<span id="L610" class="ln">   610</span>		{&#34;%#072b&#34;, 1, zeroFill(&#34;&#34;, 72, &#34;1&#34;)},
+<span id="L611" class="ln">   611</span>		{&#34;%#072b&#34;, -1, zeroFill(&#34;-&#34;, 71, &#34;1&#34;)},
+<span id="L612" class="ln">   612</span>		{&#34;%#072o&#34;, 1, zeroFill(&#34;&#34;, 72, &#34;1&#34;)},
+<span id="L613" class="ln">   613</span>		{&#34;%#072o&#34;, -1, zeroFill(&#34;-&#34;, 71, &#34;1&#34;)},
+<span id="L614" class="ln">   614</span>		{&#34;%#072d&#34;, 1, zeroFill(&#34;&#34;, 72, &#34;1&#34;)},
+<span id="L615" class="ln">   615</span>		{&#34;%#072d&#34;, -1, zeroFill(&#34;-&#34;, 71, &#34;1&#34;)},
+<span id="L616" class="ln">   616</span>	
+<span id="L617" class="ln">   617</span>		<span class="comment">// Padding for complex numbers. Has been bad, then fixed, then bad again.</span>
+<span id="L618" class="ln">   618</span>		{&#34;%+10.2f&#34;, +104.66 + 440.51i, &#34;(   +104.66   +440.51i)&#34;},
+<span id="L619" class="ln">   619</span>		{&#34;%+10.2f&#34;, -104.66 + 440.51i, &#34;(   -104.66   +440.51i)&#34;},
+<span id="L620" class="ln">   620</span>		{&#34;%+10.2f&#34;, +104.66 - 440.51i, &#34;(   +104.66   -440.51i)&#34;},
+<span id="L621" class="ln">   621</span>		{&#34;%+10.2f&#34;, -104.66 - 440.51i, &#34;(   -104.66   -440.51i)&#34;},
+<span id="L622" class="ln">   622</span>		{&#34;%+010.2f&#34;, +104.66 + 440.51i, &#34;(+000104.66+000440.51i)&#34;},
+<span id="L623" class="ln">   623</span>		{&#34;%+010.2f&#34;, -104.66 + 440.51i, &#34;(-000104.66+000440.51i)&#34;},
+<span id="L624" class="ln">   624</span>		{&#34;%+010.2f&#34;, +104.66 - 440.51i, &#34;(+000104.66-000440.51i)&#34;},
+<span id="L625" class="ln">   625</span>		{&#34;%+010.2f&#34;, -104.66 - 440.51i, &#34;(-000104.66-000440.51i)&#34;},
+<span id="L626" class="ln">   626</span>	}
+<span id="L627" class="ln">   627</span>	
+<span id="L628" class="ln">   628</span>	<span class="comment">// zeroFill generates zero-filled strings of the specified width. The length</span>
+<span id="L629" class="ln">   629</span>	<span class="comment">// of the suffix (but not the prefix) is compensated for in the width calculation.</span>
+<span id="L630" class="ln">   630</span>	func zeroFill(prefix string, width int, suffix string) string {
+<span id="L631" class="ln">   631</span>		return prefix + strings.Repeat(&#34;0&#34;, width-len(suffix)) + suffix
+<span id="L632" class="ln">   632</span>	}
+<span id="L633" class="ln">   633</span>	
+<span id="L634" class="ln">   634</span>	func TestSprintf(t *testing.T) {
+<span id="L635" class="ln">   635</span>		for _, tt := range fmtTests {
+<span id="L636" class="ln">   636</span>			s := Sprintf(tt.fmt, tt.val)
+<span id="L637" class="ln">   637</span>			if i := strings.Index(tt.out, &#34;PTR&#34;); i &gt;= 0 {
+<span id="L638" class="ln">   638</span>				pattern := &#34;PTR&#34;
+<span id="L639" class="ln">   639</span>				chars := &#34;0123456789abcdefABCDEF&#34;
+<span id="L640" class="ln">   640</span>				switch {
+<span id="L641" class="ln">   641</span>				case strings.HasPrefix(tt.out[i:], &#34;PTR_d&#34;):
+<span id="L642" class="ln">   642</span>					pattern = &#34;PTR_d&#34;
+<span id="L643" class="ln">   643</span>					chars = chars[:10]
+<span id="L644" class="ln">   644</span>				case strings.HasPrefix(tt.out[i:], &#34;PTR_o&#34;):
+<span id="L645" class="ln">   645</span>					pattern = &#34;PTR_o&#34;
+<span id="L646" class="ln">   646</span>					chars = chars[:8]
+<span id="L647" class="ln">   647</span>				case strings.HasPrefix(tt.out[i:], &#34;PTR_x&#34;):
+<span id="L648" class="ln">   648</span>					pattern = &#34;PTR_x&#34;
+<span id="L649" class="ln">   649</span>				}
+<span id="L650" class="ln">   650</span>				j := i
+<span id="L651" class="ln">   651</span>				for ; j &lt; len(s); j++ {
+<span id="L652" class="ln">   652</span>					c := s[j]
+<span id="L653" class="ln">   653</span>					if !strings.ContainsRune(chars, rune(c)) {
+<span id="L654" class="ln">   654</span>						break
+<span id="L655" class="ln">   655</span>					}
+<span id="L656" class="ln">   656</span>				}
+<span id="L657" class="ln">   657</span>				s = s[0:i] + pattern + s[j:]
+<span id="L658" class="ln">   658</span>			}
+<span id="L659" class="ln">   659</span>			if s != tt.out {
+<span id="L660" class="ln">   660</span>				if _, ok := tt.val.(string); ok {
+<span id="L661" class="ln">   661</span>					<span class="comment">// Don&#39;t requote the already-quoted strings.</span>
+<span id="L662" class="ln">   662</span>					<span class="comment">// It&#39;s too confusing to read the errors.</span>
+<span id="L663" class="ln">   663</span>					t.Errorf(&#34;Sprintf(%q, %q) = &lt;%s&gt; want &lt;%s&gt;&#34;, tt.fmt, tt.val, s, tt.out)
+<span id="L664" class="ln">   664</span>				} else {
+<span id="L665" class="ln">   665</span>					t.Errorf(&#34;Sprintf(%q, %v) = %q want %q&#34;, tt.fmt, tt.val, s, tt.out)
+<span id="L666" class="ln">   666</span>				}
+<span id="L667" class="ln">   667</span>			}
+<span id="L668" class="ln">   668</span>		}
+<span id="L669" class="ln">   669</span>	}
+<span id="L670" class="ln">   670</span>	
+<span id="L671" class="ln">   671</span>	<span class="comment">// TestComplexFormatting checks that a complex always formats to the same</span>
+<span id="L672" class="ln">   672</span>	<span class="comment">// thing as if done by hand with two singleton prints.</span>
+<span id="L673" class="ln">   673</span>	func TestComplexFormatting(t *testing.T) {
+<span id="L674" class="ln">   674</span>		var yesNo = []bool{true, false}
+<span id="L675" class="ln">   675</span>		var signs = []float64{1, 0, -1}
+<span id="L676" class="ln">   676</span>		for _, plus := range yesNo {
+<span id="L677" class="ln">   677</span>			for _, zero := range yesNo {
+<span id="L678" class="ln">   678</span>				for _, space := range yesNo {
+<span id="L679" class="ln">   679</span>					for _, char := range &#34;fFeEgG&#34; {
+<span id="L680" class="ln">   680</span>						realFmt := &#34;%&#34;
+<span id="L681" class="ln">   681</span>						if zero {
+<span id="L682" class="ln">   682</span>							realFmt += &#34;0&#34;
+<span id="L683" class="ln">   683</span>						}
+<span id="L684" class="ln">   684</span>						if space {
+<span id="L685" class="ln">   685</span>							realFmt += &#34; &#34;
+<span id="L686" class="ln">   686</span>						}
+<span id="L687" class="ln">   687</span>						if plus {
+<span id="L688" class="ln">   688</span>							realFmt += &#34;+&#34;
+<span id="L689" class="ln">   689</span>						}
+<span id="L690" class="ln">   690</span>						realFmt += &#34;10.2&#34;
+<span id="L691" class="ln">   691</span>						realFmt += string(char)
+<span id="L692" class="ln">   692</span>						<span class="comment">// Imaginary part always has a sign, so force + and ignore space.</span>
+<span id="L693" class="ln">   693</span>						imagFmt := &#34;%&#34;
+<span id="L694" class="ln">   694</span>						if zero {
+<span id="L695" class="ln">   695</span>							imagFmt += &#34;0&#34;
+<span id="L696" class="ln">   696</span>						}
+<span id="L697" class="ln">   697</span>						imagFmt += &#34;+&#34;
+<span id="L698" class="ln">   698</span>						imagFmt += &#34;10.2&#34;
+<span id="L699" class="ln">   699</span>						imagFmt += string(char)
+<span id="L700" class="ln">   700</span>						for _, realSign := range signs {
+<span id="L701" class="ln">   701</span>							for _, imagSign := range signs {
+<span id="L702" class="ln">   702</span>								one := Sprintf(realFmt, complex(realSign, imagSign))
+<span id="L703" class="ln">   703</span>								two := Sprintf(&#34;(&#34;+realFmt+imagFmt+&#34;i)&#34;, realSign, imagSign)
+<span id="L704" class="ln">   704</span>								if one != two {
+<span id="L705" class="ln">   705</span>									t.Error(f, one, two)
+<span id="L706" class="ln">   706</span>								}
+<span id="L707" class="ln">   707</span>							}
+<span id="L708" class="ln">   708</span>						}
+<span id="L709" class="ln">   709</span>					}
+<span id="L710" class="ln">   710</span>				}
+<span id="L711" class="ln">   711</span>			}
+<span id="L712" class="ln">   712</span>		}
+<span id="L713" class="ln">   713</span>	}
+<span id="L714" class="ln">   714</span>	
+<span id="L715" class="ln">   715</span>	type SE []interface{} <span class="comment">// slice of empty; notational compactness.</span>
+<span id="L716" class="ln">   716</span>	
+<span id="L717" class="ln">   717</span>	var reorderTests = []struct {
+<span id="L718" class="ln">   718</span>		fmt string
+<span id="L719" class="ln">   719</span>		val SE
+<span id="L720" class="ln">   720</span>		out string
+<span id="L721" class="ln">   721</span>	}{
+<span id="L722" class="ln">   722</span>		{&#34;%[1]d&#34;, SE{1}, &#34;1&#34;},
+<span id="L723" class="ln">   723</span>		{&#34;%[2]d&#34;, SE{2, 1}, &#34;1&#34;},
+<span id="L724" class="ln">   724</span>		{&#34;%[2]d %[1]d&#34;, SE{1, 2}, &#34;2 1&#34;},
+<span id="L725" class="ln">   725</span>		{&#34;%[2]*[1]d&#34;, SE{2, 5}, &#34;    2&#34;},
+<span id="L726" class="ln">   726</span>		{&#34;%6.2f&#34;, SE{12.0}, &#34; 12.00&#34;}, <span class="comment">// Explicit version of next line.</span>
+<span id="L727" class="ln">   727</span>		{&#34;%[3]*.[2]*[1]f&#34;, SE{12.0, 2, 6}, &#34; 12.00&#34;},
+<span id="L728" class="ln">   728</span>		{&#34;%[1]*.[2]*[3]f&#34;, SE{6, 2, 12.0}, &#34; 12.00&#34;},
+<span id="L729" class="ln">   729</span>		{&#34;%10f&#34;, SE{12.0}, &#34; 12.000000&#34;},
+<span id="L730" class="ln">   730</span>		{&#34;%[1]*[3]f&#34;, SE{10, 99, 12.0}, &#34; 12.000000&#34;},
+<span id="L731" class="ln">   731</span>		{&#34;%.6f&#34;, SE{12.0}, &#34;12.000000&#34;}, <span class="comment">// Explicit version of next line.</span>
+<span id="L732" class="ln">   732</span>		{&#34;%.[1]*[3]f&#34;, SE{6, 99, 12.0}, &#34;12.000000&#34;},
+<span id="L733" class="ln">   733</span>		{&#34;%6.f&#34;, SE{12.0}, &#34;    12&#34;}, <span class="comment">//  // Explicit version of next line; empty precision means zero.</span>
+<span id="L734" class="ln">   734</span>		{&#34;%[1]*.[3]f&#34;, SE{6, 3, 12.0}, &#34;    12&#34;},
+<span id="L735" class="ln">   735</span>		<span class="comment">// An actual use! Print the same arguments twice.</span>
+<span id="L736" class="ln">   736</span>		{&#34;%d %d %d %#[1]o %#o %#o&#34;, SE{11, 12, 13}, &#34;11 12 13 013 014 015&#34;},
+<span id="L737" class="ln">   737</span>	
+<span id="L738" class="ln">   738</span>		<span class="comment">// Erroneous cases.</span>
+<span id="L739" class="ln">   739</span>		{&#34;%[d&#34;, SE{2, 1}, &#34;%!d(BADINDEX)&#34;},
+<span id="L740" class="ln">   740</span>		{&#34;%]d&#34;, SE{2, 1}, &#34;%!](int=2)d%!(EXTRA int=1)&#34;},
+<span id="L741" class="ln">   741</span>		{&#34;%[]d&#34;, SE{2, 1}, &#34;%!d(BADINDEX)&#34;},
+<span id="L742" class="ln">   742</span>		{&#34;%[-3]d&#34;, SE{2, 1}, &#34;%!d(BADINDEX)&#34;},
+<span id="L743" class="ln">   743</span>		{&#34;%[99]d&#34;, SE{2, 1}, &#34;%!d(BADINDEX)&#34;},
+<span id="L744" class="ln">   744</span>		{&#34;%[3]&#34;, SE{2, 1}, &#34;%!(NOVERB)&#34;},
+<span id="L745" class="ln">   745</span>		{&#34;%[1].2d&#34;, SE{5, 6}, &#34;%!d(BADINDEX)&#34;},
+<span id="L746" class="ln">   746</span>		{&#34;%[1]2d&#34;, SE{2, 1}, &#34;%!d(BADINDEX)&#34;},
+<span id="L747" class="ln">   747</span>		{&#34;%3.[2]d&#34;, SE{7}, &#34;%!d(BADINDEX)&#34;},
+<span id="L748" class="ln">   748</span>		{&#34;%.[2]d&#34;, SE{7}, &#34;%!d(BADINDEX)&#34;},
+<span id="L749" class="ln">   749</span>		{&#34;%d %d %d %#[1]o %#o %#o %#o&#34;, SE{11, 12, 13}, &#34;11 12 13 013 014 015 %!o(MISSING)&#34;},
+<span id="L750" class="ln">   750</span>		{&#34;%[5]d %[2]d %d&#34;, SE{1, 2, 3}, &#34;%!d(BADINDEX) 2 3&#34;},
+<span id="L751" class="ln">   751</span>		{&#34;%d %[3]d %d&#34;, SE{1, 2}, &#34;1 %!d(BADINDEX) 2&#34;}, <span class="comment">// Erroneous index does not affect sequence.</span>
+<span id="L752" class="ln">   752</span>	}
+<span id="L753" class="ln">   753</span>	
+<span id="L754" class="ln">   754</span>	func TestReorder(t *testing.T) {
+<span id="L755" class="ln">   755</span>		for _, tt := range reorderTests {
+<span id="L756" class="ln">   756</span>			s := Sprintf(tt.fmt, tt.val...)
+<span id="L757" class="ln">   757</span>			if s != tt.out {
+<span id="L758" class="ln">   758</span>				t.Errorf(&#34;Sprintf(%q, %v) = &lt;%s&gt; want &lt;%s&gt;&#34;, tt.fmt, tt.val, s, tt.out)
+<span id="L759" class="ln">   759</span>			} else {
+<span id="L760" class="ln">   760</span>			}
+<span id="L761" class="ln">   761</span>		}
+<span id="L762" class="ln">   762</span>	}
+<span id="L763" class="ln">   763</span>	
+<span id="L764" class="ln">   764</span>	func BenchmarkSprintfEmpty(b *testing.B) {
+<span id="L765" class="ln">   765</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L766" class="ln">   766</span>			for pb.Next() {
+<span id="L767" class="ln">   767</span>				Sprintf(&#34;&#34;)
+<span id="L768" class="ln">   768</span>			}
+<span id="L769" class="ln">   769</span>		})
+<span id="L770" class="ln">   770</span>	}
+<span id="L771" class="ln">   771</span>	
+<span id="L772" class="ln">   772</span>	func BenchmarkSprintfString(b *testing.B) {
+<span id="L773" class="ln">   773</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L774" class="ln">   774</span>			for pb.Next() {
+<span id="L775" class="ln">   775</span>				Sprintf(&#34;%s&#34;, &#34;hello&#34;)
+<span id="L776" class="ln">   776</span>			}
+<span id="L777" class="ln">   777</span>		})
+<span id="L778" class="ln">   778</span>	}
+<span id="L779" class="ln">   779</span>	
+<span id="L780" class="ln">   780</span>	func BenchmarkSprintfInt(b *testing.B) {
+<span id="L781" class="ln">   781</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L782" class="ln">   782</span>			for pb.Next() {
+<span id="L783" class="ln">   783</span>				Sprintf(&#34;%d&#34;, 5)
+<span id="L784" class="ln">   784</span>			}
+<span id="L785" class="ln">   785</span>		})
+<span id="L786" class="ln">   786</span>	}
+<span id="L787" class="ln">   787</span>	
+<span id="L788" class="ln">   788</span>	func BenchmarkSprintfIntInt(b *testing.B) {
+<span id="L789" class="ln">   789</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L790" class="ln">   790</span>			for pb.Next() {
+<span id="L791" class="ln">   791</span>				Sprintf(&#34;%d %d&#34;, 5, 6)
+<span id="L792" class="ln">   792</span>			}
+<span id="L793" class="ln">   793</span>		})
+<span id="L794" class="ln">   794</span>	}
+<span id="L795" class="ln">   795</span>	
+<span id="L796" class="ln">   796</span>	func BenchmarkSprintfPrefixedInt(b *testing.B) {
+<span id="L797" class="ln">   797</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L798" class="ln">   798</span>			for pb.Next() {
+<span id="L799" class="ln">   799</span>				Sprintf(&#34;This is some meaningless prefix text that needs to be scanned %d&#34;, 6)
+<span id="L800" class="ln">   800</span>			}
+<span id="L801" class="ln">   801</span>		})
+<span id="L802" class="ln">   802</span>	}
+<span id="L803" class="ln">   803</span>	
+<span id="L804" class="ln">   804</span>	func BenchmarkSprintfFloat(b *testing.B) {
+<span id="L805" class="ln">   805</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L806" class="ln">   806</span>			for pb.Next() {
+<span id="L807" class="ln">   807</span>				Sprintf(&#34;%g&#34;, 5.23184)
+<span id="L808" class="ln">   808</span>			}
+<span id="L809" class="ln">   809</span>		})
+<span id="L810" class="ln">   810</span>	}
+<span id="L811" class="ln">   811</span>	
+<span id="L812" class="ln">   812</span>	func BenchmarkManyArgs(b *testing.B) {
+<span id="L813" class="ln">   813</span>		b.RunParallel(func(pb *testing.PB) {
+<span id="L814" class="ln">   814</span>			var buf bytes.Buffer
+<span id="L815" class="ln">   815</span>			for pb.Next() {
+<span id="L816" class="ln">   816</span>				buf.Reset()
+<span id="L817" class="ln">   817</span>				Fprintf(&amp;buf, &#34;%2d/%2d/%2d %d:%d:%d %s %s\n&#34;, 3, 4, 5, 11, 12, 13, &#34;hello&#34;, &#34;world&#34;)
+<span id="L818" class="ln">   818</span>			}
+<span id="L819" class="ln">   819</span>		})
+<span id="L820" class="ln">   820</span>	}
+<span id="L821" class="ln">   821</span>	
+<span id="L822" class="ln">   822</span>	var mallocBuf bytes.Buffer
+<span id="L823" class="ln">   823</span>	
+<span id="L824" class="ln">   824</span>	var mallocTest = []struct {
+<span id="L825" class="ln">   825</span>		count int
+<span id="L826" class="ln">   826</span>		desc  string
+<span id="L827" class="ln">   827</span>		fn    func()
+<span id="L828" class="ln">   828</span>	}{
+<span id="L829" class="ln">   829</span>		{0, `Sprintf(&#34;&#34;)`, func() { Sprintf(&#34;&#34;) }},
+<span id="L830" class="ln">   830</span>		{1, `Sprintf(&#34;xxx&#34;)`, func() { Sprintf(&#34;xxx&#34;) }},
+<span id="L831" class="ln">   831</span>		{1, `Sprintf(&#34;%x&#34;)`, func() { Sprintf(&#34;%x&#34;, 7) }},
+<span id="L832" class="ln">   832</span>		{2, `Sprintf(&#34;%s&#34;)`, func() { Sprintf(&#34;%s&#34;, &#34;hello&#34;) }},
+<span id="L833" class="ln">   833</span>		{1, `Sprintf(&#34;%x %x&#34;)`, func() { Sprintf(&#34;%x %x&#34;, 7, 112) }},
+<span id="L834" class="ln">   834</span>		<span class="comment">// For %g we use a float32, not float64, to guarantee passing the argument</span>
+<span id="L835" class="ln">   835</span>		<span class="comment">// does not need to allocate memory to store the result in a pointer-sized word.</span>
+<span id="L836" class="ln">   836</span>		{2, `Sprintf(&#34;%g&#34;)`, func() { Sprintf(&#34;%g&#34;, float32(3.14159)) }},
+<span id="L837" class="ln">   837</span>		{0, `Fprintf(buf, &#34;%x %x %x&#34;)`, func() { mallocBuf.Reset(); Fprintf(&amp;mallocBuf, &#34;%x %x %x&#34;, 7, 8, 9) }},
+<span id="L838" class="ln">   838</span>		{1, `Fprintf(buf, &#34;%s&#34;)`, func() { mallocBuf.Reset(); Fprintf(&amp;mallocBuf, &#34;%s&#34;, &#34;hello&#34;) }},
+<span id="L839" class="ln">   839</span>	}
+<span id="L840" class="ln">   840</span>	
+<span id="L841" class="ln">   841</span>	var _ bytes.Buffer
+<span id="L842" class="ln">   842</span>	
+<span id="L843" class="ln">   843</span>	func TestCountMallocs(t *testing.T) {
+<span id="L844" class="ln">   844</span>		if testing.Short() {
+<span id="L845" class="ln">   845</span>			t.Skip(&#34;skipping malloc count in short mode&#34;)
+<span id="L846" class="ln">   846</span>		}
+<span id="L847" class="ln">   847</span>		if runtime.GOMAXPROCS(0) &gt; 1 {
+<span id="L848" class="ln">   848</span>			t.Skip(&#34;skipping; GOMAXPROCS&gt;1&#34;)
+<span id="L849" class="ln">   849</span>		}
+<span id="L850" class="ln">   850</span>		for _, mt := range mallocTest {
+<span id="L851" class="ln">   851</span>			mallocs := testing.AllocsPerRun(100, mt.fn)
+<span id="L852" class="ln">   852</span>			if got, max := mallocs, float64(mt.count); got &gt; max {
+<span id="L853" class="ln">   853</span>				t.Errorf(&#34;%s: got %v allocs, want &lt;=%v&#34;, mt.desc, got, max)
+<span id="L854" class="ln">   854</span>			}
+<span id="L855" class="ln">   855</span>		}
+<span id="L856" class="ln">   856</span>	}
+<span id="L857" class="ln">   857</span>	
+<span id="L858" class="ln">   858</span>	type flagPrinter struct{}
+<span id="L859" class="ln">   859</span>	
+<span id="L860" class="ln">   860</span>	func (*flagPrinter) Format(f State, c rune) {
+<span id="L861" class="ln">   861</span>		s := &#34;%&#34;
+<span id="L862" class="ln">   862</span>		for i := 0; i &lt; 128; i++ {
+<span id="L863" class="ln">   863</span>			if f.Flag(i) {
+<span id="L864" class="ln">   864</span>				s += string(i)
+<span id="L865" class="ln">   865</span>			}
+<span id="L866" class="ln">   866</span>		}
+<span id="L867" class="ln">   867</span>		if w, ok := f.Width(); ok {
+<span id="L868" class="ln">   868</span>			s += Sprintf(&#34;%d&#34;, w)
+<span id="L869" class="ln">   869</span>		}
+<span id="L870" class="ln">   870</span>		if p, ok := f.Precision(); ok {
+<span id="L871" class="ln">   871</span>			s += Sprintf(&#34;.%d&#34;, p)
+<span id="L872" class="ln">   872</span>		}
+<span id="L873" class="ln">   873</span>		s += string(c)
+<span id="L874" class="ln">   874</span>		io.WriteString(f, &#34;[&#34;+s+&#34;]&#34;)
+<span id="L875" class="ln">   875</span>	}
+<span id="L876" class="ln">   876</span>	
+<span id="L877" class="ln">   877</span>	var flagtests = []struct {
+<span id="L878" class="ln">   878</span>		in  string
+<span id="L879" class="ln">   879</span>		out string
+<span id="L880" class="ln">   880</span>	}{
+<span id="L881" class="ln">   881</span>		{&#34;%a&#34;, &#34;[%a]&#34;},
+<span id="L882" class="ln">   882</span>		{&#34;%-a&#34;, &#34;[%-a]&#34;},
+<span id="L883" class="ln">   883</span>		{&#34;%+a&#34;, &#34;[%+a]&#34;},
+<span id="L884" class="ln">   884</span>		{&#34;%#a&#34;, &#34;[%#a]&#34;},
+<span id="L885" class="ln">   885</span>		{&#34;% a&#34;, &#34;[% a]&#34;},
+<span id="L886" class="ln">   886</span>		{&#34;%0a&#34;, &#34;[%0a]&#34;},
+<span id="L887" class="ln">   887</span>		{&#34;%1.2a&#34;, &#34;[%1.2a]&#34;},
+<span id="L888" class="ln">   888</span>		{&#34;%-1.2a&#34;, &#34;[%-1.2a]&#34;},
+<span id="L889" class="ln">   889</span>		{&#34;%+1.2a&#34;, &#34;[%+1.2a]&#34;},
+<span id="L890" class="ln">   890</span>		{&#34;%-+1.2a&#34;, &#34;[%+-1.2a]&#34;},
+<span id="L891" class="ln">   891</span>		{&#34;%-+1.2abc&#34;, &#34;[%+-1.2a]bc&#34;},
+<span id="L892" class="ln">   892</span>		{&#34;%-1.2abc&#34;, &#34;[%-1.2a]bc&#34;},
+<span id="L893" class="ln">   893</span>	}
+<span id="L894" class="ln">   894</span>	
+<span id="L895" class="ln">   895</span>	func TestFlagParser(t *testing.T) {
+<span id="L896" class="ln">   896</span>		var flagprinter flagPrinter
+<span id="L897" class="ln">   897</span>		for _, tt := range flagtests {
+<span id="L898" class="ln">   898</span>			s := Sprintf(tt.in, &amp;flagprinter)
+<span id="L899" class="ln">   899</span>			if s != tt.out {
+<span id="L900" class="ln">   900</span>				t.Errorf(&#34;Sprintf(%q, &amp;flagprinter) =&gt; %q, want %q&#34;, tt.in, s, tt.out)
+<span id="L901" class="ln">   901</span>			}
+<span id="L902" class="ln">   902</span>		}
+<span id="L903" class="ln">   903</span>	}
+<span id="L904" class="ln">   904</span>	
+<span id="L905" class="ln">   905</span>	func TestStructPrinter(t *testing.T) {
+<span id="L906" class="ln">   906</span>		var s struct {
+<span id="L907" class="ln">   907</span>			a string
+<span id="L908" class="ln">   908</span>			b string
+<span id="L909" class="ln">   909</span>			c int
+<span id="L910" class="ln">   910</span>		}
+<span id="L911" class="ln">   911</span>		s.a = &#34;abc&#34;
+<span id="L912" class="ln">   912</span>		s.b = &#34;def&#34;
+<span id="L913" class="ln">   913</span>		s.c = 123
+<span id="L914" class="ln">   914</span>		var tests = []struct {
+<span id="L915" class="ln">   915</span>			fmt string
+<span id="L916" class="ln">   916</span>			out string
+<span id="L917" class="ln">   917</span>		}{
+<span id="L918" class="ln">   918</span>			{&#34;%v&#34;, &#34;{abc def 123}&#34;},
+<span id="L919" class="ln">   919</span>			{&#34;%+v&#34;, &#34;{a:abc b:def c:123}&#34;},
+<span id="L920" class="ln">   920</span>		}
+<span id="L921" class="ln">   921</span>		for _, tt := range tests {
+<span id="L922" class="ln">   922</span>			out := Sprintf(tt.fmt, s)
+<span id="L923" class="ln">   923</span>			if out != tt.out {
+<span id="L924" class="ln">   924</span>				t.Errorf(&#34;Sprintf(%q, &amp;s) = %q, want %q&#34;, tt.fmt, out, tt.out)
+<span id="L925" class="ln">   925</span>			}
+<span id="L926" class="ln">   926</span>		}
+<span id="L927" class="ln">   927</span>	}
+<span id="L928" class="ln">   928</span>	
+<span id="L929" class="ln">   929</span>	<span class="comment">// presentInMap checks map printing using substrings so we don&#39;t depend on the</span>
+<span id="L930" class="ln">   930</span>	<span class="comment">// print order.</span>
+<span id="L931" class="ln">   931</span>	func presentInMap(s string, a []string, t *testing.T) {
+<span id="L932" class="ln">   932</span>		for i := 0; i &lt; len(a); i++ {
+<span id="L933" class="ln">   933</span>			loc := strings.Index(s, a[i])
+<span id="L934" class="ln">   934</span>			if loc &lt; 0 {
+<span id="L935" class="ln">   935</span>				t.Errorf(&#34;map print: expected to find %q in %q&#34;, a[i], s)
+<span id="L936" class="ln">   936</span>			}
+<span id="L937" class="ln">   937</span>			<span class="comment">// make sure the match ends here</span>
+<span id="L938" class="ln">   938</span>			loc += len(a[i])
+<span id="L939" class="ln">   939</span>			if loc &gt;= len(s) || (s[loc] != &#39; &#39; &amp;&amp; s[loc] != &#39;]&#39;) {
+<span id="L940" class="ln">   940</span>				t.Errorf(&#34;map print: %q not properly terminated in %q&#34;, a[i], s)
+<span id="L941" class="ln">   941</span>			}
+<span id="L942" class="ln">   942</span>		}
+<span id="L943" class="ln">   943</span>	}
+<span id="L944" class="ln">   944</span>	
+<span id="L945" class="ln">   945</span>	func TestMapPrinter(t *testing.T) {
+<span id="L946" class="ln">   946</span>		m0 := make(map[int]string)
+<span id="L947" class="ln">   947</span>		s := Sprint(m0)
+<span id="L948" class="ln">   948</span>		if s != &#34;map[]&#34; {
+<span id="L949" class="ln">   949</span>			t.Errorf(&#34;empty map printed as %q not %q&#34;, s, &#34;map[]&#34;)
+<span id="L950" class="ln">   950</span>		}
+<span id="L951" class="ln">   951</span>		m1 := map[int]string{1: &#34;one&#34;, 2: &#34;two&#34;, 3: &#34;three&#34;}
+<span id="L952" class="ln">   952</span>		a := []string{&#34;1:one&#34;, &#34;2:two&#34;, &#34;3:three&#34;}
+<span id="L953" class="ln">   953</span>		presentInMap(Sprintf(&#34;%v&#34;, m1), a, t)
+<span id="L954" class="ln">   954</span>		presentInMap(Sprint(m1), a, t)
+<span id="L955" class="ln">   955</span>	}
+<span id="L956" class="ln">   956</span>	
+<span id="L957" class="ln">   957</span>	func TestEmptyMap(t *testing.T) {
+<span id="L958" class="ln">   958</span>		const emptyMapStr = &#34;map[]&#34;
+<span id="L959" class="ln">   959</span>		var m map[string]int
+<span id="L960" class="ln">   960</span>		s := Sprint(m)
+<span id="L961" class="ln">   961</span>		if s != emptyMapStr {
+<span id="L962" class="ln">   962</span>			t.Errorf(&#34;nil map printed as %q not %q&#34;, s, emptyMapStr)
+<span id="L963" class="ln">   963</span>		}
+<span id="L964" class="ln">   964</span>		m = make(map[string]int)
+<span id="L965" class="ln">   965</span>		s = Sprint(m)
+<span id="L966" class="ln">   966</span>		if s != emptyMapStr {
+<span id="L967" class="ln">   967</span>			t.Errorf(&#34;empty map printed as %q not %q&#34;, s, emptyMapStr)
+<span id="L968" class="ln">   968</span>		}
+<span id="L969" class="ln">   969</span>	}
+<span id="L970" class="ln">   970</span>	
+<span id="L971" class="ln">   971</span>	<span class="comment">// TestBlank checks that Sprint (and hence Print, Fprint) puts spaces in the</span>
+<span id="L972" class="ln">   972</span>	<span class="comment">// right places, that is, between arg pairs in which neither is a string.</span>
+<span id="L973" class="ln">   973</span>	func TestBlank(t *testing.T) {
+<span id="L974" class="ln">   974</span>		got := Sprint(&#34;&lt;&#34;, 1, &#34;&gt;:&#34;, 1, 2, 3, &#34;!&#34;)
+<span id="L975" class="ln">   975</span>		expect := &#34;&lt;1&gt;:1 2 3!&#34;
+<span id="L976" class="ln">   976</span>		if got != expect {
+<span id="L977" class="ln">   977</span>			t.Errorf(&#34;got %q expected %q&#34;, got, expect)
+<span id="L978" class="ln">   978</span>		}
+<span id="L979" class="ln">   979</span>	}
+<span id="L980" class="ln">   980</span>	
+<span id="L981" class="ln">   981</span>	<span class="comment">// TestBlankln checks that Sprintln (and hence Println, Fprintln) puts spaces in</span>
+<span id="L982" class="ln">   982</span>	<span class="comment">// the right places, that is, between all arg pairs.</span>
+<span id="L983" class="ln">   983</span>	func TestBlankln(t *testing.T) {
+<span id="L984" class="ln">   984</span>		got := Sprintln(&#34;&lt;&#34;, 1, &#34;&gt;:&#34;, 1, 2, 3, &#34;!&#34;)
+<span id="L985" class="ln">   985</span>		expect := &#34;&lt; 1 &gt;: 1 2 3 !\n&#34;
+<span id="L986" class="ln">   986</span>		if got != expect {
+<span id="L987" class="ln">   987</span>			t.Errorf(&#34;got %q expected %q&#34;, got, expect)
+<span id="L988" class="ln">   988</span>		}
+<span id="L989" class="ln">   989</span>	}
+<span id="L990" class="ln">   990</span>	
+<span id="L991" class="ln">   991</span>	<span class="comment">// TestFormatterPrintln checks Formatter with Sprint, Sprintln, Sprintf.</span>
+<span id="L992" class="ln">   992</span>	func TestFormatterPrintln(t *testing.T) {
+<span id="L993" class="ln">   993</span>		f := F(1)
+<span id="L994" class="ln">   994</span>		expect := &#34;&lt;v=F(1)&gt;\n&#34;
+<span id="L995" class="ln">   995</span>		s := Sprint(f, &#34;\n&#34;)
+<span id="L996" class="ln">   996</span>		if s != expect {
+<span id="L997" class="ln">   997</span>			t.Errorf(&#34;Sprint wrong with Formatter: expected %q got %q&#34;, expect, s)
+<span id="L998" class="ln">   998</span>		}
+<span id="L999" class="ln">   999</span>		s = Sprintln(f)
+<span id="L1000" class="ln">  1000</span>		if s != expect {
+<span id="L1001" class="ln">  1001</span>			t.Errorf(&#34;Sprintln wrong with Formatter: expected %q got %q&#34;, expect, s)
+<span id="L1002" class="ln">  1002</span>		}
+<span id="L1003" class="ln">  1003</span>		s = Sprintf(&#34;%v\n&#34;, f)
+<span id="L1004" class="ln">  1004</span>		if s != expect {
+<span id="L1005" class="ln">  1005</span>			t.Errorf(&#34;Sprintf wrong with Formatter: expected %q got %q&#34;, expect, s)
+<span id="L1006" class="ln">  1006</span>		}
+<span id="L1007" class="ln">  1007</span>	}
+<span id="L1008" class="ln">  1008</span>	
+<span id="L1009" class="ln">  1009</span>	func args(a ...interface{}) []interface{} { return a }
+<span id="L1010" class="ln">  1010</span>	
+<span id="L1011" class="ln">  1011</span>	var startests = []struct {
+<span id="L1012" class="ln">  1012</span>		fmt string
+<span id="L1013" class="ln">  1013</span>		in  []interface{}
+<span id="L1014" class="ln">  1014</span>		out string
+<span id="L1015" class="ln">  1015</span>	}{
+<span id="L1016" class="ln">  1016</span>		{&#34;%*d&#34;, args(4, 42), &#34;  42&#34;},
+<span id="L1017" class="ln">  1017</span>		{&#34;%.*d&#34;, args(4, 42), &#34;0042&#34;},
+<span id="L1018" class="ln">  1018</span>		{&#34;%*.*d&#34;, args(8, 4, 42), &#34;    0042&#34;},
+<span id="L1019" class="ln">  1019</span>		{&#34;%0*d&#34;, args(4, 42), &#34;0042&#34;},
+<span id="L1020" class="ln">  1020</span>		{&#34;%-*d&#34;, args(4, 42), &#34;42  &#34;},
+<span id="L1021" class="ln">  1021</span>	
+<span id="L1022" class="ln">  1022</span>		<span class="comment">// erroneous</span>
+<span id="L1023" class="ln">  1023</span>		{&#34;%*d&#34;, args(nil, 42), &#34;%!(BADWIDTH)42&#34;},
+<span id="L1024" class="ln">  1024</span>		{&#34;%.*d&#34;, args(nil, 42), &#34;%!(BADPREC)42&#34;},
+<span id="L1025" class="ln">  1025</span>		{&#34;%*d&#34;, args(5, &#34;foo&#34;), &#34;%!d(string=  foo)&#34;},
+<span id="L1026" class="ln">  1026</span>		{&#34;%*% %d&#34;, args(20, 5), &#34;% 5&#34;},
+<span id="L1027" class="ln">  1027</span>		{&#34;%*&#34;, args(4), &#34;%!(NOVERB)&#34;},
+<span id="L1028" class="ln">  1028</span>		{&#34;%*d&#34;, args(int32(4), 42), &#34;%!(BADWIDTH)42&#34;},
+<span id="L1029" class="ln">  1029</span>	}
+<span id="L1030" class="ln">  1030</span>	
+<span id="L1031" class="ln">  1031</span>	func TestWidthAndPrecision(t *testing.T) {
+<span id="L1032" class="ln">  1032</span>		for _, tt := range startests {
+<span id="L1033" class="ln">  1033</span>			s := Sprintf(tt.fmt, tt.in...)
+<span id="L1034" class="ln">  1034</span>			if s != tt.out {
+<span id="L1035" class="ln">  1035</span>				t.Errorf(&#34;%q: got %q expected %q&#34;, tt.fmt, s, tt.out)
+<span id="L1036" class="ln">  1036</span>			}
+<span id="L1037" class="ln">  1037</span>		}
+<span id="L1038" class="ln">  1038</span>	}
+<span id="L1039" class="ln">  1039</span>	
+<span id="L1040" class="ln">  1040</span>	<span class="comment">// Panic is a type that panics in String.</span>
+<span id="L1041" class="ln">  1041</span>	type Panic struct {
+<span id="L1042" class="ln">  1042</span>		message interface{}
+<span id="L1043" class="ln">  1043</span>	}
+<span id="L1044" class="ln">  1044</span>	
+<span id="L1045" class="ln">  1045</span>	<span class="comment">// Value receiver.</span>
+<span id="L1046" class="ln">  1046</span>	func (p Panic) GoString() string {
+<span id="L1047" class="ln">  1047</span>		panic(p.message)
+<span id="L1048" class="ln">  1048</span>	}
+<span id="L1049" class="ln">  1049</span>	
+<span id="L1050" class="ln">  1050</span>	<span class="comment">// Value receiver.</span>
+<span id="L1051" class="ln">  1051</span>	func (p Panic) String() string {
+<span id="L1052" class="ln">  1052</span>		panic(p.message)
+<span id="L1053" class="ln">  1053</span>	}
+<span id="L1054" class="ln">  1054</span>	
+<span id="L1055" class="ln">  1055</span>	<span class="comment">// PanicF is a type that panics in Format.</span>
+<span id="L1056" class="ln">  1056</span>	type PanicF struct {
+<span id="L1057" class="ln">  1057</span>		message interface{}
+<span id="L1058" class="ln">  1058</span>	}
+<span id="L1059" class="ln">  1059</span>	
+<span id="L1060" class="ln">  1060</span>	<span class="comment">// Value receiver.</span>
+<span id="L1061" class="ln">  1061</span>	func (p PanicF) Format(f State, c rune) {
+<span id="L1062" class="ln">  1062</span>		panic(p.message)
+<span id="L1063" class="ln">  1063</span>	}
+<span id="L1064" class="ln">  1064</span>	
+<span id="L1065" class="ln">  1065</span>	var panictests = []struct {
+<span id="L1066" class="ln">  1066</span>		fmt string
+<span id="L1067" class="ln">  1067</span>		in  interface{}
+<span id="L1068" class="ln">  1068</span>		out string
+<span id="L1069" class="ln">  1069</span>	}{
+<span id="L1070" class="ln">  1070</span>		<span class="comment">// String</span>
+<span id="L1071" class="ln">  1071</span>		{&#34;%s&#34;, (*Panic)(nil), &#34;&lt;nil&gt;&#34;}, <span class="comment">// nil pointer special case</span>
+<span id="L1072" class="ln">  1072</span>		{&#34;%s&#34;, Panic{io.ErrUnexpectedEOF}, &#34;%!s(PANIC=unexpected EOF)&#34;},
+<span id="L1073" class="ln">  1073</span>		{&#34;%s&#34;, Panic{3}, &#34;%!s(PANIC=3)&#34;},
+<span id="L1074" class="ln">  1074</span>		<span class="comment">// GoString</span>
+<span id="L1075" class="ln">  1075</span>		{&#34;%#v&#34;, (*Panic)(nil), &#34;&lt;nil&gt;&#34;}, <span class="comment">// nil pointer special case</span>
+<span id="L1076" class="ln">  1076</span>		{&#34;%#v&#34;, Panic{io.ErrUnexpectedEOF}, &#34;%!v(PANIC=unexpected EOF)&#34;},
+<span id="L1077" class="ln">  1077</span>		{&#34;%#v&#34;, Panic{3}, &#34;%!v(PANIC=3)&#34;},
+<span id="L1078" class="ln">  1078</span>		<span class="comment">// Format</span>
+<span id="L1079" class="ln">  1079</span>		{&#34;%s&#34;, (*PanicF)(nil), &#34;&lt;nil&gt;&#34;}, <span class="comment">// nil pointer special case</span>
+<span id="L1080" class="ln">  1080</span>		{&#34;%s&#34;, PanicF{io.ErrUnexpectedEOF}, &#34;%!s(PANIC=unexpected EOF)&#34;},
+<span id="L1081" class="ln">  1081</span>		{&#34;%s&#34;, PanicF{3}, &#34;%!s(PANIC=3)&#34;},
+<span id="L1082" class="ln">  1082</span>	}
+<span id="L1083" class="ln">  1083</span>	
+<span id="L1084" class="ln">  1084</span>	func TestPanics(t *testing.T) {
+<span id="L1085" class="ln">  1085</span>		for _, tt := range panictests {
+<span id="L1086" class="ln">  1086</span>			s := Sprintf(tt.fmt, tt.in)
+<span id="L1087" class="ln">  1087</span>			if s != tt.out {
+<span id="L1088" class="ln">  1088</span>				t.Errorf(&#34;%q: got %q expected %q&#34;, tt.fmt, s, tt.out)
+<span id="L1089" class="ln">  1089</span>			}
+<span id="L1090" class="ln">  1090</span>		}
+<span id="L1091" class="ln">  1091</span>	}
+<span id="L1092" class="ln">  1092</span>	
+<span id="L1093" class="ln">  1093</span>	<span class="comment">// recurCount tests that erroneous String routine doesn&#39;t cause fatal recursion.</span>
+<span id="L1094" class="ln">  1094</span>	var recurCount = 0
+<span id="L1095" class="ln">  1095</span>	
+<span id="L1096" class="ln">  1096</span>	type Recur struct {
+<span id="L1097" class="ln">  1097</span>		i      int
+<span id="L1098" class="ln">  1098</span>		failed *bool
+<span id="L1099" class="ln">  1099</span>	}
+<span id="L1100" class="ln">  1100</span>	
+<span id="L1101" class="ln">  1101</span>	func (r *Recur) String() string {
+<span id="L1102" class="ln">  1102</span>		if recurCount++; recurCount &gt; 10 {
+<span id="L1103" class="ln">  1103</span>			*r.failed = true
+<span id="L1104" class="ln">  1104</span>			return &#34;FAIL&#34;
+<span id="L1105" class="ln">  1105</span>		}
+<span id="L1106" class="ln">  1106</span>		<span class="comment">// This will call badVerb. Before the fix, that would cause us to recur into</span>
+<span id="L1107" class="ln">  1107</span>		<span class="comment">// this routine to print %!p(value). Now we don&#39;t call the user&#39;s method</span>
+<span id="L1108" class="ln">  1108</span>		<span class="comment">// during an error.</span>
+<span id="L1109" class="ln">  1109</span>		return Sprintf(&#34;recur@%p value: %d&#34;, r, r.i)
+<span id="L1110" class="ln">  1110</span>	}
+<span id="L1111" class="ln">  1111</span>	
+<span id="L1112" class="ln">  1112</span>	func TestBadVerbRecursion(t *testing.T) {
+<span id="L1113" class="ln">  1113</span>		failed := false
+<span id="L1114" class="ln">  1114</span>		r := &amp;Recur{3, &amp;failed}
+<span id="L1115" class="ln">  1115</span>		Sprintf(&#34;recur@%p value: %d\n&#34;, &amp;r, r.i)
+<span id="L1116" class="ln">  1116</span>		if failed {
+<span id="L1117" class="ln">  1117</span>			t.Error(&#34;fail with pointer&#34;)
+<span id="L1118" class="ln">  1118</span>		}
+<span id="L1119" class="ln">  1119</span>		failed = false
+<span id="L1120" class="ln">  1120</span>		r = &amp;Recur{4, &amp;failed}
+<span id="L1121" class="ln">  1121</span>		Sprintf(&#34;recur@%p, value: %d\n&#34;, r, r.i)
+<span id="L1122" class="ln">  1122</span>		if failed {
+<span id="L1123" class="ln">  1123</span>			t.Error(&#34;fail with value&#34;)
+<span id="L1124" class="ln">  1124</span>		}
+<span id="L1125" class="ln">  1125</span>	}
+<span id="L1126" class="ln">  1126</span>	
+<span id="L1127" class="ln">  1127</span>	func TestIsSpace(t *testing.T) {
+<span id="L1128" class="ln">  1128</span>		<span class="comment">// This tests the internal isSpace function.</span>
+<span id="L1129" class="ln">  1129</span>		<span class="comment">// IsSpace = isSpace is defined in export_test.go.</span>
+<span id="L1130" class="ln">  1130</span>		for i := rune(0); i &lt;= unicode.MaxRune; i++ {
+<span id="L1131" class="ln">  1131</span>			if IsSpace(i) != unicode.IsSpace(i) {
+<span id="L1132" class="ln">  1132</span>				t.Errorf(&#34;isSpace(%U) = %v, want %v&#34;, i, IsSpace(i), unicode.IsSpace(i))
+<span id="L1133" class="ln">  1133</span>			}
+<span id="L1134" class="ln">  1134</span>		}
+<span id="L1135" class="ln">  1135</span>	}
+<span id="L1136" class="ln">  1136</span>	
+<span id="L1137" class="ln">  1137</span>	func TestNilDoesNotBecomeTyped(t *testing.T) {
+<span id="L1138" class="ln">  1138</span>		type A struct{}
+<span id="L1139" class="ln">  1139</span>		type B struct{}
+<span id="L1140" class="ln">  1140</span>		var a *A = nil
+<span id="L1141" class="ln">  1141</span>		var b B = B{}
+<span id="L1142" class="ln">  1142</span>		got := Sprintf(&#34;%s %s %s %s %s&#34;, nil, a, nil, b, nil)
+<span id="L1143" class="ln">  1143</span>		const expect = &#34;%!s(&lt;nil&gt;) %!s(*fmt_test.A=&lt;nil&gt;) %!s(&lt;nil&gt;) {} %!s(&lt;nil&gt;)&#34;
+<span id="L1144" class="ln">  1144</span>		if got != expect {
+<span id="L1145" class="ln">  1145</span>			t.Errorf(&#34;expected:\n\t%q\ngot:\n\t%q&#34;, expect, got)
+<span id="L1146" class="ln">  1146</span>		}
+<span id="L1147" class="ln">  1147</span>	}
+<span id="L1148" class="ln">  1148</span>	
+</pre><p><a href="fmt_test.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

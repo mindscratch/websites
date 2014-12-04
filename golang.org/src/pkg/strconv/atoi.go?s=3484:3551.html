@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/strconv/atoi.go - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Source file src/pkg/strconv/atoi.go</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1</span>	<span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2</span>	<span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3</span>	<span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	package strconv
+<span id="L6" class="ln">     6</span>	
+<span id="L7" class="ln">     7</span>	import &#34;errors&#34;
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>	<span class="comment">// ErrRange indicates that a value is out of range for the target type.</span>
+<span id="L10" class="ln">    10</span>	var ErrRange = errors.New(&#34;value out of range&#34;)
+<span id="L11" class="ln">    11</span>	
+<span id="L12" class="ln">    12</span>	<span class="comment">// ErrSyntax indicates that a value does not have the right syntax for the target type.</span>
+<span id="L13" class="ln">    13</span>	var ErrSyntax = errors.New(&#34;invalid syntax&#34;)
+<span id="L14" class="ln">    14</span>	
+<span id="L15" class="ln">    15</span>	<span class="comment">// A NumError records a failed conversion.</span>
+<span id="L16" class="ln">    16</span>	type NumError struct {
+<span id="L17" class="ln">    17</span>		Func string <span class="comment">// the failing function (ParseBool, ParseInt, ParseUint, ParseFloat)</span>
+<span id="L18" class="ln">    18</span>		Num  string <span class="comment">// the input</span>
+<span id="L19" class="ln">    19</span>		Err  error  <span class="comment">// the reason the conversion failed (ErrRange, ErrSyntax)</span>
+<span id="L20" class="ln">    20</span>	}
+<span id="L21" class="ln">    21</span>	
+<span id="L22" class="ln">    22</span>	func (e *NumError) Error() string {
+<span id="L23" class="ln">    23</span>		return &#34;strconv.&#34; + e.Func + &#34;: &#34; + &#34;parsing &#34; + Quote(e.Num) + &#34;: &#34; + e.Err.Error()
+<span id="L24" class="ln">    24</span>	}
+<span id="L25" class="ln">    25</span>	
+<span id="L26" class="ln">    26</span>	func syntaxError(fn, str string) *NumError {
+<span id="L27" class="ln">    27</span>		return &amp;NumError{fn, str, ErrSyntax}
+<span id="L28" class="ln">    28</span>	}
+<span id="L29" class="ln">    29</span>	
+<span id="L30" class="ln">    30</span>	func rangeError(fn, str string) *NumError {
+<span id="L31" class="ln">    31</span>		return &amp;NumError{fn, str, ErrRange}
+<span id="L32" class="ln">    32</span>	}
+<span id="L33" class="ln">    33</span>	
+<span id="L34" class="ln">    34</span>	const intSize = 32 &lt;&lt; uint(^uint(0)&gt;&gt;63)
+<span id="L35" class="ln">    35</span>	
+<span id="L36" class="ln">    36</span>	<span class="comment">// IntSize is the size in bits of an int or uint value.</span>
+<span id="L37" class="ln">    37</span>	const IntSize = intSize
+<span id="L38" class="ln">    38</span>	
+<span id="L39" class="ln">    39</span>	<span class="comment">// Return the first number n such that n*base &gt;= 1&lt;&lt;64.</span>
+<span id="L40" class="ln">    40</span>	func cutoff64(base int) uint64 {
+<span id="L41" class="ln">    41</span>		if base &lt; 2 {
+<span id="L42" class="ln">    42</span>			return 0
+<span id="L43" class="ln">    43</span>		}
+<span id="L44" class="ln">    44</span>		return (1&lt;&lt;64-1)/uint64(base) + 1
+<span id="L45" class="ln">    45</span>	}
+<span id="L46" class="ln">    46</span>	
+<span id="L47" class="ln">    47</span>	<span class="comment">// ParseUint is like ParseInt but for unsigned numbers.</span>
+<span id="L48" class="ln">    48</span>	func ParseUint(s string, base int, bitSize int) (n uint64, err error) {
+<span id="L49" class="ln">    49</span>		var cutoff, maxVal uint64
+<span id="L50" class="ln">    50</span>	
+<span id="L51" class="ln">    51</span>		if bitSize == 0 {
+<span id="L52" class="ln">    52</span>			bitSize = int(IntSize)
+<span id="L53" class="ln">    53</span>		}
+<span id="L54" class="ln">    54</span>	
+<span id="L55" class="ln">    55</span>		s0 := s
+<span id="L56" class="ln">    56</span>		switch {
+<span id="L57" class="ln">    57</span>		case len(s) &lt; 1:
+<span id="L58" class="ln">    58</span>			err = ErrSyntax
+<span id="L59" class="ln">    59</span>			goto Error
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>		case 2 &lt;= base &amp;&amp; base &lt;= 36:
+<span id="L62" class="ln">    62</span>			<span class="comment">// valid base; nothing to do</span>
+<span id="L63" class="ln">    63</span>	
+<span id="L64" class="ln">    64</span>		case base == 0:
+<span id="L65" class="ln">    65</span>			<span class="comment">// Look for octal, hex prefix.</span>
+<span id="L66" class="ln">    66</span>			switch {
+<span id="L67" class="ln">    67</span>			case s[0] == &#39;0&#39; &amp;&amp; len(s) &gt; 1 &amp;&amp; (s[1] == &#39;x&#39; || s[1] == &#39;X&#39;):
+<span id="L68" class="ln">    68</span>				base = 16
+<span id="L69" class="ln">    69</span>				s = s[2:]
+<span id="L70" class="ln">    70</span>				if len(s) &lt; 1 {
+<span id="L71" class="ln">    71</span>					err = ErrSyntax
+<span id="L72" class="ln">    72</span>					goto Error
+<span id="L73" class="ln">    73</span>				}
+<span id="L74" class="ln">    74</span>			case s[0] == &#39;0&#39;:
+<span id="L75" class="ln">    75</span>				base = 8
+<span id="L76" class="ln">    76</span>			default:
+<span id="L77" class="ln">    77</span>				base = 10
+<span id="L78" class="ln">    78</span>			}
+<span id="L79" class="ln">    79</span>	
+<span id="L80" class="ln">    80</span>		default:
+<span id="L81" class="ln">    81</span>			err = errors.New(&#34;invalid base &#34; + Itoa(base))
+<span id="L82" class="ln">    82</span>			goto Error
+<span id="L83" class="ln">    83</span>		}
+<span id="L84" class="ln">    84</span>	
+<span id="L85" class="ln">    85</span>		n = 0
+<span id="L86" class="ln">    86</span>		cutoff = cutoff64(base)
+<span id="L87" class="ln">    87</span>		maxVal = 1&lt;&lt;uint(bitSize) - 1
+<span id="L88" class="ln">    88</span>	
+<span id="L89" class="ln">    89</span>		for i := 0; i &lt; len(s); i++ {
+<span id="L90" class="ln">    90</span>			var v byte
+<span id="L91" class="ln">    91</span>			d := s[i]
+<span id="L92" class="ln">    92</span>			switch {
+<span id="L93" class="ln">    93</span>			case &#39;0&#39; &lt;= d &amp;&amp; d &lt;= &#39;9&#39;:
+<span id="L94" class="ln">    94</span>				v = d - &#39;0&#39;
+<span id="L95" class="ln">    95</span>			case &#39;a&#39; &lt;= d &amp;&amp; d &lt;= &#39;z&#39;:
+<span id="L96" class="ln">    96</span>				v = d - &#39;a&#39; + 10
+<span id="L97" class="ln">    97</span>			case &#39;A&#39; &lt;= d &amp;&amp; d &lt;= &#39;Z&#39;:
+<span id="L98" class="ln">    98</span>				v = d - &#39;A&#39; + 10
+<span id="L99" class="ln">    99</span>			default:
+<span id="L100" class="ln">   100</span>				n = 0
+<span id="L101" class="ln">   101</span>				err = ErrSyntax
+<span id="L102" class="ln">   102</span>				goto Error
+<span id="L103" class="ln">   103</span>			}
+<span id="L104" class="ln">   104</span>			if int(v) &gt;= base {
+<span id="L105" class="ln">   105</span>				n = 0
+<span id="L106" class="ln">   106</span>				err = ErrSyntax
+<span id="L107" class="ln">   107</span>				goto Error
+<span id="L108" class="ln">   108</span>			}
+<span id="L109" class="ln">   109</span>	
+<span id="L110" class="ln">   110</span>			if n &gt;= cutoff {
+<span id="L111" class="ln">   111</span>				<span class="comment">// n*base overflows</span>
+<span id="L112" class="ln">   112</span>				n = 1&lt;&lt;64 - 1
+<span id="L113" class="ln">   113</span>				err = ErrRange
+<span id="L114" class="ln">   114</span>				goto Error
+<span id="L115" class="ln">   115</span>			}
+<span id="L116" class="ln">   116</span>			n *= uint64(base)
+<span id="L117" class="ln">   117</span>	
+<span id="L118" class="ln">   118</span>			n1 := n + uint64(v)
+<span id="L119" class="ln">   119</span>			if n1 &lt; n || n1 &gt; maxVal {
+<span id="L120" class="ln">   120</span>				<span class="comment">// n+v overflows</span>
+<span id="L121" class="ln">   121</span>				n = 1&lt;&lt;64 - 1
+<span id="L122" class="ln">   122</span>				err = ErrRange
+<span id="L123" class="ln">   123</span>				goto Error
+<span id="L124" class="ln">   124</span>			}
+<span id="L125" class="ln">   125</span>			n = n1
+<span id="L126" class="ln">   126</span>		}
+<span id="L127" class="ln">   127</span>	
+<span id="L128" class="ln">   128</span>		return n, nil
+<span id="L129" class="ln">   129</span>	
+<span id="L130" class="ln">   130</span>	Error:
+<span id="L131" class="ln">   131</span>		return n, &amp;NumError{&#34;ParseUint&#34;, s0, err}
+<span id="L132" class="ln">   132</span>	}
+<span id="L133" class="ln">   133</span>	
+<span id="L134" class="ln">   134</span>	<span class="comment">// ParseInt interprets a string s in the given base (2 to 36) and</span>
+<span id="L135" class="ln">   135</span>	<span class="comment">// returns the corresponding value i.  If base == 0, the base is</span>
+<span id="L136" class="ln">   136</span>	<span class="comment">// implied by the string&#39;s prefix: base 16 for &#34;0x&#34;, base 8 for</span>
+<span id="L137" class="ln">   137</span>	<span class="comment">// &#34;0&#34;, and base 10 otherwise.</span>
+<span id="L138" class="ln">   138</span>	<span class="comment">//</span>
+<span id="L139" class="ln">   139</span>	<span class="comment">// The bitSize argument specifies the integer type</span>
+<span id="L140" class="ln">   140</span>	<span class="comment">// that the result must fit into.  Bit sizes 0, 8, 16, 32, and 64</span>
+<span id="L141" class="ln">   141</span>	<span class="comment">// correspond to int, int8, int16, int32, and int64.</span>
+<span id="L142" class="ln">   142</span>	<span class="comment">//</span>
+<span id="L143" class="ln">   143</span>	<span class="comment">// The errors that ParseInt returns have concrete type *NumError</span>
+<span id="L144" class="ln">   144</span>	<span class="comment">// and include err.Num = s.  If s is empty or contains invalid</span>
+<span id="L145" class="ln">   145</span>	<span class="comment">// digits, err.Err = ErrSyntax and the returned value is 0;</span>
+<span id="L146" class="ln">   146</span>	<span class="comment">// if the value corresponding to s cannot be represented by a</span>
+<span id="L147" class="ln">   147</span>	<span class="comment">// signed integer of the given size, err.Err = ErrRange and the</span>
+<span id="L148" class="ln">   148</span>	<span class="comment">// returned value is the maximum magnitude integer of the</span>
+<span id="L149" class="ln">   149</span>	<span class="comment">// appropriate bitSize and sign.</span>
+<span id="L150" class="ln">   150</span>	<span class="selection">func ParseInt(s string, base int, bitSize int) (i int64, err error)</span> {
+<span id="L151" class="ln">   151</span>		const fnParseInt = &#34;ParseInt&#34;
+<span id="L152" class="ln">   152</span>	
+<span id="L153" class="ln">   153</span>		if bitSize == 0 {
+<span id="L154" class="ln">   154</span>			bitSize = int(IntSize)
+<span id="L155" class="ln">   155</span>		}
+<span id="L156" class="ln">   156</span>	
+<span id="L157" class="ln">   157</span>		<span class="comment">// Empty string bad.</span>
+<span id="L158" class="ln">   158</span>		if len(s) == 0 {
+<span id="L159" class="ln">   159</span>			return 0, syntaxError(fnParseInt, s)
+<span id="L160" class="ln">   160</span>		}
+<span id="L161" class="ln">   161</span>	
+<span id="L162" class="ln">   162</span>		<span class="comment">// Pick off leading sign.</span>
+<span id="L163" class="ln">   163</span>		s0 := s
+<span id="L164" class="ln">   164</span>		neg := false
+<span id="L165" class="ln">   165</span>		if s[0] == &#39;+&#39; {
+<span id="L166" class="ln">   166</span>			s = s[1:]
+<span id="L167" class="ln">   167</span>		} else if s[0] == &#39;-&#39; {
+<span id="L168" class="ln">   168</span>			neg = true
+<span id="L169" class="ln">   169</span>			s = s[1:]
+<span id="L170" class="ln">   170</span>		}
+<span id="L171" class="ln">   171</span>	
+<span id="L172" class="ln">   172</span>		<span class="comment">// Convert unsigned and check range.</span>
+<span id="L173" class="ln">   173</span>		var un uint64
+<span id="L174" class="ln">   174</span>		un, err = ParseUint(s, base, bitSize)
+<span id="L175" class="ln">   175</span>		if err != nil &amp;&amp; err.(*NumError).Err != ErrRange {
+<span id="L176" class="ln">   176</span>			err.(*NumError).Func = fnParseInt
+<span id="L177" class="ln">   177</span>			err.(*NumError).Num = s0
+<span id="L178" class="ln">   178</span>			return 0, err
+<span id="L179" class="ln">   179</span>		}
+<span id="L180" class="ln">   180</span>		cutoff := uint64(1 &lt;&lt; uint(bitSize-1))
+<span id="L181" class="ln">   181</span>		if !neg &amp;&amp; un &gt;= cutoff {
+<span id="L182" class="ln">   182</span>			return int64(cutoff - 1), rangeError(fnParseInt, s0)
+<span id="L183" class="ln">   183</span>		}
+<span id="L184" class="ln">   184</span>		if neg &amp;&amp; un &gt; cutoff {
+<span id="L185" class="ln">   185</span>			return -int64(cutoff), rangeError(fnParseInt, s0)
+<span id="L186" class="ln">   186</span>		}
+<span id="L187" class="ln">   187</span>		n := int64(un)
+<span id="L188" class="ln">   188</span>		if neg {
+<span id="L189" class="ln">   189</span>			n = -n
+<span id="L190" class="ln">   190</span>		}
+<span id="L191" class="ln">   191</span>		return n, nil
+<span id="L192" class="ln">   192</span>	}
+<span id="L193" class="ln">   193</span>	
+<span id="L194" class="ln">   194</span>	<span class="comment">// Atoi is shorthand for ParseInt(s, 10, 0).</span>
+<span id="L195" class="ln">   195</span>	func Atoi(s string) (i int, err error) {
+<span id="L196" class="ln">   196</span>		i64, err := ParseInt(s, 10, 0)
+<span id="L197" class="ln">   197</span>		return int(i64), err
+<span id="L198" class="ln">   198</span>	}
+<span id="L199" class="ln">   199</span>	
+</pre><p><a href="atoi.go%3Fm=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+

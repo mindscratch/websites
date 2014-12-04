@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <title>src/pkg/runtime/defs_freebsd_386.h - The Go Programming Language</title>
+
+<link type="text/css" rel="stylesheet" href="http://golang.org/lib/godoc/style.css">
+
+<link rel="search" type="application/opensearchdescription+xml" title="godoc" href="http://golang.org/opensearch.xml" />
+
+<link rel="stylesheet" href="http://golang.org/lib/godoc/jquery.treeview.css">
+<script type="text/javascript">window.initFuncs = [];</script>
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(["_setAccount", "UA-11222381-2"]);
+_gaq.push(["b._setAccount", "UA-49880327-6"]);
+window.trackPageview = function() {
+  _gaq.push(["_trackPageview", location.pathname+location.hash]);
+  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+};
+window.trackPageview();
+</script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+
+<form method="GET" action="http://golang.org/search">
+<div id="menu">
+<a href="http://golang.org/doc/">Documents</a>
+<a href="http://golang.org/pkg/">Packages</a>
+<a href="http://golang.org/project/">The Project</a>
+<a href="http://golang.org/help/">Help</a>
+<a href="../../../blog/index.html">Blog</a>
+
+<a id="playgroundButton" href="../../../play.html" title="Show Go Playground">Play</a>
+
+<input type="text" id="search" name="q" class="inactive" value="Search" placeholder="Search">
+</div>
+<div id="heading"><a href="http://golang.org/">The Go Programming Language</a></div>
+</form>
+
+</div></div>
+
+
+<div id="playground" class="play">
+	<div class="input"><textarea class="code">package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, 世界")
+}</textarea></div>
+	<div class="output"></div>
+	<div class="buttons">
+		<a class="run" title="Run this code [shift-enter]">Run</a>
+		<a class="fmt" title="Format this code">Format</a>
+		<a class="share" title="Share this code">Share</a>
+	</div>
+</div>
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>Text file src/pkg/runtime/defs_freebsd_386.h</h1>
+
+
+
+
+<div id="nav"></div>
+
+
+<pre><span id="L1" class="ln">     1</span>	// Created by cgo -cdefs - DO NOT EDIT
+<span id="L2" class="ln">     2</span>	// cgo -cdefs defs_freebsd.go
+<span id="L3" class="ln">     3</span>	
+<span id="L4" class="ln">     4</span>	
+<span id="L5" class="ln">     5</span>	enum {
+<span id="L6" class="ln">     6</span>		EINTR	= 0x4,
+<span id="L7" class="ln">     7</span>		EFAULT	= 0xe,
+<span id="L8" class="ln">     8</span>	
+<span id="L9" class="ln">     9</span>		PROT_NONE	= 0x0,
+<span id="L10" class="ln">    10</span>		PROT_READ	= 0x1,
+<span id="L11" class="ln">    11</span>		PROT_WRITE	= 0x2,
+<span id="L12" class="ln">    12</span>		PROT_EXEC	= 0x4,
+<span id="L13" class="ln">    13</span>	
+<span id="L14" class="ln">    14</span>		MAP_ANON	= 0x1000,
+<span id="L15" class="ln">    15</span>		MAP_PRIVATE	= 0x2,
+<span id="L16" class="ln">    16</span>		MAP_FIXED	= 0x10,
+<span id="L17" class="ln">    17</span>	
+<span id="L18" class="ln">    18</span>		MADV_FREE	= 0x5,
+<span id="L19" class="ln">    19</span>	
+<span id="L20" class="ln">    20</span>		SA_SIGINFO	= 0x40,
+<span id="L21" class="ln">    21</span>		SA_RESTART	= 0x2,
+<span id="L22" class="ln">    22</span>		SA_ONSTACK	= 0x1,
+<span id="L23" class="ln">    23</span>	
+<span id="L24" class="ln">    24</span>		UMTX_OP_WAIT_UINT		= 0xb,
+<span id="L25" class="ln">    25</span>		UMTX_OP_WAIT_UINT_PRIVATE	= 0xf,
+<span id="L26" class="ln">    26</span>		UMTX_OP_WAKE			= 0x3,
+<span id="L27" class="ln">    27</span>		UMTX_OP_WAKE_PRIVATE		= 0x10,
+<span id="L28" class="ln">    28</span>	
+<span id="L29" class="ln">    29</span>		SIGHUP		= 0x1,
+<span id="L30" class="ln">    30</span>		SIGINT		= 0x2,
+<span id="L31" class="ln">    31</span>		SIGQUIT		= 0x3,
+<span id="L32" class="ln">    32</span>		SIGILL		= 0x4,
+<span id="L33" class="ln">    33</span>		SIGTRAP		= 0x5,
+<span id="L34" class="ln">    34</span>		SIGABRT		= 0x6,
+<span id="L35" class="ln">    35</span>		SIGEMT		= 0x7,
+<span id="L36" class="ln">    36</span>		SIGFPE		= 0x8,
+<span id="L37" class="ln">    37</span>		SIGKILL		= 0x9,
+<span id="L38" class="ln">    38</span>		SIGBUS		= 0xa,
+<span id="L39" class="ln">    39</span>		SIGSEGV		= 0xb,
+<span id="L40" class="ln">    40</span>		SIGSYS		= 0xc,
+<span id="L41" class="ln">    41</span>		SIGPIPE		= 0xd,
+<span id="L42" class="ln">    42</span>		SIGALRM		= 0xe,
+<span id="L43" class="ln">    43</span>		SIGTERM		= 0xf,
+<span id="L44" class="ln">    44</span>		SIGURG		= 0x10,
+<span id="L45" class="ln">    45</span>		SIGSTOP		= 0x11,
+<span id="L46" class="ln">    46</span>		SIGTSTP		= 0x12,
+<span id="L47" class="ln">    47</span>		SIGCONT		= 0x13,
+<span id="L48" class="ln">    48</span>		SIGCHLD		= 0x14,
+<span id="L49" class="ln">    49</span>		SIGTTIN		= 0x15,
+<span id="L50" class="ln">    50</span>		SIGTTOU		= 0x16,
+<span id="L51" class="ln">    51</span>		SIGIO		= 0x17,
+<span id="L52" class="ln">    52</span>		SIGXCPU		= 0x18,
+<span id="L53" class="ln">    53</span>		SIGXFSZ		= 0x19,
+<span id="L54" class="ln">    54</span>		SIGVTALRM	= 0x1a,
+<span id="L55" class="ln">    55</span>		SIGPROF		= 0x1b,
+<span id="L56" class="ln">    56</span>		SIGWINCH	= 0x1c,
+<span id="L57" class="ln">    57</span>		SIGINFO		= 0x1d,
+<span id="L58" class="ln">    58</span>		SIGUSR1		= 0x1e,
+<span id="L59" class="ln">    59</span>		SIGUSR2		= 0x1f,
+<span id="L60" class="ln">    60</span>	
+<span id="L61" class="ln">    61</span>		FPE_INTDIV	= 0x2,
+<span id="L62" class="ln">    62</span>		FPE_INTOVF	= 0x1,
+<span id="L63" class="ln">    63</span>		FPE_FLTDIV	= 0x3,
+<span id="L64" class="ln">    64</span>		FPE_FLTOVF	= 0x4,
+<span id="L65" class="ln">    65</span>		FPE_FLTUND	= 0x5,
+<span id="L66" class="ln">    66</span>		FPE_FLTRES	= 0x6,
+<span id="L67" class="ln">    67</span>		FPE_FLTINV	= 0x7,
+<span id="L68" class="ln">    68</span>		FPE_FLTSUB	= 0x8,
+<span id="L69" class="ln">    69</span>	
+<span id="L70" class="ln">    70</span>		BUS_ADRALN	= 0x1,
+<span id="L71" class="ln">    71</span>		BUS_ADRERR	= 0x2,
+<span id="L72" class="ln">    72</span>		BUS_OBJERR	= 0x3,
+<span id="L73" class="ln">    73</span>	
+<span id="L74" class="ln">    74</span>		SEGV_MAPERR	= 0x1,
+<span id="L75" class="ln">    75</span>		SEGV_ACCERR	= 0x2,
+<span id="L76" class="ln">    76</span>	
+<span id="L77" class="ln">    77</span>		ITIMER_REAL	= 0x0,
+<span id="L78" class="ln">    78</span>		ITIMER_VIRTUAL	= 0x1,
+<span id="L79" class="ln">    79</span>		ITIMER_PROF	= 0x2,
+<span id="L80" class="ln">    80</span>	
+<span id="L81" class="ln">    81</span>		EV_ADD		= 0x1,
+<span id="L82" class="ln">    82</span>		EV_DELETE	= 0x2,
+<span id="L83" class="ln">    83</span>		EV_CLEAR	= 0x20,
+<span id="L84" class="ln">    84</span>		EV_RECEIPT	= 0x40,
+<span id="L85" class="ln">    85</span>		EV_ERROR	= 0x4000,
+<span id="L86" class="ln">    86</span>		EVFILT_READ	= -0x1,
+<span id="L87" class="ln">    87</span>		EVFILT_WRITE	= -0x2,
+<span id="L88" class="ln">    88</span>	};
+<span id="L89" class="ln">    89</span>	
+<span id="L90" class="ln">    90</span>	typedef struct Rtprio Rtprio;
+<span id="L91" class="ln">    91</span>	typedef struct ThrParam ThrParam;
+<span id="L92" class="ln">    92</span>	typedef struct Sigaltstack Sigaltstack;
+<span id="L93" class="ln">    93</span>	typedef struct Sigset Sigset;
+<span id="L94" class="ln">    94</span>	typedef struct StackT StackT;
+<span id="L95" class="ln">    95</span>	typedef struct Siginfo Siginfo;
+<span id="L96" class="ln">    96</span>	typedef struct Mcontext Mcontext;
+<span id="L97" class="ln">    97</span>	typedef struct Ucontext Ucontext;
+<span id="L98" class="ln">    98</span>	typedef struct Timespec Timespec;
+<span id="L99" class="ln">    99</span>	typedef struct Timeval Timeval;
+<span id="L100" class="ln">   100</span>	typedef struct Itimerval Itimerval;
+<span id="L101" class="ln">   101</span>	typedef struct Kevent Kevent;
+<span id="L102" class="ln">   102</span>	
+<span id="L103" class="ln">   103</span>	#pragma pack on
+<span id="L104" class="ln">   104</span>	
+<span id="L105" class="ln">   105</span>	struct Rtprio {
+<span id="L106" class="ln">   106</span>		uint16	type;
+<span id="L107" class="ln">   107</span>		uint16	prio;
+<span id="L108" class="ln">   108</span>	};
+<span id="L109" class="ln">   109</span>	struct ThrParam {
+<span id="L110" class="ln">   110</span>		void	*start_func;
+<span id="L111" class="ln">   111</span>		byte	*arg;
+<span id="L112" class="ln">   112</span>		int8	*stack_base;
+<span id="L113" class="ln">   113</span>		uint32	stack_size;
+<span id="L114" class="ln">   114</span>		int8	*tls_base;
+<span id="L115" class="ln">   115</span>		uint32	tls_size;
+<span id="L116" class="ln">   116</span>		int32	*child_tid;
+<span id="L117" class="ln">   117</span>		int32	*parent_tid;
+<span id="L118" class="ln">   118</span>		int32	flags;
+<span id="L119" class="ln">   119</span>		Rtprio	*rtp;
+<span id="L120" class="ln">   120</span>		void	*spare[3];
+<span id="L121" class="ln">   121</span>	};
+<span id="L122" class="ln">   122</span>	struct Sigaltstack {
+<span id="L123" class="ln">   123</span>		int8	*ss_sp;
+<span id="L124" class="ln">   124</span>		uint32	ss_size;
+<span id="L125" class="ln">   125</span>		int32	ss_flags;
+<span id="L126" class="ln">   126</span>	};
+<span id="L127" class="ln">   127</span>	struct Sigset {
+<span id="L128" class="ln">   128</span>		uint32	__bits[4];
+<span id="L129" class="ln">   129</span>	};
+<span id="L130" class="ln">   130</span>	struct StackT {
+<span id="L131" class="ln">   131</span>		int8	*ss_sp;
+<span id="L132" class="ln">   132</span>		uint32	ss_size;
+<span id="L133" class="ln">   133</span>		int32	ss_flags;
+<span id="L134" class="ln">   134</span>	};
+<span id="L135" class="ln">   135</span>	
+<span id="L136" class="ln">   136</span>	struct Siginfo {
+<span id="L137" class="ln">   137</span>		int32	si_signo;
+<span id="L138" class="ln">   138</span>		int32	si_errno;
+<span id="L139" class="ln">   139</span>		int32	si_code;
+<span id="L140" class="ln">   140</span>		int32	si_pid;
+<span id="L141" class="ln">   141</span>		uint32	si_uid;
+<span id="L142" class="ln">   142</span>		int32	si_status;
+<span id="L143" class="ln">   143</span>		byte	*si_addr;
+<span id="L144" class="ln">   144</span>		byte	si_value[4];
+<span id="L145" class="ln">   145</span>		byte	_reason[32];
+<span id="L146" class="ln">   146</span>	};
+<span id="L147" class="ln">   147</span>	
+<span id="L148" class="ln">   148</span>	struct Mcontext {
+<span id="L149" class="ln">   149</span>		int32	mc_onstack;
+<span id="L150" class="ln">   150</span>		int32	mc_gs;
+<span id="L151" class="ln">   151</span>		int32	mc_fs;
+<span id="L152" class="ln">   152</span>		int32	mc_es;
+<span id="L153" class="ln">   153</span>		int32	mc_ds;
+<span id="L154" class="ln">   154</span>		int32	mc_edi;
+<span id="L155" class="ln">   155</span>		int32	mc_esi;
+<span id="L156" class="ln">   156</span>		int32	mc_ebp;
+<span id="L157" class="ln">   157</span>		int32	mc_isp;
+<span id="L158" class="ln">   158</span>		int32	mc_ebx;
+<span id="L159" class="ln">   159</span>		int32	mc_edx;
+<span id="L160" class="ln">   160</span>		int32	mc_ecx;
+<span id="L161" class="ln">   161</span>		int32	mc_eax;
+<span id="L162" class="ln">   162</span>		int32	mc_trapno;
+<span id="L163" class="ln">   163</span>		int32	mc_err;
+<span id="L164" class="ln">   164</span>		int32	mc_eip;
+<span id="L165" class="ln">   165</span>		int32	mc_cs;
+<span id="L166" class="ln">   166</span>		int32	mc_eflags;
+<span id="L167" class="ln">   167</span>		int32	mc_esp;
+<span id="L168" class="ln">   168</span>		int32	mc_ss;
+<span id="L169" class="ln">   169</span>		int32	mc_len;
+<span id="L170" class="ln">   170</span>		int32	mc_fpformat;
+<span id="L171" class="ln">   171</span>		int32	mc_ownedfp;
+<span id="L172" class="ln">   172</span>		int32	mc_flags;
+<span id="L173" class="ln">   173</span>		int32	mc_fpstate[128];
+<span id="L174" class="ln">   174</span>		int32	mc_fsbase;
+<span id="L175" class="ln">   175</span>		int32	mc_gsbase;
+<span id="L176" class="ln">   176</span>		int32	mc_xfpustate;
+<span id="L177" class="ln">   177</span>		int32	mc_xfpustate_len;
+<span id="L178" class="ln">   178</span>		int32	mc_spare2[4];
+<span id="L179" class="ln">   179</span>	};
+<span id="L180" class="ln">   180</span>	struct Ucontext {
+<span id="L181" class="ln">   181</span>		Sigset	uc_sigmask;
+<span id="L182" class="ln">   182</span>		Mcontext	uc_mcontext;
+<span id="L183" class="ln">   183</span>		Ucontext	*uc_link;
+<span id="L184" class="ln">   184</span>		StackT	uc_stack;
+<span id="L185" class="ln">   185</span>		int32	uc_flags;
+<span id="L186" class="ln">   186</span>		int32	__spare__[4];
+<span id="L187" class="ln">   187</span>		byte	Pad_cgo_0[12];
+<span id="L188" class="ln">   188</span>	};
+<span id="L189" class="ln">   189</span>	
+<span id="L190" class="ln">   190</span>	struct Timespec {
+<span id="L191" class="ln">   191</span>		int32	tv_sec;
+<span id="L192" class="ln">   192</span>		int32	tv_nsec;
+<span id="L193" class="ln">   193</span>	};
+<span id="L194" class="ln">   194</span>	struct Timeval {
+<span id="L195" class="ln">   195</span>		int32	tv_sec;
+<span id="L196" class="ln">   196</span>		int32	tv_usec;
+<span id="L197" class="ln">   197</span>	};
+<span id="L198" class="ln">   198</span>	struct Itimerval {
+<span id="L199" class="ln">   199</span>		Timeval	it_interval;
+<span id="L200" class="ln">   200</span>		Timeval	it_value;
+<span id="L201" class="ln">   201</span>	};
+<span id="L202" class="ln">   202</span>	
+<span id="L203" class="ln">   203</span>	struct Kevent {
+<span id="L204" class="ln">   204</span>		uint32	ident;
+<span id="L205" class="ln">   205</span>		int16	filter;
+<span id="L206" class="ln">   206</span>		uint16	flags;
+<span id="L207" class="ln">   207</span>		uint32	fflags;
+<span id="L208" class="ln">   208</span>		int32	data;
+<span id="L209" class="ln">   209</span>		byte	*udata;
+<span id="L210" class="ln">   210</span>	};
+<span id="L211" class="ln">   211</span>	
+<span id="L212" class="ln">   212</span>	
+<span id="L213" class="ln">   213</span>	#pragma pack off
+</pre><p><a href="http://golang.org/src/pkg/runtime/defs_freebsd_386.h?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.3.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
+<a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
+<a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.js"></script>
+<script type="text/javascript" src="http://golang.org/lib/godoc/jquery.treeview.edit.js"></script>
+
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/playground.js"></script>
+
+<script type="text/javascript" src="http://golang.org/lib/godoc/godocs.js"></script>
+
+<script type="text/javascript">
+(function() {
+  var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+  ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+  var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</body>
+</html>
+
