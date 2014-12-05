@@ -1,0 +1,603 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>dockertools - GoDoc</title>
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../kubelet.html">kubelet</a><span class="text-muted">/</span><span class="text-muted">dockertools</span>
+  
+  <span class="pull-right">
+    <a href="dockertools.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="dockertools.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package dockertools</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/dockertools"</code>
+
+        
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="dockertools.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          <li><a href="dockertools.html#pkg-variables">Variables</a></li>
+          <li><a href="dockertools.html#BuildDockerName">func BuildDockerName(manifestUUID, podFullName string, container *api.Container) string</a></li><li><a href="dockertools.html#GetDockerPodInfo">func GetDockerPodInfo(client DockerInterface, manifest api.PodSpec, podFullName, uuid string) (api.PodInfo, error)</a></li><li><a href="dockertools.html#GetKubeletDockerContainerLogs">func GetKubeletDockerContainerLogs(client DockerInterface, containerID, tail string, follow bool, stdout, stderr io.Writer) (err error)</a></li><li><a href="dockertools.html#GetRecentDockerContainersWithNameAndUUID">func GetRecentDockerContainersWithNameAndUUID(client DockerInterface, podFullName, uuid, containerName string) ([]*docker.Container, error)</a></li><li><a href="dockertools.html#HashContainer">func HashContainer(container *api.Container) uint64</a></li><li><a href="dockertools.html#ParseDockerName">func ParseDockerName(name string) (podFullName, uuid, containerName string, hash uint64)</a></li><li><a href="dockertools.html#RequireLatestImage">func RequireLatestImage(name string) bool</a></li>
+          
+            <li><a href="dockertools.html#ContainerCommandRunner">type ContainerCommandRunner</a></li>
+            <ul>
+            <li><a href="dockertools.html#NewDockerContainerCommandRunner">func NewDockerContainerCommandRunner(client DockerInterface) ContainerCommandRunner</a></li>
+            
+            </ul>
+          
+            <li><a href="dockertools.html#DockerContainers">type DockerContainers</a></li>
+            <ul>
+            <li><a href="dockertools.html#GetKubeletDockerContainers">func GetKubeletDockerContainers(client DockerInterface, allContainers bool) (DockerContainers, error)</a></li>
+            <li><a href="dockertools.html#DockerContainers.FindContainersByPodFullName">func (c DockerContainers) FindContainersByPodFullName(podFullName string) map[string]*docker.APIContainers</a></li><li><a href="dockertools.html#DockerContainers.FindPodContainer">func (c DockerContainers) FindPodContainer(podFullName, uuid, containerName string) (*docker.APIContainers, bool, uint64)</a></li>
+            </ul>
+          
+            <li><a href="dockertools.html#DockerID">type DockerID</a></li>
+            
+            
+            
+            
+          
+            <li><a href="dockertools.html#DockerInterface">type DockerInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="dockertools.html#DockerPuller">type DockerPuller</a></li>
+            <ul>
+            <li><a href="dockertools.html#NewDockerPuller">func NewDockerPuller(client DockerInterface, qps float32, burst int) DockerPuller</a></li>
+            
+            </ul>
+          
+            <li><a href="dockertools.html#FakeDockerClient">type FakeDockerClient</a></li>
+            <ul>
+            
+            <li><a href="dockertools.html#FakeDockerClient.AssertCalls">func (f *FakeDockerClient) AssertCalls(calls []string) (err error)</a></li><li><a href="dockertools.html#FakeDockerClient.CreateContainer">func (f *FakeDockerClient) CreateContainer(c docker.CreateContainerOptions) (*docker.Container, error)</a></li><li><a href="dockertools.html#FakeDockerClient.CreateExec">func (f *FakeDockerClient) CreateExec(_ docker.CreateExecOptions) (*docker.Exec, error)</a></li><li><a href="dockertools.html#FakeDockerClient.InspectContainer">func (f *FakeDockerClient) InspectContainer(id string) (*docker.Container, error)</a></li><li><a href="dockertools.html#FakeDockerClient.InspectImage">func (f *FakeDockerClient) InspectImage(name string) (*docker.Image, error)</a></li><li><a href="dockertools.html#FakeDockerClient.ListContainers">func (f *FakeDockerClient) ListContainers(options docker.ListContainersOptions) ([]docker.APIContainers, error)</a></li><li><a href="dockertools.html#FakeDockerClient.Logs">func (f *FakeDockerClient) Logs(opts docker.LogsOptions) error</a></li><li><a href="dockertools.html#FakeDockerClient.PullImage">func (f *FakeDockerClient) PullImage(opts docker.PullImageOptions, auth docker.AuthConfiguration) error</a></li><li><a href="dockertools.html#FakeDockerClient.RemoveContainer">func (f *FakeDockerClient) RemoveContainer(opts docker.RemoveContainerOptions) error</a></li><li><a href="dockertools.html#FakeDockerClient.StartContainer">func (f *FakeDockerClient) StartContainer(id string, hostConfig *docker.HostConfig) error</a></li><li><a href="dockertools.html#FakeDockerClient.StartExec">func (f *FakeDockerClient) StartExec(_ string, _ docker.StartExecOptions) error</a></li><li><a href="dockertools.html#FakeDockerClient.StopContainer">func (f *FakeDockerClient) StopContainer(id string, timeout uint) error</a></li><li><a href="dockertools.html#FakeDockerClient.Version">func (f *FakeDockerClient) Version() (*docker.Env, error)</a></li>
+            </ul>
+          
+            <li><a href="dockertools.html#FakeDockerPuller">type FakeDockerPuller</a></li>
+            <ul>
+            
+            <li><a href="dockertools.html#FakeDockerPuller.IsImagePresent">func (f *FakeDockerPuller) IsImagePresent(name string) (bool, error)</a></li><li><a href="dockertools.html#FakeDockerPuller.Pull">func (f *FakeDockerPuller) Pull(image string) (err error)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/kubelet/dockertools">Package Files</a>
+          <a class="permalink" href="dockertools.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go">docker.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go">fake_docker_client.go</a> </p>
+
+        
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="dockertools.html#pkg-variables">&para;</a></h3>
+          <pre>var (
+    <span class="com">// ErrNoContainersInPod is returned when there are no containers for a given pod</span>
+    <span id="ErrNoContainersInPod">ErrNoContainersInPod</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;no containers exist for this pod&#34;)
+
+    <span class="com">// ErrNoNetworkContainerInPod is returned when there is no network container for a given pod</span>
+    <span id="ErrNoNetworkContainerInPod">ErrNoNetworkContainerInPod</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;No network container exists for this pod&#34;)
+
+    <span class="com">// ErrContainerCannotRun is returned when a container is created, but cannot run properly</span>
+    <span id="ErrContainerCannotRun">ErrContainerCannotRun</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;Container cannot run&#34;)
+)</pre>
+        
+
+        
+        
+        
+          <h3 id="BuildDockerName">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L526">BuildDockerName</a> <a class="permalink" href="dockertools.html#BuildDockerName">&para;</a></h3>
+          <pre class="funcdecl">func BuildDockerName(manifestUUID, podFullName <a href="http://godoc.org/builtin#string">string</a>, container *<a href="../api.html">api</a>.<a href="../api.html#Container">Container</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Creates a name which can be reversed to identify both full pod name and container name.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetDockerPodInfo">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L431">GetDockerPodInfo</a> <a class="permalink" href="dockertools.html#GetDockerPodInfo">&para;</a></h3>
+          <pre class="funcdecl">func GetDockerPodInfo(client <a href="dockertools.html#DockerInterface">DockerInterface</a>, manifest <a href="../api.html">api</a>.<a href="../api.html#PodSpec">PodSpec</a>, podFullName, uuid <a href="http://godoc.org/builtin#string">string</a>) (<a href="../api.html">api</a>.<a href="../api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetDockerPodInfo returns docker info for all containers in the pod/manifest.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetKubeletDockerContainerLogs">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L340">GetKubeletDockerContainerLogs</a> <a class="permalink" href="dockertools.html#GetKubeletDockerContainerLogs">&para;</a></h3>
+          <pre class="funcdecl">func GetKubeletDockerContainerLogs(client <a href="dockertools.html#DockerInterface">DockerInterface</a>, containerID, tail <a href="http://godoc.org/builtin#string">string</a>, follow <a href="http://godoc.org/builtin#bool">bool</a>, stdout, stderr <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) (err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetKubeletDockerContainerLogs returns logs of specific container
+By default the function will return snapshot of the container log
+Log streaming is possible if &#39;follow&#39; param is set to true
+Log tailing is possible when number of tailed lines are set and only if &#39;follow&#39; is false
+TODO: Make &#39;RawTerminal&#39; option  flagable.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetRecentDockerContainersWithNameAndUUID">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L307">GetRecentDockerContainersWithNameAndUUID</a> <a class="permalink" href="dockertools.html#GetRecentDockerContainersWithNameAndUUID">&para;</a></h3>
+          <pre class="funcdecl">func GetRecentDockerContainersWithNameAndUUID(client <a href="dockertools.html#DockerInterface">DockerInterface</a>, podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>) ([]*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Container">Container</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetRecentDockerContainersWithNameAndUUID returns a list of dead docker containers which matches the name
+and uuid given.
+</p>
+
+          
+  
+
+        
+          <h3 id="HashContainer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L519">HashContainer</a> <a class="permalink" href="dockertools.html#HashContainer">&para;</a></h3>
+          <pre class="funcdecl">func HashContainer(container *<a href="../api.html">api</a>.<a href="../api.html#Container">Container</a>) <a href="http://godoc.org/builtin#uint64">uint64</a></pre>
+          
+  
+
+        
+          <h3 id="ParseDockerName">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L547">ParseDockerName</a> <a class="permalink" href="dockertools.html#ParseDockerName">&para;</a></h3>
+          <pre class="funcdecl">func ParseDockerName(name <a href="http://godoc.org/builtin#string">string</a>) (podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>, hash <a href="http://godoc.org/builtin#uint64">uint64</a>)</pre><p>
+Unpacks a container name, returning the pod full name and container name we would have used to
+construct the docker name. If the docker name isn&#39;t the one we created, we may return empty strings.
+</p>
+
+          
+  
+
+        
+          <h3 id="RequireLatestImage">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L240">RequireLatestImage</a> <a class="permalink" href="dockertools.html#RequireLatestImage">&para;</a></h3>
+          <pre class="funcdecl">func RequireLatestImage(name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+RequireLatestImage returns if the user wants the latest image
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ContainerCommandRunner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L600">ContainerCommandRunner</a> <a class="permalink" href="dockertools.html#ContainerCommandRunner">&para;</a></h3>
+          <pre>type ContainerCommandRunner interface {
+    <span id="ContainerCommandRunner.RunInContainer">RunInContainer</span>(containerID <a href="http://godoc.org/builtin#string">string</a>, cmd []<a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewDockerContainerCommandRunner">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L193">NewDockerContainerCommandRunner</a> <a class="permalink" href="dockertools.html#NewDockerContainerCommandRunner">&para;</a></h4>
+            <pre class="funcdecl">func NewDockerContainerCommandRunner(client <a href="dockertools.html#DockerInterface">DockerInterface</a>) <a href="dockertools.html#ContainerCommandRunner">ContainerCommandRunner</a></pre><p>
+NewDockerContainerCommandRunner creates a ContainerCommandRunner which uses nsinit to run a command
+inside a container.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="DockerContainers">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L254">DockerContainers</a> <a class="permalink" href="dockertools.html#DockerContainers">&para;</a></h3>
+          <pre>type DockerContainers map[<a href="dockertools.html#DockerID">DockerID</a>]*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#APIContainers">APIContainers</a></pre><p>
+DockerContainers is a map of containers
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="GetKubeletDockerContainers">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L284">GetKubeletDockerContainers</a> <a class="permalink" href="dockertools.html#GetKubeletDockerContainers">&para;</a></h4>
+            <pre class="funcdecl">func GetKubeletDockerContainers(client <a href="dockertools.html#DockerInterface">DockerInterface</a>, allContainers <a href="http://godoc.org/builtin#bool">bool</a>) (<a href="dockertools.html#DockerContainers">DockerContainers</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetKubeletDockerContainers takes client and boolean whether to list all container or just the running ones.
+Returns a map of docker containers that we manage. The map key is the docker container ID
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="DockerContainers.FindContainersByPodFullName">func (DockerContainers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L270">FindContainersByPodFullName</a> <a class="permalink" href="dockertools.html#DockerContainers.FindContainersByPodFullName">&para;</a></h4>
+            <pre class="funcdecl">func (c <a href="dockertools.html#DockerContainers">DockerContainers</a>) FindContainersByPodFullName(podFullName <a href="http://godoc.org/builtin#string">string</a>) map[<a href="http://godoc.org/builtin#string">string</a>]*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#APIContainers">APIContainers</a></pre><p>
+Note, this might return containers belong to a different Pod instance with the same name
+</p>
+
+            
+  
+
+          
+            <h4 id="DockerContainers.FindPodContainer">func (DockerContainers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L256">FindPodContainer</a> <a class="permalink" href="dockertools.html#DockerContainers.FindPodContainer">&para;</a></h4>
+            <pre class="funcdecl">func (c <a href="dockertools.html#DockerContainers">DockerContainers</a>) FindPodContainer(podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#APIContainers">APIContainers</a>, <a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#uint64">uint64</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="DockerID">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L56">DockerID</a> <a class="permalink" href="dockertools.html#DockerID">&para;</a></h3>
+          <pre>type DockerID <a href="http://godoc.org/builtin#string">string</a></pre><p>
+DockerID is an ID of docker container. It is a type to make it clear when we&#39;re working with docker container Ids
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="DockerInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L40">DockerInterface</a> <a class="permalink" href="dockertools.html#DockerInterface">&para;</a></h3>
+          <pre>type DockerInterface interface {
+    <span id="DockerInterface.ListContainers">ListContainers</span>(options <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#ListContainersOptions">ListContainersOptions</a>) ([]<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#APIContainers">APIContainers</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.InspectContainer">InspectContainer</span>(id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Container">Container</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.CreateContainer">CreateContainer</span>(<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#CreateContainerOptions">CreateContainerOptions</a>) (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Container">Container</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.StartContainer">StartContainer</span>(id <a href="http://godoc.org/builtin#string">string</a>, hostConfig *<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#HostConfig">HostConfig</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerInterface.StopContainer">StopContainer</span>(id <a href="http://godoc.org/builtin#string">string</a>, timeout <a href="http://godoc.org/builtin#uint">uint</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerInterface.RemoveContainer">RemoveContainer</span>(opts <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#RemoveContainerOptions">RemoveContainerOptions</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerInterface.InspectImage">InspectImage</span>(image <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Image">Image</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.PullImage">PullImage</span>(opts <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#PullImageOptions">PullImageOptions</a>, auth <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#AuthConfiguration">AuthConfiguration</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerInterface.Logs">Logs</span>(opts <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#LogsOptions">LogsOptions</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerInterface.Version">Version</span>() (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Env">Env</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.CreateExec">CreateExec</span>(<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#CreateExecOptions">CreateExecOptions</a>) (*<a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#Exec">Exec</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="DockerInterface.StartExec">StartExec</span>(<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/github.com/fsouza/go-dockerclient">docker</a>.<a href="http://godoc.org/github.com/fsouza/go-dockerclient#StartExecOptions">StartExecOptions</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+DockerInterface is an abstract interface for testability.  It abstracts the interface of docker.Client.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="DockerPuller">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L59">DockerPuller</a> <a class="permalink" href="dockertools.html#DockerPuller">&para;</a></h3>
+          <pre>type DockerPuller interface {
+    <span id="DockerPuller.Pull">Pull</span>(image <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="DockerPuller.IsImagePresent">IsImagePresent</span>(image <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+DockerPuller is an abstract interface for testability.  It abstracts image pull operations.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewDockerPuller">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/docker.go#L76">NewDockerPuller</a> <a class="permalink" href="dockertools.html#NewDockerPuller">&para;</a></h4>
+            <pre class="funcdecl">func NewDockerPuller(client <a href="dockertools.html#DockerInterface">DockerInterface</a>, qps <a href="http://godoc.org/builtin#float32">float32</a>, burst <a href="http://godoc.org/builtin#int">int</a>) <a href="dockertools.html#DockerPuller">DockerPuller</a></pre><p>
+NewDockerPuller creates a new instance of the default implementation of DockerPuller.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="FakeDockerClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L28">FakeDockerClient</a> <a class="permalink" href="dockertools.html#FakeDockerClient">&para;</a></h3>
+          <pre>type FakeDockerClient struct {
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+    <span id="FakeDockerClient.ContainerList">ContainerList</span> []docker.APIContainers
+    <span id="FakeDockerClient.Container">Container</span>     *docker.Container
+    <span id="FakeDockerClient.ContainerMap">ContainerMap</span>  map[<a href="http://godoc.org/builtin#string">string</a>]*docker.Container
+    <span id="FakeDockerClient.Image">Image</span>         *docker.Image
+    <span id="FakeDockerClient.Err">Err</span>           <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="FakeDockerClient.Stopped">Stopped</span> []<a href="http://godoc.org/builtin#string">string</a>
+
+    <span id="FakeDockerClient.Created">Created</span>     []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeDockerClient.Removed">Removed</span>     []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeDockerClient.VersionInfo">VersionInfo</span> docker.Env
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+FakeDockerClient is a simple fake docker client, so that kubelet can be run for testing without requiring a real docker setup.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeDockerClient.AssertCalls">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L49">AssertCalls</a> <a class="permalink" href="dockertools.html#FakeDockerClient.AssertCalls">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) AssertCalls(calls []<a href="http://godoc.org/builtin#string">string</a>) (err <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeDockerClient.CreateContainer">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L94">CreateContainer</a> <a class="permalink" href="dockertools.html#FakeDockerClient.CreateContainer">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) CreateContainer(c docker.CreateContainerOptions) (*docker.Container, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+CreateContainer is a test-spy implementation of DockerInterface.CreateContainer.
+It adds an entry &#34;create&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.CreateExec">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L168">CreateExec</a> <a class="permalink" href="dockertools.html#FakeDockerClient.CreateExec">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) CreateExec(_ docker.CreateExecOptions) (*docker.Exec, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeDockerClient.InspectContainer">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L71">InspectContainer</a> <a class="permalink" href="dockertools.html#FakeDockerClient.InspectContainer">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) InspectContainer(id <a href="http://godoc.org/builtin#string">string</a>) (*docker.Container, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+InspectContainer is a test-spy implementation of DockerInterface.InspectContainer.
+It adds an entry &#34;inspect&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.InspectImage">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L85">InspectImage</a> <a class="permalink" href="dockertools.html#FakeDockerClient.InspectImage">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) InspectImage(name <a href="http://godoc.org/builtin#string">string</a>) (*docker.Image, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+InspectImage is a test-spy implementation of DockerInterface.InspectImage.
+It adds an entry &#34;inspect&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.ListContainers">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L62">ListContainers</a> <a class="permalink" href="dockertools.html#FakeDockerClient.ListContainers">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) ListContainers(options docker.ListContainersOptions) ([]docker.APIContainers, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListContainers is a test-spy implementation of DockerInterface.ListContainers.
+It adds an entry &#34;list&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.Logs">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L147">Logs</a> <a class="permalink" href="dockertools.html#FakeDockerClient.Logs">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) Logs(opts docker.LogsOptions) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Logs is a test-spy implementation of DockerInterface.Logs.
+It adds an entry &#34;logs&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.PullImage">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L156">PullImage</a> <a class="permalink" href="dockertools.html#FakeDockerClient.PullImage">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) PullImage(opts docker.PullImageOptions, auth docker.AuthConfiguration) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+PullImage is a test-spy implementation of DockerInterface.StopContainer.
+It adds an entry &#34;pull&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.RemoveContainer">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L137">RemoveContainer</a> <a class="permalink" href="dockertools.html#FakeDockerClient.RemoveContainer">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) RemoveContainer(opts docker.RemoveContainerOptions) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakeDockerClient.StartContainer">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L108">StartContainer</a> <a class="permalink" href="dockertools.html#FakeDockerClient.StartContainer">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) StartContainer(id <a href="http://godoc.org/builtin#string">string</a>, hostConfig *docker.HostConfig) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+StartContainer is a test-spy implementation of DockerInterface.StartContainer.
+It adds an entry &#34;start&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.StartExec">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L171">StartExec</a> <a class="permalink" href="dockertools.html#FakeDockerClient.StartExec">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) StartExec(_ <a href="http://godoc.org/builtin#string">string</a>, _ docker.StartExecOptions) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakeDockerClient.StopContainer">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L122">StopContainer</a> <a class="permalink" href="dockertools.html#FakeDockerClient.StopContainer">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) StopContainer(id <a href="http://godoc.org/builtin#string">string</a>, timeout <a href="http://godoc.org/builtin#uint">uint</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+StopContainer is a test-spy implementation of DockerInterface.StopContainer.
+It adds an entry &#34;stop&#34; to the internal method call record.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeDockerClient.Version">func (*FakeDockerClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L164">Version</a> <a class="permalink" href="dockertools.html#FakeDockerClient.Version">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerClient">FakeDockerClient</a>) Version() (*docker.Env, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeDockerPuller">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L176">FakeDockerPuller</a> <a class="permalink" href="dockertools.html#FakeDockerPuller">&para;</a></h3>
+          <pre>type FakeDockerPuller struct {
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+
+    <span id="FakeDockerPuller.HasImages">HasImages</span>    []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeDockerPuller.ImagesPulled">ImagesPulled</span> []<a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Every pull will return the first error here, and then reslice</span>
+    <span class="com">// to remove it. Will give nil errors if this slice is empty.</span>
+    <span id="FakeDockerPuller.ErrorsToInject">ErrorsToInject</span> []<a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+FakeDockerPuller is a stub implementation of DockerPuller.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeDockerPuller.IsImagePresent">func (*FakeDockerPuller) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L200">IsImagePresent</a> <a class="permalink" href="dockertools.html#FakeDockerPuller.IsImagePresent">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerPuller">FakeDockerPuller</a>) IsImagePresent(name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeDockerPuller.Pull">func (*FakeDockerPuller) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/dockertools/fake_docker_client.go#L188">Pull</a> <a class="permalink" href="dockertools.html#FakeDockerPuller.Pull">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="dockertools.html#FakeDockerPuller">FakeDockerPuller</a>) Pull(image <a href="http://godoc.org/builtin#string">string</a>) (err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Pull records the image pull attempt, and optionally injects an error.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/dockertools"></form>
+  <p>Package dockertools imports <a href="dockertools@imports.html">18 packages</a> (<a href="dockertools@import-graph.html">graph</a>) and is imported by <a href="dockertools@importers.html">4 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:52Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="dockertools@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="dockertools.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

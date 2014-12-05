@@ -1,0 +1,379 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>vagrant_cloud - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package vagrant_cloud">
+    <meta property="og:title" content="Package vagrant_cloud">
+    <meta name="description" content="Package vagrant_cloud is an implementation of Interface, TCPLoadBalancer and Instances for developer managed Vagrant cluster.">
+    <meta name="twitter:description" content="Package vagrant_cloud is an implementation of Interface, TCPLoadBalancer and Instances for developer managed Vagrant cluster.">
+    <meta property="og:description" content="Package vagrant_cloud is an implementation of Interface, TCPLoadBalancer and Instances for developer managed Vagrant cluster.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../cloudprovider.html">cloudprovider</a><span class="text-muted">/</span><span class="text-muted">vagrant</span>
+  
+  <span class="pull-right">
+    <a href="vagrant.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="vagrant.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package vagrant_cloud</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/vagrant"</code>
+
+        <p>
+Package vagrant_cloud is an implementation of Interface, TCPLoadBalancer
+and Instances for developer managed Vagrant cluster.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="vagrant.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="vagrant.html#SaltLoginResponse">type SaltLoginResponse</a></li>
+            
+            
+            
+            
+          
+            <li><a href="vagrant.html#SaltMinion">type SaltMinion</a></li>
+            
+            
+            
+            
+          
+            <li><a href="vagrant.html#SaltMinions">type SaltMinions</a></li>
+            
+            
+            
+            
+          
+            <li><a href="vagrant.html#SaltMinionsResponse">type SaltMinionsResponse</a></li>
+            
+            
+            
+            
+          
+            <li><a href="vagrant.html#SaltToken">type SaltToken</a></li>
+            
+            
+            
+            
+          
+            <li><a href="vagrant.html#VagrantCloud">type VagrantCloud</a></li>
+            <ul>
+            
+            <li><a href="vagrant.html#VagrantCloud.Clusters">func (aws *VagrantCloud) Clusters() (cloudprovider.Clusters, bool)</a></li><li><a href="vagrant.html#VagrantCloud.GetNodeResources">func (v *VagrantCloud) GetNodeResources(name string) (*api.NodeResources, error)</a></li><li><a href="vagrant.html#VagrantCloud.IPAddress">func (v *VagrantCloud) IPAddress(instance string) (net.IP, error)</a></li><li><a href="vagrant.html#VagrantCloud.Instances">func (v *VagrantCloud) Instances() (cloudprovider.Instances, bool)</a></li><li><a href="vagrant.html#VagrantCloud.List">func (v *VagrantCloud) List(filter string) ([]string, error)</a></li><li><a href="vagrant.html#VagrantCloud.TCPLoadBalancer">func (v *VagrantCloud) TCPLoadBalancer() (cloudprovider.TCPLoadBalancer, bool)</a></li><li><a href="vagrant.html#VagrantCloud.Zones">func (v *VagrantCloud) Zones() (cloudprovider.Zones, bool)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/cloudprovider/vagrant">Package Files</a>
+          <a class="permalink" href="vagrant.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go">vagrant.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="SaltLoginResponse">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L54">SaltLoginResponse</a> <a class="permalink" href="vagrant.html#SaltLoginResponse">&para;</a></h3>
+          <pre>type SaltLoginResponse struct {
+    <span id="SaltLoginResponse.Data">Data</span> []<a href="vagrant.html#SaltToken">SaltToken</a> `json:&#34;return&#34;`
+}</pre><p>
+SaltLoginResponse is the response object for a /login operation against Salt REST API.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SaltMinion">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L59">SaltMinion</a> <a class="permalink" href="vagrant.html#SaltMinion">&para;</a></h3>
+          <pre>type SaltMinion struct {
+    <span id="SaltMinion.Roles">Roles</span> []<a href="http://godoc.org/builtin#string">string</a> `json:&#34;roles&#34;`
+    <span id="SaltMinion.IP">IP</span>    <a href="http://godoc.org/builtin#string">string</a>   `json:&#34;node_ip&#34;`
+    <span id="SaltMinion.Host">Host</span>  <a href="http://godoc.org/builtin#string">string</a>   `json:&#34;host&#34;`
+}</pre><p>
+SaltMinion is a machine managed by the Salt service.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SaltMinions">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L66">SaltMinions</a> <a class="permalink" href="vagrant.html#SaltMinions">&para;</a></h3>
+          <pre>type SaltMinions map[<a href="http://godoc.org/builtin#string">string</a>]<a href="vagrant.html#SaltMinion">SaltMinion</a></pre><p>
+SaltMinions is a map of minion name to machine information.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SaltMinionsResponse">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L69">SaltMinionsResponse</a> <a class="permalink" href="vagrant.html#SaltMinionsResponse">&para;</a></h3>
+          <pre>type SaltMinionsResponse struct {
+    <span id="SaltMinionsResponse.Minions">Minions</span> []<a href="vagrant.html#SaltMinions">SaltMinions</a> `json:&#34;return&#34;`
+}</pre><p>
+SaltMinionsResponse is the response object for a /minions operation against Salt REST API
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SaltToken">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L47">SaltToken</a> <a class="permalink" href="vagrant.html#SaltToken">&para;</a></h3>
+          <pre>type SaltToken struct {
+    <span id="SaltToken.Token">Token</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;token&#34;`
+    <span id="SaltToken.User">User</span>  <a href="http://godoc.org/builtin#string">string</a> `json:&#34;user&#34;`
+    <span id="SaltToken.EAuth">EAuth</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;eauth&#34;`
+}</pre><p>
+SaltToken is an authorization token required by Salt REST API.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="VagrantCloud">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L35">VagrantCloud</a> <a class="permalink" href="vagrant.html#VagrantCloud">&para;</a></h3>
+          <pre>type VagrantCloud struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+VagrantCloud is an implementation of Interface, TCPLoadBalancer and Instances for developer managed Vagrant cluster.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="VagrantCloud.Clusters">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L83">Clusters</a> <a class="permalink" href="vagrant.html#VagrantCloud.Clusters">&para;</a></h4>
+            <pre class="funcdecl">func (aws *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) Clusters() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Clusters">Clusters</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre>
+            
+  
+
+          
+            <h4 id="VagrantCloud.GetNodeResources">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L218">GetNodeResources</a> <a class="permalink" href="vagrant.html#VagrantCloud.GetNodeResources">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) GetNodeResources(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#NodeResources">NodeResources</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="VagrantCloud.IPAddress">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L103">IPAddress</a> <a class="permalink" href="vagrant.html#VagrantCloud.IPAddress">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) IPAddress(instance <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+IPAddress returns the address of a particular machine instance.
+</p>
+
+            
+  
+
+          
+            <h4 id="VagrantCloud.Instances">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L93">Instances</a> <a class="permalink" href="vagrant.html#VagrantCloud.Instances">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) Instances() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Instances">Instances</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Instances returns an implementation of Instances for Vagrant cloud.
+</p>
+
+            
+  
+
+          
+            <h4 id="VagrantCloud.List">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L197">List</a> <a class="permalink" href="vagrant.html#VagrantCloud.List">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) List(filter <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+List enumerates the set of minions instances known by the cloud provider.
+</p>
+
+            
+  
+
+          
+            <h4 id="VagrantCloud.TCPLoadBalancer">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L88">TCPLoadBalancer</a> <a class="permalink" href="vagrant.html#VagrantCloud.TCPLoadBalancer">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) TCPLoadBalancer() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#TCPLoadBalancer">TCPLoadBalancer</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+TCPLoadBalancer returns an implementation of TCPLoadBalancer for Vagrant cloud.
+</p>
+
+            
+  
+
+          
+            <h4 id="VagrantCloud.Zones">func (*VagrantCloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/vagrant/vagrant.go#L98">Zones</a> <a class="permalink" href="vagrant.html#VagrantCloud.Zones">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="vagrant.html#VagrantCloud">VagrantCloud</a>) Zones() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Zones">Zones</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Zones returns an implementation of Zones for Vagrant cloud.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/vagrant"></form>
+  <p>Package vagrant_cloud imports <a href="vagrant@imports.html">11 packages</a> (<a href="vagrant@import-graph.html">graph</a>) and is imported by <a href="vagrant@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:36Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="vagrant@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="vagrant.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

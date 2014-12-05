@@ -1,0 +1,954 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>runtime - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package runtime">
+    <meta property="og:title" content="Package runtime">
+    <meta name="description" content="Package runtime includes helper functions for working with API objects that follow the kubernetes API object conventions, which are:">
+    <meta name="twitter:description" content="Package runtime includes helper functions for working with API objects that follow the kubernetes API object conventions, which are:">
+    <meta property="og:description" content="Package runtime includes helper functions for working with API objects that follow the kubernetes API object conventions, which are:">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">runtime</span>
+  
+  <span class="pull-right">
+    <a href="runtime.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="runtime.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package runtime</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"</code>
+
+        <p>
+Package runtime includes helper functions for working with API objects
+that follow the kubernetes API object conventions, which are:
+</p>
+<p>
+0. Your API objects have a common metadata struct member, TypeMeta.
+1. Your code refers to an internal set of API objects.
+2. In a separate package, you have an external set of API objects.
+3. The external set is considered to be versioned, and no breaking
+</p>
+<pre>changes are ever made to it (fields may be added but not changed
+or removed).
+</pre>
+<p>
+4. As your api evolves, you&#39;ll make an additional versioned package
+</p>
+<pre>with every major change.
+</pre>
+<p>
+5. Versioned packages have conversion functions which convert to
+</p>
+<pre>and from the internal version.
+</pre>
+<p>
+6. You&#39;ll continue to support older versions according to your
+</p>
+<pre>deprecation policy, and you can easily provide a program/library
+to update old versions into new versions because of 5.
+</pre>
+<p>
+7. All of your serializations and deserializations are handled in a
+</p>
+<pre>centralized place.
+</pre>
+<p>
+Package runtime provides a conversion helper to make 5 easy, and the
+Encode/Decode/DecodeInto trio to accomplish 7. You can also register
+additional &#34;codecs&#34; which use a version of your choice. It&#39;s
+recommended that you register your types with runtime in your
+package&#39;s init function.
+</p>
+<p>
+As a bonus, a few common types useful from all api objects and versions
+are provided in types.go.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="runtime.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="runtime.html#EncodeOrDie">func EncodeOrDie(codec Codec, obj Object) string</a></li><li><a href="runtime.html#ExtractList">func ExtractList(obj Object) ([]Object, error)</a></li><li><a href="runtime.html#GetItemsPtr">func GetItemsPtr(list Object) (interface{}, error)</a></li><li><a href="runtime.html#IsListType">func IsListType(obj Object) bool</a></li><li><a href="runtime.html#SetList">func SetList(list Object, objects []Object) error</a></li>
+          
+            <li><a href="runtime.html#Codec">type Codec</a></li>
+            <ul>
+            <li><a href="runtime.html#CodecFor">func CodecFor(scheme *Scheme, version string) Codec</a></li>
+            
+            </ul>
+          
+            <li><a href="runtime.html#Decoder">type Decoder</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#EmbeddedObject">type EmbeddedObject</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#Encoder">type Encoder</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#Object">type Object</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#ObjectConvertor">type ObjectConvertor</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#ObjectTyper">type ObjectTyper</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#PluginBase">type PluginBase</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#RawExtension">type RawExtension</a></li>
+            <ul>
+            
+            <li><a href="runtime.html#RawExtension.MarshalJSON">func (re *RawExtension) MarshalJSON() ([]byte, error)</a></li><li><a href="runtime.html#RawExtension.UnmarshalJSON">func (re *RawExtension) UnmarshalJSON(in []byte) error</a></li>
+            </ul>
+          
+            <li><a href="runtime.html#ResourceVersioner">type ResourceVersioner</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#Scheme">type Scheme</a></li>
+            <ul>
+            <li><a href="runtime.html#NewScheme">func NewScheme() *Scheme</a></li>
+            <li><a href="runtime.html#Scheme.AddConversionFuncs">func (s *Scheme) AddConversionFuncs(conversionFuncs ...interface{}) error</a></li><li><a href="runtime.html#Scheme.AddKnownTypeWithName">func (s *Scheme) AddKnownTypeWithName(version, kind string, obj Object)</a></li><li><a href="runtime.html#Scheme.AddKnownTypes">func (s *Scheme) AddKnownTypes(version string, types ...Object)</a></li><li><a href="runtime.html#Scheme.AddStructFieldConversion">func (s *Scheme) AddStructFieldConversion(srcFieldType interface{}, srcFieldName string, destFieldType interface{}, destFieldName string) error</a></li><li><a href="runtime.html#Scheme.Convert">func (s *Scheme) Convert(in, out interface{}) error</a></li><li><a href="runtime.html#Scheme.ConvertToVersion">func (s *Scheme) ConvertToVersion(in Object, outVersion string) (Object, error)</a></li><li><a href="runtime.html#Scheme.Copy">func (s *Scheme) Copy(obj Object) (Object, error)</a></li><li><a href="runtime.html#Scheme.CopyOrDie">func (s *Scheme) CopyOrDie(obj Object) Object</a></li><li><a href="runtime.html#Scheme.DataVersionAndKind">func (s *Scheme) DataVersionAndKind(data []byte) (version, kind string, err error)</a></li><li><a href="runtime.html#Scheme.Decode">func (s *Scheme) Decode(data []byte) (Object, error)</a></li><li><a href="runtime.html#Scheme.DecodeInto">func (s *Scheme) DecodeInto(data []byte, obj Object) error</a></li><li><a href="runtime.html#Scheme.EncodeToVersion">func (s *Scheme) EncodeToVersion(obj Object, destVersion string) (data []byte, err error)</a></li><li><a href="runtime.html#Scheme.KnownTypes">func (s *Scheme) KnownTypes(version string) map[string]reflect.Type</a></li><li><a href="runtime.html#Scheme.Log">func (s *Scheme) Log(l conversion.DebugLogger)</a></li><li><a href="runtime.html#Scheme.New">func (s *Scheme) New(versionName, typeName string) (Object, error)</a></li><li><a href="runtime.html#Scheme.ObjectVersionAndKind">func (s *Scheme) ObjectVersionAndKind(obj Object) (version, kind string, err error)</a></li>
+            </ul>
+          
+            <li><a href="runtime.html#SelfLinker">type SelfLinker</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#TypeMeta">type TypeMeta</a></li>
+            
+            
+            
+            
+          
+            <li><a href="runtime.html#Unknown">type Unknown</a></li>
+            <ul>
+            
+            <li><a href="runtime.html#Unknown.IsAnAPIObject">func (*Unknown) IsAnAPIObject()</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/runtime">Package Files</a>
+          <a class="permalink" href="runtime.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/codec.go">codec.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/extension.go">extension.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/helper.go">helper.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go">interfaces.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go">scheme.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go">types.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="EncodeOrDie">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/codec.go#L25">EncodeOrDie</a> <a class="permalink" href="runtime.html#EncodeOrDie">&para;</a></h3>
+          <pre class="funcdecl">func EncodeOrDie(codec <a href="runtime.html#Codec">Codec</a>, obj <a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+EncodeOrDie is a version of Encode which will panic instead of returning an error. For tests.
+</p>
+
+          
+  
+
+        
+          <h3 id="ExtractList">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/helper.go#L52">ExtractList</a> <a class="permalink" href="runtime.html#ExtractList">&para;</a></h3>
+          <pre class="funcdecl">func ExtractList(obj <a href="runtime.html#Object">Object</a>) ([]<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ExtractList returns obj&#39;s Items element as an array of runtime.Objects.
+Returns an error if obj is not a List type (does not have an Items member).
+</p>
+
+          
+  
+
+        
+          <h3 id="GetItemsPtr">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/helper.go#L35">GetItemsPtr</a> <a class="permalink" href="runtime.html#GetItemsPtr">&para;</a></h3>
+          <pre class="funcdecl">func GetItemsPtr(list <a href="runtime.html#Object">Object</a>) (interface{}, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetItemsPtr returns a pointer to the list object&#39;s Items member.
+If &#39;list&#39; doesn&#39;t have an Items member, it&#39;s not really a list type
+and an error will be returned.
+This function will either return a pointer to a slice, or an error, but not both.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsListType">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/helper.go#L26">IsListType</a> <a class="permalink" href="runtime.html#IsListType">&para;</a></h3>
+          <pre class="funcdecl">func IsListType(obj <a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+          
+  
+
+        
+          <h3 id="SetList">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/helper.go#L77">SetList</a> <a class="permalink" href="runtime.html#SetList">&para;</a></h3>
+          <pre class="funcdecl">func SetList(list <a href="runtime.html#Object">Object</a>, objects []<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetList sets the given list object&#39;s Items member have the elements given in
+objects.
+Returns an error if list is not a List type (does not have an Items member),
+or if any of the objects are not of the right type.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Codec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L31">Codec</a> <a class="permalink" href="runtime.html#Codec">&para;</a></h3>
+          <pre>type Codec interface {
+    <a href="runtime.html#Decoder">Decoder</a>
+    <a href="runtime.html#Encoder">Encoder</a>
+}</pre><p>
+Codec defines methods for serializing and deserializing API objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="CodecFor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/codec.go#L20">CodecFor</a> <a class="permalink" href="runtime.html#CodecFor">&para;</a></h4>
+            <pre class="funcdecl">func CodecFor(scheme *<a href="runtime.html#Scheme">Scheme</a>, version <a href="http://godoc.org/builtin#string">string</a>) <a href="runtime.html#Codec">Codec</a></pre><p>
+CodecFor returns a Codec that invokes Encode with the provided version.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="Decoder">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L20">Decoder</a> <a class="permalink" href="runtime.html#Decoder">&para;</a></h3>
+          <pre>type Decoder interface {
+    <span id="Decoder.Decode">Decode</span>(data []<a href="http://godoc.org/builtin#byte">byte</a>) (<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Decoder.DecodeInto">DecodeInto</span>(data []<a href="http://godoc.org/builtin#byte">byte</a>, obj <a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+Decoder defines methods for deserializing API objects into a given type
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EmbeddedObject">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L65">EmbeddedObject</a> <a class="permalink" href="runtime.html#EmbeddedObject">&para;</a></h3>
+          <pre>type EmbeddedObject struct {
+    <a href="runtime.html#Object">Object</a>
+}</pre><p>
+EmbeddedObject has appropriate encoder and decoder functions, such that on the wire, it&#39;s
+stored as a []byte, but in memory, the contained object is accessible as an Object
+via the Get() function. Only valid API objects may be stored via EmbeddedObject.
+The purpose of this is to allow an API object of type known only at runtime to be
+embedded within other API objects.
+</p>
+<p>
+Note that object assumes that you&#39;ve registered all of your api types with the api package.
+</p>
+<p>
+EmbeddedObject and RawExtension can be used together to allow for API object extensions:
+see the comment for RawExtension.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Encoder">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L26">Encoder</a> <a class="permalink" href="runtime.html#Encoder">&para;</a></h3>
+          <pre>type Encoder interface {
+    <span id="Encoder.Encode">Encode</span>(obj <a href="runtime.html#Object">Object</a>) (data []<a href="http://godoc.org/builtin#byte">byte</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Encoder defines methods for serializing API objects into bytes
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Object">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L67">Object</a> <a class="permalink" href="runtime.html#Object">&para;</a></h3>
+          <pre>type Object interface {
+    <span class="com">// This function is used only to enforce membership. It&#39;s never called.</span>
+    <span class="com">// TODO: Consider mass rename in the future to make it do something useful.</span>
+    <span id="Object.IsAnAPIObject">IsAnAPIObject</span>()
+}</pre><p>
+All api types must support the Object interface. It&#39;s deliberately tiny so that this is not an onerous
+burden. Implement it with a pointer reciever; this will allow us to use the go compiler to check the
+one thing about our objects that it&#39;s capable of checking for us.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ObjectConvertor">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L37">ObjectConvertor</a> <a class="permalink" href="runtime.html#ObjectConvertor">&para;</a></h3>
+          <pre>type ObjectConvertor interface {
+    <span id="ObjectConvertor.ConvertToVersion">ConvertToVersion</span>(in <a href="runtime.html#Object">Object</a>, outVersion <a href="http://godoc.org/builtin#string">string</a>) (out <a href="runtime.html#Object">Object</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ObjectConvertor converts an object to a different version.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ObjectTyper">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L43">ObjectTyper</a> <a class="permalink" href="runtime.html#ObjectTyper">&para;</a></h3>
+          <pre>type ObjectTyper interface {
+    <span id="ObjectTyper.DataVersionAndKind">DataVersionAndKind</span>([]<a href="http://godoc.org/builtin#byte">byte</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ObjectTyper.ObjectVersionAndKind">ObjectVersionAndKind</span>(<a href="runtime.html#Object">Object</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ObjectTyper contains methods for extracting the APIVersion and Kind
+of objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PluginBase">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L51">PluginBase</a> <a class="permalink" href="runtime.html#PluginBase">&para;</a></h3>
+          <pre>type PluginBase struct {
+    <span id="PluginBase.Kind">Kind</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;kind,omitempty&#34;`
+}</pre><p>
+PluginBase is like TypeMeta, but it&#39;s intended for plugin objects that won&#39;t ever be encoded
+except while embedded in other objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RawExtension">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L112">RawExtension</a> <a class="permalink" href="runtime.html#RawExtension">&para;</a></h3>
+          <pre>type RawExtension struct {
+    <span id="RawExtension.RawJSON">RawJSON</span> []<a href="http://godoc.org/builtin#byte">byte</a>
+}</pre><p>
+RawExtension is used with EmbeddedObject to do a two-phase encoding of extension objects.
+</p>
+<p>
+To use this, make a field which has RawExtension as its type in your external, versioned
+struct, and EmbeddedObject in your internal struct. You also need to register your
+various plugin types.
+</p>
+<p>
+// Internal package:
+type MyAPIObject struct {
+</p>
+<pre>runtime.TypeMeta `json:&#34;,inline&#34;`
+MyPlugin runtime.EmbeddedObject `json:&#34;myPlugin&#34;`
+</pre>
+<p>
+}
+type PluginA struct {
+</p>
+<pre>runtime.PluginBase `json:&#34;,inline&#34;`
+AOption string `json:&#34;aOption&#34;`
+</pre>
+<p>
+}
+</p>
+<p>
+// External package:
+type MyAPIObject struct {
+</p>
+<pre>runtime.TypeMeta `json:&#34;,inline&#34;`
+MyPlugin runtime.RawExtension `json:&#34;myPlugin&#34;`
+</pre>
+<p>
+}
+type PluginA struct {
+</p>
+<pre>runtime.PluginBase `json:&#34;,inline&#34;`
+AOption string `json:&#34;aOption&#34;`
+</pre>
+<p>
+}
+</p>
+<p>
+// On the wire, the JSON will look something like this:
+{
+</p>
+<pre>&#34;kind&#34;:&#34;MyAPIObject&#34;,
+&#34;apiVersion&#34;:&#34;v1beta1&#34;,
+&#34;myPlugin&#34;: {
+	&#34;kind&#34;:&#34;PluginA&#34;,
+	&#34;aOption&#34;:&#34;foo&#34;,
+},
+</pre>
+<p>
+}
+</p>
+<p>
+So what happens? Decode first uses json or yaml to unmarshal the serialized data into
+your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked.
+The next step is to copy (using pkg/conversion) into the internal struct. The runtime
+package&#39;s DefaultScheme has conversion functions installed which will unpack the
+JSON stored in RawExtension, turning it into the correct object type, and storing it
+in the EmbeddedObject. (TODO: In the case where the object is of an unknown type, a
+runtime.Unknown object will be created and stored.)
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="RawExtension.MarshalJSON">func (*RawExtension) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/extension.go#L29">MarshalJSON</a> <a class="permalink" href="runtime.html#RawExtension.MarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (re *<a href="runtime.html#RawExtension">RawExtension</a>) MarshalJSON() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="RawExtension.UnmarshalJSON">func (*RawExtension) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/extension.go#L21">UnmarshalJSON</a> <a class="permalink" href="runtime.html#RawExtension.UnmarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (re *<a href="runtime.html#RawExtension">RawExtension</a>) UnmarshalJSON(in []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+        
+          <h3 id="ResourceVersioner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L50">ResourceVersioner</a> <a class="permalink" href="runtime.html#ResourceVersioner">&para;</a></h3>
+          <pre>type ResourceVersioner interface {
+    <span id="ResourceVersioner.SetResourceVersion">SetResourceVersion</span>(obj <a href="runtime.html#Object">Object</a>, version <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="ResourceVersioner.ResourceVersion">ResourceVersion</span>(obj <a href="runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ResourceVersioner provides methods for setting and retrieving
+the resource version from an API object.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Scheme">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L28">Scheme</a> <a class="permalink" href="runtime.html#Scheme">&para;</a></h3>
+          <pre>type Scheme struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Scheme defines methods for serializing and deserializing API objects. It
+is an adaptation of conversion&#39;s Scheme for our API objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewScheme">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L144">NewScheme</a> <a class="permalink" href="runtime.html#NewScheme">&para;</a></h4>
+            <pre class="funcdecl">func NewScheme() *<a href="runtime.html#Scheme">Scheme</a></pre><p>
+NewScheme creates a new Scheme. This scheme is pluggable by default.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Scheme.AddConversionFuncs">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L216">AddConversionFuncs</a> <a class="permalink" href="runtime.html#Scheme.AddConversionFuncs">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) AddConversionFuncs(conversionFuncs ...interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+AddConversionFuncs adds a function to the list of conversion functions. The given
+function should know how to convert between two API objects. We deduce how to call
+it from the types of its two parameters; see the comment for Converter.Register.
+</p>
+<p>
+Note that, if you need to copy sub-objects that didn&#39;t change, it&#39;s safe to call
+Convert() inside your conversionFuncs, as long as you don&#39;t start a conversion
+chain that&#39;s infinitely recursive.
+</p>
+<p>
+Also note that the default behavior, if you don&#39;t add a conversion function, is to
+sanely copy fields that have the same names. It&#39;s OK if the destination type has
+extra fields, but it must not remove any. So you only need to add a conversion
+function for things with changed/removed fields.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddKnownTypeWithName">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L168">AddKnownTypeWithName</a> <a class="permalink" href="runtime.html#Scheme.AddKnownTypeWithName">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) AddKnownTypeWithName(version, kind <a href="http://godoc.org/builtin#string">string</a>, obj <a href="runtime.html#Object">Object</a>)</pre><p>
+AddKnownTypeWithName is like AddKnownTypes, but it lets you specify what this type should
+be encoded as. Useful for testing when you don&#39;t want to make multiple packages to define
+your structs.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddKnownTypes">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L157">AddKnownTypes</a> <a class="permalink" href="runtime.html#Scheme.AddKnownTypes">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) AddKnownTypes(version <a href="http://godoc.org/builtin#string">string</a>, types ...<a href="runtime.html#Object">Object</a>)</pre><p>
+AddKnownTypes registers the types of the arguments to the marshaller of the package api.
+Encode() refuses the object unless its type is registered with AddKnownTypes.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddStructFieldConversion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L224">AddStructFieldConversion</a> <a class="permalink" href="runtime.html#Scheme.AddStructFieldConversion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) AddStructFieldConversion(srcFieldType interface{}, srcFieldName <a href="http://godoc.org/builtin#string">string</a>, destFieldType interface{}, destFieldName <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+AddStructFieldConversion allows you to specify a mechanical copy for a moved
+or renamed struct field without writing an entire conversion function. See
+the comment in conversion.Converter.SetStructFieldCopy for parameter details.
+Call as many times as needed, even on the same fields.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Convert">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L231">Convert</a> <a class="permalink" href="runtime.html#Scheme.Convert">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) Convert(in, out interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Convert will attempt to convert in into out. Both must be pointers.
+For easy testing of conversion functions. Returns an error if the conversion isn&#39;t
+possible.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.ConvertToVersion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L240">ConvertToVersion</a> <a class="permalink" href="runtime.html#Scheme.ConvertToVersion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) ConvertToVersion(in <a href="runtime.html#Object">Object</a>, outVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ConvertToVersion attempts to convert an input object to its matching Kind in another
+version within this scheme. Will return an error if the provided version does not
+contain the inKind (or a mapping by name defined with AddKnownTypeWithName). Will also
+return an error if the conversion does not result in a valid Object being
+returned.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Copy">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L307">Copy</a> <a class="permalink" href="runtime.html#Scheme.Copy">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) Copy(obj <a href="runtime.html#Object">Object</a>) (<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Copy does a deep copy of an API object.  Useful mostly for tests.
+TODO(dbsmith): implement directly instead of via Encode/Decode
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.CopyOrDie">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L315">CopyOrDie</a> <a class="permalink" href="runtime.html#Scheme.CopyOrDie">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) CopyOrDie(obj <a href="runtime.html#Object">Object</a>) <a href="runtime.html#Object">Object</a></pre>
+            
+  
+
+          
+            <h4 id="Scheme.DataVersionAndKind">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L180">DataVersionAndKind</a> <a class="permalink" href="runtime.html#Scheme.DataVersionAndKind">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) DataVersionAndKind(data []<a href="http://godoc.org/builtin#byte">byte</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+DataVersionAndKind will return the APIVersion and Kind of the given wire-format
+encoding of an API Object, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Decode">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L288">Decode</a> <a class="permalink" href="runtime.html#Scheme.Decode">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) Decode(data []<a href="http://godoc.org/builtin#byte">byte</a>) (<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Decode converts a YAML or JSON string back into a pointer to an api object.
+Deduces the type based upon the APIVersion and Kind fields, which are set
+by Encode. Only versioned objects (APIVersion != &#34;&#34;) are accepted. The object
+will be converted into the in-memory unversioned type before being returned.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.DecodeInto">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L301">DecodeInto</a> <a class="permalink" href="runtime.html#Scheme.DecodeInto">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) DecodeInto(data []<a href="http://godoc.org/builtin#byte">byte</a>, obj <a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DecodeInto parses a YAML or JSON string and stores it in obj. Returns an error
+if data.Kind is set and doesn&#39;t match the type of obj. Obj should be a
+pointer to an api type.
+If obj&#39;s APIVersion doesn&#39;t match that in data, an attempt will be made to convert
+data into obj&#39;s version.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.EncodeToVersion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L280">EncodeToVersion</a> <a class="permalink" href="runtime.html#Scheme.EncodeToVersion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) EncodeToVersion(obj <a href="runtime.html#Object">Object</a>, destVersion <a href="http://godoc.org/builtin#string">string</a>) (data []<a href="http://godoc.org/builtin#byte">byte</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+EncodeToVersion turns the given api object into an appropriate JSON string.
+Will return an error if the object doesn&#39;t have an embedded TypeMeta.
+Obj may be a pointer to a struct, or a struct. If a struct, a copy
+must be made. If a pointer, the object may be modified before encoding,
+but will be put back into its original state before returning.
+</p>
+<p>
+Memory/wire format differences:
+</p>
+<pre>* Having to keep track of the Kind and APIVersion fields makes tests
+  very annoying, so the rule is that they are set only in wire format
+  (json), not when in native (memory) format. This is possible because
+  both pieces of information are implicit in the go typed object.
+   * An exception: note that, if there are embedded API objects of known
+     type, for example, PodList{... Items []Pod ...}, these embedded
+     objects must be of the same version of the object they are embedded
+     within, and their APIVersion and Kind must both be empty.
+   * Note that the exception does not apply to the APIObject type, which
+     recursively does Encode()/Decode(), and is capable of expressing any
+     API object.
+* Only versioned objects should be encoded. This means that, if you pass
+  a native object, Encode will convert it to a versioned object. For
+  example, an api.Pod will get converted to a v1beta1.Pod. However, if
+  you pass in an object that&#39;s already versioned (v1beta1.Pod), Encode
+  will not modify it.
+</pre>
+<p>
+The purpose of the above complex conversion behavior is to allow us to
+change the memory format yet not break compatibility with any stored
+objects, whether they be in our storage layer (e.g., etcd), or in user&#39;s
+config files.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.KnownTypes">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L174">KnownTypes</a> <a class="permalink" href="runtime.html#Scheme.KnownTypes">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) KnownTypes(version <a href="http://godoc.org/builtin#string">string</a>) map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Type">Type</a></pre><p>
+KnownTypes returns the types known for the given version.
+Return value must be treated as read-only.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Log">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L200">Log</a> <a class="permalink" href="runtime.html#Scheme.Log">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) Log(l <a href="conversion.html">conversion</a>.<a href="conversion.html#DebugLogger">DebugLogger</a>)</pre><p>
+Log sets a logger on the scheme. For test purposes only
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.New">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L191">New</a> <a class="permalink" href="runtime.html#Scheme.New">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) New(versionName, typeName <a href="http://godoc.org/builtin#string">string</a>) (<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+New returns a new API object of the given version (&#34;&#34; for internal
+representation) and name, or an error if it hasn&#39;t been registered.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.ObjectVersionAndKind">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/scheme.go#L185">ObjectVersionAndKind</a> <a class="permalink" href="runtime.html#Scheme.ObjectVersionAndKind">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="runtime.html#Scheme">Scheme</a>) ObjectVersionAndKind(obj <a href="runtime.html#Object">Object</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ObjectVersionAndKind returns the version and kind of the given Object.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="SelfLinker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/interfaces.go#L56">SelfLinker</a> <a class="permalink" href="runtime.html#SelfLinker">&para;</a></h3>
+          <pre>type SelfLinker interface {
+    <span id="SelfLinker.SetSelfLink">SetSelfLink</span>(obj <a href="runtime.html#Object">Object</a>, selfLink <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="SelfLinker.SelfLink">SelfLink</span>(obj <a href="runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Knowing Name is sometimes necessary to use a SelfLinker.</span>
+    <span id="SelfLinker.Name">Name</span>(obj <a href="runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+SelfLinker provides methods for setting and retrieving the SelfLink field of an API object.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="TypeMeta">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L37">TypeMeta</a> <a class="permalink" href="runtime.html#TypeMeta">&para;</a></h3>
+          <pre>type TypeMeta struct {
+    <span id="TypeMeta.APIVersion">APIVersion</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;apiVersion,omitempty&#34;`
+    <span id="TypeMeta.Kind">Kind</span>       <a href="http://godoc.org/builtin#string">string</a> `json:&#34;kind,omitempty&#34;`
+
+    <span id="TypeMeta.Namespace">Namespace</span>         <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;namespace,omitempty&#34;`
+    <span id="TypeMeta.Name">Name</span>              <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;name,omitempty&#34;`
+    <span id="TypeMeta.UID">UID</span>               <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;uid,omitempty&#34;`
+    <span id="TypeMeta.CreationTimestamp">CreationTimestamp</span> <a href="util.html">util</a>.<a href="util.html#Time">Time</a> `json:&#34;creationTimestamp,omitempty&#34;`
+    <span id="TypeMeta.SelfLink">SelfLink</span>          <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;selfLink,omitempty&#34;`
+    <span id="TypeMeta.ResourceVersion">ResourceVersion</span>   <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;resourceVersion,omitempty&#34;`
+}</pre><p>
+TypeMeta is shared by all top level objects. The proper way to use it is to inline it in your type,
+like this:
+type MyAwesomeAPIObject struct {
+</p>
+<pre>runtime.TypeMeta    `json:&#34;,inline&#34;`
+... // other fields
+</pre>
+<p>
+}
+func (*MyAwesomeAPIObject) IsAnAPIObject() {}
+</p>
+<p>
+TypeMeta is provided here for convenience. You may use it directly from this package or define
+your own with the same fields.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Unknown">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L120">Unknown</a> <a class="permalink" href="runtime.html#Unknown">&para;</a></h3>
+          <pre>type Unknown struct {
+    <a href="runtime.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <span class="com">// RawJSON will hold the complete JSON of the object which couldn&#39;t be matched</span>
+    <span class="com">// with a registered type. Most likely, nothing should be done with this</span>
+    <span class="com">// except for passing it through the system.</span>
+    <span id="Unknown.RawJSON">RawJSON</span> []<a href="http://godoc.org/builtin#byte">byte</a>
+}</pre><p>
+Unknown allows api objects with unknown types to be passed-through. This can be used
+to deal with the API objects from a plug-in. Unknown objects still have functioning
+TypeMeta features-- kind, version, resourceVersion, etc.
+TODO: Not implemented yet!
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Unknown.IsAnAPIObject">func (*Unknown) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/runtime/types.go#L128">IsAnAPIObject</a> <a class="permalink" href="runtime.html#Unknown.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="runtime.html#Unknown">Unknown</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"></form>
+  <p>Package runtime imports <a href="runtime@imports.html">5 packages</a> (<a href="runtime@import-graph.html">graph</a>) and is imported by <a href="runtime@importers.html">81 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:14Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="runtime@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="runtime.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

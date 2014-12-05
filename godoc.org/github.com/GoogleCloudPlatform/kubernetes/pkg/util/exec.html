@@ -1,0 +1,430 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>exec - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package exec">
+    <meta property="og:title" content="Package exec">
+    <meta name="description" content="Package exec provides an injectable interface and implementations for running commands.">
+    <meta name="twitter:description" content="Package exec provides an injectable interface and implementations for running commands.">
+    <meta property="og:description" content="Package exec provides an injectable interface and implementations for running commands.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../util.html">util</a><span class="text-muted">/</span><span class="text-muted">exec</span>
+  
+  <span class="pull-right">
+    <a href="exec.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="exec.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package exec</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/util/exec"</code>
+
+        <p>
+Package exec provides an injectable interface and implementations for running commands.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="exec.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="exec.html#Cmd">type Cmd</a></li>
+            <ul>
+            <li><a href="exec.html#InitFakeCmd">func InitFakeCmd(fake *FakeCmd, cmd string, args ...string) Cmd</a></li>
+            
+            </ul>
+          
+            <li><a href="exec.html#ExitError">type ExitError</a></li>
+            
+            
+            
+            
+          
+            <li><a href="exec.html#FakeCmd">type FakeCmd</a></li>
+            <ul>
+            
+            <li><a href="exec.html#FakeCmd.CombinedOutput">func (fake *FakeCmd) CombinedOutput() ([]byte, error)</a></li><li><a href="exec.html#FakeCmd.SetDir">func (fake *FakeCmd) SetDir(dir string)</a></li>
+            </ul>
+          
+            <li><a href="exec.html#FakeCombinedOutputAction">type FakeCombinedOutputAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="exec.html#FakeCommandAction">type FakeCommandAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="exec.html#FakeExec">type FakeExec</a></li>
+            <ul>
+            
+            <li><a href="exec.html#FakeExec.Command">func (fake *FakeExec) Command(cmd string, args ...string) Cmd</a></li>
+            </ul>
+          
+            <li><a href="exec.html#FakeExitError">type FakeExitError</a></li>
+            <ul>
+            
+            <li><a href="exec.html#FakeExitError.Error">func (fake *FakeExitError) Error() string</a></li><li><a href="exec.html#FakeExitError.ExitStatus">func (fake *FakeExitError) ExitStatus() int</a></li><li><a href="exec.html#FakeExitError.Exited">func (fake *FakeExitError) Exited() bool</a></li><li><a href="exec.html#FakeExitError.String">func (fake *FakeExitError) String() string</a></li>
+            </ul>
+          
+            <li><a href="exec.html#Interface">type Interface</a></li>
+            <ul>
+            <li><a href="exec.html#New">func New() Interface</a></li>
+            
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/util/exec">Package Files</a>
+          <a class="permalink" href="exec.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/exec.go">exec.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go">fake_exec.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="Cmd">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/exec.go#L35">Cmd</a> <a class="permalink" href="exec.html#Cmd">&para;</a></h3>
+          <pre>type Cmd interface {
+    <span class="com">// CombinedOutput runs the command and returns its combined standard output</span>
+    <span class="com">// and standard error.  This follows the pattern of package os/exec.</span>
+    <span id="Cmd.CombinedOutput">CombinedOutput</span>() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Cmd.SetDir">SetDir</span>(dir <a href="http://godoc.org/builtin#string">string</a>)
+}</pre><p>
+Cmd is an interface that presents an API that is very similar to Cmd from os/exec.
+As more functionality is needed, this can grow.  Since Cmd is a struct, we will have
+to replace fields with get/set method pairs.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="InitFakeCmd">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L49">InitFakeCmd</a> <a class="permalink" href="exec.html#InitFakeCmd">&para;</a></h4>
+            <pre class="funcdecl">func InitFakeCmd(fake *<a href="exec.html#FakeCmd">FakeCmd</a>, cmd <a href="http://godoc.org/builtin#string">string</a>, args ...<a href="http://godoc.org/builtin#string">string</a>) <a href="exec.html#Cmd">Cmd</a></pre>
+            
+  
+
+          
+
+          
+        
+          <h3 id="ExitError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/exec.go#L45">ExitError</a> <a class="permalink" href="exec.html#ExitError">&para;</a></h3>
+          <pre>type ExitError interface {
+    <span id="ExitError.String">String</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="ExitError.Error">Error</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="ExitError.Exited">Exited</span>() <a href="http://godoc.org/builtin#bool">bool</a>
+    <span id="ExitError.ExitStatus">ExitStatus</span>() <a href="http://godoc.org/builtin#int">int</a>
+}</pre><p>
+ExitError is an interface that presents an API similar to os.ProcessState, which is
+what ExitError from os/exec is.  This is designed to make testing a bit easier and
+probably loses some of the cross-platform properties of the underlying library.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeCmd">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L41">FakeCmd</a> <a class="permalink" href="exec.html#FakeCmd">&para;</a></h3>
+          <pre>type FakeCmd struct {
+    <span id="FakeCmd.Argv">Argv</span>                 []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeCmd.CombinedOutputScript">CombinedOutputScript</span> []<a href="exec.html#FakeCombinedOutputAction">FakeCombinedOutputAction</a>
+    <span id="FakeCmd.CombinedOutputCalls">CombinedOutputCalls</span>  <a href="http://godoc.org/builtin#int">int</a>
+    <span id="FakeCmd.CombinedOutputLog">CombinedOutputLog</span>    [][]<a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeCmd.Dirs">Dirs</span>                 []<a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+A simple scripted Cmd type.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeCmd.CombinedOutput">func (*FakeCmd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L60">CombinedOutput</a> <a class="permalink" href="exec.html#FakeCmd.CombinedOutput">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeCmd">FakeCmd</a>) CombinedOutput() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeCmd.SetDir">func (*FakeCmd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L56">SetDir</a> <a class="permalink" href="exec.html#FakeCmd.SetDir">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeCmd">FakeCmd</a>) SetDir(dir <a href="http://godoc.org/builtin#string">string</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeCombinedOutputAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L54">FakeCombinedOutputAction</a> <a class="permalink" href="exec.html#FakeCombinedOutputAction">&para;</a></h3>
+          <pre>type FakeCombinedOutputAction func() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeCommandAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L29">FakeCommandAction</a> <a class="permalink" href="exec.html#FakeCommandAction">&para;</a></h3>
+          <pre>type FakeCommandAction func(cmd <a href="http://godoc.org/builtin#string">string</a>, args ...<a href="http://godoc.org/builtin#string">string</a>) <a href="exec.html#Cmd">Cmd</a></pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeExec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L24">FakeExec</a> <a class="permalink" href="exec.html#FakeExec">&para;</a></h3>
+          <pre>type FakeExec struct {
+    <span id="FakeExec.CommandScript">CommandScript</span> []<a href="exec.html#FakeCommandAction">FakeCommandAction</a>
+    <span id="FakeExec.CommandCalls">CommandCalls</span>  <a href="http://godoc.org/builtin#int">int</a>
+}</pre><p>
+A simple scripted Interface type.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeExec.Command">func (*FakeExec) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L31">Command</a> <a class="permalink" href="exec.html#FakeExec.Command">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeExec">FakeExec</a>) Command(cmd <a href="http://godoc.org/builtin#string">string</a>, args ...<a href="http://godoc.org/builtin#string">string</a>) <a href="exec.html#Cmd">Cmd</a></pre>
+            
+  
+
+          
+        
+          <h3 id="FakeExitError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L74">FakeExitError</a> <a class="permalink" href="exec.html#FakeExitError">&para;</a></h3>
+          <pre>type FakeExitError struct {
+    <span id="FakeExitError.Status">Status</span> <a href="http://godoc.org/builtin#int">int</a>
+}</pre><p>
+A simple fake ExitError type.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeExitError.Error">func (*FakeExitError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L82">Error</a> <a class="permalink" href="exec.html#FakeExitError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeExitError">FakeExitError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="FakeExitError.ExitStatus">func (*FakeExitError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L90">ExitStatus</a> <a class="permalink" href="exec.html#FakeExitError.ExitStatus">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeExitError">FakeExitError</a>) ExitStatus() <a href="http://godoc.org/builtin#int">int</a></pre>
+            
+  
+
+          
+            <h4 id="FakeExitError.Exited">func (*FakeExitError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L86">Exited</a> <a class="permalink" href="exec.html#FakeExitError.Exited">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeExitError">FakeExitError</a>) Exited() <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="FakeExitError.String">func (*FakeExitError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/fake_exec.go#L78">String</a> <a class="permalink" href="exec.html#FakeExitError.String">&para;</a></h4>
+            <pre class="funcdecl">func (fake *<a href="exec.html#FakeExitError">FakeExitError</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/exec.go#L26">Interface</a> <a class="permalink" href="exec.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <span class="com">// Command returns a Cmd instance which can be used to run a single command.</span>
+    <span class="com">// This follows the pattern of package os/exec.</span>
+    <span id="Interface.Command">Command</span>(cmd <a href="http://godoc.org/builtin#string">string</a>, args ...<a href="http://godoc.org/builtin#string">string</a>) <a href="exec.html#Cmd">Cmd</a>
+}</pre><p>
+Interface is an interface that presents a subset of the os/exec API.  Use this
+when you want to inject fakeable/mockable exec behavior.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="New">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/exec/exec.go#L56">New</a> <a class="permalink" href="exec.html#New">&para;</a></h4>
+            <pre class="funcdecl">func New() <a href="exec.html#Interface">Interface</a></pre><p>
+New returns a new Interface which will os/exec to run commands.
+</p>
+
+            
+  
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/util/exec"></form>
+  <p>Package exec imports <a href="exec@imports.html">3 packages</a> (<a href="exec@import-graph.html">graph</a>) and is imported by <a href="exec@importers.html">4 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:22Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="exec@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="exec.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

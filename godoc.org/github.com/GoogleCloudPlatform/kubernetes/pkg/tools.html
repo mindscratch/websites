@@ -1,0 +1,768 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>tools - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package tools">
+    <meta property="og:title" content="Package tools">
+    <meta name="description" content="Package tools implements general tools which depend on the api package.">
+    <meta name="twitter:description" content="Package tools implements general tools which depend on the api package.">
+    <meta property="og:description" content="Package tools implements general tools which depend on the api package.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">tools</span>
+  
+  <span class="pull-right">
+    <a href="tools.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="tools.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package tools</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/tools"</code>
+
+        <p>
+Package tools implements general tools which depend on the api package.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="tools.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="tools.html#pkg-constants">Constants</a></li>
+          <li><a href="tools.html#pkg-variables">Variables</a></li>
+          <li><a href="tools.html#Everything">func Everything(runtime.Object) bool</a></li><li><a href="tools.html#IsEtcdNodeExist">func IsEtcdNodeExist(err error) bool</a></li><li><a href="tools.html#IsEtcdNotFound">func IsEtcdNotFound(err error) bool</a></li><li><a href="tools.html#IsEtcdTestFailed">func IsEtcdTestFailed(err error) bool</a></li><li><a href="tools.html#IsEtcdWatchStoppedByUser">func IsEtcdWatchStoppedByUser(err error) bool</a></li><li><a href="tools.html#ParseWatchResourceVersion">func ParseWatchResourceVersion(resourceVersion, kind string) (uint64, error)</a></li>
+          
+            <li><a href="tools.html#EtcdClient">type EtcdClient</a></li>
+            <ul>
+            <li><a href="tools.html#NewEtcdClientStartServerIfNecessary">func NewEtcdClientStartServerIfNecessary(server string) (EtcdClient, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="tools.html#EtcdGetSet">type EtcdGetSet</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#EtcdHelper">type EtcdHelper</a></li>
+            <ul>
+            
+            <li><a href="tools.html#EtcdHelper.AtomicUpdate">func (h *EtcdHelper) AtomicUpdate(key string, ptrToType runtime.Object, tryUpdate EtcdUpdateFunc) error</a></li><li><a href="tools.html#EtcdHelper.CreateObj">func (h *EtcdHelper) CreateObj(key string, obj runtime.Object, ttl uint64) error</a></li><li><a href="tools.html#EtcdHelper.Delete">func (h *EtcdHelper) Delete(key string, recursive bool) error</a></li><li><a href="tools.html#EtcdHelper.ExtractList">func (h *EtcdHelper) ExtractList(key string, slicePtr interface{}, resourceVersion *uint64) error</a></li><li><a href="tools.html#EtcdHelper.ExtractObj">func (h *EtcdHelper) ExtractObj(key string, objPtr runtime.Object, ignoreNotFound bool) error</a></li><li><a href="tools.html#EtcdHelper.ExtractToList">func (h *EtcdHelper) ExtractToList(key string, listObj runtime.Object) error</a></li><li><a href="tools.html#EtcdHelper.SetObj">func (h *EtcdHelper) SetObj(key string, obj runtime.Object) error</a></li><li><a href="tools.html#EtcdHelper.Watch">func (h *EtcdHelper) Watch(key string, resourceVersion uint64) watch.Interface</a></li><li><a href="tools.html#EtcdHelper.WatchAndTransform">func (h *EtcdHelper) WatchAndTransform(key string, resourceVersion uint64, transform TransformFunc) watch.Interface</a></li><li><a href="tools.html#EtcdHelper.WatchList">func (h *EtcdHelper) WatchList(key string, resourceVersion uint64, filter FilterFunc) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="tools.html#EtcdResourceVersioner">type EtcdResourceVersioner</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#EtcdResponseWithError">type EtcdResponseWithError</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#EtcdUpdateFunc">type EtcdUpdateFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#FakeEtcdClient">type FakeEtcdClient</a></li>
+            <ul>
+            <li><a href="tools.html#NewFakeEtcdClient">func NewFakeEtcdClient(t TestLogger) *FakeEtcdClient</a></li>
+            <li><a href="tools.html#FakeEtcdClient.AddChild">func (f *FakeEtcdClient) AddChild(key, data string, ttl uint64) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.CompareAndSwap">func (f *FakeEtcdClient) CompareAndSwap(key, value string, ttl uint64, prevValue string, prevIndex uint64) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.Create">func (f *FakeEtcdClient) Create(key, value string, ttl uint64) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.Delete">func (f *FakeEtcdClient) Delete(key string, recursive bool) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.ExpectNotFoundGet">func (f *FakeEtcdClient) ExpectNotFoundGet(key string)</a></li><li><a href="tools.html#FakeEtcdClient.Get">func (f *FakeEtcdClient) Get(key string, sort, recursive bool) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.GetCluster">func (f *FakeEtcdClient) GetCluster() []string</a></li><li><a href="tools.html#FakeEtcdClient.Set">func (f *FakeEtcdClient) Set(key, value string, ttl uint64) (*etcd.Response, error)</a></li><li><a href="tools.html#FakeEtcdClient.WaitForWatchCompletion">func (f *FakeEtcdClient) WaitForWatchCompletion()</a></li><li><a href="tools.html#FakeEtcdClient.Watch">func (f *FakeEtcdClient) Watch(prefix string, waitIndex uint64, recursive bool, receiver chan *etcd.Response, stop chan bool) (*etcd.Response, error)</a></li>
+            </ul>
+          
+            <li><a href="tools.html#FilterFunc">type FilterFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#RuntimeVersionAdapter">type RuntimeVersionAdapter</a></li>
+            <ul>
+            
+            <li><a href="tools.html#RuntimeVersionAdapter.ResourceVersion">func (a RuntimeVersionAdapter) ResourceVersion(obj runtime.Object) (uint64, error)</a></li><li><a href="tools.html#RuntimeVersionAdapter.SetResourceVersion">func (a RuntimeVersionAdapter) SetResourceVersion(obj runtime.Object, version uint64) error</a></li>
+            </ul>
+          
+            <li><a href="tools.html#TestLogger">type TestLogger</a></li>
+            
+            
+            
+            
+          
+            <li><a href="tools.html#TransformFunc">type TransformFunc</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/tools">Package Files</a>
+          <a class="permalink" href="tools.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go">etcd_tools.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go">etcd_tools_watch.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go">fake_etcd_client.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="tools.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span id="EtcdErrorCodeNotFound">EtcdErrorCodeNotFound</span>      = 100
+    <span id="EtcdErrorCodeTestFailed">EtcdErrorCodeTestFailed</span>    = 101
+    <span id="EtcdErrorCodeNodeExist">EtcdErrorCodeNodeExist</span>     = 105
+    <span id="EtcdErrorCodeValueRequired">EtcdErrorCodeValueRequired</span> = 200
+)</pre>
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="tools.html#pkg-variables">&para;</a></h3>
+          <pre>var (
+    <span id="EtcdErrorNotFound">EtcdErrorNotFound</span>      = &amp;<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#EtcdError">EtcdError</a>{ErrorCode: <a href="tools.html#EtcdErrorCodeNotFound">EtcdErrorCodeNotFound</a>}
+    <span id="EtcdErrorTestFailed">EtcdErrorTestFailed</span>    = &amp;<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#EtcdError">EtcdError</a>{ErrorCode: <a href="tools.html#EtcdErrorCodeTestFailed">EtcdErrorCodeTestFailed</a>}
+    <span id="EtcdErrorNodeExist">EtcdErrorNodeExist</span>     = &amp;<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#EtcdError">EtcdError</a>{ErrorCode: <a href="tools.html#EtcdErrorCodeNodeExist">EtcdErrorCodeNodeExist</a>}
+    <span id="EtcdErrorValueRequired">EtcdErrorValueRequired</span> = &amp;<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#EtcdError">EtcdError</a>{ErrorCode: <a href="tools.html#EtcdErrorCodeValueRequired">EtcdErrorCodeValueRequired</a>}
+)</pre>
+        
+
+        
+        
+        
+          <h3 id="Everything">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L39">Everything</a> <a class="permalink" href="tools.html#Everything">&para;</a></h3>
+          <pre class="funcdecl">func Everything(<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+Everything is a FilterFunc which accepts all objects.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsEtcdNodeExist">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L120">IsEtcdNodeExist</a> <a class="permalink" href="tools.html#IsEtcdNodeExist">&para;</a></h3>
+          <pre class="funcdecl">func IsEtcdNodeExist(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsEtcdNodeExist returns true iff err is an etcd node aleady exist error.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsEtcdNotFound">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L115">IsEtcdNotFound</a> <a class="permalink" href="tools.html#IsEtcdNotFound">&para;</a></h3>
+          <pre class="funcdecl">func IsEtcdNotFound(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsEtcdNotFound returns true iff err is an etcd not found error.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsEtcdTestFailed">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L125">IsEtcdTestFailed</a> <a class="permalink" href="tools.html#IsEtcdTestFailed">&para;</a></h3>
+          <pre class="funcdecl">func IsEtcdTestFailed(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsEtcdTestFailed returns true iff err is an etcd write conflict.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsEtcdWatchStoppedByUser">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L130">IsEtcdWatchStoppedByUser</a> <a class="permalink" href="tools.html#IsEtcdWatchStoppedByUser">&para;</a></h3>
+          <pre class="funcdecl">func IsEtcdWatchStoppedByUser(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsEtcdWatchStoppedByUser returns true iff err is a client triggered stop.
+</p>
+
+          
+  
+
+        
+          <h3 id="ParseWatchResourceVersion">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L47">ParseWatchResourceVersion</a> <a class="permalink" href="tools.html#ParseWatchResourceVersion">&para;</a></h3>
+          <pre class="funcdecl">func ParseWatchResourceVersion(resourceVersion, kind <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#uint64">uint64</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ParseWatchResourceVersion takes a resource version argument and converts it to
+the etcd version we should pass to helper.Watch(). Because resourceVersion is
+an opaque value, the default watch behavior for non-zero watch is to watch
+the next value (if you pass &#34;1&#34;, you will see updates from &#34;2&#34; onwards).
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="EtcdClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L51">EtcdClient</a> <a class="permalink" href="tools.html#EtcdClient">&para;</a></h3>
+          <pre>type EtcdClient interface {
+    <span id="EtcdClient.GetCluster">GetCluster</span>() []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="EtcdClient.AddChild">AddChild</span>(key, data <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdClient.Get">Get</span>(key <a href="http://godoc.org/builtin#string">string</a>, sort, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdClient.Set">Set</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdClient.Create">Create</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdClient.CompareAndSwap">CompareAndSwap</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>, prevValue <a href="http://godoc.org/builtin#string">string</a>, prevIndex <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdClient.Delete">Delete</span>(key <a href="http://godoc.org/builtin#string">string</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// I&#39;d like to use directional channels here (e.g. &lt;-chan) but this interface mimics</span>
+    <span class="com">// the etcd client interface which doesn&#39;t, and it doesn&#39;t seem worth it to wrap the api.</span>
+    <span id="EtcdClient.Watch">Watch</span>(prefix <a href="http://godoc.org/builtin#string">string</a>, waitIndex <a href="http://godoc.org/builtin#uint64">uint64</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>, receiver chan *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, stop chan <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+EtcdClient is an injectable interface for testing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewEtcdClientStartServerIfNecessary">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L395">NewEtcdClientStartServerIfNecessary</a> <a class="permalink" href="tools.html#NewEtcdClientStartServerIfNecessary">&para;</a></h4>
+            <pre class="funcdecl">func NewEtcdClientStartServerIfNecessary(server <a href="http://godoc.org/builtin#string">string</a>) (<a href="tools.html#EtcdClient">EtcdClient</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+
+          
+        
+          <h3 id="EtcdGetSet">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L65">EtcdGetSet</a> <a class="permalink" href="tools.html#EtcdGetSet">&para;</a></h3>
+          <pre>type EtcdGetSet interface {
+    <span id="EtcdGetSet.GetCluster">GetCluster</span>() []<a href="http://godoc.org/builtin#string">string</a>
+    <span id="EtcdGetSet.Get">Get</span>(key <a href="http://godoc.org/builtin#string">string</a>, sort, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdGetSet.Set">Set</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdGetSet.Create">Create</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdGetSet.Delete">Delete</span>(key <a href="http://godoc.org/builtin#string">string</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdGetSet.CompareAndSwap">CompareAndSwap</span>(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>, prevValue <a href="http://godoc.org/builtin#string">string</a>, prevIndex <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EtcdGetSet.Watch">Watch</span>(prefix <a href="http://godoc.org/builtin#string">string</a>, waitIndex <a href="http://godoc.org/builtin#uint64">uint64</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>, receiver chan *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, stop chan <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+EtcdGetSet interface exposes only the etcd operations needed by EtcdHelper.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EtcdHelper">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L107">EtcdHelper</a> <a class="permalink" href="tools.html#EtcdHelper">&para;</a></h3>
+          <pre>type EtcdHelper struct {
+    <span id="EtcdHelper.Client">Client</span> <a href="tools.html#EtcdGetSet">EtcdGetSet</a>
+    <span id="EtcdHelper.Codec">Codec</span>  <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>
+    <span class="com">// optional, no atomic operations can be performed without this interface</span>
+    <span id="EtcdHelper.ResourceVersioner">ResourceVersioner</span> <a href="tools.html#EtcdResourceVersioner">EtcdResourceVersioner</a>
+}</pre><p>
+EtcdHelper offers common object marshalling/unmarshalling operations on an etcd client.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="EtcdHelper.AtomicUpdate">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L326">AtomicUpdate</a> <a class="permalink" href="tools.html#EtcdHelper.AtomicUpdate">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) AtomicUpdate(key <a href="http://godoc.org/builtin#string">string</a>, ptrToType <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, tryUpdate <a href="tools.html#EtcdUpdateFunc">EtcdUpdateFunc</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+AtomicUpdate generalizes the pattern that allows for making atomic updates to etcd objects.
+Note, tryUpdate may be called more than once.
+</p>
+<p>
+Example:
+</p>
+<p>
+h := &amp;util.EtcdHelper{client, encoding, versioning}
+err := h.AtomicUpdate(&#34;myKey&#34;, &amp;MyType{}, func(input runtime.Object) (runtime.Object, error) {
+</p>
+<pre>// Before this function is called, currentObj has been reset to etcd&#39;s current
+// contents for &#34;myKey&#34;.
+
+cur := input.(*MyType) // Guaranteed to work.
+
+// Make a *modification*.
+cur.Counter++
+
+// Return the modified object. Return an error to stop iterating.
+return cur, nil
+</pre>
+<p>
+})
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.CreateObj">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L263">CreateObj</a> <a class="permalink" href="tools.html#EtcdHelper.CreateObj">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) CreateObj(key <a href="http://godoc.org/builtin#string">string</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+CreateObj adds a new object at a key unless it already exists. &#39;ttl&#39; is time-to-live in seconds,
+and 0 means forever.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.Delete">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L279">Delete</a> <a class="permalink" href="tools.html#EtcdHelper.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) Delete(key <a href="http://godoc.org/builtin#string">string</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Delete removes the specified key.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.ExtractList">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L168">ExtractList</a> <a class="permalink" href="tools.html#EtcdHelper.ExtractList">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) ExtractList(key <a href="http://godoc.org/builtin#string">string</a>, slicePtr interface{}, resourceVersion *<a href="http://godoc.org/builtin#uint64">uint64</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ExtractList extracts a go object per etcd node into a slice with the resource version.
+DEPRECATED: Use ExtractToList instead, it&#39;s more convenient.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.ExtractObj">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L228">ExtractObj</a> <a class="permalink" href="tools.html#EtcdHelper.ExtractObj">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) ExtractObj(key <a href="http://godoc.org/builtin#string">string</a>, objPtr <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, ignoreNotFound <a href="http://godoc.org/builtin#bool">bool</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ExtractObj unmarshals json found at key into objPtr. On a not found error, will either return
+a zero object of the requested type, or an error, depending on ignoreNotFound. Treats
+empty responses and nil response nodes exactly like a not found error.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.ExtractToList">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L208">ExtractToList</a> <a class="permalink" href="tools.html#EtcdHelper.ExtractToList">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) ExtractToList(key <a href="http://godoc.org/builtin#string">string</a>, listObj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ExtractToList is just like ExtractList, but it works on a ThingyList api object.
+extracts a go object per etcd node into a slice with the resource version.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.SetObj">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L286">SetObj</a> <a class="permalink" href="tools.html#EtcdHelper.SetObj">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) SetObj(key <a href="http://godoc.org/builtin#string">string</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetObj marshals obj via json, and stores under key. Will do an
+atomic update if obj&#39;s ResourceVersion field is set.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.Watch">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L72">Watch</a> <a class="permalink" href="tools.html#EtcdHelper.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) Watch(key <a href="http://godoc.org/builtin#string">string</a>, resourceVersion <a href="http://godoc.org/builtin#uint64">uint64</a>) <a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a></pre><p>
+Watch begins watching the specified key. Events are decoded into
+API objects and sent down the returned watch.Interface.
+Errors will be sent down the channel.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.WatchAndTransform">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L92">WatchAndTransform</a> <a class="permalink" href="tools.html#EtcdHelper.WatchAndTransform">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) WatchAndTransform(key <a href="http://godoc.org/builtin#string">string</a>, resourceVersion <a href="http://godoc.org/builtin#uint64">uint64</a>, transform <a href="tools.html#TransformFunc">TransformFunc</a>) <a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a></pre><p>
+WatchAndTransform begins watching the specified key. Events are decoded into
+API objects and sent down the returned watch.Interface. If the transform
+function is provided, the value decoded from etcd will be passed to the function
+prior to being returned.
+</p>
+<p>
+The transform function can be used to populate data not available to etcd, or to
+change or wrap the serialized etcd object.
+</p>
+<pre>startTime := time.Now()
+helper.WatchAndTransform(key, version, func(input runtime.Object) (runtime.Object, error) {
+  value := input.(TimeAwareValue)
+  value.Since = startTime
+  return value, nil
+})
+</pre>
+<p>
+Errors will be sent down the channel.
+</p>
+
+            
+  
+
+          
+            <h4 id="EtcdHelper.WatchList">func (*EtcdHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L63">WatchList</a> <a class="permalink" href="tools.html#EtcdHelper.WatchList">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="tools.html#EtcdHelper">EtcdHelper</a>) WatchList(key <a href="http://godoc.org/builtin#string">string</a>, resourceVersion <a href="http://godoc.org/builtin#uint64">uint64</a>, filter <a href="tools.html#FilterFunc">FilterFunc</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WatchList begins watching the specified key&#39;s items. Items are decoded into
+API objects, and any items passing &#39;filter&#39; are sent down the returned
+watch.Interface. resourceVersion may be used to specify what version to begin
+watching (e.g., for reconnecting without missing any updates).
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="EtcdResourceVersioner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L75">EtcdResourceVersioner</a> <a class="permalink" href="tools.html#EtcdResourceVersioner">&para;</a></h3>
+          <pre>type EtcdResourceVersioner interface {
+    <span id="EtcdResourceVersioner.SetResourceVersion">SetResourceVersion</span>(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, version <a href="http://godoc.org/builtin#uint64">uint64</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="EtcdResourceVersioner.ResourceVersion">ResourceVersion</span>(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#uint64">uint64</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EtcdResponseWithError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L27">EtcdResponseWithError</a> <a class="permalink" href="tools.html#EtcdResponseWithError">&para;</a></h3>
+          <pre>type EtcdResponseWithError struct {
+    <span id="EtcdResponseWithError.R">R</span>   *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>
+    <span id="EtcdResponseWithError.E">E</span>   <a href="http://godoc.org/builtin#error">error</a>
+    <span class="com">// if N is non-null, it will be assigned into the map after this response is used for an operation</span>
+    <span id="EtcdResponseWithError.N">N</span>   *<a href="tools.html#EtcdResponseWithError">EtcdResponseWithError</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EtcdUpdateFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L305">EtcdUpdateFunc</a> <a class="permalink" href="tools.html#EtcdUpdateFunc">&para;</a></h3>
+          <pre>type EtcdUpdateFunc func(input <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (output <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Pass an EtcdUpdateFunc to EtcdHelper.AtomicUpdate to make an atomic etcd update.
+See the comment for AtomicUpdate for more detail.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeEtcdClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L40">FakeEtcdClient</a> <a class="permalink" href="tools.html#FakeEtcdClient">&para;</a></h3>
+          <pre>type FakeEtcdClient struct {
+    <span id="FakeEtcdClient.Data">Data</span>        map[<a href="http://godoc.org/builtin#string">string</a>]<a href="tools.html#EtcdResponseWithError">EtcdResponseWithError</a>
+    <span id="FakeEtcdClient.DeletedKeys">DeletedKeys</span> []<a href="http://godoc.org/builtin#string">string</a>
+
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+    <span id="FakeEtcdClient.Err">Err</span> <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="FakeEtcdClient.Ix">Ix</span>          <a href="http://godoc.org/builtin#int">int</a>
+    <span id="FakeEtcdClient.TestIndex">TestIndex</span>   <a href="http://godoc.org/builtin#bool">bool</a>
+    <span id="FakeEtcdClient.ChangeIndex">ChangeIndex</span> <a href="http://godoc.org/builtin#uint64">uint64</a>
+    <span id="FakeEtcdClient.LastSetTTL">LastSetTTL</span>  <a href="http://godoc.org/builtin#uint64">uint64</a>
+    <span id="FakeEtcdClient.Machines">Machines</span>    []<a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Will become valid after Watch is called; tester may write to it. Tester may</span>
+    <span class="com">// also read from it to verify that it&#39;s closed after injecting an error.</span>
+    <span id="FakeEtcdClient.WatchResponse">WatchResponse</span> chan *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>
+    <span id="FakeEtcdClient.WatchIndex">WatchIndex</span>    <a href="http://godoc.org/builtin#uint64">uint64</a>
+    <span class="com">// Write to this to prematurely stop a Watch that is running in a goroutine.</span>
+    <span id="FakeEtcdClient.WatchInjectError">WatchInjectError</span> chan&lt;- <a href="http://godoc.org/builtin#error">error</a>
+    <span id="FakeEtcdClient.WatchStop">WatchStop</span>        chan&lt;- <a href="http://godoc.org/builtin#bool">bool</a>
+    <span class="com">// If non-nil, will be returned immediately when Watch is called.</span>
+    <span id="FakeEtcdClient.WatchImmediateError">WatchImmediateError</span> <a href="http://godoc.org/builtin#error">error</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewFakeEtcdClient">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L66">NewFakeEtcdClient</a> <a class="permalink" href="tools.html#NewFakeEtcdClient">&para;</a></h4>
+            <pre class="funcdecl">func NewFakeEtcdClient(t <a href="tools.html#TestLogger">TestLogger</a>) *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="FakeEtcdClient.AddChild">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L114">AddChild</a> <a class="permalink" href="tools.html#FakeEtcdClient.AddChild">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) AddChild(key, data <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.CompareAndSwap">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L191">CompareAndSwap</a> <a class="permalink" href="tools.html#FakeEtcdClient.CompareAndSwap">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) CompareAndSwap(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>, prevValue <a href="http://godoc.org/builtin#string">string</a>, prevIndex <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.Create">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L230">Create</a> <a class="permalink" href="tools.html#FakeEtcdClient.Create">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) Create(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.Delete">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L242">Delete</a> <a class="permalink" href="tools.html#FakeEtcdClient.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) Delete(key <a href="http://godoc.org/builtin#string">string</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.ExpectNotFoundGet">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L91">ExpectNotFoundGet</a> <a class="permalink" href="tools.html#FakeEtcdClient.ExpectNotFoundGet">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) ExpectNotFoundGet(key <a href="http://godoc.org/builtin#string">string</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.Get">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L122">Get</a> <a class="permalink" href="tools.html#FakeEtcdClient.Get">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) Get(key <a href="http://godoc.org/builtin#string">string</a>, sort, recursive <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.GetCluster">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L87">GetCluster</a> <a class="permalink" href="tools.html#FakeEtcdClient.GetCluster">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) GetCluster() []<a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.Set">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L183">Set</a> <a class="permalink" href="tools.html#FakeEtcdClient.Set">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) Set(key, value <a href="http://godoc.org/builtin#string">string</a>, ttl <a href="http://godoc.org/builtin#uint64">uint64</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.WaitForWatchCompletion">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L260">WaitForWatchCompletion</a> <a class="permalink" href="tools.html#FakeEtcdClient.WaitForWatchCompletion">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) WaitForWatchCompletion()</pre>
+            
+  
+
+          
+            <h4 id="FakeEtcdClient.Watch">func (*FakeEtcdClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L264">Watch</a> <a class="permalink" href="tools.html#FakeEtcdClient.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="tools.html#FakeEtcdClient">FakeEtcdClient</a>) Watch(prefix <a href="http://godoc.org/builtin#string">string</a>, waitIndex <a href="http://godoc.org/builtin#uint64">uint64</a>, recursive <a href="http://godoc.org/builtin#bool">bool</a>, receiver chan *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, stop chan <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FilterFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L36">FilterFunc</a> <a class="permalink" href="tools.html#FilterFunc">&para;</a></h3>
+          <pre>type FilterFunc func(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+FilterFunc is a predicate which takes an API object and returns true
+iff the object should remain in the set.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RuntimeVersionAdapter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L81">RuntimeVersionAdapter</a> <a class="permalink" href="tools.html#RuntimeVersionAdapter">&para;</a></h3>
+          <pre>type RuntimeVersionAdapter struct {
+    <span id="RuntimeVersionAdapter.Versioner">Versioner</span> <a href="runtime.html">runtime</a>.<a href="runtime.html#ResourceVersioner">ResourceVersioner</a>
+}</pre><p>
+RuntimeVersionAdapter converts a string based versioner to EtcdResourceVersioner
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="RuntimeVersionAdapter.ResourceVersion">func (RuntimeVersionAdapter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L95">ResourceVersion</a> <a class="permalink" href="tools.html#RuntimeVersionAdapter.ResourceVersion">&para;</a></h4>
+            <pre class="funcdecl">func (a <a href="tools.html#RuntimeVersionAdapter">RuntimeVersionAdapter</a>) ResourceVersion(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#uint64">uint64</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+SetResourceVersion implements EtcdResourceVersioner
+</p>
+
+            
+  
+
+          
+            <h4 id="RuntimeVersionAdapter.SetResourceVersion">func (RuntimeVersionAdapter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools.go#L86">SetResourceVersion</a> <a class="permalink" href="tools.html#RuntimeVersionAdapter.SetResourceVersion">&para;</a></h4>
+            <pre class="funcdecl">func (a <a href="tools.html#RuntimeVersionAdapter">RuntimeVersionAdapter</a>) SetResourceVersion(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, version <a href="http://godoc.org/builtin#uint64">uint64</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetResourceVersion implements EtcdResourceVersioner
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="TestLogger">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/fake_etcd_client.go#L35">TestLogger</a> <a class="permalink" href="tools.html#TestLogger">&para;</a></h3>
+          <pre>type TestLogger interface {
+    <span id="TestLogger.Errorf">Errorf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+    <span id="TestLogger.Logf">Logf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+}</pre><p>
+TestLogger is a type passed to Test functions to support formatted test logs.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="TransformFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/tools/etcd_tools_watch.go#L99">TransformFunc</a> <a class="permalink" href="tools.html#TransformFunc">&para;</a></h3>
+          <pre>type TransformFunc func(<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+TransformFunc attempts to convert an object to another object for use with a watcher.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/tools"></form>
+  <p>Package tools imports <a href="tools@imports.html">18 packages</a> (<a href="tools@import-graph.html">graph</a>) and is imported by <a href="tools@importers.html">33 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:18Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="tools@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="tools.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

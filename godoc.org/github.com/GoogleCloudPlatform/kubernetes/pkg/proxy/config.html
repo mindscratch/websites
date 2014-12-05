@@ -1,0 +1,586 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>config - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package config">
+    <meta property="og:title" content="Package config">
+    <meta name="description" content="Package config provides decoupling between various configuration sources (etcd, files,...) and the pieces that actually care about them (loadbalancer, proxy).">
+    <meta name="twitter:description" content="Package config provides decoupling between various configuration sources (etcd, files,...) and the pieces that actually care about them (loadbalancer, proxy).">
+    <meta property="og:description" content="Package config provides decoupling between various configuration sources (etcd, files,...) and the pieces that actually care about them (loadbalancer, proxy).">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../proxy.html">proxy</a><span class="text-muted">/</span><span class="text-muted">config</span>
+  
+  <span class="pull-right">
+    <a href="config.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="config.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package config</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/proxy/config"</code>
+
+        <p>
+Package config provides decoupling between various configuration sources (etcd, files,...) and
+the pieces that actually care about them (loadbalancer, proxy). Config takes 1 or more
+configuration sources and allows for incremental (add/remove) and full replace (set)
+changes from each of the sources, then creates a union of the configuration and provides
+a unified view for both service handlers as well as endpoint handlers. There is no attempt
+to resolve conflicts of any sort. Basic idea is that each configuration source gets a channel
+from the Config service and pushes updates to it via that channel. Config then keeps track of
+incremental &amp; replace changes and distributes them to listeners as appropriate.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="config.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="config.html#ConfigSourceEtcd">type ConfigSourceEtcd</a></li>
+            <ul>
+            <li><a href="config.html#NewConfigSourceEtcd">func NewConfigSourceEtcd(client *etcd.Client, serviceChannel chan ServiceUpdate, endpointsChannel chan EndpointsUpdate) ConfigSourceEtcd</a></li>
+            <li><a href="config.html#ConfigSourceEtcd.GetEndpoints">func (s ConfigSourceEtcd) GetEndpoints(namespace, service string) (api.Endpoints, error)</a></li><li><a href="config.html#ConfigSourceEtcd.GetServices">func (s ConfigSourceEtcd) GetServices() ([]api.Service, []api.Endpoints, error)</a></li><li><a href="config.html#ConfigSourceEtcd.ProcessChange">func (s ConfigSourceEtcd) ProcessChange(response *etcd.Response)</a></li><li><a href="config.html#ConfigSourceEtcd.ProcessEndpointResponse">func (s ConfigSourceEtcd) ProcessEndpointResponse(response *etcd.Response)</a></li><li><a href="config.html#ConfigSourceEtcd.Run">func (s ConfigSourceEtcd) Run()</a></li><li><a href="config.html#ConfigSourceEtcd.WatchForChanges">func (s ConfigSourceEtcd) WatchForChanges()</a></li>
+            </ul>
+          
+            <li><a href="config.html#EndpointsConfig">type EndpointsConfig</a></li>
+            <ul>
+            <li><a href="config.html#NewEndpointsConfig">func NewEndpointsConfig() *EndpointsConfig</a></li>
+            <li><a href="config.html#EndpointsConfig.Channel">func (c *EndpointsConfig) Channel(source string) chan EndpointsUpdate</a></li><li><a href="config.html#EndpointsConfig.Config">func (c *EndpointsConfig) Config() map[string]map[string]api.Endpoints</a></li><li><a href="config.html#EndpointsConfig.RegisterHandler">func (c *EndpointsConfig) RegisterHandler(handler EndpointsConfigHandler)</a></li>
+            </ul>
+          
+            <li><a href="config.html#EndpointsConfigHandler">type EndpointsConfigHandler</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#EndpointsUpdate">type EndpointsUpdate</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#EndpointsWatcher">type EndpointsWatcher</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#Operation">type Operation</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#ServiceConfig">type ServiceConfig</a></li>
+            <ul>
+            <li><a href="config.html#NewServiceConfig">func NewServiceConfig() *ServiceConfig</a></li>
+            <li><a href="config.html#ServiceConfig.Channel">func (c *ServiceConfig) Channel(source string) chan ServiceUpdate</a></li><li><a href="config.html#ServiceConfig.Config">func (c *ServiceConfig) Config() map[string]map[string]api.Service</a></li><li><a href="config.html#ServiceConfig.RegisterHandler">func (c *ServiceConfig) RegisterHandler(handler ServiceConfigHandler)</a></li>
+            </ul>
+          
+            <li><a href="config.html#ServiceConfigHandler">type ServiceConfigHandler</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#ServiceUpdate">type ServiceUpdate</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#ServicesWatcher">type ServicesWatcher</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#SourceAPI">type SourceAPI</a></li>
+            <ul>
+            <li><a href="config.html#NewSourceAPI">func NewSourceAPI(servicesWatcher ServicesWatcher, endpointsWatcher EndpointsWatcher, period time.Duration, services chan&lt;- ServiceUpdate, endpoints chan&lt;- EndpointsUpdate) *SourceAPI</a></li>
+            
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/proxy/config">Package Files</a>
+          <a class="permalink" href="config.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/api.go">api.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go">config.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go">etcd.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="ConfigSourceEtcd">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L54">ConfigSourceEtcd</a> <a class="permalink" href="config.html#ConfigSourceEtcd">&para;</a></h3>
+          <pre>type ConfigSourceEtcd struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+ConfigSourceEtcd communicates with a etcd via the client, and sends the change notification of services and endpoints to the specified channels.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewConfigSourceEtcd">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L62">NewConfigSourceEtcd</a> <a class="permalink" href="config.html#NewConfigSourceEtcd">&para;</a></h4>
+            <pre class="funcdecl">func NewConfigSourceEtcd(client *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Client">Client</a>, serviceChannel chan <a href="config.html#ServiceUpdate">ServiceUpdate</a>, endpointsChannel chan <a href="config.html#EndpointsUpdate">EndpointsUpdate</a>) <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a></pre><p>
+NewConfigSourceEtcd creates a new ConfigSourceEtcd and immediately runs the created ConfigSourceEtcd in a goroutine.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="ConfigSourceEtcd.GetEndpoints">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L181">GetEndpoints</a> <a class="permalink" href="config.html#ConfigSourceEtcd.GetEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) GetEndpoints(namespace, service <a href="http://godoc.org/builtin#string">string</a>) (<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetEndpoints finds the list of endpoints of the service from etcd.
+</p>
+
+            
+  
+
+          
+            <h4 id="ConfigSourceEtcd.GetServices">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L160">GetServices</a> <a class="permalink" href="config.html#ConfigSourceEtcd.GetServices">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) GetServices() ([]<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>, []<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetServices finds the list of services and their endpoints from etcd.
+This operation is akin to a set a known good at regular intervals.
+</p>
+
+            
+  
+
+          
+            <h4 id="ConfigSourceEtcd.ProcessChange">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L223">ProcessChange</a> <a class="permalink" href="config.html#ConfigSourceEtcd.ProcessChange">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) ProcessChange(response *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>)</pre>
+            
+  
+
+          
+            <h4 id="ConfigSourceEtcd.ProcessEndpointResponse">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L254">ProcessEndpointResponse</a> <a class="permalink" href="config.html#ConfigSourceEtcd.ProcessEndpointResponse">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) ProcessEndpointResponse(response *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Response">Response</a>)</pre>
+            
+  
+
+          
+            <h4 id="ConfigSourceEtcd.Run">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L74">Run</a> <a class="permalink" href="config.html#ConfigSourceEtcd.Run">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) Run()</pre><p>
+Run begins watching for new services and their endpoints on etcd.
+</p>
+
+            
+  
+
+          
+            <h4 id="ConfigSourceEtcd.WatchForChanges">func (ConfigSourceEtcd) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/etcd.go#L207">WatchForChanges</a> <a class="permalink" href="config.html#ConfigSourceEtcd.WatchForChanges">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="config.html#ConfigSourceEtcd">ConfigSourceEtcd</a>) WatchForChanges()</pre>
+            
+  
+
+          
+        
+          <h3 id="EndpointsConfig">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L74">EndpointsConfig</a> <a class="permalink" href="config.html#EndpointsConfig">&para;</a></h3>
+          <pre>type EndpointsConfig struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+EndpointsConfig tracks a set of endpoints configurations.
+It accepts &#34;set&#34;, &#34;add&#34; and &#34;remove&#34; operations of endpoints via channels, and invokes registered handlers on change.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewEndpointsConfig">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L82">NewEndpointsConfig</a> <a class="permalink" href="config.html#NewEndpointsConfig">&para;</a></h4>
+            <pre class="funcdecl">func NewEndpointsConfig() *<a href="config.html#EndpointsConfig">EndpointsConfig</a></pre><p>
+NewEndpointsConfig creates a new EndpointsConfig.
+It immediately runs the created EndpointsConfig.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="EndpointsConfig.Channel">func (*EndpointsConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L97">Channel</a> <a class="permalink" href="config.html#EndpointsConfig.Channel">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#EndpointsConfig">EndpointsConfig</a>) Channel(source <a href="http://godoc.org/builtin#string">string</a>) chan <a href="config.html#EndpointsUpdate">EndpointsUpdate</a></pre>
+            
+  
+
+          
+            <h4 id="EndpointsConfig.Config">func (*EndpointsConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L109">Config</a> <a class="permalink" href="config.html#EndpointsConfig.Config">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#EndpointsConfig">EndpointsConfig</a>) Config() map[<a href="http://godoc.org/builtin#string">string</a>]map[<a href="http://godoc.org/builtin#string">string</a>]<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a></pre>
+            
+  
+
+          
+            <h4 id="EndpointsConfig.RegisterHandler">func (*EndpointsConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L91">RegisterHandler</a> <a class="permalink" href="config.html#EndpointsConfig.RegisterHandler">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#EndpointsConfig">EndpointsConfig</a>) RegisterHandler(handler <a href="config.html#EndpointsConfigHandler">EndpointsConfigHandler</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="EndpointsConfigHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L65">EndpointsConfigHandler</a> <a class="permalink" href="config.html#EndpointsConfigHandler">&para;</a></h3>
+          <pre>type EndpointsConfigHandler interface {
+    <span class="com">// OnUpdate gets called when endpoints configuration is changed for a given</span>
+    <span class="com">// service on any of the configuration sources. An example is when a new</span>
+    <span class="com">// service comes up, or when containers come up or down for an existing service.</span>
+    <span id="EndpointsConfigHandler.OnUpdate">OnUpdate</span>(endpoints []<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>)
+}</pre><p>
+EndpointsConfigHandler is an abstract interface of objects which receive update notifications for the set of endpoints.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EndpointsUpdate">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L52">EndpointsUpdate</a> <a class="permalink" href="config.html#EndpointsUpdate">&para;</a></h3>
+          <pre>type EndpointsUpdate struct {
+    <span id="EndpointsUpdate.Endpoints">Endpoints</span> []<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>
+    <span id="EndpointsUpdate.Op">Op</span>        <a href="config.html#Operation">Operation</a>
+}</pre><p>
+EndpointsUpdate describes an operation of endpoints, sent on the channel.
+You can add or remove single endpoints by sending an array of size one and Op == ADD|REMOVE.
+For setting the state of the system to a given state for this source configuration, set Endpoints as desired and Op to SET,
+which will reset the system state to that specified in this operation for this source channel.
+To remove all endpoints, set Endpoints to empty array and Op to SET
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EndpointsWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/api.go#L37">EndpointsWatcher</a> <a class="permalink" href="config.html#EndpointsWatcher">&para;</a></h3>
+          <pre>type EndpointsWatcher interface {
+    <span id="EndpointsWatcher.List">List</span>(label <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>) (*<a href="../api.html">api</a>.<a href="../api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EndpointsWatcher.Watch">Watch</span>(label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+EndpointsWatcher is capable of listing and watching for changes to endpoints across ALL namespaces
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Operation">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L28">Operation</a> <a class="permalink" href="config.html#Operation">&para;</a></h3>
+          <pre>type Operation <a href="http://godoc.org/builtin#int">int</a></pre><p>
+Operation is a type of operation of services or endpoints.
+</p>
+
+          <pre>const (
+    <span id="SET">SET</span> <a href="config.html#Operation">Operation</a> = <a href="http://godoc.org/builtin#iota">iota</a>
+    <span id="ADD">ADD</span>
+    <span id="REMOVE">REMOVE</span>
+)</pre><p>
+These are the available operation types.
+</p>
+
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServiceConfig">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L169">ServiceConfig</a> <a class="permalink" href="config.html#ServiceConfig">&para;</a></h3>
+          <pre>type ServiceConfig struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+ServiceConfig tracks a set of service configurations.
+It accepts &#34;set&#34;, &#34;add&#34; and &#34;remove&#34; operations of services via channels, and invokes registered handlers on change.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewServiceConfig">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L177">NewServiceConfig</a> <a class="permalink" href="config.html#NewServiceConfig">&para;</a></h4>
+            <pre class="funcdecl">func NewServiceConfig() *<a href="config.html#ServiceConfig">ServiceConfig</a></pre><p>
+NewServiceConfig creates a new ServiceConfig.
+It immediately runs the created ServiceConfig.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="ServiceConfig.Channel">func (*ServiceConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L192">Channel</a> <a class="permalink" href="config.html#ServiceConfig.Channel">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#ServiceConfig">ServiceConfig</a>) Channel(source <a href="http://godoc.org/builtin#string">string</a>) chan <a href="config.html#ServiceUpdate">ServiceUpdate</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceConfig.Config">func (*ServiceConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L204">Config</a> <a class="permalink" href="config.html#ServiceConfig.Config">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#ServiceConfig">ServiceConfig</a>) Config() map[<a href="http://godoc.org/builtin#string">string</a>]map[<a href="http://godoc.org/builtin#string">string</a>]<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceConfig.RegisterHandler">func (*ServiceConfig) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L186">RegisterHandler</a> <a class="permalink" href="config.html#ServiceConfig.RegisterHandler">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="config.html#ServiceConfig">ServiceConfig</a>) RegisterHandler(handler <a href="config.html#ServiceConfigHandler">ServiceConfigHandler</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="ServiceConfigHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L58">ServiceConfigHandler</a> <a class="permalink" href="config.html#ServiceConfigHandler">&para;</a></h3>
+          <pre>type ServiceConfigHandler interface {
+    <span class="com">// OnUpdate gets called when a configuration has been changed by one of the sources.</span>
+    <span class="com">// This is the union of all the configuration sources.</span>
+    <span id="ServiceConfigHandler.OnUpdate">OnUpdate</span>(services []<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>)
+}</pre><p>
+ServiceConfigHandler is an abstract interface of objects which receive update notifications for the set of services.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServiceUpdate">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/config.go#L42">ServiceUpdate</a> <a class="permalink" href="config.html#ServiceUpdate">&para;</a></h3>
+          <pre>type ServiceUpdate struct {
+    <span id="ServiceUpdate.Services">Services</span> []<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>
+    <span id="ServiceUpdate.Op">Op</span>       <a href="config.html#Operation">Operation</a>
+}</pre><p>
+ServiceUpdate describes an operation of services, sent on the channel.
+You can add or remove single services by sending an array of size one and Op == ADD|REMOVE.
+For setting the state of the system to a given state for this source configuration, set Services as desired and Op to SET,
+which will reset the system state to that specified in this operation for this source channel.
+To remove all services, set Services to empty array and Op to SET
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServicesWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/api.go#L31">ServicesWatcher</a> <a class="permalink" href="config.html#ServicesWatcher">&para;</a></h3>
+          <pre>type ServicesWatcher interface {
+    <span id="ServicesWatcher.List">List</span>(label <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ServicesWatcher.Watch">Watch</span>(label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ServicesWatcher is capable of listing and watching for changes to services across ALL namespaces
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SourceAPI">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/api.go#L44">SourceAPI</a> <a class="permalink" href="config.html#SourceAPI">&para;</a></h3>
+          <pre>type SourceAPI struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+SourceAPI implements a configuration source for services and endpoints that
+uses the client watch API to efficiently detect changes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewSourceAPI">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/config/api.go#L56">NewSourceAPI</a> <a class="permalink" href="config.html#NewSourceAPI">&para;</a></h4>
+            <pre class="funcdecl">func NewSourceAPI(servicesWatcher <a href="config.html#ServicesWatcher">ServicesWatcher</a>, endpointsWatcher <a href="config.html#EndpointsWatcher">EndpointsWatcher</a>, period <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>, services chan&lt;- <a href="config.html#ServiceUpdate">ServiceUpdate</a>, endpoints chan&lt;- <a href="config.html#EndpointsUpdate">EndpointsUpdate</a>) *<a href="config.html#SourceAPI">SourceAPI</a></pre><p>
+NewSourceAPI creates a config source that watches for changes to the services and endpoints.
+</p>
+
+            
+  
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/proxy/config"></form>
+  <p>Package config imports <a href="config@imports.html">15 packages</a> (<a href="config@import-graph.html">graph</a>) and is imported by <a href="config@importers.html">3 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:58Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="config@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="config.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

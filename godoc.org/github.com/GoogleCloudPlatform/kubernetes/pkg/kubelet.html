@@ -1,0 +1,785 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>kubelet - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package kubelet">
+    <meta property="og:title" content="Package kubelet">
+    <meta name="description" content="Package kubelet is the package that contains the libraries that drive the Kubelet binary.">
+    <meta name="twitter:description" content="Package kubelet is the package that contains the libraries that drive the Kubelet binary.">
+    <meta property="og:description" content="Package kubelet is the package that contains the libraries that drive the Kubelet binary.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">kubelet</span>
+  
+  <span class="pull-right">
+    <a href="kubelet.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="kubelet.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="kubelet.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package kubelet</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"</code>
+
+        <p>
+Package kubelet is the package that contains the libraries that drive the Kubelet binary.
+The kubelet is responsible for node level pod management.  It runs on each worker in the cluster.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="kubelet.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="kubelet.html#pkg-constants">Constants</a></li>
+          
+          <li><a href="kubelet.html#ConnectToDockerOrDie">func ConnectToDockerOrDie(dockerEndpoint string) *docker.Client</a></li><li><a href="kubelet.html#EtcdClientOrDie">func EtcdClientOrDie(etcdServerList util.StringList, etcdConfigFile string) *etcd.Client</a></li><li><a href="kubelet.html#GarbageCollectLoop">func GarbageCollectLoop(k *Kubelet)</a></li><li><a href="kubelet.html#GetDockerEndpoint">func GetDockerEndpoint(dockerEndpoint string) string</a></li><li><a href="kubelet.html#GetHostname">func GetHostname(hostnameOverride string) string</a></li><li><a href="kubelet.html#GetPodFullName">func GetPodFullName(pod *api.BoundPod) string</a></li><li><a href="kubelet.html#InitHealthChecking">func InitHealthChecking(k *Kubelet)</a></li><li><a href="kubelet.html#ListenAndServeKubeletServer">func ListenAndServeKubeletServer(host HostInterface, updates chan&lt;- interface{}, address net.IP, port uint, enableDebuggingHandlers bool)</a></li><li><a href="kubelet.html#MonitorCAdvisor">func MonitorCAdvisor(k *Kubelet)</a></li><li><a href="kubelet.html#ResolvePort">func ResolvePort(portReference util.IntOrString, container *api.Container) (int, error)</a></li><li><a href="kubelet.html#SetupCapabilities">func SetupCapabilities(allowPrivileged bool)</a></li><li><a href="kubelet.html#SetupEventSending">func SetupEventSending(authPath string, apiServerList util.StringList)</a></li><li><a href="kubelet.html#SetupLogging">func SetupLogging()</a></li><li><a href="kubelet.html#SetupRootDirectoryOrDie">func SetupRootDirectoryOrDie(rootDirectory string)</a></li>
+          
+            <li><a href="kubelet.html#ByCreated">type ByCreated</a></li>
+            <ul>
+            
+            <li><a href="kubelet.html#ByCreated.Len">func (a ByCreated) Len() int</a></li><li><a href="kubelet.html#ByCreated.Less">func (a ByCreated) Less(i, j int) bool</a></li><li><a href="kubelet.html#ByCreated.Swap">func (a ByCreated) Swap(i, j int)</a></li>
+            </ul>
+          
+            <li><a href="kubelet.html#FlushWriter">type FlushWriter</a></li>
+            <ul>
+            
+            <li><a href="kubelet.html#FlushWriter.Write">func (fw *FlushWriter) Write(p []byte) (n int, err error)</a></li>
+            </ul>
+          
+            <li><a href="kubelet.html#HostInterface">type HostInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="kubelet.html#Kubelet">type Kubelet</a></li>
+            <ul>
+            <li><a href="kubelet.html#NewIntegrationTestKubelet">func NewIntegrationTestKubelet(hn string, rd string, dc dockertools.DockerInterface) *Kubelet</a></li><li><a href="kubelet.html#NewMainKubelet">func NewMainKubelet(
+    hn string,
+    dc dockertools.DockerInterface,
+    ec tools.EtcdClient,
+    rd string,
+    ni string,
+    ri time.Duration,
+    pullQPS float32,
+    pullBurst int,
+    minimumGCAge time.Duration,
+    maxContainerCount int) *Kubelet</a></li>
+            <li><a href="kubelet.html#Kubelet.BirthCry">func (kl *Kubelet) BirthCry()</a></li><li><a href="kubelet.html#Kubelet.GarbageCollectContainers">func (kl *Kubelet) GarbageCollectContainers() error</a></li><li><a href="kubelet.html#Kubelet.GetBoundPods">func (kl *Kubelet) GetBoundPods() ([]api.BoundPod, error)</a></li><li><a href="kubelet.html#Kubelet.GetCadvisorClient">func (kl *Kubelet) GetCadvisorClient() cadvisorInterface</a></li><li><a href="kubelet.html#Kubelet.GetContainerInfo">func (kl *Kubelet) GetContainerInfo(podFullName, uuid, containerName string, req *cadvisor.ContainerInfoRequest) (*cadvisor.ContainerInfo, error)</a></li><li><a href="kubelet.html#Kubelet.GetKubeletContainerLogs">func (kl *Kubelet) GetKubeletContainerLogs(podFullName, containerName, tail string, follow bool, stdout, stderr io.Writer) error</a></li><li><a href="kubelet.html#Kubelet.GetMachineInfo">func (kl *Kubelet) GetMachineInfo() (*cadvisor.MachineInfo, error)</a></li><li><a href="kubelet.html#Kubelet.GetPodInfo">func (kl *Kubelet) GetPodInfo(podFullName, uuid string) (api.PodInfo, error)</a></li><li><a href="kubelet.html#Kubelet.GetRootInfo">func (kl *Kubelet) GetRootInfo(req *cadvisor.ContainerInfoRequest) (*cadvisor.ContainerInfo, error)</a></li><li><a href="kubelet.html#Kubelet.Run">func (kl *Kubelet) Run(updates &lt;-chan PodUpdate)</a></li><li><a href="kubelet.html#Kubelet.RunInContainer">func (kl *Kubelet) RunInContainer(podFullName, uuid, container string, cmd []string) ([]byte, error)</a></li><li><a href="kubelet.html#Kubelet.RunOnce">func (kl *Kubelet) RunOnce(updates &lt;-chan PodUpdate) ([]RunPodResult, error)</a></li><li><a href="kubelet.html#Kubelet.ServeLogs">func (kl *Kubelet) ServeLogs(w http.ResponseWriter, req *http.Request)</a></li><li><a href="kubelet.html#Kubelet.SetCadvisorClient">func (kl *Kubelet) SetCadvisorClient(c cadvisorInterface)</a></li><li><a href="kubelet.html#Kubelet.SyncPods">func (kl *Kubelet) SyncPods(pods []api.BoundPod) error</a></li>
+            </ul>
+          
+            <li><a href="kubelet.html#PodOperation">type PodOperation</a></li>
+            
+            
+            
+            
+          
+            <li><a href="kubelet.html#PodUpdate">type PodUpdate</a></li>
+            
+            
+            
+            
+          
+            <li><a href="kubelet.html#RunPodResult">type RunPodResult</a></li>
+            
+            
+            
+            
+          
+            <li><a href="kubelet.html#Server">type Server</a></li>
+            <ul>
+            <li><a href="kubelet.html#NewServer">func NewServer(host HostInterface, updates chan&lt;- interface{}, enableDebuggingHandlers bool) Server</a></li>
+            <li><a href="kubelet.html#Server.InstallDebuggingHandlers">func (s *Server) InstallDebuggingHandlers()</a></li><li><a href="kubelet.html#Server.InstallDefaultHandlers">func (s *Server) InstallDefaultHandlers()</a></li><li><a href="kubelet.html#Server.ServeHTTP">func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="kubelet.html#SyncHandler">type SyncHandler</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/kubelet">Package Files</a>
+          <a class="permalink" href="kubelet.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/cadvisor.go">cadvisor.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/handlers.go">handlers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go">kubelet.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/runonce.go">runonce.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go">server.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/types.go">types.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go">util.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="kubelet.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span id="RunOnceManifestDelay">RunOnceManifestDelay</span>     = 1 * <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Second">Second</a>
+    <span id="RunOnceMaxRetries">RunOnceMaxRetries</span>        = 10
+    <span id="RunOnceRetryDelay">RunOnceRetryDelay</span>        = 1 * <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Second">Second</a>
+    <span id="RunOnceRetryDelayBackoff">RunOnceRetryDelayBackoff</span> = 2
+)</pre><pre>const <span id="ConfigSourceAnnotationKey">ConfigSourceAnnotationKey</span> = &#34;kubernetes/config.source&#34;</pre><pre>const (
+    <span id="NetworkContainerImage">NetworkContainerImage</span> = &#34;kubernetes/pause:latest&#34;
+)</pre>
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="ConnectToDockerOrDie">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L70">ConnectToDockerOrDie</a> <a class="permalink" href="kubelet.html#ConnectToDockerOrDie">&para;</a></h3>
+          <pre class="funcdecl">func ConnectToDockerOrDie(dockerEndpoint <a href="http://godoc.org/builtin#string">string</a>) *docker.Client</pre><p>
+TODO: move this into pkg/util
+</p>
+
+          
+  
+
+        
+          <h3 id="EtcdClientOrDie">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L114">EtcdClientOrDie</a> <a class="permalink" href="kubelet.html#EtcdClientOrDie">&para;</a></h3>
+          <pre class="funcdecl">func EtcdClientOrDie(etcdServerList <a href="util.html">util</a>.<a href="util.html#StringList">StringList</a>, etcdConfigFile <a href="http://godoc.org/builtin#string">string</a>) *<a href="http://godoc.org/github.com/coreos/go-etcd/etcd">etcd</a>.<a href="http://godoc.org/github.com/coreos/go-etcd/etcd#Client">Client</a></pre><p>
+TODO: move this into a pkg/tools/etcd_tools
+</p>
+
+          
+  
+
+        
+          <h3 id="GarbageCollectLoop">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L79">GarbageCollectLoop</a> <a class="permalink" href="kubelet.html#GarbageCollectLoop">&para;</a></h3>
+          <pre class="funcdecl">func GarbageCollectLoop(k *<a href="kubelet.html#Kubelet">Kubelet</a>)</pre><p>
+TODO: move this into the kubelet itself
+</p>
+
+          
+  
+
+        
+          <h3 id="GetDockerEndpoint">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L55">GetDockerEndpoint</a> <a class="permalink" href="kubelet.html#GetDockerEndpoint">&para;</a></h3>
+          <pre class="funcdecl">func GetDockerEndpoint(dockerEndpoint <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+TODO: move this into a pkg/util
+</p>
+
+          
+  
+
+        
+          <h3 id="GetHostname">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L40">GetHostname</a> <a class="permalink" href="kubelet.html#GetHostname">&para;</a></h3>
+          <pre class="funcdecl">func GetHostname(hostnameOverride <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+TODO: move this into a pkg/util
+</p>
+
+          
+  
+
+        
+          <h3 id="GetPodFullName">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/types.go#L56">GetPodFullName</a> <a class="permalink" href="kubelet.html#GetPodFullName">&para;</a></h3>
+          <pre class="funcdecl">func GetPodFullName(pod *<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+GetPodFullName returns a name that uniquely identifies a pod across all config sources.
+</p>
+
+          
+  
+
+        
+          <h3 id="InitHealthChecking">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L105">InitHealthChecking</a> <a class="permalink" href="kubelet.html#InitHealthChecking">&para;</a></h3>
+          <pre class="funcdecl">func InitHealthChecking(k *<a href="kubelet.html#Kubelet">Kubelet</a>)</pre><p>
+TODO: move this into the kubelet itself
+</p>
+
+          
+  
+
+        
+          <h3 id="ListenAndServeKubeletServer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L51">ListenAndServeKubeletServer</a> <a class="permalink" href="kubelet.html#ListenAndServeKubeletServer">&para;</a></h3>
+          <pre class="funcdecl">func ListenAndServeKubeletServer(host <a href="kubelet.html#HostInterface">HostInterface</a>, updates chan&lt;- interface{}, address <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, port <a href="http://godoc.org/builtin#uint">uint</a>, enableDebuggingHandlers <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+ListenAndServeKubeletServer initializes a server to respond to HTTP network requests on the Kubelet.
+</p>
+
+          
+  
+
+        
+          <h3 id="MonitorCAdvisor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L91">MonitorCAdvisor</a> <a class="permalink" href="kubelet.html#MonitorCAdvisor">&para;</a></h3>
+          <pre class="funcdecl">func MonitorCAdvisor(k *<a href="kubelet.html#Kubelet">Kubelet</a>)</pre><p>
+TODO: move this into the kubelet itself
+</p>
+
+          
+  
+
+        
+          <h3 id="ResolvePort">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/handlers.go#L51">ResolvePort</a> <a class="permalink" href="kubelet.html#ResolvePort">&para;</a></h3>
+          <pre class="funcdecl">func ResolvePort(portReference <a href="util.html">util</a>.<a href="util.html#IntOrString">IntOrString</a>, container *<a href="api.html">api</a>.<a href="api.html#Container">Container</a>) (<a href="http://godoc.org/builtin#int">int</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ResolvePort attempts to turn a IntOrString port reference into a concrete port number.
+If portReference has an int value, it is treated as a literal, and simply returns that value.
+If portReference is a string, an attempt is first made to parse it as an integer.  If that fails,
+an attempt is made to find a port with the same name in the container spec.
+If a port with the same name is found, it&#39;s ContainerPort value is returned.  If no matching
+port is found, an error is returned.
+</p>
+
+          
+  
+
+        
+          <h3 id="SetupCapabilities">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L139">SetupCapabilities</a> <a class="permalink" href="kubelet.html#SetupCapabilities">&para;</a></h3>
+          <pre class="funcdecl">func SetupCapabilities(allowPrivileged <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+TODO: move this into pkg/capabilities
+</p>
+
+          
+  
+
+        
+          <h3 id="SetupEventSending">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L174">SetupEventSending</a> <a class="permalink" href="kubelet.html#SetupEventSending">&para;</a></h3>
+          <pre class="funcdecl">func SetupEventSending(authPath <a href="http://godoc.org/builtin#string">string</a>, apiServerList <a href="util.html">util</a>.<a href="util.html#StringList">StringList</a>)</pre>
+          
+  
+
+        
+          <h3 id="SetupLogging">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L146">SetupLogging</a> <a class="permalink" href="kubelet.html#SetupLogging">&para;</a></h3>
+          <pre class="funcdecl">func SetupLogging()</pre><p>
+TODO: Split this up?
+</p>
+
+          
+  
+
+        
+          <h3 id="SetupRootDirectoryOrDie">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/util.go#L128">SetupRootDirectoryOrDie</a> <a class="permalink" href="kubelet.html#SetupRootDirectoryOrDie">&para;</a></h3>
+          <pre class="funcdecl">func SetupRootDirectoryOrDie(rootDirectory <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+TODO: move this into pkg/util
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ByCreated">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L148">ByCreated</a> <a class="permalink" href="kubelet.html#ByCreated">&para;</a></h3>
+          <pre>type ByCreated []*docker.Container</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ByCreated.Len">func (ByCreated) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L150">Len</a> <a class="permalink" href="kubelet.html#ByCreated.Len">&para;</a></h4>
+            <pre class="funcdecl">func (a <a href="kubelet.html#ByCreated">ByCreated</a>) Len() <a href="http://godoc.org/builtin#int">int</a></pre>
+            
+  
+
+          
+            <h4 id="ByCreated.Less">func (ByCreated) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L152">Less</a> <a class="permalink" href="kubelet.html#ByCreated.Less">&para;</a></h4>
+            <pre class="funcdecl">func (a <a href="kubelet.html#ByCreated">ByCreated</a>) Less(i, j <a href="http://godoc.org/builtin#int">int</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="ByCreated.Swap">func (ByCreated) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L151">Swap</a> <a class="permalink" href="kubelet.html#ByCreated.Swap">&para;</a></h4>
+            <pre class="funcdecl">func (a <a href="kubelet.html#ByCreated">ByCreated</a>) Swap(i, j <a href="http://godoc.org/builtin#int">int</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FlushWriter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/handlers.go#L102">FlushWriter</a> <a class="permalink" href="kubelet.html#FlushWriter">&para;</a></h3>
+          <pre>type FlushWriter struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+FlushWriter provides wrapper for responseWriter with HTTP streaming capabilities
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FlushWriter.Write">func (*FlushWriter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/handlers.go#L108">Write</a> <a class="permalink" href="kubelet.html#FlushWriter.Write">&para;</a></h4>
+            <pre class="funcdecl">func (fw *<a href="kubelet.html#FlushWriter">FlushWriter</a>) Write(p []<a href="http://godoc.org/builtin#byte">byte</a>) (n <a href="http://godoc.org/builtin#int">int</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Write is a FlushWriter implementation of the io.Writer that sends any buffered data to the client.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="HostInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L66">HostInterface</a> <a class="permalink" href="kubelet.html#HostInterface">&para;</a></h3>
+          <pre>type HostInterface interface {
+    <span id="HostInterface.GetContainerInfo">GetContainerInfo</span>(podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.GetRootInfo">GetRootInfo</span>(req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.GetMachineInfo">GetMachineInfo</span>() (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#MachineInfo">MachineInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.GetBoundPods">GetBoundPods</span>() ([]<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.GetPodInfo">GetPodInfo</span>(name, uuid <a href="http://godoc.org/builtin#string">string</a>) (<a href="api.html">api</a>.<a href="api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.RunInContainer">RunInContainer</span>(name, uuid, container <a href="http://godoc.org/builtin#string">string</a>, cmd []<a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HostInterface.GetKubeletContainerLogs">GetKubeletContainerLogs</span>(podFullName, containerName, tail <a href="http://godoc.org/builtin#string">string</a>, follow <a href="http://godoc.org/builtin#bool">bool</a>, stdout, stderr <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="HostInterface.ServeLogs">ServeLogs</span>(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)
+}</pre><p>
+HostInterface contains all the kubelet methods required by the server.
+For testablitiy.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Kubelet">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L108">Kubelet</a> <a class="permalink" href="kubelet.html#Kubelet">&para;</a></h3>
+          <pre>type Kubelet struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Kubelet is the main kubelet implementation.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewIntegrationTestKubelet">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L90">NewIntegrationTestKubelet</a> <a class="permalink" href="kubelet.html#NewIntegrationTestKubelet">&para;</a></h4>
+            <pre class="funcdecl">func NewIntegrationTestKubelet(hn <a href="http://godoc.org/builtin#string">string</a>, rd <a href="http://godoc.org/builtin#string">string</a>, dc <a href="kubelet/dockertools.html">dockertools</a>.<a href="kubelet/dockertools.html#DockerInterface">DockerInterface</a>) *<a href="kubelet.html#Kubelet">Kubelet</a></pre><p>
+NewIntegrationTestKubelet creates a new Kubelet for use in integration tests.
+TODO: add more integration tests, and expand parameter list as needed.
+</p>
+
+            
+  
+
+          
+            <h4 id="NewMainKubelet">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L59">NewMainKubelet</a> <a class="permalink" href="kubelet.html#NewMainKubelet">&para;</a></h4>
+            <pre class="funcdecl">func NewMainKubelet(
+    hn <a href="http://godoc.org/builtin#string">string</a>,
+    dc <a href="kubelet/dockertools.html">dockertools</a>.<a href="kubelet/dockertools.html#DockerInterface">DockerInterface</a>,
+    ec <a href="tools.html">tools</a>.<a href="tools.html#EtcdClient">EtcdClient</a>,
+    rd <a href="http://godoc.org/builtin#string">string</a>,
+    ni <a href="http://godoc.org/builtin#string">string</a>,
+    ri <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>,
+    pullQPS <a href="http://godoc.org/builtin#float32">float32</a>,
+    pullBurst <a href="http://godoc.org/builtin#int">int</a>,
+    minimumGCAge <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>,
+    maxContainerCount <a href="http://godoc.org/builtin#int">int</a>) *<a href="kubelet.html#Kubelet">Kubelet</a></pre><p>
+New creates a new Kubelet for use in main
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Kubelet.BirthCry">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L1044">BirthCry</a> <a class="permalink" href="kubelet.html#Kubelet.BirthCry">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) BirthCry()</pre><p>
+BirthCry sends an event that the kubelet has started up.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GarbageCollectContainers">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L181">GarbageCollectContainers</a> <a class="permalink" href="kubelet.html#Kubelet.GarbageCollectContainers">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GarbageCollectContainers() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+TODO: Also enforce a maximum total number of containers.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetBoundPods">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L991">GetBoundPods</a> <a class="permalink" href="kubelet.html#Kubelet.GetBoundPods">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetBoundPods() ([]<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetBoundPods returns all pods bound to the kubelet and their spec
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetCadvisorClient">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L214">GetCadvisorClient</a> <a class="permalink" href="kubelet.html#Kubelet.GetCadvisorClient">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetCadvisorClient() cadvisorInterface</pre><p>
+GetCadvisorClient gets the cadvisor client.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetContainerInfo">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/cadvisor.go#L56">GetContainerInfo</a> <a class="permalink" href="kubelet.html#Kubelet.GetContainerInfo">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetContainerInfo(podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">cadvisor</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">cadvisor</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetContainerInfo returns stats (from Cadvisor) for a container.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetKubeletContainerLogs">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L974">GetKubeletContainerLogs</a> <a class="permalink" href="kubelet.html#Kubelet.GetKubeletContainerLogs">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetKubeletContainerLogs(podFullName, containerName, tail <a href="http://godoc.org/builtin#string">string</a>, follow <a href="http://godoc.org/builtin#bool">bool</a>, stdout, stderr <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+GetKubeletContainerLogs returns logs from the container
+The second parameter of GetPodInfo and FindPodContainer methods represents pod UUID, which is allowed to be blank
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetMachineInfo">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/cadvisor.go#L81">GetMachineInfo</a> <a class="permalink" href="kubelet.html#Kubelet.GetMachineInfo">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetMachineInfo() (*<a href="http://godoc.org/github.com/google/cadvisor/info">cadvisor</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#MachineInfo">MachineInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="Kubelet.GetPodInfo">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L996">GetPodInfo</a> <a class="permalink" href="kubelet.html#Kubelet.GetPodInfo">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetPodInfo(podFullName, uuid <a href="http://godoc.org/builtin#string">string</a>) (<a href="api.html">api</a>.<a href="api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetPodInfo returns information from Docker about the containers in a pod
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.GetRootInfo">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/cadvisor.go#L73">GetRootInfo</a> <a class="permalink" href="kubelet.html#Kubelet.GetRootInfo">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) GetRootInfo(req *<a href="http://godoc.org/github.com/google/cadvisor/info">cadvisor</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">cadvisor</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetRootInfo returns stats (from Cadvisor) of current machine (root container).
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.Run">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L221">Run</a> <a class="permalink" href="kubelet.html#Kubelet.Run">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) Run(updates &lt;-chan <a href="kubelet.html#PodUpdate">PodUpdate</a>)</pre><p>
+Run starts the kubelet reacting to config updates
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.RunInContainer">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L1028">RunInContainer</a> <a class="permalink" href="kubelet.html#Kubelet.RunInContainer">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) RunInContainer(podFullName, uuid, container <a href="http://godoc.org/builtin#string">string</a>, cmd []<a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Run a command in a container, returns the combined stdout, stderr as an array of bytes
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.RunOnce">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/runonce.go#L41">RunOnce</a> <a class="permalink" href="kubelet.html#Kubelet.RunOnce">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) RunOnce(updates &lt;-chan <a href="kubelet.html#PodUpdate">PodUpdate</a>) ([]<a href="kubelet.html#RunPodResult">RunPodResult</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+RunOnce polls from one configuration update and run the associated pods.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.ServeLogs">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L1022">ServeLogs</a> <a class="permalink" href="kubelet.html#Kubelet.ServeLogs">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) ServeLogs(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre><p>
+Returns logs of current machine.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.SetCadvisorClient">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L207">SetCadvisorClient</a> <a class="permalink" href="kubelet.html#Kubelet.SetCadvisorClient">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) SetCadvisorClient(c cadvisorInterface)</pre><p>
+SetCadvisorClient sets the cadvisor client in a thread-safe way.
+</p>
+
+            
+  
+
+          
+            <h4 id="Kubelet.SyncPods">func (*Kubelet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L839">SyncPods</a> <a class="permalink" href="kubelet.html#Kubelet.SyncPods">&para;</a></h4>
+            <pre class="funcdecl">func (kl *<a href="kubelet.html#Kubelet">Kubelet</a>) SyncPods(pods []<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SyncPods synchronizes the configured list of pods (desired state) with the host current state.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="PodOperation">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/types.go#L28">PodOperation</a> <a class="permalink" href="kubelet.html#PodOperation">&para;</a></h3>
+          <pre>type PodOperation <a href="http://godoc.org/builtin#int">int</a></pre><p>
+PodOperation defines what changes will be made on a pod configuration.
+</p>
+
+          <pre>const (
+    <span class="com">// This is the current pod configuration</span>
+    <span id="SET">SET</span> <a href="kubelet.html#PodOperation">PodOperation</a> = <a href="http://godoc.org/builtin#iota">iota</a>
+    <span class="com">// Pods with the given ids are new to this source</span>
+    <span id="ADD">ADD</span>
+    <span class="com">// Pods with the given ids have been removed from this source</span>
+    <span id="REMOVE">REMOVE</span>
+    <span class="com">// Pods with the given ids have been updated in this source</span>
+    <span id="UPDATE">UPDATE</span>
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodUpdate">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/types.go#L50">PodUpdate</a> <a class="permalink" href="kubelet.html#PodUpdate">&para;</a></h3>
+          <pre>type PodUpdate struct {
+    <span id="PodUpdate.Pods">Pods</span> []<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>
+    <span id="PodUpdate.Op">Op</span>   <a href="kubelet.html#PodOperation">PodOperation</a>
+}</pre><p>
+PodUpdate defines an operation sent on the channel. You can add or remove single services by
+sending an array of size one and Op == ADD|REMOVE (with REMOVE, only the ID is required).
+For setting the state of the system to a given state for this source configuration, set
+Pods as desired and Op to SET, which will reset the system state to that specified in this
+operation for this source channel. To remove all pods, set Pods to empty object and Op to SET.
+</p>
+<p>
+Additionally, Pods should never be nil - it should always point to an empty slice. While
+functionally similar, this helps our unit tests properly check that the correct PodUpdates
+are generated.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RunPodResult">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/runonce.go#L35">RunPodResult</a> <a class="permalink" href="kubelet.html#RunPodResult">&para;</a></h3>
+          <pre>type RunPodResult struct {
+    <span id="RunPodResult.Pod">Pod</span> *<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>
+    <span id="RunPodResult.Err">Err</span> <a href="http://godoc.org/builtin#error">error</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Server">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L44">Server</a> <a class="permalink" href="kubelet.html#Server">&para;</a></h3>
+          <pre>type Server struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Server is a http.Handler which exposes kubelet functionality over HTTP.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewServer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L78">NewServer</a> <a class="permalink" href="kubelet.html#NewServer">&para;</a></h4>
+            <pre class="funcdecl">func NewServer(host <a href="kubelet.html#HostInterface">HostInterface</a>, updates chan&lt;- interface{}, enableDebuggingHandlers <a href="http://godoc.org/builtin#bool">bool</a>) <a href="kubelet.html#Server">Server</a></pre><p>
+NewServer initializes and configures a kubelet.Server object to handle HTTP requests.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Server.InstallDebuggingHandlers">func (*Server) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L101">InstallDebuggingHandlers</a> <a class="permalink" href="kubelet.html#Server.InstallDebuggingHandlers">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="kubelet.html#Server">Server</a>) InstallDebuggingHandlers()</pre><p>
+InstallDeguggingHandlers registers the HTTP request patterns that serve logs or run commands/containers
+</p>
+
+            
+  
+
+          
+            <h4 id="Server.InstallDefaultHandlers">func (*Server) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L92">InstallDefaultHandlers</a> <a class="permalink" href="kubelet.html#Server.InstallDefaultHandlers">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="kubelet.html#Server">Server</a>) InstallDefaultHandlers()</pre><p>
+InstallDefaultHandlers registers the default set of supported HTTP request patterns with the mux.
+</p>
+
+            
+  
+
+          
+            <h4 id="Server.ServeHTTP">func (*Server) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/server.go#L366">ServeHTTP</a> <a class="permalink" href="kubelet.html#Server.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="kubelet.html#Server">Server</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre><p>
+ServeHTTP responds to HTTP requests on the Kubelet.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="SyncHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubelet/kubelet.go#L52">SyncHandler</a> <a class="permalink" href="kubelet.html#SyncHandler">&para;</a></h3>
+          <pre>type SyncHandler interface {
+    <span id="SyncHandler.SyncPods">SyncPods</span>([]<a href="api.html">api</a>.<a href="api.html#BoundPod">BoundPod</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+SyncHandler is an interface implemented by Kubelet, for testability
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="kubelet.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="kubelet/config.html">config</a><td>Package config implements the pod configuration readers.</td></tr><tr><td><a href="kubelet/dockertools.html">dockertools</a><td></td></tr><tr><td><a href="kubelet/envvars.html">envvars</a><td>Package envvars is the package that build the environment variables that kubernetes provides to the containers run by it.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"></form>
+  <p>Package kubelet imports <a href="kubelet@imports.html">36 packages</a> (<a href="kubelet@import-graph.html">graph</a>) and is imported by <a href="kubelet@importers.html">9 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:50Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="kubelet@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="kubelet.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

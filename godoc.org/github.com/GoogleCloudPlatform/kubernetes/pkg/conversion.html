@@ -1,0 +1,795 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>conversion - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package conversion">
+    <meta property="og:title" content="Package conversion">
+    <meta name="description" content="Package conversion provides go object versioning and encoding/decoding mechanisms.">
+    <meta name="twitter:description" content="Package conversion provides go object versioning and encoding/decoding mechanisms.">
+    <meta property="og:description" content="Package conversion provides go object versioning and encoding/decoding mechanisms.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">conversion</span>
+  
+  <span class="pull-right">
+    <a href="conversion.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="conversion.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package conversion</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/conversion"</code>
+
+        <p>
+Package conversion provides go object versioning and encoding/decoding
+mechanisms.
+</p>
+<p>
+Specifically, conversion provides a way for you to define multiple versions
+of the same object. You may write functions which implement conversion logic,
+but for the fields which did not change, copying is automated. This makes it
+easy to modify the structures you use in memory without affecting the format
+you store on disk or respond to in your external API calls.
+</p>
+<p>
+The second offering of this package is automated encoding/decoding. The version
+and type of the object is recorded in the output, so it can be recreated upon
+reading. Currently, conversion writes JSON output, and interprets both JSON
+and YAML input.
+</p>
+<p>
+In the future, we plan to more explicitly separate the above two mechanisms, and
+add more serialization options, such as gob.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="conversion.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          <li><a href="conversion.html#pkg-variables">Variables</a></li>
+          <li><a href="conversion.html#EnforcePtr">func EnforcePtr(obj interface{}) (reflect.Value, error)</a></li><li><a href="conversion.html#UpdateVersionAndKind">func UpdateVersionAndKind(baseFields []string, versionField, version, kindField, kind string, obj interface{}) error</a></li>
+          
+            <li><a href="conversion.html#Converter">type Converter</a></li>
+            <ul>
+            <li><a href="conversion.html#NewConverter">func NewConverter() *Converter</a></li>
+            <li><a href="conversion.html#Converter.Convert">func (c *Converter) Convert(src, dest interface{}, flags FieldMatchingFlags, meta *Meta) error</a></li><li><a href="conversion.html#Converter.Register">func (c *Converter) Register(conversionFunc interface{}) error</a></li><li><a href="conversion.html#Converter.SetStructFieldCopy">func (c *Converter) SetStructFieldCopy(srcFieldType interface{}, srcFieldName string, destFieldType interface{}, destFieldName string) error</a></li>
+            </ul>
+          
+            <li><a href="conversion.html#DebugLogger">type DebugLogger</a></li>
+            
+            
+            
+            
+          
+            <li><a href="conversion.html#FieldMatchingFlags">type FieldMatchingFlags</a></li>
+            <ul>
+            
+            <li><a href="conversion.html#FieldMatchingFlags.IsSet">func (f FieldMatchingFlags) IsSet(flag FieldMatchingFlags) bool</a></li>
+            </ul>
+          
+            <li><a href="conversion.html#Meta">type Meta</a></li>
+            
+            
+            
+            
+          
+            <li><a href="conversion.html#MetaFactory">type MetaFactory</a></li>
+            
+            
+            
+            
+          
+            <li><a href="conversion.html#Scheme">type Scheme</a></li>
+            <ul>
+            <li><a href="conversion.html#NewScheme">func NewScheme() *Scheme</a></li>
+            <li><a href="conversion.html#Scheme.AddConversionFuncs">func (s *Scheme) AddConversionFuncs(conversionFuncs ...interface{}) error</a></li><li><a href="conversion.html#Scheme.AddKnownTypeWithName">func (s *Scheme) AddKnownTypeWithName(version, kind string, obj interface{})</a></li><li><a href="conversion.html#Scheme.AddKnownTypes">func (s *Scheme) AddKnownTypes(version string, types ...interface{})</a></li><li><a href="conversion.html#Scheme.AddStructFieldConversion">func (s *Scheme) AddStructFieldConversion(srcFieldType interface{}, srcFieldName string, destFieldType interface{}, destFieldName string) error</a></li><li><a href="conversion.html#Scheme.Convert">func (s *Scheme) Convert(in, out interface{}) error</a></li><li><a href="conversion.html#Scheme.ConvertToVersion">func (s *Scheme) ConvertToVersion(in interface{}, outVersion string) (interface{}, error)</a></li><li><a href="conversion.html#Scheme.DataVersionAndKind">func (s *Scheme) DataVersionAndKind(data []byte) (version, kind string, err error)</a></li><li><a href="conversion.html#Scheme.Decode">func (s *Scheme) Decode(data []byte) (interface{}, error)</a></li><li><a href="conversion.html#Scheme.DecodeInto">func (s *Scheme) DecodeInto(data []byte, obj interface{}) error</a></li><li><a href="conversion.html#Scheme.EncodeToVersion">func (s *Scheme) EncodeToVersion(obj interface{}, destVersion string) (data []byte, err error)</a></li><li><a href="conversion.html#Scheme.KnownTypes">func (s *Scheme) KnownTypes(version string) map[string]reflect.Type</a></li><li><a href="conversion.html#Scheme.Log">func (s *Scheme) Log(l DebugLogger)</a></li><li><a href="conversion.html#Scheme.NewObject">func (s *Scheme) NewObject(versionName, typeName string) (interface{}, error)</a></li><li><a href="conversion.html#Scheme.ObjectVersionAndKind">func (s *Scheme) ObjectVersionAndKind(obj interface{}) (apiVersion, kind string, err error)</a></li><li><a href="conversion.html#Scheme.SetVersionAndKind">func (s *Scheme) SetVersionAndKind(version, kind string, obj interface{}) error</a></li>
+            </ul>
+          
+            <li><a href="conversion.html#Scope">type Scope</a></li>
+            
+            
+            
+            
+          
+            <li><a href="conversion.html#SimpleMetaFactory">type SimpleMetaFactory</a></li>
+            <ul>
+            
+            <li><a href="conversion.html#SimpleMetaFactory.Interpret">func (SimpleMetaFactory) Interpret(data []byte) (version, kind string, err error)</a></li><li><a href="conversion.html#SimpleMetaFactory.Update">func (f SimpleMetaFactory) Update(version, kind string, obj interface{}) error</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/conversion">Package Files</a>
+          <a class="permalink" href="conversion.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go">converter.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/decode.go">decode.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/encode.go">encode.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go">meta.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go">scheme.go</a> </p>
+
+        
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="conversion.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="DefaultMetaFactory">DefaultMetaFactory</span> = <a href="conversion.html#SimpleMetaFactory">SimpleMetaFactory</a>{KindField: &#34;Kind&#34;, VersionField: &#34;APIVersion&#34;}</pre><p>
+DefaultMetaFactory is a default factory for versioning objects in JSON/YAML. The object
+in memory and in the default JSON serialization will use the &#34;kind&#34; and &#34;apiVersion&#34;
+fields.
+</p>
+
+        
+
+        
+        
+        
+          <h3 id="EnforcePtr">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L113">EnforcePtr</a> <a class="permalink" href="conversion.html#EnforcePtr">&para;</a></h3>
+          <pre class="funcdecl">func EnforcePtr(obj interface{}) (<a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Value">Value</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+EnforcePtr ensures that obj is a pointer of some sort. Returns a reflect.Value
+of the dereferenced pointer, ensuring that it is settable/addressable.
+Returns an error if this is not possible.
+</p>
+
+          
+  
+
+        
+          <h3 id="UpdateVersionAndKind">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L78">UpdateVersionAndKind</a> <a class="permalink" href="conversion.html#UpdateVersionAndKind">&para;</a></h3>
+          <pre class="funcdecl">func UpdateVersionAndKind(baseFields []<a href="http://godoc.org/builtin#string">string</a>, versionField, version, kindField, kind <a href="http://godoc.org/builtin#string">string</a>, obj interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UpdateVersionAndKind uses reflection to find and set the versionField and kindField fields
+on a pointer to a struct to version and kind. Provided as a convenience for others
+implementing MetaFactory. Pass an array to baseFields to check one or more nested structs
+for the named fields. The version field is treated as optional if it is not present in the struct.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Converter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L40">Converter</a> <a class="permalink" href="conversion.html#Converter">&para;</a></h3>
+          <pre>type Converter struct {
+
+    <span class="com">// If non-nil, will be called to print helpful debugging info. Quite verbose.</span>
+    <span id="Converter.Debug">Debug</span> <a href="conversion.html#DebugLogger">DebugLogger</a>
+
+    <span class="com">// NameFunc is called to retrieve the name of a type; this name is used for the</span>
+    <span class="com">// purpose of deciding whether two types match or not (i.e., will we attempt to</span>
+    <span class="com">// do a conversion). The default returns the go type name.</span>
+    <span id="Converter.NameFunc">NameFunc</span> func(t <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Type">Type</a>) <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Converter knows how to convert one type to another.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewConverter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L64">NewConverter</a> <a class="permalink" href="conversion.html#NewConverter">&para;</a></h4>
+            <pre class="funcdecl">func NewConverter() *<a href="conversion.html#Converter">Converter</a></pre><p>
+NewConverter creates a new Converter object.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Converter.Convert">func (*Converter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L251">Convert</a> <a class="permalink" href="conversion.html#Converter.Convert">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="conversion.html#Converter">Converter</a>) Convert(src, dest interface{}, flags <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a>, meta *<a href="conversion.html#Meta">Meta</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Convert will translate src to dest if it knows how. Both must be pointers.
+If no conversion func is registered and the default copying mechanism
+doesn&#39;t work on this type pair, an error will be returned.
+Read the comments on the various FieldMatchingFlags constants to understand
+what the &#39;flags&#39; parameter does.
+&#39;meta&#39; is given to allow you to pass information to conversion functions,
+it is not used by Convert() other than storing it in the scope.
+Not safe for objects with cyclic references!
+</p>
+
+            
+  
+
+          
+            <h4 id="Converter.Register">func (*Converter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L163">Register</a> <a class="permalink" href="conversion.html#Converter.Register">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="conversion.html#Converter">Converter</a>) Register(conversionFunc interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Register registers a conversion func with the Converter. conversionFunc must take
+three parameters: a pointer to the input type, a pointer to the output type, and
+a conversion.Scope (which should be used if recursive conversion calls are desired).
+It must return an error.
+</p>
+<p>
+Example:
+c.Register(func(in *Pod, out *v1beta1.Pod, s Scope) error { ... return nil })
+</p>
+
+            
+  
+
+          
+            <h4 id="Converter.SetStructFieldCopy">func (*Converter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L202">SetStructFieldCopy</a> <a class="permalink" href="conversion.html#Converter.SetStructFieldCopy">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="conversion.html#Converter">Converter</a>) SetStructFieldCopy(srcFieldType interface{}, srcFieldName <a href="http://godoc.org/builtin#string">string</a>, destFieldType interface{}, destFieldName <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetStructFieldCopy registers a correspondence. Whenever a struct field is encountered
+which has a type and name matching srcFieldType and srcFieldName, it wil be copied
+into the field in the destination struct matching destFieldType &amp; Name, if such a
+field exists.
+May be called multiple times, even for the same source field &amp; type--all applicable
+copies will be performed.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="DebugLogger">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L35">DebugLogger</a> <a class="permalink" href="conversion.html#DebugLogger">&para;</a></h3>
+          <pre>type DebugLogger interface {
+    <span id="DebugLogger.Logf">Logf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+}</pre><p>
+DebugLogger allows you to get debugging messages if necessary.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FieldMatchingFlags">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L214">FieldMatchingFlags</a> <a class="permalink" href="conversion.html#FieldMatchingFlags">&para;</a></h3>
+          <pre>type FieldMatchingFlags <a href="http://godoc.org/builtin#int">int</a></pre><p>
+FieldMatchingFlags contains a list of ways in which struct fields could be
+copied. These constants may be | combined.
+</p>
+
+          <pre>const (
+    <span class="com">// Loop through destination fields, search for matching source</span>
+    <span class="com">// field to copy it from. Source fields with no corresponding</span>
+    <span class="com">// destination field will be ignored. If SourceToDest is</span>
+    <span class="com">// specified, this flag is ignored. If niether is specified,</span>
+    <span class="com">// or no flags are passed, this flag is the default.</span>
+    <span id="DestFromSource">DestFromSource</span> <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a> = 0
+    <span class="com">// Loop through source fields, search for matching dest field</span>
+    <span class="com">// to copy it into. Destination fields with no corresponding</span>
+    <span class="com">// source field will be ignored.</span>
+    <span id="SourceToDest">SourceToDest</span> <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a> = 1 &lt;&lt; <a href="http://godoc.org/builtin#iota">iota</a>
+    <span class="com">// Don&#39;t treat it as an error if the corresponding source or</span>
+    <span class="com">// dest field can&#39;t be found.</span>
+    <span id="IgnoreMissingFields">IgnoreMissingFields</span>
+    <span class="com">// Don&#39;t require type names to match.</span>
+    <span id="AllowDifferentFieldTypeNames">AllowDifferentFieldTypeNames</span>
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FieldMatchingFlags.IsSet">func (FieldMatchingFlags) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L235">IsSet</a> <a class="permalink" href="conversion.html#FieldMatchingFlags.IsSet">&para;</a></h4>
+            <pre class="funcdecl">func (f <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a>) IsSet(flag <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsSet returns true if the given flag or combination of flags is set.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Meta">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L94">Meta</a> <a class="permalink" href="conversion.html#Meta">&para;</a></h3>
+          <pre>type Meta struct {
+    <span id="Meta.SrcVersion">SrcVersion</span>  <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Meta.DestVersion">DestVersion</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+Meta is supplied by Scheme, when it calls Convert.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="MetaFactory">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L28">MetaFactory</a> <a class="permalink" href="conversion.html#MetaFactory">&para;</a></h3>
+          <pre>type MetaFactory interface {
+    <span class="com">// Update sets the given version and kind onto the object.</span>
+    <span id="MetaFactory.Update">Update</span>(version, kind <a href="http://godoc.org/builtin#string">string</a>, obj interface{}) <a href="http://godoc.org/builtin#error">error</a>
+    <span class="com">// Interpret should return the version and kind of the wire-format of</span>
+    <span class="com">// the object.</span>
+    <span id="MetaFactory.Interpret">Interpret</span>(data []<a href="http://godoc.org/builtin#byte">byte</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+MetaFactory is used to store and retrieve the version and kind
+information for all objects in a scheme.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Scheme">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L25">Scheme</a> <a class="permalink" href="conversion.html#Scheme">&para;</a></h3>
+          <pre>type Scheme struct {
+
+    <span class="com">// Indent will cause the JSON output from Encode to be indented, iff it is true.</span>
+    <span id="Scheme.Indent">Indent</span> <a href="http://godoc.org/builtin#bool">bool</a>
+
+    <span class="com">// InternalVersion is the default internal version. It is recommended that</span>
+    <span class="com">// you use &#34;&#34; for the internal version.</span>
+    <span id="Scheme.InternalVersion">InternalVersion</span> <a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// MetaInsertionFactory is used to create an object to store and retrieve</span>
+    <span class="com">// the version and kind information for all objects. The default uses the</span>
+    <span class="com">// keys &#34;apiVersion&#34; and &#34;kind&#34; respectively.</span>
+    <span id="Scheme.MetaFactory">MetaFactory</span> <a href="conversion.html#MetaFactory">MetaFactory</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Scheme defines an entire encoding and decoding scheme.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewScheme">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L57">NewScheme</a> <a class="permalink" href="conversion.html#NewScheme">&para;</a></h4>
+            <pre class="funcdecl">func NewScheme() *<a href="conversion.html#Scheme">Scheme</a></pre><p>
+NewScheme manufactures a new scheme.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Scheme.AddConversionFuncs">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L186">AddConversionFuncs</a> <a class="permalink" href="conversion.html#Scheme.AddConversionFuncs">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) AddConversionFuncs(conversionFuncs ...interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+AddConversionFuncs adds functions to the list of conversion functions. The given
+functions should know how to convert between two of your API objects, or their
+sub-objects. We deduce how to call these functions from the types of their two
+parameters; see the comment for Converter.Register.
+</p>
+<p>
+Note that, if you need to copy sub-objects that didn&#39;t change, you can use the
+conversion.Scope object that will be passed to your conversion function.
+Additionally, all conversions started by Scheme will set the SrcVersion and
+DestVersion fields on the Meta object. Example:
+</p>
+<p>
+s.AddConversionFuncs(
+</p>
+<pre>func(in *InternalObject, out *ExternalObject, scope conversion.Scope) error {
+	// You can depend on Meta() being non-nil, and this being set to
+	// the source version, e.g., &#34;&#34;
+	s.Meta().SrcVersion
+	// You can depend on this being set to the destination version,
+	// e.g., &#34;v1beta1&#34;.
+	s.Meta().DestVersion
+	// Call scope.Convert to copy sub-fields.
+	s.Convert(&amp;in.SubFieldThatMoved, &amp;out.NewLocation.NewName, 0)
+	return nil
+},
+</pre>
+<p>
+)
+</p>
+<p>
+(For more detail about conversion functions, see Converter.Register&#39;s comment.)
+</p>
+<p>
+Also note that the default behavior, if you don&#39;t add a conversion function, is to
+sanely copy fields that have the same names and same type names. It&#39;s OK if the
+destination type has extra fields, but it must not remove any. So you only need to
+add conversion functions for things with changed/removed fields.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddKnownTypeWithName">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L112">AddKnownTypeWithName</a> <a class="permalink" href="conversion.html#Scheme.AddKnownTypeWithName">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) AddKnownTypeWithName(version, kind <a href="http://godoc.org/builtin#string">string</a>, obj interface{})</pre><p>
+AddKnownTypeWithName is like AddKnownTypes, but it lets you specify what this type should
+be encoded as. Useful for testing when you don&#39;t want to make multiple packages to define
+your structs.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddKnownTypes">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L88">AddKnownTypes</a> <a class="permalink" href="conversion.html#Scheme.AddKnownTypes">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) AddKnownTypes(version <a href="http://godoc.org/builtin#string">string</a>, types ...interface{})</pre><p>
+AddKnownTypes registers all types passed in &#39;types&#39; as being members of version &#39;version.
+Encode() will refuse objects unless their type has been registered with AddKnownTypes.
+All objects passed to types should be pointers to structs. The name that go reports for
+the struct becomes the &#34;kind&#34; field when encoding.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.AddStructFieldConversion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L200">AddStructFieldConversion</a> <a class="permalink" href="conversion.html#Scheme.AddStructFieldConversion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) AddStructFieldConversion(srcFieldType interface{}, srcFieldName <a href="http://godoc.org/builtin#string">string</a>, destFieldType interface{}, destFieldName <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+AddStructFieldConversion allows you to specify a mechanical copy for a moved
+or renamed struct field without writing an entire conversion function. See
+the comment in Converter.SetStructFieldCopy for parameter details.
+Call as many times as needed, even on the same fields.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Convert">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L210">Convert</a> <a class="permalink" href="conversion.html#Scheme.Convert">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) Convert(in, out interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Convert will attempt to convert in into out. Both must be pointers. For easy
+testing of conversion functions. Returns an error if the conversion isn&#39;t
+possible. You can call this with types that haven&#39;t been registered (for example,
+a to test conversion of types that are nested within registered types), but in
+that case, the conversion.Scope object passed to your conversion functions won&#39;t
+have SrcVersion or DestVersion fields set correctly in Meta().
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.ConvertToVersion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L225">ConvertToVersion</a> <a class="permalink" href="conversion.html#Scheme.ConvertToVersion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) ConvertToVersion(in interface{}, outVersion <a href="http://godoc.org/builtin#string">string</a>) (interface{}, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ConvertToVersion attempts to convert an input object to its matching Kind in another
+version within this scheme. Will return an error if the provided version does not
+contain the inKind (or a mapping by name defined with AddKnownTypeWithName).
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.DataVersionAndKind">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L272">DataVersionAndKind</a> <a class="permalink" href="conversion.html#Scheme.DataVersionAndKind">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) DataVersionAndKind(data []<a href="http://godoc.org/builtin#byte">byte</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+DataVersionAndKind will return the APIVersion and Kind of the given wire-format
+encoding of an API Object, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Decode">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/decode.go#L31">Decode</a> <a class="permalink" href="conversion.html#Scheme.Decode">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) Decode(data []<a href="http://godoc.org/builtin#byte">byte</a>) (interface{}, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Decode converts a YAML or JSON string back into a pointer to an api object.
+Deduces the type based upon the fields added by the MetaInsertionFactory
+technique. The object will be converted, if necessary, into the
+s.InternalVersion type before being returned. Decode will not decode
+objects without version set unless InternalVersion is also &#34;&#34;.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.DecodeInto">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/decode.go#L80">DecodeInto</a> <a class="permalink" href="conversion.html#Scheme.DecodeInto">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) DecodeInto(data []<a href="http://godoc.org/builtin#byte">byte</a>, obj interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DecodeInto parses a YAML or JSON string and stores it in obj. Returns an error
+if data.Kind is set and doesn&#39;t match the type of obj. Obj should be a
+pointer to an api type.
+If obj&#39;s version doesn&#39;t match that in data, an attempt will be made to convert
+data into obj&#39;s version.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.EncodeToVersion">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/encode.go#L52">EncodeToVersion</a> <a class="permalink" href="conversion.html#Scheme.EncodeToVersion">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) EncodeToVersion(obj interface{}, destVersion <a href="http://godoc.org/builtin#string">string</a>) (data []<a href="http://godoc.org/builtin#byte">byte</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+EncodeToVersion turns the given api object into an appropriate JSON string.
+Obj may be a pointer to a struct, or a struct. If a struct, a copy
+will be made, therefore it&#39;s recommended to pass a pointer to a
+struct. The type must have been registered.
+</p>
+<p>
+Memory/wire format differences:
+</p>
+<pre>* Having to keep track of the Kind and Version fields makes tests
+  very annoying, so the rule is that they are set only in wire format
+  (json), not when in native (memory) format. This is possible because
+  both pieces of information are implicit in the go typed object.
+   * An exception: note that, if there are embedded API objects of known
+     type, for example, PodList{... Items []Pod ...}, these embedded
+     objects must be of the same version of the object they are embedded
+     within, and their Version and Kind must both be empty.
+   * Note that the exception does not apply to a generic APIObject type
+     which recursively does Encode()/Decode(), and is capable of
+     expressing any API object.
+* Only versioned objects should be encoded. This means that, if you pass
+  a native object, Encode will convert it to a versioned object. For
+  example, an api.Pod will get converted to a v1beta1.Pod. However, if
+  you pass in an object that&#39;s already versioned (v1beta1.Pod), Encode
+  will not modify it.
+</pre>
+<p>
+The purpose of the above complex conversion behavior is to allow us to
+change the memory format yet not break compatibility with any stored
+objects, whether they be in our storage layer (e.g., etcd), or in user&#39;s
+config files.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.KnownTypes">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L132">KnownTypes</a> <a class="permalink" href="conversion.html#Scheme.KnownTypes">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) KnownTypes(version <a href="http://godoc.org/builtin#string">string</a>) map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Type">Type</a></pre><p>
+KnownTypes returns an array of the types that are known for a particular version.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.Log">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L71">Log</a> <a class="permalink" href="conversion.html#Scheme.Log">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) Log(l <a href="conversion.html#DebugLogger">DebugLogger</a>)</pre><p>
+Log sets a logger on the scheme. For test purposes only
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.NewObject">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L146">NewObject</a> <a class="permalink" href="conversion.html#Scheme.NewObject">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) NewObject(versionName, typeName <a href="http://godoc.org/builtin#string">string</a>) (interface{}, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewObject returns a new object of the given version and name,
+or an error if it hasn&#39;t been registered.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.ObjectVersionAndKind">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L278">ObjectVersionAndKind</a> <a class="permalink" href="conversion.html#Scheme.ObjectVersionAndKind">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) ObjectVersionAndKind(obj interface{}) (apiVersion, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ObjectVersionAndKind returns the API version and kind of the go object,
+or an error if it&#39;s not a pointer or is unregistered.
+</p>
+
+            
+  
+
+          
+            <h4 id="Scheme.SetVersionAndKind">func (*Scheme) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/scheme.go#L297">SetVersionAndKind</a> <a class="permalink" href="conversion.html#Scheme.SetVersionAndKind">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="conversion.html#Scheme">Scheme</a>) SetVersionAndKind(version, kind <a href="http://godoc.org/builtin#string">string</a>, obj interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetVersionAndKind sets the version and kind fields (with help from
+MetaInsertionFactory). Returns an error if this isn&#39;t possible. obj
+must be a pointer.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Scope">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/converter.go#L76">Scope</a> <a class="permalink" href="conversion.html#Scope">&para;</a></h3>
+          <pre>type Scope interface {
+    <span class="com">// Call Convert to convert sub-objects. Note that if you call it with your own exact</span>
+    <span class="com">// parameters, you&#39;ll run out of stack space before anything useful happens.</span>
+    <span id="Scope.Convert">Convert</span>(src, dest interface{}, flags <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span class="com">// SrcTags and DestTags contain the struct tags that src and dest had, respectively.</span>
+    <span class="com">// If the enclosing object was not a struct, then these will contain no tags, of course.</span>
+    <span id="Scope.SrcTag">SrcTag</span>() <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#StructTag">StructTag</a>
+    <span id="Scope.DestTag">DestTag</span>() <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#StructTag">StructTag</a>
+
+    <span class="com">// Flags returns the flags with which the conversion was started.</span>
+    <span id="Scope.Flags">Flags</span>() <a href="conversion.html#FieldMatchingFlags">FieldMatchingFlags</a>
+
+    <span class="com">// Meta returns any information originally passed to Convert.</span>
+    <span id="Scope.Meta">Meta</span>() *<a href="conversion.html#Meta">Meta</a>
+}</pre><p>
+Scope is passed to conversion funcs to allow them to continue an ongoing conversion.
+If multiple converters exist in the system, Scope will allow you to use the correct one
+from a conversion function--that is, the one your conversion function was called by.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="SimpleMetaFactory">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L45">SimpleMetaFactory</a> <a class="permalink" href="conversion.html#SimpleMetaFactory">&para;</a></h3>
+          <pre>type SimpleMetaFactory struct {
+    <span class="com">// The name of the API version field in memory of the struct</span>
+    <span id="SimpleMetaFactory.VersionField">VersionField</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// The name of the kind field in memory of the struct.</span>
+    <span id="SimpleMetaFactory.KindField">KindField</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Optional, if set will look in the named inline structs to find the fields to set.</span>
+    <span id="SimpleMetaFactory.BaseFields">BaseFields</span> []<a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+SimpleMetaFactory provides default methods for retrieving the type and version of objects
+that are identified with an &#34;apiVersion&#34; and &#34;kind&#34; fields in their JSON/YAML
+serialization. It may be parameterized with the names of the fields in memory, or an
+optional list of base structs to search for those fields in memory.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="SimpleMetaFactory.Interpret">func (SimpleMetaFactory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L56">Interpret</a> <a class="permalink" href="conversion.html#SimpleMetaFactory.Interpret">&para;</a></h4>
+            <pre class="funcdecl">func (<a href="conversion.html#SimpleMetaFactory">SimpleMetaFactory</a>) Interpret(data []<a href="http://godoc.org/builtin#byte">byte</a>) (version, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Interpret will return the APIVersion and Kind of the JSON/YAML wire-format
+encoding of an object, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="SimpleMetaFactory.Update">func (SimpleMetaFactory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/conversion/meta.go#L70">Update</a> <a class="permalink" href="conversion.html#SimpleMetaFactory.Update">&para;</a></h4>
+            <pre class="funcdecl">func (f <a href="conversion.html#SimpleMetaFactory">SimpleMetaFactory</a>) Update(version, kind <a href="http://godoc.org/builtin#string">string</a>, obj interface{}) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/conversion"></form>
+  <p>Package conversion imports <a href="conversion@imports.html">5 packages</a> (<a href="conversion@import-graph.html">graph</a>) and is imported by <a href="conversion@importers.html">7 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:39Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="conversion@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="conversion.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

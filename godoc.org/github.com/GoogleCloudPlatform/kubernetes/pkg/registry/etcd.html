@@ -1,0 +1,488 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>etcd - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package etcd">
+    <meta property="og:title" content="Package etcd">
+    <meta name="description" content="Package etcd provides etcd backend implementation for storing PodRegistry, ControllerRegistry and ServiceRegistry api objects.">
+    <meta name="twitter:description" content="Package etcd provides etcd backend implementation for storing PodRegistry, ControllerRegistry and ServiceRegistry api objects.">
+    <meta property="og:description" content="Package etcd provides etcd backend implementation for storing PodRegistry, ControllerRegistry and ServiceRegistry api objects.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../registry.html">registry</a><span class="text-muted">/</span><span class="text-muted">etcd</span>
+  
+  <span class="pull-right">
+    <a href="etcd.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="etcd.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package etcd</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/registry/etcd"</code>
+
+        <p>
+Package etcd provides etcd backend implementation for storing
+PodRegistry, ControllerRegistry and ServiceRegistry api objects.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="etcd.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="etcd.html#pkg-constants">Constants</a></li>
+          
+          <li><a href="etcd.html#MakeEtcdItemKey">func MakeEtcdItemKey(ctx api.Context, prefix string, id string) (string, error)</a></li><li><a href="etcd.html#MakeEtcdListKey">func MakeEtcdListKey(ctx api.Context, prefix string) string</a></li>
+          
+            <li><a href="etcd.html#Registry">type Registry</a></li>
+            <ul>
+            <li><a href="etcd.html#NewRegistry">func NewRegistry(helper tools.EtcdHelper, boundPodFactory pod.BoundPodFactory) *Registry</a></li>
+            <li><a href="etcd.html#Registry.ApplyBinding">func (r *Registry) ApplyBinding(ctx api.Context, binding *api.Binding) error</a></li><li><a href="etcd.html#Registry.CreateController">func (r *Registry) CreateController(ctx api.Context, controller *api.ReplicationController) error</a></li><li><a href="etcd.html#Registry.CreateMinion">func (r *Registry) CreateMinion(ctx api.Context, minion *api.Minion) error</a></li><li><a href="etcd.html#Registry.CreatePod">func (r *Registry) CreatePod(ctx api.Context, pod *api.Pod) error</a></li><li><a href="etcd.html#Registry.CreateService">func (r *Registry) CreateService(ctx api.Context, svc *api.Service) error</a></li><li><a href="etcd.html#Registry.DeleteController">func (r *Registry) DeleteController(ctx api.Context, controllerID string) error</a></li><li><a href="etcd.html#Registry.DeleteMinion">func (r *Registry) DeleteMinion(ctx api.Context, minionID string) error</a></li><li><a href="etcd.html#Registry.DeletePod">func (r *Registry) DeletePod(ctx api.Context, podID string) error</a></li><li><a href="etcd.html#Registry.DeleteService">func (r *Registry) DeleteService(ctx api.Context, name string) error</a></li><li><a href="etcd.html#Registry.GetController">func (r *Registry) GetController(ctx api.Context, controllerID string) (*api.ReplicationController, error)</a></li><li><a href="etcd.html#Registry.GetEndpoints">func (r *Registry) GetEndpoints(ctx api.Context, name string) (*api.Endpoints, error)</a></li><li><a href="etcd.html#Registry.GetMinion">func (r *Registry) GetMinion(ctx api.Context, minionID string) (*api.Minion, error)</a></li><li><a href="etcd.html#Registry.GetPod">func (r *Registry) GetPod(ctx api.Context, id string) (*api.Pod, error)</a></li><li><a href="etcd.html#Registry.GetService">func (r *Registry) GetService(ctx api.Context, name string) (*api.Service, error)</a></li><li><a href="etcd.html#Registry.ListControllers">func (r *Registry) ListControllers(ctx api.Context) (*api.ReplicationControllerList, error)</a></li><li><a href="etcd.html#Registry.ListEndpoints">func (r *Registry) ListEndpoints(ctx api.Context) (*api.EndpointsList, error)</a></li><li><a href="etcd.html#Registry.ListMinions">func (r *Registry) ListMinions(ctx api.Context) (*api.MinionList, error)</a></li><li><a href="etcd.html#Registry.ListPods">func (r *Registry) ListPods(ctx api.Context, selector labels.Selector) (*api.PodList, error)</a></li><li><a href="etcd.html#Registry.ListPodsPredicate">func (r *Registry) ListPodsPredicate(ctx api.Context, filter func(*api.Pod) bool) (*api.PodList, error)</a></li><li><a href="etcd.html#Registry.ListServices">func (r *Registry) ListServices(ctx api.Context) (*api.ServiceList, error)</a></li><li><a href="etcd.html#Registry.UpdateController">func (r *Registry) UpdateController(ctx api.Context, controller *api.ReplicationController) error</a></li><li><a href="etcd.html#Registry.UpdateEndpoints">func (r *Registry) UpdateEndpoints(ctx api.Context, endpoints *api.Endpoints) error</a></li><li><a href="etcd.html#Registry.UpdateMinion">func (r *Registry) UpdateMinion(ctx api.Context, minion *api.Minion) error</a></li><li><a href="etcd.html#Registry.UpdatePod">func (r *Registry) UpdatePod(ctx api.Context, pod *api.Pod) error</a></li><li><a href="etcd.html#Registry.UpdateService">func (r *Registry) UpdateService(ctx api.Context, svc *api.Service) error</a></li><li><a href="etcd.html#Registry.WatchControllers">func (r *Registry) WatchControllers(ctx api.Context, resourceVersion string) (watch.Interface, error)</a></li><li><a href="etcd.html#Registry.WatchEndpoints">func (r *Registry) WatchEndpoints(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li><li><a href="etcd.html#Registry.WatchPods">func (r *Registry) WatchPods(ctx api.Context, resourceVersion string, filter func(*api.Pod) bool) (watch.Interface, error)</a></li><li><a href="etcd.html#Registry.WatchServices">func (r *Registry) WatchServices(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/registry/etcd">Package Files</a>
+          <a class="permalink" href="etcd.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go">etcd.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="etcd.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span class="com">// PodPath is the path to pod resources in etcd</span>
+    <span id="PodPath">PodPath</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;/registry/pods&#34;
+    <span class="com">// ControllerPath is the path to controller resources in etcd</span>
+    <span id="ControllerPath">ControllerPath</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;/registry/controllers&#34;
+    <span class="com">// ServicePath is the path to service resources in etcd</span>
+    <span id="ServicePath">ServicePath</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;/registry/services/specs&#34;
+    <span class="com">// ServiceEndpointPath is the path to service endpoints resources in etcd</span>
+    <span id="ServiceEndpointPath">ServiceEndpointPath</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;/registry/services/endpoints&#34;
+)</pre>
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="MakeEtcdItemKey">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L76">MakeEtcdItemKey</a> <a class="permalink" href="etcd.html#MakeEtcdItemKey">&para;</a></h3>
+          <pre class="funcdecl">func MakeEtcdItemKey(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, prefix <a href="http://godoc.org/builtin#string">string</a>, id <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+MakeEtcdItemKey constructs etcd paths to a resource relative to prefix enforcing namespace rules.  If no namespace is on context, it errors.
+</p>
+
+          
+  
+
+        
+          <h3 id="MakeEtcdListKey">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L66">MakeEtcdListKey</a> <a class="permalink" href="etcd.html#MakeEtcdListKey">&para;</a></h3>
+          <pre class="funcdecl">func MakeEtcdListKey(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, prefix <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+MakeEtcdListKey constructs etcd paths to resource directories enforcing namespace rules
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Registry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L51">Registry</a> <a class="permalink" href="etcd.html#Registry">&para;</a></h3>
+          <pre>type Registry struct {
+    <a href="../tools.html">tools</a>.<a href="../tools.html#EtcdHelper">EtcdHelper</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Registry implements PodRegistry, ControllerRegistry, ServiceRegistry and MinionRegistry, backed by etcd.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRegistry">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L57">NewRegistry</a> <a class="permalink" href="etcd.html#NewRegistry">&para;</a></h4>
+            <pre class="funcdecl">func NewRegistry(helper <a href="../tools.html">tools</a>.<a href="../tools.html#EtcdHelper">EtcdHelper</a>, boundPodFactory <a href="pod.html">pod</a>.<a href="pod.html#BoundPodFactory">BoundPodFactory</a>) *<a href="etcd.html#Registry">Registry</a></pre><p>
+NewRegistry creates an etcd registry.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Registry.ApplyBinding">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L173">ApplyBinding</a> <a class="permalink" href="etcd.html#Registry.ApplyBinding">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ApplyBinding(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, binding *<a href="../api.html">api</a>.<a href="../api.html#Binding">Binding</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ApplyBinding implements binding&#39;s registry
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.CreateController">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L364">CreateController</a> <a class="permalink" href="etcd.html#Registry.CreateController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) CreateController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controller *<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+CreateController creates a new ReplicationController.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.CreateMinion">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L568">CreateMinion</a> <a class="permalink" href="etcd.html#Registry.CreateMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) CreateMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="Registry.CreatePod">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L160">CreatePod</a> <a class="permalink" href="etcd.html#Registry.CreatePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) CreatePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, pod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+CreatePod creates a pod based on a specification.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.CreateService">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L411">CreateService</a> <a class="permalink" href="etcd.html#Registry.CreateService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) CreateService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, svc *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+CreateService creates a new Service.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.DeleteController">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L384">DeleteController</a> <a class="permalink" href="etcd.html#Registry.DeleteController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) DeleteController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controllerID <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DeleteController deletes a ReplicationController specified by its ID.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.DeleteMinion">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L590">DeleteMinion</a> <a class="permalink" href="etcd.html#Registry.DeleteMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) DeleteMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minionID <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="Registry.DeletePod">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L276">DeletePod</a> <a class="permalink" href="etcd.html#Registry.DeletePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) DeletePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, podID <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DeletePod deletes an existing pod specified by its ID.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.DeleteService">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L459">DeleteService</a> <a class="permalink" href="etcd.html#Registry.DeleteService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) DeleteService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DeleteService deletes a Service specified by its name.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.GetController">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L350">GetController</a> <a class="permalink" href="etcd.html#Registry.GetController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) GetController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controllerID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetController gets a specific ReplicationController specified by its ID.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.GetEndpoints">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L435">GetEndpoints</a> <a class="permalink" href="etcd.html#Registry.GetEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) GetEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetEndpoints obtains the endpoints for the service identified by &#39;name&#39;.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.GetMinion">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L580">GetMinion</a> <a class="permalink" href="etcd.html#Registry.GetMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) GetMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minionID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="Registry.GetPod">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L143">GetPod</a> <a class="permalink" href="etcd.html#Registry.GetPod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) GetPod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetPod gets a specific pod specified by its ID.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.GetService">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L421">GetService</a> <a class="permalink" href="etcd.html#Registry.GetService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) GetService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetService obtains a Service specified by its name.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.ListControllers">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L322">ListControllers</a> <a class="permalink" href="etcd.html#Registry.ListControllers">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListControllers(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ReplicationControllerList">ReplicationControllerList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListControllers obtains a list of ReplicationControllers.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.ListEndpoints">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L514">ListEndpoints</a> <a class="permalink" href="etcd.html#Registry.ListEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListEndpoints obtains a list of Services.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.ListMinions">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L562">ListMinions</a> <a class="permalink" href="etcd.html#Registry.ListMinions">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListMinions(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#MinionList">MinionList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="Registry.ListPods">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L100">ListPods</a> <a class="permalink" href="etcd.html#Registry.ListPods">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListPods(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, selector <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>) (*<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListPods obtains a list of pods with labels that match selector.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.ListPodsPredicate">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L107">ListPodsPredicate</a> <a class="permalink" href="etcd.html#Registry.ListPodsPredicate">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListPodsPredicate(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, filter func(*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListPodsPredicate obtains a list of pods that match filter.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.ListServices">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L404">ListServices</a> <a class="permalink" href="etcd.html#Registry.ListServices">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) ListServices(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListServices obtains a list of Services.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.UpdateController">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L374">UpdateController</a> <a class="permalink" href="etcd.html#Registry.UpdateController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) UpdateController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controller *<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UpdateController replaces an existing ReplicationController.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.UpdateEndpoints">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L522">UpdateEndpoints</a> <a class="permalink" href="etcd.html#Registry.UpdateEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) UpdateEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, endpoints *<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UpdateEndpoints update Endpoints of a Service.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.UpdateMinion">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L574">UpdateMinion</a> <a class="permalink" href="etcd.html#Registry.UpdateMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) UpdateMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="Registry.UpdatePod">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L230">UpdatePod</a> <a class="permalink" href="etcd.html#Registry.UpdatePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) UpdatePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, pod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="Registry.UpdateService">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L482">UpdateService</a> <a class="permalink" href="etcd.html#Registry.UpdateService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) UpdateService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, svc *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UpdateService replaces an existing Service.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.WatchControllers">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L330">WatchControllers</a> <a class="permalink" href="etcd.html#Registry.WatchControllers">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) WatchControllers(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WatchControllers begins watching for new, changed, or deleted controllers.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.WatchEndpoints">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L537">WatchEndpoints</a> <a class="permalink" href="etcd.html#Registry.WatchEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) WatchEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WatchEndpoints begins watching for new, changed, or deleted endpoint configurations.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.WatchPods">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L125">WatchPods</a> <a class="permalink" href="etcd.html#Registry.WatchPods">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) WatchPods(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>, filter func(*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#bool">bool</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WatchPods begins watching for new, changed, or deleted pods.
+</p>
+
+            
+  
+
+          
+            <h4 id="Registry.WatchServices">func (*Registry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/etcd/etcd.go#L492">WatchServices</a> <a class="permalink" href="etcd.html#Registry.WatchServices">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="etcd.html#Registry">Registry</a>) WatchServices(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WatchServices begins watching for new, changed, or deleted service configurations.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/registry/etcd"></form>
+  <p>Package etcd imports <a href="etcd@imports.html">12 packages</a> (<a href="etcd@import-graph.html">graph</a>) and is imported by <a href="etcd@importers.html">7 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:04Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="etcd@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="etcd.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

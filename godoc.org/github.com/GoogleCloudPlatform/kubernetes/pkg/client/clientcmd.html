@@ -1,0 +1,419 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>clientcmd - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package clientcmd">
+    <meta property="og:title" content="Package clientcmd">
+    <meta name="description" content="Package cmd provides one stop shopping for a command line executable to bind the correct flags, build the client config, and create a working client.">
+    <meta name="twitter:description" content="Package cmd provides one stop shopping for a command line executable to bind the correct flags, build the client config, and create a working client.">
+    <meta property="og:description" content="Package cmd provides one stop shopping for a command line executable to bind the correct flags, build the client config, and create a working client.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../client.html">client</a><span class="text-muted">/</span><span class="text-muted">clientcmd</span>
+  
+  <span class="pull-right">
+    <a href="clientcmd.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="clientcmd.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package clientcmd</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/client/clientcmd"</code>
+
+        <p>
+Package cmd provides one stop shopping for a command line executable to bind the correct flags,
+build the client config, and create a working client. The code for usage looks like this:
+</p>
+<pre>clientBuilder := clientcmd.NewBuilder(clientcmd.NewDefaultAuthLoader())
+clientBuilder.BindFlags(cmds.PersistentFlags())
+apiClient, err := clientBuilder.Client()</pre>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="clientcmd.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="clientcmd.html#pkg-constants">Constants</a></li>
+          
+          
+          
+            <li><a href="clientcmd.html#AuthLoader">type AuthLoader</a></li>
+            <ul>
+            <li><a href="clientcmd.html#NewDefaultAuthLoader">func NewDefaultAuthLoader() AuthLoader</a></li><li><a href="clientcmd.html#NewPromptingAuthLoader">func NewPromptingAuthLoader(reader io.Reader) AuthLoader</a></li>
+            
+            </ul>
+          
+            <li><a href="clientcmd.html#BoolFlag">type BoolFlag</a></li>
+            <ul>
+            
+            <li><a href="clientcmd.html#BoolFlag.Provided">func (flag *BoolFlag) Provided() bool</a></li><li><a href="clientcmd.html#BoolFlag.Set">func (flag *BoolFlag) Set(value string) error</a></li><li><a href="clientcmd.html#BoolFlag.SetDefault">func (flag *BoolFlag) SetDefault(value bool)</a></li><li><a href="clientcmd.html#BoolFlag.String">func (flag *BoolFlag) String() string</a></li><li><a href="clientcmd.html#BoolFlag.Type">func (flag *BoolFlag) Type() string</a></li>
+            </ul>
+          
+            <li><a href="clientcmd.html#Builder">type Builder</a></li>
+            <ul>
+            <li><a href="clientcmd.html#NewBuilder">func NewBuilder(authLoader AuthLoader) Builder</a></li>
+            
+            </ul>
+          
+            <li><a href="clientcmd.html#FlagProvider">type FlagProvider</a></li>
+            
+            
+            
+            
+          
+            <li><a href="clientcmd.html#StringFlag">type StringFlag</a></li>
+            <ul>
+            
+            <li><a href="clientcmd.html#StringFlag.Provided">func (flag *StringFlag) Provided() bool</a></li><li><a href="clientcmd.html#StringFlag.Set">func (flag *StringFlag) Set(value string) error</a></li><li><a href="clientcmd.html#StringFlag.SetDefault">func (flag *StringFlag) SetDefault(value string)</a></li><li><a href="clientcmd.html#StringFlag.String">func (flag *StringFlag) String() string</a></li><li><a href="clientcmd.html#StringFlag.Type">func (flag *StringFlag) Type() string</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/client/clientcmd">Package Files</a>
+          <a class="permalink" href="clientcmd.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/auth_loaders.go">auth_loaders.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/client_builder.go">client_builder.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go">provided_flags.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="clientcmd.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span id="FlagApiServer">FlagApiServer</span>       = &#34;server&#34;
+    <span id="FlagMatchApiVersion">FlagMatchApiVersion</span> = &#34;match-server-version&#34;
+    <span id="FlagApiVersion">FlagApiVersion</span>      = &#34;api-version&#34;
+    <span id="FlagAuthPath">FlagAuthPath</span>        = &#34;auth-path&#34;
+    <span id="FlagInsecure">FlagInsecure</span>        = &#34;insecure-skip-tls-verify&#34;
+    <span id="FlagCertFile">FlagCertFile</span>        = &#34;client-certificate&#34;
+    <span id="FlagKeyFile">FlagKeyFile</span>         = &#34;client-key&#34;
+    <span id="FlagCAFile">FlagCAFile</span>          = &#34;certificate-authority&#34;
+    <span id="FlagBearerToken">FlagBearerToken</span>     = &#34;token&#34;
+)</pre>
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="AuthLoader">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/auth_loaders.go#L30">AuthLoader</a> <a class="permalink" href="clientcmd.html#AuthLoader">&para;</a></h3>
+          <pre>type AuthLoader interface {
+    <span class="com">// LoadAuth takes a path to a config file and can then do anything it needs in order to return a valid clientauth.Info</span>
+    <span id="AuthLoader.LoadAuth">LoadAuth</span>(path <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../clientauth.html">clientauth</a>.<a href="../clientauth.html#Info">Info</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+AuthLoaders are used to build clientauth.Info objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewDefaultAuthLoader">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/auth_loaders.go#L80">NewDefaultAuthLoader</a> <a class="permalink" href="clientcmd.html#NewDefaultAuthLoader">&para;</a></h4>
+            <pre class="funcdecl">func NewDefaultAuthLoader() <a href="clientcmd.html#AuthLoader">AuthLoader</a></pre><p>
+NewDefaultAuthLoader returns a default implementation of an AuthLoader that only reads from a config file
+</p>
+
+            
+  
+
+          
+            <h4 id="NewPromptingAuthLoader">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/auth_loaders.go#L75">NewPromptingAuthLoader</a> <a class="permalink" href="clientcmd.html#NewPromptingAuthLoader">&para;</a></h4>
+            <pre class="funcdecl">func NewPromptingAuthLoader(reader <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Reader">Reader</a>) <a href="clientcmd.html#AuthLoader">AuthLoader</a></pre><p>
+NewDefaultAuthLoader is an AuthLoader that parses an AuthInfo object from a file path. It prompts user and creates file if it doesn&#39;t exist.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="BoolFlag">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L66">BoolFlag</a> <a class="permalink" href="clientcmd.html#BoolFlag">&para;</a></h3>
+          <pre>type BoolFlag struct {
+    <span id="BoolFlag.Default">Default</span>     <a href="http://godoc.org/builtin#bool">bool</a>
+    <span id="BoolFlag.Value">Value</span>       <a href="http://godoc.org/builtin#bool">bool</a>
+    <span id="BoolFlag.WasProvided">WasProvided</span> <a href="http://godoc.org/builtin#bool">bool</a>
+}</pre><p>
+BoolFlag implements FlagProvider
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="BoolFlag.Provided">func (*BoolFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L94">Provided</a> <a class="permalink" href="clientcmd.html#BoolFlag.Provided">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#BoolFlag">BoolFlag</a>) Provided() <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="BoolFlag.Set">func (*BoolFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L78">Set</a> <a class="permalink" href="clientcmd.html#BoolFlag.Set">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#BoolFlag">BoolFlag</a>) Set(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="BoolFlag.SetDefault">func (*BoolFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L73">SetDefault</a> <a class="permalink" href="clientcmd.html#BoolFlag.SetDefault">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#BoolFlag">BoolFlag</a>) SetDefault(value <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+SetDefault sets a default value for a flag while keeping Provided() false
+</p>
+
+            
+  
+
+          
+            <h4 id="BoolFlag.String">func (*BoolFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L98">String</a> <a class="permalink" href="clientcmd.html#BoolFlag.String">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#BoolFlag">BoolFlag</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="BoolFlag.Type">func (*BoolFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L90">Type</a> <a class="permalink" href="clientcmd.html#BoolFlag.Type">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#BoolFlag">BoolFlag</a>) Type() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="Builder">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/client_builder.go#L33">Builder</a> <a class="permalink" href="clientcmd.html#Builder">&para;</a></h3>
+          <pre>type Builder interface {
+    <span class="com">// BindFlags must bind and keep track of all the flags required to build a client config object</span>
+    <span id="Builder.BindFlags">BindFlags</span>(flags *<a href="http://godoc.org/github.com/spf13/pflag">pflag</a>.<a href="http://godoc.org/github.com/spf13/pflag#FlagSet">FlagSet</a>)
+    <span class="com">// Config uses the values of the bound flags and builds a complete client config</span>
+    <span id="Builder.Config">Config</span>() (*<a href="../client.html">client</a>.<a href="../client.html#Config">Config</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// Client calls BuildConfig under the covers and uses that config to return a client</span>
+    <span id="Builder.Client">Client</span>() (*<a href="../client.html">client</a>.<a href="../client.html#Client">Client</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Builder are used to bind and interpret command line flags to make it easy to get an api server client
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewBuilder">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/client_builder.go#L64">NewBuilder</a> <a class="permalink" href="clientcmd.html#NewBuilder">&para;</a></h4>
+            <pre class="funcdecl">func NewBuilder(authLoader <a href="clientcmd.html#AuthLoader">AuthLoader</a>) <a href="clientcmd.html#Builder">Builder</a></pre><p>
+NewBuilder returns a valid Builder that uses the passed authLoader.  If authLoader is nil, the NewDefaultAuthLoader is used.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="FlagProvider">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L27">FlagProvider</a> <a class="permalink" href="clientcmd.html#FlagProvider">&para;</a></h3>
+          <pre>type FlagProvider interface {
+    <span class="com">// Provided returns true iff .Set was called on this flag</span>
+    <span id="FlagProvider.Provided">Provided</span>() <a href="http://godoc.org/builtin#bool">bool</a>
+    <a href="http://godoc.org/github.com/spf13/pflag">pflag</a>.<a href="http://godoc.org/github.com/spf13/pflag#Value">Value</a>
+}</pre><p>
+FlagProvider adds a check for whether .Set was called on this flag variable
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="StringFlag">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L34">StringFlag</a> <a class="permalink" href="clientcmd.html#StringFlag">&para;</a></h3>
+          <pre>type StringFlag struct {
+    <span id="StringFlag.Default">Default</span>     <a href="http://godoc.org/builtin#string">string</a>
+    <span id="StringFlag.Value">Value</span>       <a href="http://godoc.org/builtin#string">string</a>
+    <span id="StringFlag.WasProvided">WasProvided</span> <a href="http://godoc.org/builtin#bool">bool</a>
+}</pre><p>
+StringFlag implements FlagProvider
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="StringFlag.Provided">func (*StringFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L57">Provided</a> <a class="permalink" href="clientcmd.html#StringFlag.Provided">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#StringFlag">StringFlag</a>) Provided() <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="StringFlag.Set">func (*StringFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L46">Set</a> <a class="permalink" href="clientcmd.html#StringFlag.Set">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#StringFlag">StringFlag</a>) Set(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="StringFlag.SetDefault">func (*StringFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L41">SetDefault</a> <a class="permalink" href="clientcmd.html#StringFlag.SetDefault">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#StringFlag">StringFlag</a>) SetDefault(value <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+SetDefault sets a default value for a flag while keeping Provided() false
+</p>
+
+            
+  
+
+          
+            <h4 id="StringFlag.String">func (*StringFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L61">String</a> <a class="permalink" href="clientcmd.html#StringFlag.String">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#StringFlag">StringFlag</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="StringFlag.Type">func (*StringFlag) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/clientcmd/provided_flags.go#L53">Type</a> <a class="permalink" href="clientcmd.html#StringFlag.Type">&para;</a></h4>
+            <pre class="funcdecl">func (flag *<a href="clientcmd.html#StringFlag">StringFlag</a>) Type() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/client/clientcmd"></form>
+  <p>Package clientcmd imports <a href="clientcmd@imports.html">12 packages</a> (<a href="clientcmd@import-graph.html">graph</a>) and is imported by <a href="clientcmd@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:25Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="clientcmd@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="clientcmd.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

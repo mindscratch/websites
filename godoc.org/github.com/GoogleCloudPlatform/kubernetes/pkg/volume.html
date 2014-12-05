@@ -1,0 +1,579 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>volume - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package volume">
+    <meta property="og:title" content="Package volume">
+    <meta name="description" content="Package volume includes internal representations of external volume types as well as utility methods required to mount/unmount volumes to kubelets.">
+    <meta name="twitter:description" content="Package volume includes internal representations of external volume types as well as utility methods required to mount/unmount volumes to kubelets.">
+    <meta property="og:description" content="Package volume includes internal representations of external volume types as well as utility methods required to mount/unmount volumes to kubelets.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">volume</span>
+  
+  <span class="pull-right">
+    <a href="volume.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="volume.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package volume</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/volume"</code>
+
+        <p>
+Package volume includes internal representations of external volume types
+as well as utility methods required to mount/unmount volumes to kubelets.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="volume.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="volume.html#pkg-constants">Constants</a></li>
+          <li><a href="volume.html#pkg-variables">Variables</a></li>
+          <li><a href="volume.html#GetCurrentVolumes">func GetCurrentVolumes(rootDirectory string) map[string]Cleaner</a></li>
+          
+            <li><a href="volume.html#Builder">type Builder</a></li>
+            <ul>
+            <li><a href="volume.html#CreateVolumeBuilder">func CreateVolumeBuilder(volume *api.Volume, podID string, rootDir string) (Builder, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="volume.html#Cleaner">type Cleaner</a></li>
+            <ul>
+            <li><a href="volume.html#CreateVolumeCleaner">func CreateVolumeCleaner(kind string, name string, podID string, rootDir string) (Cleaner, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="volume.html#DiskMounter">type DiskMounter</a></li>
+            <ul>
+            
+            <li><a href="volume.html#DiskMounter.Mount">func (mounter *DiskMounter) Mount(source string, target string, fstype string, flags uintptr, data string) error</a></li><li><a href="volume.html#DiskMounter.RefCount">func (mounter *DiskMounter) RefCount(mount Interface) (string, int, error)</a></li><li><a href="volume.html#DiskMounter.Unmount">func (mounter *DiskMounter) Unmount(target string, flags int) error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#EmptyDir">type EmptyDir</a></li>
+            <ul>
+            
+            <li><a href="volume.html#EmptyDir.GetPath">func (emptyDir *EmptyDir) GetPath() string</a></li><li><a href="volume.html#EmptyDir.SetUp">func (emptyDir *EmptyDir) SetUp() error</a></li><li><a href="volume.html#EmptyDir.TearDown">func (emptyDir *EmptyDir) TearDown() error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#GCEDiskUtil">type GCEDiskUtil</a></li>
+            <ul>
+            
+            <li><a href="volume.html#GCEDiskUtil.AttachDisk">func (util *GCEDiskUtil) AttachDisk(GCEPD *GCEPersistentDisk) error</a></li><li><a href="volume.html#GCEDiskUtil.DetachDisk">func (util *GCEDiskUtil) DetachDisk(GCEPD *GCEPersistentDisk, devicePath string) error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#GCEPersistentDisk">type GCEPersistentDisk</a></li>
+            <ul>
+            
+            <li><a href="volume.html#GCEPersistentDisk.GetPath">func (PD *GCEPersistentDisk) GetPath() string</a></li><li><a href="volume.html#GCEPersistentDisk.SetUp">func (PD *GCEPersistentDisk) SetUp() error</a></li><li><a href="volume.html#GCEPersistentDisk.TearDown">func (PD *GCEPersistentDisk) TearDown() error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#GitDir">type GitDir</a></li>
+            <ul>
+            
+            <li><a href="volume.html#GitDir.ExecCommand">func (g *GitDir) ExecCommand(command string, args []string, dir string) ([]byte, error)</a></li><li><a href="volume.html#GitDir.GetPath">func (g *GitDir) GetPath() string</a></li><li><a href="volume.html#GitDir.SetUp">func (g *GitDir) SetUp() error</a></li><li><a href="volume.html#GitDir.TearDown">func (g *GitDir) TearDown() error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#HostDir">type HostDir</a></li>
+            <ul>
+            
+            <li><a href="volume.html#HostDir.GetPath">func (hostVol *HostDir) GetPath() string</a></li><li><a href="volume.html#HostDir.SetUp">func (hostVol *HostDir) SetUp() error</a></li>
+            </ul>
+          
+            <li><a href="volume.html#Interface">type Interface</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/volume">Package Files</a>
+          <a class="permalink" href="volume.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/gce_util.go">gce_util.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/mounter_linux.go">mounter_linux.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go">volume.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="volume.html#pkg-constants">&para;</a></h3>
+          <pre>const <span id="MOUNT_MS_BIND">MOUNT_MS_BIND</span> = <a href="http://godoc.org/syscall">syscall</a>.<a href="http://godoc.org/syscall#MS_BIND">MS_BIND</a></pre><pre>const <span id="MOUNT_MS_RDONLY">MOUNT_MS_RDONLY</span> = <a href="http://godoc.org/syscall">syscall</a>.<a href="http://godoc.org/syscall#MS_RDONLY">MS_RDONLY</a></pre>
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="volume.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="ErrUnsupportedVolumeType">ErrUnsupportedVolumeType</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;unsupported volume type&#34;)</pre>
+        
+
+        
+        
+        
+          <h3 id="GetCurrentVolumes">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L388">GetCurrentVolumes</a> <a class="permalink" href="volume.html#GetCurrentVolumes">&para;</a></h3>
+          <pre class="funcdecl">func GetCurrentVolumes(rootDirectory <a href="http://godoc.org/builtin#string">string</a>) map[<a href="http://godoc.org/builtin#string">string</a>]<a href="volume.html#Cleaner">Cleaner</a></pre><p>
+GetCurrentVolumes examines directory structure to determine volumes that are
+presently active and mounted. Returns a map of Cleaner types.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Builder">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L42">Builder</a> <a class="permalink" href="volume.html#Builder">&para;</a></h3>
+          <pre>type Builder interface {
+    <span class="com">// Uses Interface to provide the path for Docker binds.</span>
+    <a href="volume.html#Interface">Interface</a>
+    <span class="com">// SetUp prepares and mounts/unpacks the volume to a directory path.</span>
+    <span id="Builder.SetUp">SetUp</span>() <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+Builder interface provides method to set up/mount the volume.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="CreateVolumeBuilder">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L335">CreateVolumeBuilder</a> <a class="permalink" href="volume.html#CreateVolumeBuilder">&para;</a></h4>
+            <pre class="funcdecl">func CreateVolumeBuilder(volume *<a href="api.html">api</a>.<a href="api.html#Volume">Volume</a>, podID <a href="http://godoc.org/builtin#string">string</a>, rootDir <a href="http://godoc.org/builtin#string">string</a>) (<a href="volume.html#Builder">Builder</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+CreateVolumeBuilder returns a Builder capable of mounting a volume described by an
+*api.Volume, or an error.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="Cleaner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L50">Cleaner</a> <a class="permalink" href="volume.html#Cleaner">&para;</a></h3>
+          <pre>type Cleaner interface {
+    <span class="com">// TearDown unmounts the volume and removes traces of the SetUp procedure.</span>
+    <span id="Cleaner.TearDown">TearDown</span>() <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+Cleaner interface provides method to cleanup/unmount the volumes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="CreateVolumeCleaner">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L364">CreateVolumeCleaner</a> <a class="permalink" href="volume.html#CreateVolumeCleaner">&para;</a></h4>
+            <pre class="funcdecl">func CreateVolumeCleaner(kind <a href="http://godoc.org/builtin#string">string</a>, name <a href="http://godoc.org/builtin#string">string</a>, podID <a href="http://godoc.org/builtin#string">string</a>, rootDir <a href="http://godoc.org/builtin#string">string</a>) (<a href="volume.html#Cleaner">Cleaner</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+CreateVolumeCleaner returns a Cleaner capable of tearing down a volume.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="DiskMounter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/mounter_linux.go#L33">DiskMounter</a> <a class="permalink" href="volume.html#DiskMounter">&para;</a></h3>
+          <pre>type DiskMounter struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="DiskMounter.Mount">func (*DiskMounter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/mounter_linux.go#L36">Mount</a> <a class="permalink" href="volume.html#DiskMounter.Mount">&para;</a></h4>
+            <pre class="funcdecl">func (mounter *<a href="volume.html#DiskMounter">DiskMounter</a>) Mount(source <a href="http://godoc.org/builtin#string">string</a>, target <a href="http://godoc.org/builtin#string">string</a>, fstype <a href="http://godoc.org/builtin#string">string</a>, flags <a href="http://godoc.org/builtin#uintptr">uintptr</a>, data <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Wraps syscall.Mount()
+</p>
+
+            
+  
+
+          
+            <h4 id="DiskMounter.RefCount">func (*DiskMounter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/mounter_linux.go#L49">RefCount</a> <a class="permalink" href="volume.html#DiskMounter.RefCount">&para;</a></h4>
+            <pre class="funcdecl">func (mounter *<a href="volume.html#DiskMounter">DiskMounter</a>) RefCount(mount <a href="volume.html#Interface">Interface</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#int">int</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Examines /proc/mounts to find the source device of the PD resource and the
+number of references to that device. Returns both the full device path under
+the /dev tree and the number of references.
+</p>
+
+            
+  
+
+          
+            <h4 id="DiskMounter.Unmount">func (*DiskMounter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/mounter_linux.go#L42">Unmount</a> <a class="permalink" href="volume.html#DiskMounter.Unmount">&para;</a></h4>
+            <pre class="funcdecl">func (mounter *<a href="volume.html#DiskMounter">DiskMounter</a>) Unmount(target <a href="http://godoc.org/builtin#string">string</a>, flags <a href="http://godoc.org/builtin#int">int</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Wraps syscall.Unmount()
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="EmptyDir">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L165">EmptyDir</a> <a class="permalink" href="volume.html#EmptyDir">&para;</a></h3>
+          <pre>type EmptyDir struct {
+    <span id="EmptyDir.Name">Name</span>    <a href="http://godoc.org/builtin#string">string</a>
+    <span id="EmptyDir.PodID">PodID</span>   <a href="http://godoc.org/builtin#string">string</a>
+    <span id="EmptyDir.RootDir">RootDir</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+EmptyDir volumes are temporary directories exposed to the pod.
+These do not persist beyond the lifetime of a pod.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="EmptyDir.GetPath">func (*EmptyDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L177">GetPath</a> <a class="permalink" href="volume.html#EmptyDir.GetPath">&para;</a></h4>
+            <pre class="funcdecl">func (emptyDir *<a href="volume.html#EmptyDir">EmptyDir</a>) GetPath() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="EmptyDir.SetUp">func (*EmptyDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L172">SetUp</a> <a class="permalink" href="volume.html#EmptyDir.SetUp">&para;</a></h4>
+            <pre class="funcdecl">func (emptyDir *<a href="volume.html#EmptyDir">EmptyDir</a>) SetUp() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetUp creates new directory.
+</p>
+
+            
+  
+
+          
+            <h4 id="EmptyDir.TearDown">func (*EmptyDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L194">TearDown</a> <a class="permalink" href="volume.html#EmptyDir.TearDown">&para;</a></h4>
+            <pre class="funcdecl">func (emptyDir *<a href="volume.html#EmptyDir">EmptyDir</a>) TearDown() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+TearDown simply deletes everything in the directory.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="GCEDiskUtil">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/gce_util.go#L37">GCEDiskUtil</a> <a class="permalink" href="volume.html#GCEDiskUtil">&para;</a></h3>
+          <pre>type GCEDiskUtil struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="GCEDiskUtil.AttachDisk">func (*GCEDiskUtil) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/gce_util.go#L41">AttachDisk</a> <a class="permalink" href="volume.html#GCEDiskUtil.AttachDisk">&para;</a></h4>
+            <pre class="funcdecl">func (util *<a href="volume.html#GCEDiskUtil">GCEDiskUtil</a>) AttachDisk(GCEPD *<a href="volume.html#GCEPersistentDisk">GCEPersistentDisk</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Attaches a disk specified by a volume.GCEPersistentDisk to the current kubelet.
+Mounts the disk to it&#39;s global path.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCEDiskUtil.DetachDisk">func (*GCEDiskUtil) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/gce_util.go#L111">DetachDisk</a> <a class="permalink" href="volume.html#GCEDiskUtil.DetachDisk">&para;</a></h4>
+            <pre class="funcdecl">func (util *<a href="volume.html#GCEDiskUtil">GCEDiskUtil</a>) DetachDisk(GCEPD *<a href="volume.html#GCEPersistentDisk">GCEPersistentDisk</a>, devicePath <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Unmounts the device and detaches the disk from the kubelet&#39;s host machine.
+Expects a GCE device path symlink. Ex: /dev/disk/by-id/google-mydisk-part1
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="GCEPersistentDisk">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L213">GCEPersistentDisk</a> <a class="permalink" href="volume.html#GCEPersistentDisk">&para;</a></h3>
+          <pre>type GCEPersistentDisk struct {
+    <span id="GCEPersistentDisk.Name">Name</span>    <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GCEPersistentDisk.PodID">PodID</span>   <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GCEPersistentDisk.RootDir">RootDir</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Unique identifier of the PD, used to find the disk resource in the provider.</span>
+    <span id="GCEPersistentDisk.PDName">PDName</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Filesystem type, optional.</span>
+    <span id="GCEPersistentDisk.FSType">FSType</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Specifies the partition to mount</span>
+    <span id="GCEPersistentDisk.Partition">Partition</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Specifies whether the disk will be attached as ReadOnly.</span>
+    <span id="GCEPersistentDisk.ReadOnly">ReadOnly</span> <a href="http://godoc.org/builtin#bool">bool</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+GCEPersistentDisk volumes are disk resources provided by Google Compute Engine
+that are attached to the kubelet&#39;s host machine and exposed to the pod.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="GCEPersistentDisk.GetPath">func (*GCEPersistentDisk) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L231">GetPath</a> <a class="permalink" href="volume.html#GCEPersistentDisk.GetPath">&para;</a></h4>
+            <pre class="funcdecl">func (PD *<a href="volume.html#GCEPersistentDisk">GCEPersistentDisk</a>) GetPath() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="GCEPersistentDisk.SetUp">func (*GCEPersistentDisk) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L236">SetUp</a> <a class="permalink" href="volume.html#GCEPersistentDisk.SetUp">&para;</a></h4>
+            <pre class="funcdecl">func (PD *<a href="volume.html#GCEPersistentDisk">GCEPersistentDisk</a>) SetUp() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Attaches the disk and bind mounts to the volume path.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCEPersistentDisk.TearDown">func (*GCEPersistentDisk) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L267">TearDown</a> <a class="permalink" href="volume.html#GCEPersistentDisk.TearDown">&para;</a></h4>
+            <pre class="funcdecl">func (PD *<a href="volume.html#GCEPersistentDisk">GCEPersistentDisk</a>) TearDown() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Unmounts the bind mount, and detaches the disk only if the PD
+resource was the last reference to that disk on the kubelet.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="GitDir">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L91">GitDir</a> <a class="permalink" href="volume.html#GitDir">&para;</a></h3>
+          <pre>type GitDir struct {
+    <span id="GitDir.Source">Source</span>   <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GitDir.Revision">Revision</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GitDir.PodID">PodID</span>    <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GitDir.RootDir">RootDir</span>  <a href="http://godoc.org/builtin#string">string</a>
+    <span id="GitDir.Name">Name</span>     <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="GitDir.ExecCommand">func (*GitDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L111">ExecCommand</a> <a class="permalink" href="volume.html#GitDir.ExecCommand">&para;</a></h4>
+            <pre class="funcdecl">func (g *<a href="volume.html#GitDir">GitDir</a>) ExecCommand(command <a href="http://godoc.org/builtin#string">string</a>, args []<a href="http://godoc.org/builtin#string">string</a>, dir <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GitDir.GetPath">func (*GitDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L146">GetPath</a> <a class="permalink" href="volume.html#GitDir.GetPath">&para;</a></h4>
+            <pre class="funcdecl">func (g *<a href="volume.html#GitDir">GitDir</a>) GetPath() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="GitDir.SetUp">func (*GitDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L117">SetUp</a> <a class="permalink" href="volume.html#GitDir.SetUp">&para;</a></h4>
+            <pre class="funcdecl">func (g *<a href="volume.html#GitDir">GitDir</a>) SetUp() <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GitDir.TearDown">func (*GitDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L151">TearDown</a> <a class="permalink" href="volume.html#GitDir.TearDown">&para;</a></h4>
+            <pre class="funcdecl">func (g *<a href="volume.html#GitDir">GitDir</a>) TearDown() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+TearDown simply deletes everything in the directory.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="HostDir">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L73">HostDir</a> <a class="permalink" href="volume.html#HostDir">&para;</a></h3>
+          <pre>type HostDir struct {
+    <span id="HostDir.Path">Path</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+HostDir volumes represent a bare host directory mount.
+The directory in Path will be directly exposed to the container.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="HostDir.GetPath">func (*HostDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L83">GetPath</a> <a class="permalink" href="volume.html#HostDir.GetPath">&para;</a></h4>
+            <pre class="funcdecl">func (hostVol *<a href="volume.html#HostDir">HostDir</a>) GetPath() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+            <h4 id="HostDir.SetUp">func (*HostDir) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L79">SetUp</a> <a class="permalink" href="volume.html#HostDir.SetUp">&para;</a></h4>
+            <pre class="funcdecl">func (hostVol *<a href="volume.html#HostDir">HostDir</a>) SetUp() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SetUp implements interface definitions, even though host directory
+mounts don&#39;t require any setup or cleanup.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/volume/volume.go#L36">Interface</a> <a class="permalink" href="volume.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <span class="com">// GetPath returns the directory path the volume is mounted to.</span>
+    <span id="Interface.GetPath">GetPath</span>() <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+Interface is a directory used by pods or hosts.
+All method implementations of methods in the volume interface must be idempotent.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/volume"></form>
+  <p>Package volume imports <a href="volume@imports.html">18 packages</a> (<a href="volume@import-graph.html">graph</a>) and is imported by <a href="volume@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:27Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="volume@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="volume.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>cloudprovider - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package cloudprovider">
+    <meta property="og:title" content="Package cloudprovider">
+    <meta name="description" content="Package cloudprovider supplies interfaces and implementations for cloud service providers.">
+    <meta name="twitter:description" content="Package cloudprovider supplies interfaces and implementations for cloud service providers.">
+    <meta property="og:description" content="Package cloudprovider supplies interfaces and implementations for cloud service providers.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">cloudprovider</span>
+  
+  <span class="pull-right">
+    <a href="cloudprovider.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="cloudprovider.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="cloudprovider.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package cloudprovider</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"</code>
+
+        <p>
+Package cloudprovider supplies interfaces and implementations for cloud service providers.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="cloudprovider.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="cloudprovider.html#RegisterCloudProvider">func RegisterCloudProvider(name string, cloud Factory)</a></li>
+          
+            <li><a href="cloudprovider.html#Clusters">type Clusters</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cloudprovider.html#Factory">type Factory</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cloudprovider.html#Instances">type Instances</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cloudprovider.html#Interface">type Interface</a></li>
+            <ul>
+            <li><a href="cloudprovider.html#GetCloudProvider">func GetCloudProvider(name string, config io.Reader) (Interface, error)</a></li><li><a href="cloudprovider.html#InitCloudProvider">func InitCloudProvider(name string, configFilePath string) Interface</a></li>
+            
+            </ul>
+          
+            <li><a href="cloudprovider.html#TCPLoadBalancer">type TCPLoadBalancer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cloudprovider.html#Zone">type Zone</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cloudprovider.html#Zones">type Zones</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/cloudprovider">Package Files</a>
+          <a class="permalink" href="cloudprovider.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go">cloud.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/plugins.go">plugins.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="RegisterCloudProvider">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/plugins.go#L39">RegisterCloudProvider</a> <a class="permalink" href="cloudprovider.html#RegisterCloudProvider">&para;</a></h3>
+          <pre class="funcdecl">func RegisterCloudProvider(name <a href="http://godoc.org/builtin#string">string</a>, cloud <a href="cloudprovider.html#Factory">Factory</a>)</pre><p>
+RegisterCloudProvider registers a cloudprovider.Factory by name.  This
+is expected to happen during app startup.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Clusters">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L38">Clusters</a> <a class="permalink" href="cloudprovider.html#Clusters">&para;</a></h3>
+          <pre>type Clusters interface {
+    <span class="com">// List lists the names of the available clusters.</span>
+    <span id="Clusters.ListClusters">ListClusters</span>() ([]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// Master gets back the address (either DNS name or IP address) of the master node for the cluster.</span>
+    <span id="Clusters.Master">Master</span>(clusterName <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Clusters is an abstract, pluggable interface for clusters of containers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Factory">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/plugins.go#L31">Factory</a> <a class="permalink" href="cloudprovider.html#Factory">&para;</a></h3>
+          <pre>type Factory func(config <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Reader">Reader</a>) (<a href="cloudprovider.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Factory is a function that returns a cloudprovider.Interface.
+The config parameter provides an io.Reader handler to the factory in
+order to load specific configurations. If no configuration is provided
+the parameter is nil.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Instances">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L59">Instances</a> <a class="permalink" href="cloudprovider.html#Instances">&para;</a></h3>
+          <pre>type Instances interface {
+    <span class="com">// IPAddress returns an IP address of the specified instance.</span>
+    <span id="Instances.IPAddress">IPAddress</span>(name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// List lists instances that match &#39;filter&#39; which is a regular expression which must match the entire instance name (fqdn)</span>
+    <span id="Instances.List">List</span>(filter <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// GetNodeResources gets the resources for a particular node</span>
+    <span id="Instances.GetNodeResources">GetNodeResources</span>(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#NodeResources">NodeResources</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Instances is an abstract, pluggable interface for sets of instances.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L26">Interface</a> <a class="permalink" href="cloudprovider.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <span class="com">// TCPLoadBalancer returns a balancer interface. Also returns true if the interface is supported, false otherwise.</span>
+    <span id="Interface.TCPLoadBalancer">TCPLoadBalancer</span>() (<a href="cloudprovider.html#TCPLoadBalancer">TCPLoadBalancer</a>, <a href="http://godoc.org/builtin#bool">bool</a>)
+    <span class="com">// Instances returns an instances interface. Also returns true if the interface is supported, false otherwise.</span>
+    <span id="Interface.Instances">Instances</span>() (<a href="cloudprovider.html#Instances">Instances</a>, <a href="http://godoc.org/builtin#bool">bool</a>)
+    <span class="com">// Zones returns a zones interface. Also returns true if the interface is supported, false otherwise.</span>
+    <span id="Interface.Zones">Zones</span>() (<a href="cloudprovider.html#Zones">Zones</a>, <a href="http://godoc.org/builtin#bool">bool</a>)
+    <span class="com">// Clusters returns a clusters interface.  Also returns true if the interface is supported, false otherwise.</span>
+    <span id="Interface.Clusters">Clusters</span>() (<a href="cloudprovider.html#Clusters">Clusters</a>, <a href="http://godoc.org/builtin#bool">bool</a>)
+}</pre><p>
+Interface is an abstract, pluggable interface for cloud providers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="GetCloudProvider">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/plugins.go#L55">GetCloudProvider</a> <a class="permalink" href="cloudprovider.html#GetCloudProvider">&para;</a></h4>
+            <pre class="funcdecl">func GetCloudProvider(name <a href="http://godoc.org/builtin#string">string</a>, config <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Reader">Reader</a>) (<a href="cloudprovider.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetCloudProvider creates an instance of the named cloud provider, or nil if
+the name is not known.  The error return is only used if the named provider
+was known but failed to initialize. The config parameter specifies the
+io.Reader handler of the configuration file for the cloud provider, or nil
+for no configuation.
+</p>
+
+            
+  
+
+          
+            <h4 id="InitCloudProvider">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/plugins.go#L66">InitCloudProvider</a> <a class="permalink" href="cloudprovider.html#InitCloudProvider">&para;</a></h4>
+            <pre class="funcdecl">func InitCloudProvider(name <a href="http://godoc.org/builtin#string">string</a>, configFilePath <a href="http://godoc.org/builtin#string">string</a>) <a href="cloudprovider.html#Interface">Interface</a></pre><p>
+InitCloudProvider creates an instance of the named cloud provider.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="TCPLoadBalancer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L46">TCPLoadBalancer</a> <a class="permalink" href="cloudprovider.html#TCPLoadBalancer">&para;</a></h3>
+          <pre>type TCPLoadBalancer interface {
+    <span class="com">// TCPLoadBalancerExists returns whether the specified load balancer exists.</span>
+    <span class="com">// TODO: Break this up into different interfaces (LB, etc) when we have more than one type of service</span>
+    <span id="TCPLoadBalancer.TCPLoadBalancerExists">TCPLoadBalancerExists</span>(name, region <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// CreateTCPLoadBalancer creates a new tcp load balancer. Returns the IP address of the balancer</span>
+    <span id="TCPLoadBalancer.CreateTCPLoadBalancer">CreateTCPLoadBalancer</span>(name, region <a href="http://godoc.org/builtin#string">string</a>, externalIP <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, port <a href="http://godoc.org/builtin#int">int</a>, hosts []<a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// UpdateTCPLoadBalancer updates hosts under the specified load balancer.</span>
+    <span id="TCPLoadBalancer.UpdateTCPLoadBalancer">UpdateTCPLoadBalancer</span>(name, region <a href="http://godoc.org/builtin#string">string</a>, hosts []<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span class="com">// DeleteTCPLoadBalancer deletes a specified load balancer.</span>
+    <span id="TCPLoadBalancer.DeleteTCPLoadBalancer">DeleteTCPLoadBalancer</span>(name, region <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+TCPLoadBalancer is an abstract, pluggable interface for TCP load balancers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Zone">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L69">Zone</a> <a class="permalink" href="cloudprovider.html#Zone">&para;</a></h3>
+          <pre>type Zone struct {
+    <span id="Zone.FailureDomain">FailureDomain</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Zone.Region">Region</span>        <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+Zone represents the location of a particular machine.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Zones">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/cloud.go#L75">Zones</a> <a class="permalink" href="cloudprovider.html#Zones">&para;</a></h3>
+          <pre>type Zones interface {
+    <span class="com">// GetZone returns the Zone containing the current failure zone and locality region that the program is running in</span>
+    <span id="Zones.GetZone">GetZone</span>() (<a href="cloudprovider.html#Zone">Zone</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Zones is an abstract, pluggable interface for zone enumeration.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="cloudprovider.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="cloudprovider/aws.html">aws</a><td></td></tr><tr><td><a href="cloudprovider/controller.html">controller</a><td>Package controller contains code for syncing cloud instances with minion registry</td></tr><tr><td><a href="cloudprovider/fake.html">fake</a><td>Package fake_cloud is a test-double implementation of cloudprovider Interface, TCPLoadBalancer and Instances.</td></tr><tr><td><a href="cloudprovider/gce.html">gce</a><td>Package gce_cloud is an implementation of Interface, TCPLoadBalancer and Instances for Google Compute Engine.</td></tr><tr><td><a href="cloudprovider/openstack.html">openstack</a><td></td></tr><tr><td><a href="cloudprovider/ovirt.html">ovirt</a><td></td></tr><tr><td><a href="cloudprovider/vagrant.html">vagrant</a><td>Package vagrant_cloud is an implementation of Interface, TCPLoadBalancer and Instances for developer managed Vagrant cluster.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"></form>
+  <p>Package cloudprovider imports <a href="cloudprovider@imports.html">6 packages</a> (<a href="cloudprovider@import-graph.html">graph</a>) and is imported by <a href="cloudprovider@importers.html">22 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:28Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="cloudprovider@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="cloudprovider.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

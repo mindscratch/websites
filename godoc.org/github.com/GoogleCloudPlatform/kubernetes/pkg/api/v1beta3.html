@@ -1,0 +1,2371 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>v1beta3 - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package v1beta3">
+    <meta property="og:title" content="Package v1beta3">
+    <meta name="description" content="Package v1beta3 is the v1beta3 version of the API.">
+    <meta name="twitter:description" content="Package v1beta3 is the v1beta3 version of the API.">
+    <meta property="og:description" content="Package v1beta3 is the v1beta3 version of the API.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../api.html">api</a><span class="text-muted">/</span><span class="text-muted">v1beta3</span>
+  
+  <span class="pull-right">
+    <a href="v1beta3.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="v1beta3.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package v1beta3</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta3"</code>
+
+        <p>
+Package v1beta3 is the v1beta3 version of the API.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="v1beta3.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="v1beta3.html#pkg-constants">Constants</a></li>
+          <li><a href="v1beta3.html#pkg-variables">Variables</a></li>
+          
+          
+            <li><a href="v1beta3.html#Binding">type Binding</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Binding.IsAnAPIObject">func (*Binding) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#BoundPod">type BoundPod</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#BoundPod.IsAnAPIObject">func (*BoundPod) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#BoundPods">type BoundPods</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#BoundPods.IsAnAPIObject">func (*BoundPods) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#CauseType">type CauseType</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Container">type Container</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ContainerState">type ContainerState</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ContainerStateRunning">type ContainerStateRunning</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ContainerStateTerminated">type ContainerStateTerminated</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ContainerStateWaiting">type ContainerStateWaiting</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ContainerStatus">type ContainerStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#EmptyDir">type EmptyDir</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Endpoints">type Endpoints</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Endpoints.IsAnAPIObject">func (*Endpoints) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#EndpointsList">type EndpointsList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#EndpointsList.IsAnAPIObject">func (*EndpointsList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#EnvVar">type EnvVar</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Event">type Event</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Event.IsAnAPIObject">func (*Event) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#EventList">type EventList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#EventList.IsAnAPIObject">func (*EventList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#ExecAction">type ExecAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#GCEPersistentDisk">type GCEPersistentDisk</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#GitRepo">type GitRepo</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#HTTPGetAction">type HTTPGetAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Handler">type Handler</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#HostDir">type HostDir</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Lifecycle">type Lifecycle</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ListMeta">type ListMeta</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#LivenessProbe">type LivenessProbe</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Node">type Node</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Node.IsAnAPIObject">func (*Node) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#NodeList">type NodeList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#NodeList.IsAnAPIObject">func (*NodeList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#NodeSpec">type NodeSpec</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#NodeStatus">type NodeStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ObjectMeta">type ObjectMeta</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ObjectReference">type ObjectReference</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Operation">type Operation</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Operation.IsAnAPIObject">func (*Operation) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#OperationList">type OperationList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#OperationList.IsAnAPIObject">func (*OperationList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#Pod">type Pod</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Pod.IsAnAPIObject">func (*Pod) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#PodInfo">type PodInfo</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#PodList">type PodList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#PodList.IsAnAPIObject">func (*PodList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#PodPhase">type PodPhase</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#PodSpec">type PodSpec</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#PodStatus">type PodStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#PodTemplate">type PodTemplate</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#PodTemplate.IsAnAPIObject">func (*PodTemplate) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#PodTemplateList">type PodTemplateList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#PodTemplateList.IsAnAPIObject">func (*PodTemplateList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#PodTemplateSpec">type PodTemplateSpec</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Port">type Port</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Protocol">type Protocol</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#PullPolicy">type PullPolicy</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ReplicationController">type ReplicationController</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#ReplicationController.IsAnAPIObject">func (*ReplicationController) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#ReplicationControllerList">type ReplicationControllerList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#ReplicationControllerList.IsAnAPIObject">func (*ReplicationControllerList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#ReplicationControllerSpec">type ReplicationControllerSpec</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ReplicationControllerStatus">type ReplicationControllerStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ResourceList">type ResourceList</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ResourceName">type ResourceName</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#RestartPolicy">type RestartPolicy</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#RestartPolicyAlways">type RestartPolicyAlways</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#RestartPolicyNever">type RestartPolicyNever</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#RestartPolicyOnFailure">type RestartPolicyOnFailure</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Service">type Service</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Service.IsAnAPIObject">func (*Service) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#ServiceList">type ServiceList</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#ServiceList.IsAnAPIObject">func (*ServiceList) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#ServiceSpec">type ServiceSpec</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#ServiceStatus">type ServiceStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Status">type Status</a></li>
+            <ul>
+            
+            <li><a href="v1beta3.html#Status.IsAnAPIObject">func (*Status) IsAnAPIObject()</a></li>
+            </ul>
+          
+            <li><a href="v1beta3.html#StatusCause">type StatusCause</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#StatusDetails">type StatusDetails</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#StatusReason">type StatusReason</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#TCPSocketAction">type TCPSocketAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#TypeMeta">type TypeMeta</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#Volume">type Volume</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#VolumeMount">type VolumeMount</a></li>
+            
+            
+            
+            
+          
+            <li><a href="v1beta3.html#VolumeSource">type VolumeSource</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/api/v1beta3">Package Files</a>
+          <a class="permalink" href="v1beta3.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go">register.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go">types.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="v1beta3.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span class="com">// NamespaceDefault means the object is in the default namespace which is applied when not specified by clients</span>
+    <span id="NamespaceDefault">NamespaceDefault</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;default&#34;
+    <span class="com">// NamespaceAll is the default argument to specify on a context when you want to list or filter resources across all namespaces</span>
+    <span id="NamespaceAll">NamespaceAll</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;&#34;
+)</pre><pre>const (
+    <span id="StatusSuccess">StatusSuccess</span> = &#34;Success&#34;
+    <span id="StatusFailure">StatusFailure</span> = &#34;Failure&#34;
+    <span id="StatusWorking">StatusWorking</span> = &#34;Working&#34;
+)</pre><p>
+Values of Status.Status
+</p>
+
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="v1beta3.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="Codec">Codec</span> = <a href="../runtime.html">runtime</a>.<a href="../runtime.html#CodecFor">CodecFor</a>(<a href="../api.html">api</a>.<a href="../api.html#Scheme">Scheme</a>, &#34;v1beta3&#34;)</pre><p>
+Codec encodes internal objects to the v1beta3 scheme
+</p>
+
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="Binding">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L705">Binding</a> <a class="permalink" href="v1beta3.html#Binding">&para;</a></h3>
+          <pre>type Binding struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// PodID is a Pod name to be bound to a node.</span>
+    <span id="Binding.PodID">PodID</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;podID&#34;`
+    <span class="com">// Host is the name of a node to bind to.</span>
+    <span id="Binding.Host">Host</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;host&#34;`
+}</pre><p>
+Binding is written by a scheduler to cause a pod to be bound to a node. Name is not
+required for Bindings.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Binding.IsAnAPIObject">func (*Binding) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L66">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Binding.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Binding">Binding</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="BoundPod">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L530">BoundPod</a> <a class="permalink" href="v1beta3.html#BoundPod">&para;</a></h3>
+          <pre>type BoundPod struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a pod.</span>
+    <span id="BoundPod.Spec">Spec</span> <a href="v1beta3.html#PodSpec">PodSpec</a> `json:&#34;spec,omitempty&#34;`
+}</pre><p>
+BoundPod is a collection of containers that should be run on a host. A BoundPod
+defines how a Pod may change after a Binding is created. A Pod is a request to
+execute a pod, whereas a BoundPod is the specification that would be run on a server.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="BoundPod.IsAnAPIObject">func (*BoundPod) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L56">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#BoundPod.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#BoundPod">BoundPod</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="BoundPods">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L540">BoundPods</a> <a class="permalink" href="v1beta3.html#BoundPods">&para;</a></h3>
+          <pre>type BoundPods struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Host is the name of a node that these pods were bound to.</span>
+    <span id="BoundPods.Host">Host</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;host&#34;`
+
+    <span class="com">// Items is the list of all pods bound to a given host.</span>
+    <span id="BoundPods.Items">Items</span> []<a href="v1beta3.html#BoundPod">BoundPod</a> `json:&#34;items&#34;`
+}</pre><p>
+BoundPods is a list of Pods bound to a common server. The resource version of
+the pod list is guaranteed to only change when the list of bound pods changes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="BoundPods.IsAnAPIObject">func (*BoundPods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L57">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#BoundPods.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#BoundPods">BoundPods</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="CauseType">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L849">CauseType</a> <a class="permalink" href="v1beta3.html#CauseType">&para;</a></h3>
+          <pre>type CauseType <a href="http://godoc.org/builtin#string">string</a></pre><p>
+CauseType is a machine readable value providing more detail about what
+occured in a status response. An operation may have multiple causes for a
+status (whether Failure, Success, or Working).
+</p>
+
+          <pre>const (
+    <span class="com">// CauseTypeFieldValueNotFound is used to report failure to find a requested value</span>
+    <span class="com">// (e.g. looking up an ID).</span>
+    <span id="CauseTypeFieldValueNotFound">CauseTypeFieldValueNotFound</span> <a href="v1beta3.html#CauseType">CauseType</a> = &#34;FieldValueNotFound&#34;
+    <span class="com">// CauseTypeFieldValueRequired is used to report required values that are not</span>
+    <span class="com">// provided (e.g. empty strings, null values, or empty arrays).</span>
+    <span id="CauseTypeFieldValueRequired">CauseTypeFieldValueRequired</span> <a href="v1beta3.html#CauseType">CauseType</a> = &#34;FieldValueRequired&#34;
+    <span class="com">// CauseTypeFieldValueDuplicate is used to report collisions of values that must be</span>
+    <span class="com">// unique (e.g. unique IDs).</span>
+    <span id="CauseTypeFieldValueDuplicate">CauseTypeFieldValueDuplicate</span> <a href="v1beta3.html#CauseType">CauseType</a> = &#34;FieldValueDuplicate&#34;
+    <span class="com">// CauseTypeFieldValueInvalid is used to report malformed values (e.g. failed regex</span>
+    <span class="com">// match).</span>
+    <span id="CauseTypeFieldValueInvalid">CauseTypeFieldValueInvalid</span> <a href="v1beta3.html#CauseType">CauseType</a> = &#34;FieldValueInvalid&#34;
+    <span class="com">// CauseTypeFieldValueNotSupported is used to report valid (as per formatting rules)</span>
+    <span class="com">// values that can not be handled (e.g. an enumerated string).</span>
+    <span id="CauseTypeFieldValueNotSupported">CauseTypeFieldValueNotSupported</span> <a href="v1beta3.html#CauseType">CauseType</a> = &#34;FieldValueNotSupported&#34;
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Container">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L320">Container</a> <a class="permalink" href="v1beta3.html#Container">&para;</a></h3>
+          <pre>type Container struct {
+    <span class="com">// Required: This must be a DNS_LABEL.  Each container in a pod must</span>
+    <span class="com">// have a unique name.</span>
+    <span id="Container.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name&#34;`
+    <span class="com">// Required.</span>
+    <span id="Container.Image">Image</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;image&#34;`
+    <span class="com">// Optional: Defaults to whatever is defined in the image.</span>
+    <span id="Container.Command">Command</span> []<a href="http://godoc.org/builtin#string">string</a> `json:&#34;command,omitempty&#34;`
+    <span class="com">// Optional: Defaults to Docker&#39;s default.</span>
+    <span id="Container.WorkingDir">WorkingDir</span> <a href="http://godoc.org/builtin#string">string</a>   `json:&#34;workingDir,omitempty&#34;`
+    <span id="Container.Ports">Ports</span>      []<a href="v1beta3.html#Port">Port</a>   `json:&#34;ports,omitempty&#34;`
+    <span id="Container.Env">Env</span>        []<a href="v1beta3.html#EnvVar">EnvVar</a> `json:&#34;env,omitempty&#34;`
+    <span class="com">// Optional: Defaults to unlimited.</span>
+    <span id="Container.Memory">Memory</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;memory,omitempty&#34;`
+    <span class="com">// Optional: Defaults to unlimited.</span>
+    <span id="Container.CPU">CPU</span>           <a href="http://godoc.org/builtin#int">int</a>            `json:&#34;cpu,omitempty&#34;`
+    <span id="Container.VolumeMounts">VolumeMounts</span>  []<a href="v1beta3.html#VolumeMount">VolumeMount</a>  `json:&#34;volumeMounts,omitempty&#34;`
+    <span id="Container.LivenessProbe">LivenessProbe</span> *<a href="v1beta3.html#LivenessProbe">LivenessProbe</a> `json:&#34;livenessProbe,omitempty&#34;`
+    <span id="Container.Lifecycle">Lifecycle</span>     *<a href="v1beta3.html#Lifecycle">Lifecycle</a>     `json:&#34;lifecycle,omitempty&#34;`
+    <span class="com">// Optional: Defaults to /dev/termination-log</span>
+    <span id="Container.TerminationMessagePath">TerminationMessagePath</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;terminationMessagePath,omitempty&#34;`
+    <span class="com">// Optional: Default to false.</span>
+    <span id="Container.Privileged">Privileged</span> <a href="http://godoc.org/builtin#bool">bool</a> `json:&#34;privileged,omitempty&#34;`
+    <span class="com">// Optional: Policy for pulling images for this container</span>
+    <span id="Container.ImagePullPolicy">ImagePullPolicy</span> <a href="v1beta3.html#PullPolicy">PullPolicy</a> `json:&#34;imagePullPolicy&#34;`
+}</pre><p>
+Container represents a single container that is expected to be run on the host.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerState">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L410">ContainerState</a> <a class="permalink" href="v1beta3.html#ContainerState">&para;</a></h3>
+          <pre>type ContainerState struct {
+    <span id="ContainerState.Waiting">Waiting</span>     *<a href="v1beta3.html#ContainerStateWaiting">ContainerStateWaiting</a>    `json:&#34;waiting,omitempty&#34;`
+    <span id="ContainerState.Running">Running</span>     *<a href="v1beta3.html#ContainerStateRunning">ContainerStateRunning</a>    `json:&#34;running,omitempty&#34;`
+    <span id="ContainerState.Termination">Termination</span> *<a href="v1beta3.html#ContainerStateTerminated">ContainerStateTerminated</a> `json:&#34;termination,omitempty&#34;`
+}</pre><p>
+ContainerState holds a possible state of container.
+Only one of its members may be specified.
+If none of them is specified, the default one is ContainerStateWaiting.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerStateRunning">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L394">ContainerStateRunning</a> <a class="permalink" href="v1beta3.html#ContainerStateRunning">&para;</a></h3>
+          <pre>type ContainerStateRunning struct {
+    <span id="ContainerStateRunning.StartedAt">StartedAt</span> <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Time">Time</a> `json:&#34;startedAt,omitempty&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerStateTerminated">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L398">ContainerStateTerminated</a> <a class="permalink" href="v1beta3.html#ContainerStateTerminated">&para;</a></h3>
+          <pre>type ContainerStateTerminated struct {
+    <span id="ContainerStateTerminated.ExitCode">ExitCode</span>   <a href="http://godoc.org/builtin#int">int</a>       `json:&#34;exitCode&#34;`
+    <span id="ContainerStateTerminated.Signal">Signal</span>     <a href="http://godoc.org/builtin#int">int</a>       `json:&#34;signal,omitempty&#34;`
+    <span id="ContainerStateTerminated.Reason">Reason</span>     <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;reason,omitempty&#34;`
+    <span id="ContainerStateTerminated.Message">Message</span>    <a href="http://godoc.org/builtin#string">string</a>    `json:&#34;message,omitempty&#34;`
+    <span id="ContainerStateTerminated.StartedAt">StartedAt</span>  <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Time">Time</a> `json:&#34;startedAt,omitempty&#34;`
+    <span id="ContainerStateTerminated.FinishedAt">FinishedAt</span> <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Time">Time</a> `json:&#34;finishedAt,omitempty&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerStateWaiting">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L389">ContainerStateWaiting</a> <a class="permalink" href="v1beta3.html#ContainerStateWaiting">&para;</a></h3>
+          <pre>type ContainerStateWaiting struct {
+    <span class="com">// Reason could be pulling image,</span>
+    <span id="ContainerStateWaiting.Reason">Reason</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;reason,omitempty&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L416">ContainerStatus</a> <a class="permalink" href="v1beta3.html#ContainerStatus">&para;</a></h3>
+          <pre>type ContainerStatus struct {
+    <span class="com">// TODO(dchen1107): Should we rename PodStatus to a more generic name or have a separate states</span>
+    <span class="com">// defined for container?</span>
+    <span id="ContainerStatus.State">State</span> <a href="v1beta3.html#ContainerState">ContainerState</a> `json:&#34;state,omitempty&#34;`
+    <span class="com">// Note that this is calculated from dead containers.  But those containers are subject to</span>
+    <span class="com">// garbage collection.  This value will get capped at 5 by GC.</span>
+    <span id="ContainerStatus.RestartCount">RestartCount</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;restartCount&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EmptyDir">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L192">EmptyDir</a> <a class="permalink" href="v1beta3.html#EmptyDir">&para;</a></h3>
+          <pre>type EmptyDir struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Endpoints">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L649">Endpoints</a> <a class="permalink" href="v1beta3.html#Endpoints">&para;</a></h3>
+          <pre>type Endpoints struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata&#34;`
+
+    <span class="com">// Endpoints is the list of host ports that satisfy the service selector</span>
+    <span id="Endpoints.Endpoints">Endpoints</span> []<a href="http://godoc.org/builtin#string">string</a> `json:&#34;endpoints&#34;`
+}</pre><p>
+Endpoints is a collection of endpoints that implement the actual service, for example:
+Name: &#34;mysql&#34;, Endpoints: [&#34;10.10.1.1:1909&#34;, &#34;10.10.2.2:8834&#34;]
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Endpoints.IsAnAPIObject">func (*Endpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L62">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Endpoints.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Endpoints">Endpoints</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="EndpointsList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L658">EndpointsList</a> <a class="permalink" href="v1beta3.html#EndpointsList">&para;</a></h3>
+          <pre>type EndpointsList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="EndpointsList.Items">Items</span> []<a href="v1beta3.html#Endpoints">Endpoints</a> `json:&#34;items&#34;`
+}</pre><p>
+EndpointsList is a list of endpoints.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="EndpointsList.IsAnAPIObject">func (*EndpointsList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L63">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#EndpointsList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#EndpointsList">EndpointsList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="EnvVar">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L260">EnvVar</a> <a class="permalink" href="v1beta3.html#EnvVar">&para;</a></h3>
+          <pre>type EnvVar struct {
+    <span class="com">// Required: This must be a C_IDENTIFIER.</span>
+    <span id="EnvVar.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name&#34;`
+    <span class="com">// Optional: defaults to &#34;&#34;.</span>
+    <span id="EnvVar.Value">Value</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;value,omitempty&#34;`
+}</pre><p>
+EnvVar represents an environment variable present in a Container.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Event">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L906">Event</a> <a class="permalink" href="v1beta3.html#Event">&para;</a></h3>
+          <pre>type Event struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata&#34;`
+
+    <span class="com">// Required. The object that this event is about.</span>
+    <span id="Event.InvolvedObject">InvolvedObject</span> <a href="v1beta3.html#ObjectReference">ObjectReference</a> `json:&#34;involvedObject,omitempty&#34;`
+
+    <span class="com">// Should be a short, machine understandable string that describes the current status</span>
+    <span class="com">// of the referred object. This should not give the reason for being in this state.</span>
+    <span class="com">// Examples: &#34;Running&#34;, &#34;CantStart&#34;, &#34;CantSchedule&#34;, &#34;Deleted&#34;.</span>
+    <span class="com">// It&#39;s OK for components to make up statuses to report here, but the same string should</span>
+    <span class="com">// always be used for the same status.</span>
+    <span class="com">// TODO: define a way of making sure these are consistent and don&#39;t collide.</span>
+    <span class="com">// TODO: provide exact specification for format.</span>
+    <span id="Event.Condition">Condition</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;condition,omitempty&#34;`
+
+    <span class="com">// Optional; this should be a short, machine understandable string that gives the reason</span>
+    <span class="com">// for the transition into the object&#39;s current status. For example, if ObjectStatus is</span>
+    <span class="com">// &#34;cantStart&#34;, StatusReason might be &#34;imageNotFound&#34;.</span>
+    <span class="com">// TODO: provide exact specification for format.</span>
+    <span id="Event.Reason">Reason</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;reason,omitempty&#34;`
+
+    <span class="com">// Optional. A human-readable description of the status of this operation.</span>
+    <span class="com">// TODO: decide on maximum length.</span>
+    <span id="Event.Message">Message</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;message,omitempty&#34;`
+
+    <span class="com">// Optional. The component reporting this event. Should be a short machine understandable string.</span>
+    <span class="com">// TODO: provide exact specification for format.</span>
+    <span id="Event.Source">Source</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;source,omitempty&#34;`
+
+    <span class="com">// The time at which the client recorded the event. (Time of server receipt is in TypeMeta.)</span>
+    <span id="Event.Timestamp">Timestamp</span> <a href="../util.html">util</a>.<a href="../util.html#Time">Time</a> `json:&#34;timestamp,omitempty&#34;`
+}</pre><p>
+Event is a report of an event somewhere in the cluster.
+TODO: Decide whether to store these separately or with the object they apply to.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Event.IsAnAPIObject">func (*Event) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L70">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Event.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Event">Event</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="EventList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L941">EventList</a> <a class="permalink" href="v1beta3.html#EventList">&para;</a></h3>
+          <pre>type EventList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="EventList.Items">Items</span> []<a href="v1beta3.html#Event">Event</a> `json:&#34;items&#34;`
+}</pre><p>
+EventList is a list of events.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="EventList.IsAnAPIObject">func (*EventList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L71">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#EventList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#EventList">EventList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="ExecAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L284">ExecAction</a> <a class="permalink" href="v1beta3.html#ExecAction">&para;</a></h3>
+          <pre>type ExecAction struct {
+    <span class="com">// Command is the command line to execute inside the container, the working directory for the</span>
+    <span class="com">// command  is root (&#39;/&#39;) in the container&#39;s filesystem.  The command is simply exec&#39;d, it is</span>
+    <span class="com">// not run inside a shell, so traditional shell instructions (&#39;|&#39;, etc) won&#39;t work.  To use</span>
+    <span class="com">// a shell, you need to explicitly call out to that shell.</span>
+    <span id="ExecAction.Command">Command</span> []<a href="http://godoc.org/builtin#string">string</a> `json:&#34;command,omitempty&#34;`
+}</pre><p>
+ExecAction describes a &#34;run in container&#34; action.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="GCEPersistentDisk">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L209">GCEPersistentDisk</a> <a class="permalink" href="v1beta3.html#GCEPersistentDisk">&para;</a></h3>
+          <pre>type GCEPersistentDisk struct {
+    <span class="com">// Unique name of the PD resource. Used to identify the disk in GCE</span>
+    <span id="GCEPersistentDisk.PDName">PDName</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;pdName&#34;`
+    <span class="com">// Required: Filesystem type to mount.</span>
+    <span class="com">// Must be a filesystem type supported by the host operating system.</span>
+    <span class="com">// Ex. &#34;ext4&#34;, &#34;xfs&#34;, &#34;ntfs&#34;</span>
+    <span class="com">// TODO: how do we prevent errors in the filesystem from compromising the machine</span>
+    <span id="GCEPersistentDisk.FSType">FSType</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;fsType,omitempty&#34;`
+    <span class="com">// Optional: Partition on the disk to mount.</span>
+    <span class="com">// If omitted, kubelet will attempt to mount the device name.</span>
+    <span class="com">// Ex. For /dev/sda1, this field is &#34;1&#34;, for /dev/sda, this field is 0 or empty.</span>
+    <span id="GCEPersistentDisk.Partition">Partition</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;partition,omitempty&#34;`
+    <span class="com">// Optional: Defaults to false (read/write). ReadOnly here will force</span>
+    <span class="com">// the ReadOnly setting in VolumeMounts.</span>
+    <span id="GCEPersistentDisk.ReadOnly">ReadOnly</span> <a href="http://godoc.org/builtin#bool">bool</a> `json:&#34;readOnly,omitempty&#34;`
+}</pre><p>
+GCEPersistentDisk represents a Persistent Disk resource in Google Compute Engine.
+</p>
+<p>
+A GCE PD must exist and be formatted before mounting to a container.
+The disk must also be in the same GCE project and zone as the kubelet.
+A GCE PD can only be mounted as read/write once.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="GitRepo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L227">GitRepo</a> <a class="permalink" href="v1beta3.html#GitRepo">&para;</a></h3>
+          <pre>type GitRepo struct {
+    <span class="com">// Repository URL</span>
+    <span id="GitRepo.Repository">Repository</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;repository&#34;`
+    <span class="com">// Commit hash, this is optional</span>
+    <span id="GitRepo.Revision">Revision</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;revision&#34;`
+}</pre><p>
+GitRepo represents a volume that is pulled from git when the pod is created.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HTTPGetAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L268">HTTPGetAction</a> <a class="permalink" href="v1beta3.html#HTTPGetAction">&para;</a></h3>
+          <pre>type HTTPGetAction struct {
+    <span class="com">// Optional: Path to access on the HTTP server.</span>
+    <span id="HTTPGetAction.Path">Path</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;path,omitempty&#34;`
+    <span class="com">// Required: Name or number of the port to access on the container.</span>
+    <span id="HTTPGetAction.Port">Port</span> <a href="../util.html">util</a>.<a href="../util.html#IntOrString">IntOrString</a> `json:&#34;port,omitempty&#34;`
+    <span class="com">// Optional: Host name to connect to, defaults to the pod IP.</span>
+    <span id="HTTPGetAction.Host">Host</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;host,omitempty&#34;`
+}</pre><p>
+HTTPGetAction describes an action based on HTTP Get requests.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Handler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L349">Handler</a> <a class="permalink" href="v1beta3.html#Handler">&para;</a></h3>
+          <pre>type Handler struct {
+    <span class="com">// One and only one of the following should be specified.</span>
+    <span class="com">// Exec specifies the action to take.</span>
+    <span id="Handler.Exec">Exec</span> *<a href="v1beta3.html#ExecAction">ExecAction</a> `json:&#34;exec,omitempty&#34;`
+    <span class="com">// HTTPGet specifies the http request to perform.</span>
+    <span id="Handler.HTTPGet">HTTPGet</span> *<a href="v1beta3.html#HTTPGetAction">HTTPGetAction</a> `json:&#34;httpGet,omitempty&#34;`
+}</pre><p>
+Handler defines a specific action that should be taken
+TODO: pass structured data to these actions, and document that data here.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HostDir">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L188">HostDir</a> <a class="permalink" href="v1beta3.html#HostDir">&para;</a></h3>
+          <pre>type HostDir struct {
+    <span id="HostDir.Path">Path</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;path&#34;`
+}</pre><p>
+HostDir represents bare host directory volume.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Lifecycle">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L360">Lifecycle</a> <a class="permalink" href="v1beta3.html#Lifecycle">&para;</a></h3>
+          <pre>type Lifecycle struct {
+    <span class="com">// PostStart is called immediately after a container is created.  If the handler fails, the container</span>
+    <span class="com">// is terminated and restarted.</span>
+    <span id="Lifecycle.PostStart">PostStart</span> *<a href="v1beta3.html#Handler">Handler</a> `json:&#34;postStart,omitempty&#34;`
+    <span class="com">// PreStop is called immediately before a container is terminated.  The reason for termination is</span>
+    <span class="com">// passed to the handler.  Regardless of the outcome of the handler, the container is eventually terminated.</span>
+    <span id="Lifecycle.PreStop">PreStop</span> *<a href="v1beta3.html#Handler">Handler</a> `json:&#34;preStop,omitempty&#34;`
+}</pre><p>
+Lifecycle describes actions that the management system should take in response to container lifecycle
+events.  For the PostStart and PreStop lifecycle handlers, management of the container blocks
+until the action is complete, unless the container process fails, in which case the handler is aborted.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ListMeta">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L64">ListMeta</a> <a class="permalink" href="v1beta3.html#ListMeta">&para;</a></h3>
+          <pre>type ListMeta struct {
+    <span class="com">// SelfLink is a URL representing this object.</span>
+    <span id="ListMeta.SelfLink">SelfLink</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;selfLink,omitempty&#34;`
+
+    <span class="com">// An opaque value that represents the version of this response for use with optimistic</span>
+    <span class="com">// concurrency and change monitoring endpoints.  Clients must treat these values as opaque</span>
+    <span class="com">// and values may only be valid for a particular resource or set of resources. Only servers</span>
+    <span class="com">// will generate resource versions.</span>
+    <span id="ListMeta.ResourceVersion">ResourceVersion</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;resourceVersion,omitempty&#34;`
+}</pre><p>
+ListMeta describes metadata that synthetic resources must have, including lists and
+various status objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="LivenessProbe">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L294">LivenessProbe</a> <a class="permalink" href="v1beta3.html#LivenessProbe">&para;</a></h3>
+          <pre>type LivenessProbe struct {
+    <span class="com">// Type of liveness probe.  Current legal values &#34;HTTP&#34;, &#34;TCP&#34;, &#34;Exec&#34;</span>
+    <span id="LivenessProbe.Type">Type</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;type,omitempty&#34;`
+    <span class="com">// HTTPGetProbe parameters, required if Type == &#39;HTTP&#39;</span>
+    <span id="LivenessProbe.HTTPGet">HTTPGet</span> *<a href="v1beta3.html#HTTPGetAction">HTTPGetAction</a> `json:&#34;httpGet,omitempty&#34;`
+    <span class="com">// TCPSocketProbe parameter, required if Type == &#39;TCP&#39;</span>
+    <span id="LivenessProbe.TCPSocket">TCPSocket</span> *<a href="v1beta3.html#TCPSocketAction">TCPSocketAction</a> `json:&#34;tcpSocket,omitempty&#34;`
+    <span class="com">// ExecProbe parameter, required if Type == &#39;Exec&#39;</span>
+    <span id="LivenessProbe.Exec">Exec</span> *<a href="v1beta3.html#ExecAction">ExecAction</a> `json:&#34;exec,omitempty&#34;`
+    <span class="com">// Length of time before health checking is activated.  In seconds.</span>
+    <span id="LivenessProbe.InitialDelaySeconds">InitialDelaySeconds</span> <a href="http://godoc.org/builtin#int64">int64</a> `json:&#34;initialDelaySeconds,omitempty&#34;`
+}</pre><p>
+LivenessProbe describes how to probe a container for liveness.
+TODO: pass structured data to the actions, and document that data here.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Node">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L684">Node</a> <a class="permalink" href="v1beta3.html#Node">&para;</a></h3>
+          <pre>type Node struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a node.</span>
+    <span id="Node.Spec">Spec</span> <a href="v1beta3.html#NodeSpec">NodeSpec</a> `json:&#34;spec,omitempty&#34;`
+
+    <span class="com">// Status describes the current status of a Node</span>
+    <span id="Node.Status">Status</span> <a href="v1beta3.html#NodeStatus">NodeStatus</a> `json:&#34;status,omitempty&#34;`
+}</pre><p>
+Node is a worker node in Kubernetes.
+The name of the node according to etcd is in ID.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Node.IsAnAPIObject">func (*Node) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L64">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Node.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Node">Node</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="NodeList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L696">NodeList</a> <a class="permalink" href="v1beta3.html#NodeList">&para;</a></h3>
+          <pre>type NodeList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="NodeList.Items">Items</span> []<a href="v1beta3.html#Node">Node</a> `json:&#34;items&#34;`
+}</pre><p>
+NodeList is a list of minions.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="NodeList.IsAnAPIObject">func (*NodeList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L65">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#NodeList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#NodeList">NodeList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="NodeSpec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L666">NodeSpec</a> <a class="permalink" href="v1beta3.html#NodeSpec">&para;</a></h3>
+          <pre>type NodeSpec struct {
+    <span class="com">// Capacity represents the available resources of a node</span>
+    <span class="com">// see https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/resources.md for more details.</span>
+    <span id="NodeSpec.Capacity">Capacity</span> <a href="v1beta3.html#ResourceList">ResourceList</a> `json:&#34;capacity,omitempty&#34;`
+}</pre><p>
+NodeSpec describes the attributes that a node is created with.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="NodeStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L673">NodeStatus</a> <a class="permalink" href="v1beta3.html#NodeStatus">&para;</a></h3>
+          <pre>type NodeStatus struct {
+    <span class="com">// Queried from cloud provider, if available.</span>
+    <span id="NodeStatus.HostIP">HostIP</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;hostIP,omitempty&#34;`
+}</pre><p>
+NodeStatus is information about the current status of a node.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ObjectMeta">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L77">ObjectMeta</a> <a class="permalink" href="v1beta3.html#ObjectMeta">&para;</a></h3>
+          <pre>type ObjectMeta struct {
+    <span class="com">// Name is unique within a namespace.  Name is required when creating resources, although</span>
+    <span class="com">// some resources may allow a client to request the generation of an appropriate name</span>
+    <span class="com">// automatically. Name is primarily intended for creation idempotence and configuration</span>
+    <span class="com">// definition.</span>
+    <span id="ObjectMeta.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name,omitempty&#34;`
+
+    <span class="com">// Namespace defines the space within which name must be unique. An empty namespace is</span>
+    <span class="com">// equivalent to the &#34;default&#34; namespace, but &#34;default&#34; is the canonical representation.</span>
+    <span class="com">// Not all objects are required to be scoped to a namespace - the value of this field for</span>
+    <span class="com">// those objects will be empty.</span>
+    <span id="ObjectMeta.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;namespace,omitempty&#34;`
+
+    <span class="com">// SelfLink is a URL representing this object.</span>
+    <span id="ObjectMeta.SelfLink">SelfLink</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;selfLink,omitempty&#34;`
+
+    <span class="com">// UID is the unique in time and space value for this object. It is typically generated by</span>
+    <span class="com">// the server on successful creation of a resource and is not allowed to change on PUT</span>
+    <span class="com">// operations.</span>
+    <span id="ObjectMeta.UID">UID</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;uid,omitempty&#34;`
+
+    <span class="com">// An opaque value that represents the version of this resource. May be used for optimistic</span>
+    <span class="com">// concurrency, change detection, and the watch operation on a resource or set of resources.</span>
+    <span class="com">// Clients must treat these values as opaque and values may only be valid for a particular</span>
+    <span class="com">// resource or set of resources. Only servers will generate resource versions.</span>
+    <span id="ObjectMeta.ResourceVersion">ResourceVersion</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;resourceVersion,omitempty&#34;`
+
+    <span class="com">// CreationTimestamp is a timestamp representing the server time when this object was</span>
+    <span class="com">// created. It is not guaranteed to be set in happens-before order across separate operations.</span>
+    <span class="com">// Clients may not set this value. It is represented in RFC3339 form and is in UTC.</span>
+    <span id="ObjectMeta.CreationTimestamp">CreationTimestamp</span> <a href="../util.html">util</a>.<a href="../util.html#Time">Time</a> `json:&#34;creationTimestamp,omitempty&#34;`
+
+    <span class="com">// Labels are key value pairs that may be used to scope and select individual resources.</span>
+    <span class="com">// TODO: replace map[string]string with labels.LabelSet type</span>
+    <span id="ObjectMeta.Labels">Labels</span> map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a> `json:&#34;labels,omitempty&#34;`
+
+    <span class="com">// Annotations are unstructured key value data stored with a resource that may be set by</span>
+    <span class="com">// external tooling. They are not queryable and should be preserved when modifying</span>
+    <span class="com">// objects.</span>
+    <span id="ObjectMeta.Annotations">Annotations</span> map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a> `json:&#34;annotations,omitempty&#34;`
+}</pre><p>
+ObjectMeta is metadata that all persisted resources must have, which includes all objects
+users must create.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ObjectReference">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L886">ObjectReference</a> <a class="permalink" href="v1beta3.html#ObjectReference">&para;</a></h3>
+          <pre>type ObjectReference struct {
+    <span id="ObjectReference.Kind">Kind</span>            <a href="http://godoc.org/builtin#string">string</a> `json:&#34;kind,omitempty&#34;`
+    <span id="ObjectReference.Namespace">Namespace</span>       <a href="http://godoc.org/builtin#string">string</a> `json:&#34;namespace,omitempty&#34;`
+    <span id="ObjectReference.Name">Name</span>            <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name,omitempty&#34;`
+    <span id="ObjectReference.UID">UID</span>             <a href="http://godoc.org/builtin#string">string</a> `json:&#34;uid,omitempty&#34;`
+    <span id="ObjectReference.APIVersion">APIVersion</span>      <a href="http://godoc.org/builtin#string">string</a> `json:&#34;apiVersion,omitempty&#34;`
+    <span id="ObjectReference.ResourceVersion">ResourceVersion</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;resourceVersion,omitempty&#34;`
+
+    <span class="com">// Optional. If referring to a piece of an object instead of an entire object, this string</span>
+    <span class="com">// should contain a valid field access statement. For example,</span>
+    <span class="com">// if the object reference is to a container within a pod, this would take on a value like:</span>
+    <span class="com">// &#34;spec.containers[2]&#34;. Such statements are valid language constructs in</span>
+    <span class="com">// both go and JavaScript. This is syntax is chosen only to have some well-defined way of</span>
+    <span class="com">// referencing a part of an object.</span>
+    <span class="com">// TODO: this design is not final and this field is subject to change in the future.</span>
+    <span id="ObjectReference.FieldPath">FieldPath</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;fieldPath,omitempty&#34;`
+}</pre><p>
+ObjectReference contains enough information to let you inspect or modify the referred object.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Operation">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L872">Operation</a> <a class="permalink" href="v1beta3.html#Operation">&para;</a></h3>
+          <pre>type Operation struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata&#34;`
+}</pre><p>
+Operation is a request from a client that has not yet been satisfied. The name of an
+Operation is assigned by the server when an operation is started, and can be used by
+clients to retrieve the final result of the operation at a later time.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Operation.IsAnAPIObject">func (*Operation) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L68">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Operation.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Operation">Operation</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="OperationList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L878">OperationList</a> <a class="permalink" href="v1beta3.html#OperationList">&para;</a></h3>
+          <pre>type OperationList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="OperationList.Items">Items</span> []<a href="v1beta3.html#Operation">Operation</a> `json:&#34;items&#34;`
+}</pre><p>
+OperationList is a list of operations, as delivered to API clients.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="OperationList.IsAnAPIObject">func (*OperationList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L69">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#OperationList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#OperationList">OperationList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="Pod">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L481">Pod</a> <a class="permalink" href="v1beta3.html#Pod">&para;</a></h3>
+          <pre>type Pod struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a pod.</span>
+    <span id="Pod.Spec">Spec</span> <a href="v1beta3.html#PodSpec">PodSpec</a> `json:&#34;spec,omitempty&#34;`
+
+    <span class="com">// Status represents the current information about a pod. This data may not be up</span>
+    <span class="com">// to date.</span>
+    <span id="Pod.Status">Status</span> <a href="v1beta3.html#PodStatus">PodStatus</a> `json:&#34;status,omitempty&#34;`
+}</pre><p>
+Pod is a collection of containers that can run on a host. This resource is created
+by clients and scheduled onto hosts.  BoundPod represents the state of this resource
+to hosts.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Pod.IsAnAPIObject">func (*Pod) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L52">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Pod.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Pod">Pod</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="PodInfo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L428">PodInfo</a> <a class="permalink" href="v1beta3.html#PodInfo">&para;</a></h3>
+          <pre>type PodInfo map[<a href="http://godoc.org/builtin#string">string</a>]<a href="v1beta3.html#ContainerStatus">ContainerStatus</a></pre><p>
+PodInfo contains one entry for every container with available info.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L494">PodList</a> <a class="permalink" href="v1beta3.html#PodList">&para;</a></h3>
+          <pre>type PodList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="PodList.Items">Items</span> []<a href="v1beta3.html#Pod">Pod</a> `json:&#34;items&#34;`
+}</pre><p>
+PodList is a list of Pods.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="PodList.IsAnAPIObject">func (*PodList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L53">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#PodList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#PodList">PodList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="PodPhase">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L370">PodPhase</a> <a class="permalink" href="v1beta3.html#PodPhase">&para;</a></h3>
+          <pre>type PodPhase <a href="http://godoc.org/builtin#string">string</a></pre><p>
+PodPhase is a label for the condition of a pod at the current time.
+</p>
+
+          <pre>const (
+    <span class="com">// PodPending means the pod has been accepted by the system, but one or more of the containers</span>
+    <span class="com">// has not been started. This includes time before being bound to a node, as well as time spent</span>
+    <span class="com">// pulling images onto the host.</span>
+    <span id="PodPending">PodPending</span> <a href="v1beta3.html#PodPhase">PodPhase</a> = &#34;Pending&#34;
+    <span class="com">// PodRunning means the pod has been bound to a node and all of the containers have been started.</span>
+    <span class="com">// At least one container is still running or is in the process of being restarted.</span>
+    <span id="PodRunning">PodRunning</span> <a href="v1beta3.html#PodPhase">PodPhase</a> = &#34;Running&#34;
+    <span class="com">// PodSucceeded means that all containers in the pod have voluntarily terminated</span>
+    <span class="com">// with a container exit code of 0, and the system is not going to restart any of these containers.</span>
+    <span id="PodSucceeded">PodSucceeded</span> <a href="v1beta3.html#PodPhase">PodPhase</a> = &#34;Succeeded&#34;
+    <span class="com">// PodFailed means that all containers in the pod have terminated, and at least one container has</span>
+    <span class="com">// terminated in a failure (exited with a non-zero exit code or was stopped by the system).</span>
+    <span id="PodFailed">PodFailed</span> <a href="v1beta3.html#PodPhase">PodPhase</a> = &#34;Failed&#34;
+)</pre><p>
+These are the valid states of pods.
+</p>
+
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodSpec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L448">PodSpec</a> <a class="permalink" href="v1beta3.html#PodSpec">&para;</a></h3>
+          <pre>type PodSpec struct {
+    <span id="PodSpec.Volumes">Volumes</span>       []<a href="v1beta3.html#Volume">Volume</a>      `json:&#34;volumes&#34;`
+    <span id="PodSpec.Containers">Containers</span>    []<a href="v1beta3.html#Container">Container</a>   `json:&#34;containers&#34;`
+    <span id="PodSpec.RestartPolicy">RestartPolicy</span> <a href="v1beta3.html#RestartPolicy">RestartPolicy</a> `json:&#34;restartPolicy,omitempty&#34;`
+    <span class="com">// NodeSelector is a selector which must be true for the pod to fit on a node</span>
+    <span id="PodSpec.NodeSelector">NodeSelector</span> map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a> `json:&#34;nodeSelector,omitempty&#34;`
+}</pre><p>
+PodSpec is a description of a pod
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L458">PodStatus</a> <a class="permalink" href="v1beta3.html#PodStatus">&para;</a></h3>
+          <pre>type PodStatus struct {
+    <span id="PodStatus.Phase">Phase</span> <a href="v1beta3.html#PodPhase">PodPhase</a> `json:&#34;phase,omitempty&#34;`
+    <span class="com">// A human readable message indicating details about why the pod is in this state.</span>
+    <span id="PodStatus.Message">Message</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;message,omitempty&#34;`
+
+    <span class="com">// Host is the name of the node that this Pod is currently bound to, or empty if no</span>
+    <span class="com">// assignment has been done.</span>
+    <span id="PodStatus.Host">Host</span>   <a href="http://godoc.org/builtin#string">string</a> `json:&#34;host,omitempty&#34;`
+    <span id="PodStatus.HostIP">HostIP</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;hostIP,omitempty&#34;`
+    <span id="PodStatus.PodIP">PodIP</span>  <a href="http://godoc.org/builtin#string">string</a> `json:&#34;podIP,omitempty&#34;`
+
+    <span class="com">// The key of this map is the *name* of the container within the manifest; it has one</span>
+    <span class="com">// entry per container in the manifest. The value of this map is currently the output</span>
+    <span class="com">// of `docker inspect`. This output format is *not* final and should not be relied</span>
+    <span class="com">// upon.</span>
+    <span class="com">// TODO: Make real decisions about what our info should look like. Re-enable fuzz test</span>
+    <span class="com">// when we have done this.</span>
+    <span id="PodStatus.Info">Info</span> <a href="v1beta3.html#PodInfo">PodInfo</a> `json:&#34;info,omitempty&#34;`
+}</pre><p>
+PodStatus represents information about the status of a pod. Status may trail the actual
+state of a system.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodTemplate">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L511">PodTemplate</a> <a class="permalink" href="v1beta3.html#PodTemplate">&para;</a></h3>
+          <pre>type PodTemplate struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a pod.</span>
+    <span id="PodTemplate.Spec">Spec</span> <a href="v1beta3.html#PodTemplateSpec">PodTemplateSpec</a> `json:&#34;spec,omitempty&#34;`
+}</pre><p>
+PodTemplate describes a template for creating copies of a predefined pod.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="PodTemplate.IsAnAPIObject">func (*PodTemplate) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L54">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#PodTemplate.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#PodTemplate">PodTemplate</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="PodTemplateList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L520">PodTemplateList</a> <a class="permalink" href="v1beta3.html#PodTemplateList">&para;</a></h3>
+          <pre>type PodTemplateList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="PodTemplateList.Items">Items</span> []<a href="v1beta3.html#PodTemplate">PodTemplate</a> `json:&#34;items&#34;`
+}</pre><p>
+PodTemplateList is a list of PodTemplates.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="PodTemplateList.IsAnAPIObject">func (*PodTemplateList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L55">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#PodTemplateList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#PodTemplateList">PodTemplateList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="PodTemplateSpec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L502">PodTemplateSpec</a> <a class="permalink" href="v1beta3.html#PodTemplateSpec">&para;</a></h3>
+          <pre>type PodTemplateSpec struct {
+    <span class="com">// Metadata of the pods created from this template.</span>
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a pod.</span>
+    <span id="PodTemplateSpec.Spec">Spec</span> <a href="v1beta3.html#PodSpec">PodSpec</a> `json:&#34;spec,omitempty&#34;`
+}</pre><p>
+PodTemplateSpec describes the data a pod should have when created from a template
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Port">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L235">Port</a> <a class="permalink" href="v1beta3.html#Port">&para;</a></h3>
+          <pre>type Port struct {
+    <span class="com">// Optional: If specified, this must be a DNS_LABEL.  Each named port</span>
+    <span class="com">// in a pod must have a unique name.</span>
+    <span id="Port.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name,omitempty&#34;`
+    <span class="com">// Optional: If specified, this must be a valid port number, 0 &lt; x &lt; 65536.</span>
+    <span id="Port.HostPort">HostPort</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;hostPort,omitempty&#34;`
+    <span class="com">// Required: This must be a valid port number, 0 &lt; x &lt; 65536.</span>
+    <span id="Port.ContainerPort">ContainerPort</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;containerPort&#34;`
+    <span class="com">// Optional: Supports &#34;TCP&#34; and &#34;UDP&#34;.  Defaults to &#34;TCP&#34;.</span>
+    <span id="Port.Protocol">Protocol</span> <a href="v1beta3.html#Protocol">Protocol</a> `json:&#34;protocol,omitempty&#34;`
+    <span class="com">// Optional: What host IP to bind the external port to.</span>
+    <span id="Port.HostIP">HostIP</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;hostIP,omitempty&#34;`
+}</pre><p>
+Port represents a network port in a single container.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Protocol">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L195">Protocol</a> <a class="permalink" href="v1beta3.html#Protocol">&para;</a></h3>
+          <pre>type Protocol <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Protocol defines network protocols supported for things like conatiner ports.
+</p>
+
+          <pre>const (
+    <span class="com">// ProtocolTCP is the TCP protocol.</span>
+    <span id="ProtocolTCP">ProtocolTCP</span> <a href="v1beta3.html#Protocol">Protocol</a> = &#34;TCP&#34;
+    <span class="com">// ProtocolUDP is the UDP protocol.</span>
+    <span id="ProtocolUDP">ProtocolUDP</span> <a href="v1beta3.html#Protocol">Protocol</a> = &#34;UDP&#34;
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PullPolicy">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L308">PullPolicy</a> <a class="permalink" href="v1beta3.html#PullPolicy">&para;</a></h3>
+          <pre>type PullPolicy <a href="http://godoc.org/builtin#string">string</a></pre><p>
+PullPolicy describes a policy for if/when to pull a container image
+</p>
+
+          <pre>const (
+    <span class="com">// PullAlways means that kubelet always attempts to pull the latest image.  Container will fail If the pull fails.</span>
+    <span id="PullAlways">PullAlways</span> <a href="v1beta3.html#PullPolicy">PullPolicy</a> = &#34;PullAlways&#34;
+    <span class="com">// PullNever means that kubelet never pulls an image, but only uses a local image.  Container will fail if the image isn&#39;t present</span>
+    <span id="PullNever">PullNever</span> <a href="v1beta3.html#PullPolicy">PullPolicy</a> = &#34;PullNever&#34;
+    <span class="com">// PullIfNotPresent means that kubelet pulls if the image isn&#39;t present on disk. Container will fail if the image isn&#39;t present and the pull fails.</span>
+    <span id="PullIfNotPresent">PullIfNotPresent</span> <a href="v1beta3.html#PullPolicy">PullPolicy</a> = &#34;PullIfNotPresent&#34;
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ReplicationController">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L572">ReplicationController</a> <a class="permalink" href="v1beta3.html#ReplicationController">&para;</a></h3>
+          <pre>type ReplicationController struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the desired behavior of this replication controller.</span>
+    <span id="ReplicationController.Spec">Spec</span> <a href="v1beta3.html#ReplicationControllerSpec">ReplicationControllerSpec</a> `json:&#34;spec,omitempty&#34;`
+
+    <span class="com">// Status is the current status of this replication controller. This data may be</span>
+    <span class="com">// out of date by some window of time.</span>
+    <span id="ReplicationController.Status">Status</span> <a href="v1beta3.html#ReplicationControllerStatus">ReplicationControllerStatus</a> `json:&#34;status,omitempty&#34;`
+}</pre><p>
+ReplicationController represents the configuration of a replication controller.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ReplicationController.IsAnAPIObject">func (*ReplicationController) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L58">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#ReplicationController.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#ReplicationController">ReplicationController</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="ReplicationControllerList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L585">ReplicationControllerList</a> <a class="permalink" href="v1beta3.html#ReplicationControllerList">&para;</a></h3>
+          <pre>type ReplicationControllerList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="ReplicationControllerList.Items">Items</span> []<a href="v1beta3.html#ReplicationController">ReplicationController</a> `json:&#34;items&#34;`
+}</pre><p>
+ReplicationControllerList is a collection of replication controllers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ReplicationControllerList.IsAnAPIObject">func (*ReplicationControllerList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L59">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#ReplicationControllerList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#ReplicationControllerList">ReplicationControllerList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="ReplicationControllerSpec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L552">ReplicationControllerSpec</a> <a class="permalink" href="v1beta3.html#ReplicationControllerSpec">&para;</a></h3>
+          <pre>type ReplicationControllerSpec struct {
+    <span class="com">// Replicas is the number of desired replicas.</span>
+    <span id="ReplicationControllerSpec.Replicas">Replicas</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;replicas&#34;`
+
+    <span class="com">// Selector is a label query over pods that should match the Replicas count.</span>
+    <span id="ReplicationControllerSpec.Selector">Selector</span> map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a> `json:&#34;selector,omitempty&#34;`
+
+    <span class="com">// Template is a reference to an object that describes the pod that will be created if</span>
+    <span class="com">// insufficient replicas are detected.</span>
+    <span id="ReplicationControllerSpec.Template">Template</span> <a href="v1beta3.html#ObjectReference">ObjectReference</a> `json:&#34;template,omitempty&#34;`
+}</pre><p>
+ReplicationControllerSpec is the specification of a replication controller.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ReplicationControllerStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L566">ReplicationControllerStatus</a> <a class="permalink" href="v1beta3.html#ReplicationControllerStatus">&para;</a></h3>
+          <pre>type ReplicationControllerStatus struct {
+    <span class="com">// Replicas is the number of actual replicas.</span>
+    <span id="ReplicationControllerStatus.Replicas">Replicas</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;replicas&#34;`
+}</pre><p>
+ReplicationControllerStatus represents the current status of a replication
+controller.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ResourceList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L680">ResourceList</a> <a class="permalink" href="v1beta3.html#ResourceList">&para;</a></h3>
+          <pre>type ResourceList map[<a href="v1beta3.html#ResourceName">ResourceName</a>]<a href="../util.html">util</a>.<a href="../util.html#IntOrString">IntOrString</a></pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ResourceName">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L678">ResourceName</a> <a class="permalink" href="v1beta3.html#ResourceName">&para;</a></h3>
+          <pre>type ResourceName <a href="http://godoc.org/builtin#string">string</a></pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RestartPolicy">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L438">RestartPolicy</a> <a class="permalink" href="v1beta3.html#RestartPolicy">&para;</a></h3>
+          <pre>type RestartPolicy struct {
+    <span class="com">// Only one of the following restart policies may be specified.</span>
+    <span class="com">// If none of the following policies is specified, the default one</span>
+    <span class="com">// is RestartPolicyAlways.</span>
+    <span id="RestartPolicy.Always">Always</span>    *<a href="v1beta3.html#RestartPolicyAlways">RestartPolicyAlways</a>    `json:&#34;always,omitempty&#34;`
+    <span id="RestartPolicy.OnFailure">OnFailure</span> *<a href="v1beta3.html#RestartPolicyOnFailure">RestartPolicyOnFailure</a> `json:&#34;onFailure,omitempty&#34;`
+    <span id="RestartPolicy.Never">Never</span>     *<a href="v1beta3.html#RestartPolicyNever">RestartPolicyNever</a>     `json:&#34;never,omitempty&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RestartPolicyAlways">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L430">RestartPolicyAlways</a> <a class="permalink" href="v1beta3.html#RestartPolicyAlways">&para;</a></h3>
+          <pre>type RestartPolicyAlways struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RestartPolicyNever">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L436">RestartPolicyNever</a> <a class="permalink" href="v1beta3.html#RestartPolicyNever">&para;</a></h3>
+          <pre>type RestartPolicyNever struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RestartPolicyOnFailure">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L434">RestartPolicyOnFailure</a> <a class="permalink" href="v1beta3.html#RestartPolicyOnFailure">&para;</a></h3>
+          <pre>type RestartPolicyOnFailure struct{}</pre><p>
+TODO(dchen1107): Define what kinds of failures should restart.
+TODO(dchen1107): Decide whether to support policy knobs, and, if so, which ones.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Service">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L628">Service</a> <a class="permalink" href="v1beta3.html#Service">&para;</a></h3>
+          <pre>type Service struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a>   `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ObjectMeta">ObjectMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// Spec defines the behavior of a service.</span>
+    <span id="Service.Spec">Spec</span> <a href="v1beta3.html#ServiceSpec">ServiceSpec</a> `json:&#34;spec,omitempty&#34;`
+
+    <span class="com">// Status represents the current status of a service.</span>
+    <span id="Service.Status">Status</span> <a href="v1beta3.html#ServiceStatus">ServiceStatus</a> `json:&#34;status,omitempty&#34;`
+}</pre><p>
+Service is a named abstraction of software service (for example, mysql) consisting of local port
+(for example 3306) that the proxy listens on, and the selector that determines which pods
+will answer requests sent through the proxy.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Service.IsAnAPIObject">func (*Service) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L60">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Service.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Service">Service</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="ServiceList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L640">ServiceList</a> <a class="permalink" href="v1beta3.html#ServiceList">&para;</a></h3>
+          <pre>type ServiceList struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span id="ServiceList.Items">Items</span> []<a href="v1beta3.html#Service">Service</a> `json:&#34;items&#34;`
+}</pre><p>
+ServiceList holds a list of services.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ServiceList.IsAnAPIObject">func (*ServiceList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L61">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#ServiceList.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#ServiceList">ServiceList</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="ServiceSpec">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L596">ServiceSpec</a> <a class="permalink" href="v1beta3.html#ServiceSpec">&para;</a></h3>
+          <pre>type ServiceSpec struct {
+    <span class="com">// Port is the TCP or UDP port that will be made available to each pod for connecting to the pods</span>
+    <span class="com">// proxied by this service.</span>
+    <span id="ServiceSpec.Port">Port</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;port&#34;`
+
+    <span class="com">// Optional: Supports &#34;TCP&#34; and &#34;UDP&#34;.  Defaults to &#34;TCP&#34;.</span>
+    <span id="ServiceSpec.Protocol">Protocol</span> <a href="v1beta3.html#Protocol">Protocol</a> `json:&#34;protocol,omitempty&#34;`
+
+    <span class="com">// This service will route traffic to pods having labels matching this selector.</span>
+    <span id="ServiceSpec.Selector">Selector</span> map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a> `json:&#34;selector,omitempty&#34;`
+
+    <span class="com">// PortalIP is usually assigned by the master.  If specified by the user</span>
+    <span class="com">// we will try to respect it or else fail the request.  This field can</span>
+    <span class="com">// not be changed by updates.</span>
+    <span id="ServiceSpec.PortalIP">PortalIP</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;portalIP,omitempty&#34;`
+
+    <span class="com">// ProxyPort is assigned by the master.  If 0, the proxy will choose an ephemeral port.</span>
+    <span id="ServiceSpec.ProxyPort">ProxyPort</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;proxyPort,omitempty&#34;`
+
+    <span class="com">// CreateExternalLoadBalancer indicates whether a load balancer should be created for this service.</span>
+    <span id="ServiceSpec.CreateExternalLoadBalancer">CreateExternalLoadBalancer</span> <a href="http://godoc.org/builtin#bool">bool</a> `json:&#34;createExternalLoadBalancer,omitempty&#34;`
+    <span class="com">// PublicIPs are used by external load balancers.</span>
+    <span id="ServiceSpec.PublicIPs">PublicIPs</span> []<a href="http://godoc.org/builtin#string">string</a> `json:&#34;publicIPs,omitempty&#34;`
+
+    <span class="com">// ContainerPort is the name of the port on the container to direct traffic to.</span>
+    <span class="com">// Optional, if unspecified use the first port on the container.</span>
+    <span id="ServiceSpec.ContainerPort">ContainerPort</span> <a href="../util.html">util</a>.<a href="../util.html#IntOrString">IntOrString</a> `json:&#34;containerPort,omitempty&#34;`
+}</pre><p>
+ServiceSpec describes the attributes that a user creates on a service
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServiceStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L593">ServiceStatus</a> <a class="permalink" href="v1beta3.html#ServiceStatus">&para;</a></h3>
+          <pre>type ServiceStatus struct{}</pre><p>
+ServiceStatus represents the current status of a service
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Status">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L716">Status</a> <a class="permalink" href="v1beta3.html#Status">&para;</a></h3>
+          <pre>type Status struct {
+    <a href="v1beta3.html#TypeMeta">TypeMeta</a> `json:&#34;,inline&#34;`
+    <a href="v1beta3.html#ListMeta">ListMeta</a> `json:&#34;metadata,omitempty&#34;`
+
+    <span class="com">// One of: &#34;Success&#34;, &#34;Failure&#34;, &#34;Working&#34; (for operations not yet completed)</span>
+    <span id="Status.Status">Status</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;status,omitempty&#34;`
+    <span class="com">// A human-readable description of the status of this operation.</span>
+    <span id="Status.Message">Message</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;message,omitempty&#34;`
+    <span class="com">// A machine-readable description of why this operation is in the</span>
+    <span class="com">// &#34;Failure&#34; or &#34;Working&#34; status. If this value is empty there</span>
+    <span class="com">// is no information available. A Reason clarifies an HTTP status</span>
+    <span class="com">// code but does not override it.</span>
+    <span id="Status.Reason">Reason</span> <a href="v1beta3.html#StatusReason">StatusReason</a> `json:&#34;reason,omitempty&#34;`
+    <span class="com">// Extended data associated with the reason.  Each reason may define its</span>
+    <span class="com">// own extended details. This field is optional and the data returned</span>
+    <span class="com">// is not guaranteed to conform to any schema except that defined by</span>
+    <span class="com">// the reason type.</span>
+    <span id="Status.Details">Details</span> *<a href="v1beta3.html#StatusDetails">StatusDetails</a> `json:&#34;details,omitempty&#34;`
+    <span class="com">// Suggested HTTP return code for this status, 0 if not set.</span>
+    <span id="Status.Code">Code</span> <a href="http://godoc.org/builtin#int">int</a> `json:&#34;code,omitempty&#34;`
+}</pre><p>
+Status is a return value for calls that don&#39;t return other objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Status.IsAnAPIObject">func (*Status) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/register.go#L67">IsAnAPIObject</a> <a class="permalink" href="v1beta3.html#Status.IsAnAPIObject">&para;</a></h4>
+            <pre class="funcdecl">func (*<a href="v1beta3.html#Status">Status</a>) IsAnAPIObject()</pre>
+            
+  
+
+          
+        
+          <h3 id="StatusCause">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L827">StatusCause</a> <a class="permalink" href="v1beta3.html#StatusCause">&para;</a></h3>
+          <pre>type StatusCause struct {
+    <span class="com">// A machine-readable description of the cause of the error. If this value is</span>
+    <span class="com">// empty there is no information available.</span>
+    <span id="StatusCause.Type">Type</span> <a href="v1beta3.html#CauseType">CauseType</a> `json:&#34;reason,omitempty&#34;`
+    <span class="com">// A human-readable description of the cause of the error.  This field may be</span>
+    <span class="com">// presented as-is to a reader.</span>
+    <span id="StatusCause.Message">Message</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;message,omitempty&#34;`
+    <span class="com">// The field of the resource that has caused this error, as named by its JSON</span>
+    <span class="com">// serialization. May include dot and postfix notation for nested attributes.</span>
+    <span class="com">// Arrays are zero-indexed.  Fields may appear more than once in an array of</span>
+    <span class="com">// causes due to fields having multiple errors.</span>
+    <span class="com">// Optional.</span>
+    <span class="com">//</span>
+    <span class="com">// Examples:</span>
+    <span class="com">//   &#34;name&#34; - the field &#34;name&#34; on the current resource</span>
+    <span class="com">//   &#34;items[0].name&#34; - the field &#34;name&#34; on the first array entry in &#34;items&#34;</span>
+    <span id="StatusCause.Field">Field</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;field,omitempty&#34;`
+}</pre><p>
+StatusCause provides more information about an api.Status failure, including
+cases when multiple errors are encountered.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="StatusDetails">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L744">StatusDetails</a> <a class="permalink" href="v1beta3.html#StatusDetails">&para;</a></h3>
+          <pre>type StatusDetails struct {
+    <span class="com">// The ID attribute of the resource associated with the status StatusReason</span>
+    <span class="com">// (when there is a single ID which can be described).</span>
+    <span id="StatusDetails.ID">ID</span>  <a href="http://godoc.org/builtin#string">string</a> `json:&#34;id,omitempty&#34;`
+    <span class="com">// The kind attribute of the resource associated with the status StatusReason.</span>
+    <span class="com">// On some operations may differ from the requested resource Kind.</span>
+    <span id="StatusDetails.Kind">Kind</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;kind,omitempty&#34;`
+    <span class="com">// The Causes array includes more details associated with the StatusReason</span>
+    <span class="com">// failure. Not all StatusReasons may provide detailed causes.</span>
+    <span id="StatusDetails.Causes">Causes</span> []<a href="v1beta3.html#StatusCause">StatusCause</a> `json:&#34;causes,omitempty&#34;`
+}</pre><p>
+StatusDetails is a set of additional properties that MAY be set by the
+server to provide additional information about a response. The Reason
+field of a Status object defines what attributes will be set. Clients
+must ignore fields that do not match the defined type of each attribute,
+and should assume that any attribute may be empty, invalid, or under
+defined.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="StatusReason">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L767">StatusReason</a> <a class="permalink" href="v1beta3.html#StatusReason">&para;</a></h3>
+          <pre>type StatusReason <a href="http://godoc.org/builtin#string">string</a></pre><p>
+StatusReason is an enumeration of possible failure causes.  Each StatusReason
+must map to a single HTTP status code, but multiple reasons may map
+to the same HTTP status code.
+TODO: move to apiserver
+</p>
+
+          <pre>const (
+    <span class="com">// StatusReasonUnknown means the server has declined to indicate a specific reason.</span>
+    <span class="com">// The details field may contain other information about this error.</span>
+    <span class="com">// Status code 500.</span>
+    <span id="StatusReasonUnknown">StatusReasonUnknown</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;&#34;
+
+    <span class="com">// StatusReasonWorking means the server is processing this request and will complete</span>
+    <span class="com">// at a future time.</span>
+    <span class="com">// Details (optional):</span>
+    <span class="com">//   &#34;kind&#34; string - the name of the resource being referenced (&#34;operation&#34; today)</span>
+    <span class="com">//   &#34;id&#34;   string - the identifier of the Operation resource where updates</span>
+    <span class="com">//                   will be returned</span>
+    <span class="com">// Headers (optional):</span>
+    <span class="com">//   &#34;Location&#34; - HTTP header populated with a URL that can retrieved the final</span>
+    <span class="com">//                status of this operation.</span>
+    <span class="com">// Status code 202</span>
+    <span id="StatusReasonWorking">StatusReasonWorking</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;Working&#34;
+
+    <span class="com">// StatusReasonNotFound means one or more resources required for this operation</span>
+    <span class="com">// could not be found.</span>
+    <span class="com">// Details (optional):</span>
+    <span class="com">//   &#34;kind&#34; string - the kind attribute of the missing resource</span>
+    <span class="com">//                   on some operations may differ from the requested</span>
+    <span class="com">//                   resource.</span>
+    <span class="com">//   &#34;id&#34;   string - the identifier of the missing resource</span>
+    <span class="com">// Status code 404</span>
+    <span id="StatusReasonNotFound">StatusReasonNotFound</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;NotFound&#34;
+
+    <span class="com">// StatusReasonAlreadyExists means the resource you are creating already exists.</span>
+    <span class="com">// Details (optional):</span>
+    <span class="com">//   &#34;kind&#34; string - the kind attribute of the conflicting resource</span>
+    <span class="com">//   &#34;id&#34;   string - the identifier of the conflicting resource</span>
+    <span class="com">// Status code 409</span>
+    <span id="StatusReasonAlreadyExists">StatusReasonAlreadyExists</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;AlreadyExists&#34;
+
+    <span class="com">// StatusReasonConflict means the requested update operation cannot be completed</span>
+    <span class="com">// due to a conflict in the operation. The client may need to alter the request.</span>
+    <span class="com">// Each resource may define custom details that indicate the nature of the</span>
+    <span class="com">// conflict.</span>
+    <span class="com">// Status code 409</span>
+    <span id="StatusReasonConflict">StatusReasonConflict</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;Conflict&#34;
+
+    <span class="com">// StatusReasonInvalid means the requested create or update operation cannot be</span>
+    <span class="com">// completed due to invalid data provided as part of the request. The client may</span>
+    <span class="com">// need to alter the request. When set, the client may use the StatusDetails</span>
+    <span class="com">// message field as a summary of the issues encountered.</span>
+    <span class="com">// Details (optional):</span>
+    <span class="com">//   &#34;kind&#34; string - the kind attribute of the invalid resource</span>
+    <span class="com">//   &#34;id&#34;   string - the identifier of the invalid resource</span>
+    <span class="com">//   &#34;causes&#34;      - one or more StatusCause entries indicating the data in the</span>
+    <span class="com">//                   provided resource that was invalid.  The code, message, and</span>
+    <span class="com">//                   field attributes will be set.</span>
+    <span class="com">// Status code 422</span>
+    <span id="StatusReasonInvalid">StatusReasonInvalid</span> <a href="v1beta3.html#StatusReason">StatusReason</a> = &#34;Invalid&#34;
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="TCPSocketAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L278">TCPSocketAction</a> <a class="permalink" href="v1beta3.html#TCPSocketAction">&para;</a></h3>
+          <pre>type TCPSocketAction struct {
+    <span class="com">// Required: Port to connect to.</span>
+    <span id="TCPSocketAction.Port">Port</span> <a href="../util.html">util</a>.<a href="../util.html#IntOrString">IntOrString</a> `json:&#34;port,omitempty&#34;`
+}</pre><p>
+TCPSocketAction describes an action based on opening a socket
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="TypeMeta">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L51">TypeMeta</a> <a class="permalink" href="v1beta3.html#TypeMeta">&para;</a></h3>
+          <pre>type TypeMeta struct {
+    <span class="com">// Kind is a string value representing the REST resource this object represents.</span>
+    <span class="com">// Servers may infer this from the endpoint the client submits requests to.</span>
+    <span id="TypeMeta.Kind">Kind</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;kind,omitempty&#34;`
+
+    <span class="com">// APIVersion defines the versioned schema of this representation of an object.</span>
+    <span class="com">// Servers should convert recognized schemas to the latest internal value, and</span>
+    <span class="com">// may reject unrecognized values.</span>
+    <span id="TypeMeta.APIVersion">APIVersion</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;apiVersion,omitempty&#34;`
+}</pre><p>
+TypeMeta describes an individual object in an API response or request
+with strings representing the type of the object and its API schema version.
+Structures that are versioned or persisted should inline TypeMeta.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Volume">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L159">Volume</a> <a class="permalink" href="v1beta3.html#Volume">&para;</a></h3>
+          <pre>type Volume struct {
+    <span class="com">// Required: This must be a DNS_LABEL.  Each volume in a pod must have</span>
+    <span class="com">// a unique name.</span>
+    <span id="Volume.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name&#34;`
+    <span class="com">// Source represents the location and type of a volume to mount.</span>
+    <span class="com">// This is optional for now. If not specified, the Volume is implied to be an EmptyDir.</span>
+    <span class="com">// This implied behavior is deprecated and will be removed in a future version.</span>
+    <span id="Volume.Source">Source</span> *<a href="v1beta3.html#VolumeSource">VolumeSource</a> `json:&#34;source&#34;`
+}</pre><p>
+Volume represents a named volume in a pod that may be accessed by any containers in the pod.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="VolumeMount">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L250">VolumeMount</a> <a class="permalink" href="v1beta3.html#VolumeMount">&para;</a></h3>
+          <pre>type VolumeMount struct {
+    <span class="com">// Required: This must match the Name of a Volume [above].</span>
+    <span id="VolumeMount.Name">Name</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;name&#34;`
+    <span class="com">// Optional: Defaults to false (read-write).</span>
+    <span id="VolumeMount.ReadOnly">ReadOnly</span> <a href="http://godoc.org/builtin#bool">bool</a> `json:&#34;readOnly,omitempty&#34;`
+    <span class="com">// Required.</span>
+    <span id="VolumeMount.MountPath">MountPath</span> <a href="http://godoc.org/builtin#string">string</a> `json:&#34;mountPath,omitempty&#34;`
+}</pre><p>
+VolumeMount describes a mounting of a Volume within a container.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="VolumeSource">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/v1beta3/types.go#L171">VolumeSource</a> <a class="permalink" href="v1beta3.html#VolumeSource">&para;</a></h3>
+          <pre>type VolumeSource struct {
+    <span class="com">// HostDir represents a pre-existing directory on the host machine that is directly</span>
+    <span class="com">// exposed to the container. This is generally used for system agents or other privileged</span>
+    <span class="com">// things that are allowed to see the host machine. Most containers will NOT need this.</span>
+    <span class="com">// TODO(jonesdl) We need to restrict who can use host directory mounts and who can/can not</span>
+    <span class="com">// mount host directories as read/write.</span>
+    <span id="VolumeSource.HostDir">HostDir</span> *<a href="v1beta3.html#HostDir">HostDir</a> `json:&#34;hostDir&#34;`
+    <span class="com">// EmptyDir represents a temporary directory that shares a pod&#39;s lifetime.</span>
+    <span id="VolumeSource.EmptyDir">EmptyDir</span> *<a href="v1beta3.html#EmptyDir">EmptyDir</a> `json:&#34;emptyDir&#34;`
+    <span class="com">// GCEPersistentDisk represents a GCE Disk resource that is attached to a</span>
+    <span class="com">// kubelet&#39;s host machine and then exposed to the pod.</span>
+    <span id="VolumeSource.GCEPersistentDisk">GCEPersistentDisk</span> *<a href="v1beta3.html#GCEPersistentDisk">GCEPersistentDisk</a> `json:&#34;persistentDisk&#34;`
+    <span class="com">// GitRepo represents a git repository at a particular revision.</span>
+    <span id="VolumeSource.GitRepo">GitRepo</span> *<a href="v1beta3.html#GitRepo">GitRepo</a> `json:&#34;gitRepo&#34;`
+}</pre><p>
+VolumeSource represents the source location of a valume to mount.
+Only one of its members may be specified.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta3"></form>
+  <p>Package v1beta3 imports <a href="v1beta3@imports.html">4 packages</a> (<a href="v1beta3@import-graph.html">graph</a>) and is imported by <a href="v1beta3@importers.html">8 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:12Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="v1beta3@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="v1beta3.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>labels - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package labels">
+    <meta property="og:title" content="Package labels">
+    <meta name="description" content="Package labels implements a simple label system, parsing and matching selectors with sets of labels.">
+    <meta name="twitter:description" content="Package labels implements a simple label system, parsing and matching selectors with sets of labels.">
+    <meta property="og:description" content="Package labels implements a simple label system, parsing and matching selectors with sets of labels.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">labels</span>
+  
+  <span class="pull-right">
+    <a href="labels.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="labels.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package labels</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/labels"</code>
+
+        <p>
+Package labels implements a simple label system, parsing and matching
+selectors with sets of labels.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="labels.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="labels.html#LabelSelector">type LabelSelector</a></li>
+            <ul>
+            
+            <li><a href="labels.html#LabelSelector.Matches">func (lsel *LabelSelector) Matches(l Labels) (bool, error)</a></li><li><a href="labels.html#LabelSelector.String">func (lsel *LabelSelector) String() (string, error)</a></li>
+            </ul>
+          
+            <li><a href="labels.html#Labels">type Labels</a></li>
+            
+            
+            
+            
+          
+            <li><a href="labels.html#Operator">type Operator</a></li>
+            
+            
+            
+            
+          
+            <li><a href="labels.html#Requirement">type Requirement</a></li>
+            <ul>
+            <li><a href="labels.html#NewRequirement">func NewRequirement(key string, op Operator, vals util.StringSet) (*Requirement, error)</a></li>
+            <li><a href="labels.html#Requirement.Matches">func (r *Requirement) Matches(ls Labels) (bool, error)</a></li><li><a href="labels.html#Requirement.String">func (r *Requirement) String() (string, error)</a></li>
+            </ul>
+          
+            <li><a href="labels.html#Selector">type Selector</a></li>
+            <ul>
+            <li><a href="labels.html#Everything">func Everything() Selector</a></li><li><a href="labels.html#OneTermEqualSelector">func OneTermEqualSelector(k, v string) Selector</a></li><li><a href="labels.html#ParseSelector">func ParseSelector(selector string) (Selector, error)</a></li><li><a href="labels.html#SelectorFromSet">func SelectorFromSet(ls Set) Selector</a></li>
+            
+            </ul>
+          
+            <li><a href="labels.html#Set">type Set</a></li>
+            <ul>
+            
+            <li><a href="labels.html#Set.AsSelector">func (ls Set) AsSelector() Selector</a></li><li><a href="labels.html#Set.Get">func (ls Set) Get(label string) string</a></li><li><a href="labels.html#Set.Has">func (ls Set) Has(label string) bool</a></li><li><a href="labels.html#Set.String">func (ls Set) String() string</a></li>
+            </ul>
+          
+            <li><a href="labels.html#SetBasedSelector">type SetBasedSelector</a></li>
+            <ul>
+            <li><a href="labels.html#Parse">func Parse(selector string) (SetBasedSelector, error)</a></li>
+            
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/labels">Package Files</a>
+          <a class="permalink" href="labels.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go">labels.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go">selector.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="LabelSelector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L166">LabelSelector</a> <a class="permalink" href="labels.html#LabelSelector">&para;</a></h3>
+          <pre>type LabelSelector struct {
+    <span id="LabelSelector.Requirements">Requirements</span> []<a href="labels.html#Requirement">Requirement</a>
+}</pre><p>
+LabelSelector contains a list of Requirements.
+LabelSelector is set-based and is distinguished from exact
+match-based selectors composed of key=value matching conjunctions.
+TODO: Remove previous sentence when exact match-based
+selectors are removed.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="LabelSelector.Matches">func (*LabelSelector) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L273">Matches</a> <a class="permalink" href="labels.html#LabelSelector.Matches">&para;</a></h4>
+            <pre class="funcdecl">func (lsel *<a href="labels.html#LabelSelector">LabelSelector</a>) Matches(l <a href="labels.html#Labels">Labels</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Matches for a LabelSelector returns true if all
+its Requirements match the input Labels. If any
+Requirement does not match, false is returned.
+An error is returned if any match attempt between
+a Requirement and the input Labels returns an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="LabelSelector.String">func (*LabelSelector) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L288">String</a> <a class="permalink" href="labels.html#LabelSelector.String">&para;</a></h4>
+            <pre class="funcdecl">func (lsel *<a href="labels.html#LabelSelector">LabelSelector</a>) String() (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+String returns a comma-separated string of all
+the LabelSelector Requirements&#39; human-readable strings.
+An error is returned if any attempt to get a
+Requirement&#39;s  human-readable string returns an error.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Labels">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L25">Labels</a> <a class="permalink" href="labels.html#Labels">&para;</a></h3>
+          <pre>type Labels interface {
+    <span class="com">// Has returns whether the provided label exists.</span>
+    <span id="Labels.Has">Has</span>(label <a href="http://godoc.org/builtin#string">string</a>) (exists <a href="http://godoc.org/builtin#bool">bool</a>)
+
+    <span class="com">// Get returns the value for the provided label.</span>
+    <span id="Labels.Get">Get</span>(label <a href="http://godoc.org/builtin#string">string</a>) (value <a href="http://godoc.org/builtin#string">string</a>)
+}</pre><p>
+Labels allows you to present labels independently from their storage.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Operator">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L153">Operator</a> <a class="permalink" href="labels.html#Operator">&para;</a></h3>
+          <pre>type Operator <a href="http://godoc.org/builtin#int">int</a></pre><p>
+Operator represents a key&#39;s relationship
+to a set of values in a Requirement.
+</p>
+
+          <pre>const (
+    <span id="In">In</span>  <a href="labels.html#Operator">Operator</a> = <a href="http://godoc.org/builtin#iota">iota</a> + 1
+    <span id="NotIn">NotIn</span>
+    <span id="Exists">Exists</span>
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Requirement">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L178">Requirement</a> <a class="permalink" href="labels.html#Requirement">&para;</a></h3>
+          <pre>type Requirement struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Requirement is a selector that contains values, a key
+and an operator that relates the key and values. The zero
+value of Requirement is invalid. See the NewRequirement
+constructor for creating a valid Requirement.
+Requirement is set-based and is distinguished from exact
+match-based selectors composed of key=value matching.
+TODO: Remove previous sentence when exact match-based
+selectors are removed.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRequirement">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L193">NewRequirement</a> <a class="permalink" href="labels.html#NewRequirement">&para;</a></h4>
+            <pre class="funcdecl">func NewRequirement(key <a href="http://godoc.org/builtin#string">string</a>, op <a href="labels.html#Operator">Operator</a>, vals <a href="util.html">util</a>.<a href="util.html#StringSet">StringSet</a>) (*<a href="labels.html#Requirement">Requirement</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewRequirement is the constructor for a Requirement.
+If any of these rules is violated, an error is returned:
+(1) The operator can only be In, NotIn or Exists.
+(2) If the operator is In or NotIn, the values set must
+</p>
+<pre>be non-empty.
+</pre>
+<p>
+(3) The key is invalid due to its length, or sequence
+</p>
+<pre>of characters. See validateLabelKey for more details.
+</pre>
+<p>
+The empty string is a valid value in the input values set.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Requirement.Matches">func (*Requirement) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L221">Matches</a> <a class="permalink" href="labels.html#Requirement.Matches">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="labels.html#Requirement">Requirement</a>) Matches(ls <a href="labels.html#Labels">Labels</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Matches returns true if the Requirement matches the input Labels.
+There is a match in the following cases:
+(1) The operator is Exists and Labels has the Requirement&#39;s key.
+(2) The operator is In, Labels has the Requirement&#39;s key and Labels&#39;
+</p>
+<pre>value for that key is in Requirement&#39;s value set.
+</pre>
+<p>
+(3) The operator is NotIn, Labels has the Requirement&#39;s key and
+</p>
+<pre>Labels&#39; value for that key is not in Requirement&#39;s value set.
+</pre>
+<p>
+(4) The operator is NotIn and Labels does not have the
+</p>
+<pre>Requirement&#39;s key.
+</pre>
+<p>
+If called on an invalid Requirement, an error is returned. See
+NewRequirement for creating a valid Requirement.
+</p>
+
+            
+  
+
+          
+            <h4 id="Requirement.String">func (*Requirement) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L243">String</a> <a class="permalink" href="labels.html#Requirement.String">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="labels.html#Requirement">Requirement</a>) String() (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+String returns a human-readable string that represents this
+Requirement. If called on an invalid Requirement, an error is
+returned. See NewRequirement for creating a valid Requirement.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Selector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L30">Selector</a> <a class="permalink" href="labels.html#Selector">&para;</a></h3>
+          <pre>type Selector interface {
+    <span class="com">// Matches returns true if this selector matches the given set of labels.</span>
+    <span id="Selector.Matches">Matches</span>(<a href="labels.html#Labels">Labels</a>) <a href="http://godoc.org/builtin#bool">bool</a>
+
+    <span class="com">// Empty returns true if this selector does not restrict the selection space.</span>
+    <span id="Selector.Empty">Empty</span>() <a href="http://godoc.org/builtin#bool">bool</a>
+
+    <span class="com">// RequiresExactMatch allows a caller to introspect whether a given selector</span>
+    <span class="com">// requires a single specific label to be set, and if so returns the value it</span>
+    <span class="com">// requires.</span>
+    <span class="com">// TODO: expand this to be more general</span>
+    <span id="Selector.RequiresExactMatch">RequiresExactMatch</span>(label <a href="http://godoc.org/builtin#string">string</a>) (value <a href="http://godoc.org/builtin#string">string</a>, found <a href="http://godoc.org/builtin#bool">bool</a>)
+
+    <span class="com">// String returns a human readable string that represents this selector.</span>
+    <span id="Selector.String">String</span>() <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+Selector represents a label selector.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="Everything">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L48">Everything</a> <a class="permalink" href="labels.html#Everything">&para;</a></h4>
+            <pre class="funcdecl">func Everything() <a href="labels.html#Selector">Selector</a></pre><p>
+Everything returns a selector that matches all labels.
+</p>
+
+            
+  
+
+          
+            <h4 id="OneTermEqualSelector">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L489">OneTermEqualSelector</a> <a class="permalink" href="labels.html#OneTermEqualSelector">&para;</a></h4>
+            <pre class="funcdecl">func OneTermEqualSelector(k, v <a href="http://godoc.org/builtin#string">string</a>) <a href="labels.html#Selector">Selector</a></pre><p>
+OneTermEqualSelector returns an object that matches objects where one label/field equals one value.
+Cannot return an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="ParseSelector">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L463">ParseSelector</a> <a class="permalink" href="labels.html#ParseSelector">&para;</a></h4>
+            <pre class="funcdecl">func ParseSelector(selector <a href="http://godoc.org/builtin#string">string</a>) (<a href="labels.html#Selector">Selector</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ParseSelector takes a string representing a selector and returns an
+object suitable for matching, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="SelectorFromSet">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L447">SelectorFromSet</a> <a class="permalink" href="labels.html#SelectorFromSet">&para;</a></h4>
+            <pre class="funcdecl">func SelectorFromSet(ls <a href="labels.html#Set">Set</a>) <a href="labels.html#Selector">Selector</a></pre><p>
+SelectorFromSet returns a Selector which will match exactly the given Set. A
+nil Set is considered equivalent to Everything().
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="Set">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L34">Set</a> <a class="permalink" href="labels.html#Set">&para;</a></h3>
+          <pre>type Set map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a></pre><p>
+Set is a map of label:value. It implements Labels.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Set.AsSelector">func (Set) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L60">AsSelector</a> <a class="permalink" href="labels.html#Set.AsSelector">&para;</a></h4>
+            <pre class="funcdecl">func (ls <a href="labels.html#Set">Set</a>) AsSelector() <a href="labels.html#Selector">Selector</a></pre><p>
+AsSelector converts labels into a selectors.
+</p>
+
+            
+  
+
+          
+            <h4 id="Set.Get">func (Set) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L55">Get</a> <a class="permalink" href="labels.html#Set.Get">&para;</a></h4>
+            <pre class="funcdecl">func (ls <a href="labels.html#Set">Set</a>) Get(label <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Get returns the value in the map for the provided label.
+</p>
+
+            
+  
+
+          
+            <h4 id="Set.Has">func (Set) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L49">Has</a> <a class="permalink" href="labels.html#Set.Has">&para;</a></h4>
+            <pre class="funcdecl">func (ls <a href="labels.html#Set">Set</a>) Has(label <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+Has returns whether the provided label exists in the map.
+</p>
+
+            
+  
+
+          
+            <h4 id="Set.String">func (Set) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/labels.go#L38">String</a> <a class="permalink" href="labels.html#Set.String">&para;</a></h4>
+            <pre class="funcdecl">func (ls <a href="labels.html#Set">Set</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+String returns all labels listed as a human readable string.
+Conveniently, exactly the format that ParseSelector takes.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="SetBasedSelector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L143">SetBasedSelector</a> <a class="permalink" href="labels.html#SetBasedSelector">&para;</a></h3>
+          <pre>type SetBasedSelector interface {
+    <span class="com">// Matches returns true if this selector matches the given set of labels.</span>
+    <span id="SetBasedSelector.Matches">Matches</span>(<a href="labels.html#Labels">Labels</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// String returns a human-readable string that represents this selector.</span>
+    <span id="SetBasedSelector.String">String</span>() (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+TODO Support forward and reverse indexing (#1183, #1348). Eliminate uses of Selector.RequiresExactMatch.
+TODO rename to Selector after Selector interface above removed
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="Parse">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/labels/selector.go#L330">Parse</a> <a class="permalink" href="labels.html#Parse">&para;</a></h4>
+            <pre class="funcdecl">func Parse(selector <a href="http://godoc.org/builtin#string">string</a>) (<a href="labels.html#SetBasedSelector">SetBasedSelector</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Parse takes a string representing a selector and returns a selector
+object, or an error. This parsing function differs from ParseSelector
+as they parse different selectors with different syntaxes.
+The input will cause an error if it does not follow this form:
+</p>
+<pre>&lt;selector-syntax&gt; ::= &lt;requirement&gt; | &lt;requirement&gt; &#34;,&#34; &lt;selector-syntax&gt;
+    &lt;requirement&gt; ::= KEY &lt;set-restriction&gt;
+&lt;set-restriction&gt; ::= &#34;&#34; | &lt;inclusion-exclusion&gt; &lt;value-set&gt;
+</pre>
+<p>
+&lt;inclusion-exclusion&gt; ::= &#34; in &#34; | &#34; not in &#34;
+</p>
+<pre>&lt;value-set&gt; ::= &#34;(&#34; &lt;values&gt; &#34;)&#34;
+   &lt;values&gt; ::= VALUE | VALUE &#34;,&#34; &lt;values&gt;
+</pre>
+<p>
+KEY is a sequence of one or more characters that does not contain &#39;,&#39; or &#39; &#39;
+</p>
+<pre>[^, ]+
+</pre>
+<p>
+VALUE is a sequence of zero or more characters that does not contain &#39;,&#39;, &#39; &#39; or &#39;)&#39;
+</p>
+<pre>[^, )]*
+</pre>
+<p>
+Example of valid syntax:
+</p>
+<pre>&#34;x in (foo,,baz),y,z not in ()&#34;
+</pre>
+<p>
+Note:
+</p>
+<pre>(1) Inclusion - &#34; in &#34; - denotes that the KEY is equal to any of the
+    VALUEs in its requirement
+(2) Exclusion - &#34; not in &#34; - denotes that the KEY is not equal to any
+    of the VALUEs in its requirement
+(3) The empty string is a valid VALUE
+(4) A requirement with just a KEY - as in &#34;y&#34; above - denotes that
+    the KEY exists and can be any VALUE.
+</pre>
+<p>
+TODO: value validation possibly including duplicate value check, restricting certain characters
+</p>
+
+            
+  
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/labels"></form>
+  <p>Package labels imports <a href="labels@imports.html">6 packages</a> (<a href="labels@import-graph.html">graph</a>) and is imported by <a href="labels@importers.html">82 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:54Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="labels@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="labels.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

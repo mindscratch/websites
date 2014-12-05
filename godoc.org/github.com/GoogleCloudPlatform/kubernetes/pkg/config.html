@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>config - GoDoc</title>
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">config</span>
+  
+  <span class="pull-right">
+    <a href="config.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="config.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package config</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/config"</code>
+
+        
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="config.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="config.html#CreateObject">func CreateObject(client RESTClientPoster, mapping *meta.RESTMapping, obj runtime.Object) *errs.ValidationError</a></li><li><a href="config.html#CreateObjects">func CreateObjects(typer runtime.ObjectTyper, mapper meta.RESTMapper, clientFor ClientPosterFunc, objects []runtime.Object) util.ErrorList</a></li>
+          
+            <li><a href="config.html#ClientPosterFunc">type ClientPosterFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="config.html#RESTClientPoster">type RESTClientPoster</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/config">Package Files</a>
+          <a class="permalink" href="config.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/config/config.go">config.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="CreateObject">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/config/config.go#L72">CreateObject</a> <a class="permalink" href="config.html#CreateObject">&para;</a></h3>
+          <pre class="funcdecl">func CreateObject(client <a href="config.html#RESTClientPoster">RESTClientPoster</a>, mapping *<a href="api/meta.html">meta</a>.<a href="api/meta.html#RESTMapping">RESTMapping</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) *<a href="api/errors.html">errs</a>.<a href="api/errors.html#ValidationError">ValidationError</a></pre><p>
+CreateObject creates the obj using the provided clients and the resource URI
+mapping. It reports ValidationError when the object is missing the Metadata
+or the Name and it will report any error occured during create REST call
+</p>
+
+          
+  
+
+        
+          <h3 id="CreateObjects">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/config/config.go#L40">CreateObjects</a> <a class="permalink" href="config.html#CreateObjects">&para;</a></h3>
+          <pre class="funcdecl">func CreateObjects(typer <a href="runtime.html">runtime</a>.<a href="runtime.html#ObjectTyper">ObjectTyper</a>, mapper <a href="api/meta.html">meta</a>.<a href="api/meta.html#RESTMapper">RESTMapper</a>, clientFor <a href="config.html#ClientPosterFunc">ClientPosterFunc</a>, objects []<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="util.html">util</a>.<a href="util.html#ErrorList">ErrorList</a></pre><p>
+CreateObjects creates bulk of resources provided by items list. Each item must
+be valid API type. It requires ObjectTyper to parse the Version and Kind and
+RESTMapper to get the resource URI and REST client that knows how to create
+given type
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ClientPosterFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/config/config.go#L34">ClientPosterFunc</a> <a class="permalink" href="config.html#ClientPosterFunc">&para;</a></h3>
+          <pre>type ClientPosterFunc func(mapping *<a href="api/meta.html">meta</a>.<a href="api/meta.html#RESTMapping">RESTMapping</a>) (<a href="config.html#RESTClientPoster">RESTClientPoster</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ClientFunc returns the RESTClient defined for given resource
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RESTClientPoster">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/config/config.go#L29">RESTClientPoster</a> <a class="permalink" href="config.html#RESTClientPoster">&para;</a></h3>
+          <pre>type RESTClientPoster interface {
+    <span id="RESTClientPoster.Post">Post</span>() *<a href="client.html">client</a>.<a href="client.html#Request">Request</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/config"></form>
+  <p>Package config imports <a href="config@imports.html">6 packages</a> (<a href="config@import-graph.html">graph</a>) and is imported by <a href="config@importers.html">1 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:37Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="config@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="config.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

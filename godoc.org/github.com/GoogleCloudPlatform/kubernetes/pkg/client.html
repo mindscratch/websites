@@ -1,0 +1,2157 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>client - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package client">
+    <meta property="og:title" content="Package client">
+    <meta name="description" content="Package client contains the implementation of the client side communication with the Kubernetes master.">
+    <meta name="twitter:description" content="Package client contains the implementation of the client side communication with the Kubernetes master.">
+    <meta property="og:description" content="Package client contains the implementation of the client side communication with the Kubernetes master.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">client</span>
+  
+  <span class="pull-right">
+    <a href="client.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="client.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="client.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package client</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/client"</code>
+
+        <p>
+Package client contains the implementation of the client side communication with the
+Kubernetes master. The Client class provides methods for reading, creating, updating,
+and deleting pods, replication controllers, services, and minions.
+</p>
+<p>
+Most consumers should use the Config object to create a Client:
+</p>
+<pre>config := &amp;client.Config{
+  Host:     &#34;<a href="http://localhost:8080">http://localhost:8080</a>&#34;,
+  Username: &#34;test&#34;,
+  Password: &#34;password&#34;,
+}
+client, err := client.New(&amp;config)
+if err != nil {
+  // handle error
+}
+client.ListPods()
+</pre>
+<p>
+More advanced consumers may wish to provide their own transport via a http.RoundTripper:
+</p>
+<pre>config := &amp;client.Config{
+  Host:      &#34;<a href="https://localhost:8080">https://localhost:8080</a>&#34;,
+  Transport: oauthclient.Transport(),
+}
+client, err := client.New(&amp;config)
+</pre>
+<p>
+The RESTClient type implements the Kubernetes API conventions (see `docs/api-conventions.md`)
+for a given API path and is intended for use by consumers implementing their own Kubernetes
+compatible APIs.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="client.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          <li><a href="client.html#pkg-variables">Variables</a></li>
+          <li><a href="client.html#BindClientConfigFlags">func BindClientConfigFlags(flags FlagSet, config *Config)</a></li><li><a href="client.html#BindKubeletClientConfigFlags">func BindKubeletClientConfigFlags(flags FlagSet, config *KubeletConfig)</a></li><li><a href="client.html#DefaultServerURL">func DefaultServerURL(host, prefix, version string, defaultTLS bool) (*url.URL, error)</a></li><li><a href="client.html#IsConfigTransportTLS">func IsConfigTransportTLS(config *Config) bool</a></li><li><a href="client.html#NewBasicAuthRoundTripper">func NewBasicAuthRoundTripper(username, password string, rt http.RoundTripper) http.RoundTripper</a></li><li><a href="client.html#NewBearerAuthRoundTripper">func NewBearerAuthRoundTripper(bearer string, rt http.RoundTripper) http.RoundTripper</a></li><li><a href="client.html#NewClientCertTLSTransport">func NewClientCertTLSTransport(certFile, keyFile, caFile string) (*http.Transport, error)</a></li><li><a href="client.html#NewUnsafeTLSTransport">func NewUnsafeTLSTransport() *http.Transport</a></li><li><a href="client.html#TransportFor">func TransportFor(config *Config) (http.RoundTripper, error)</a></li>
+          
+            <li><a href="client.html#APIStatus">type APIStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#Client">type Client</a></li>
+            <ul>
+            <li><a href="client.html#New">func New(c *Config) (*Client, error)</a></li><li><a href="client.html#NewOrDie">func NewOrDie(c *Config) *Client</a></li>
+            <li><a href="client.html#Client.ControllerHasDesiredReplicas">func (c *Client) ControllerHasDesiredReplicas(controller api.ReplicationController) wait.ConditionFunc</a></li><li><a href="client.html#Client.Endpoints">func (c *Client) Endpoints(namespace string) EndpointsInterface</a></li><li><a href="client.html#Client.Events">func (c *Client) Events(namespace string) EventInterface</a></li><li><a href="client.html#Client.Minions">func (c *Client) Minions() MinionInterface</a></li><li><a href="client.html#Client.Pods">func (c *Client) Pods(namespace string) PodInterface</a></li><li><a href="client.html#Client.ReplicationControllers">func (c *Client) ReplicationControllers(namespace string) ReplicationControllerInterface</a></li><li><a href="client.html#Client.ServerAPIVersions">func (c *Client) ServerAPIVersions() (*api.APIVersions, error)</a></li><li><a href="client.html#Client.ServerVersion">func (c *Client) ServerVersion() (*version.Info, error)</a></li><li><a href="client.html#Client.Services">func (c *Client) Services(namespace string) ServiceInterface</a></li>
+            </ul>
+          
+            <li><a href="client.html#Config">type Config</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#ContainerInfoGetter">type ContainerInfoGetter</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#EndpointsInterface">type EndpointsInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#EndpointsNamespacer">type EndpointsNamespacer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#EventInterface">type EventInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#EventNamespacer">type EventNamespacer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#Fake">type Fake</a></li>
+            <ul>
+            
+            <li><a href="client.html#Fake.Endpoints">func (c *Fake) Endpoints(namespace string) EndpointsInterface</a></li><li><a href="client.html#Fake.Events">func (c *Fake) Events(namespace string) EventInterface</a></li><li><a href="client.html#Fake.Minions">func (c *Fake) Minions() MinionInterface</a></li><li><a href="client.html#Fake.Pods">func (c *Fake) Pods(namespace string) PodInterface</a></li><li><a href="client.html#Fake.ReplicationControllers">func (c *Fake) ReplicationControllers(namespace string) ReplicationControllerInterface</a></li><li><a href="client.html#Fake.ServerAPIVersions">func (c *Fake) ServerAPIVersions() (*api.APIVersions, error)</a></li><li><a href="client.html#Fake.ServerVersion">func (c *Fake) ServerVersion() (*version.Info, error)</a></li><li><a href="client.html#Fake.Services">func (c *Fake) Services(namespace string) ServiceInterface</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeAction">type FakeAction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#FakeEndpoints">type FakeEndpoints</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeEndpoints.Create">func (c *FakeEndpoints) Create(endpoints *api.Endpoints) (*api.Endpoints, error)</a></li><li><a href="client.html#FakeEndpoints.Get">func (c *FakeEndpoints) Get(name string) (*api.Endpoints, error)</a></li><li><a href="client.html#FakeEndpoints.List">func (c *FakeEndpoints) List(selector labels.Selector) (*api.EndpointsList, error)</a></li><li><a href="client.html#FakeEndpoints.Update">func (c *FakeEndpoints) Update(endpoints *api.Endpoints) (*api.Endpoints, error)</a></li><li><a href="client.html#FakeEndpoints.Watch">func (c *FakeEndpoints) Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeEvents">type FakeEvents</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeEvents.Create">func (c *FakeEvents) Create(event *api.Event) (*api.Event, error)</a></li><li><a href="client.html#FakeEvents.Get">func (c *FakeEvents) Get(id string) (*api.Event, error)</a></li><li><a href="client.html#FakeEvents.List">func (c *FakeEvents) List(label, field labels.Selector) (*api.EventList, error)</a></li><li><a href="client.html#FakeEvents.Search">func (c *FakeEvents) Search(objOrRef runtime.Object) (*api.EventList, error)</a></li><li><a href="client.html#FakeEvents.Watch">func (c *FakeEvents) Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeKubeletClient">type FakeKubeletClient</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeKubeletClient.GetPodInfo">func (c FakeKubeletClient) GetPodInfo(host, podNamespace string, podID string) (api.PodInfo, error)</a></li><li><a href="client.html#FakeKubeletClient.HealthCheck">func (c FakeKubeletClient) HealthCheck(host string) (health.Status, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeMinions">type FakeMinions</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeMinions.Create">func (c *FakeMinions) Create(minion *api.Minion) (*api.Minion, error)</a></li><li><a href="client.html#FakeMinions.Delete">func (c *FakeMinions) Delete(id string) error</a></li><li><a href="client.html#FakeMinions.Get">func (c *FakeMinions) Get(name string) (*api.Minion, error)</a></li><li><a href="client.html#FakeMinions.List">func (c *FakeMinions) List() (*api.MinionList, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakePods">type FakePods</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakePods.Create">func (c *FakePods) Create(pod *api.Pod) (*api.Pod, error)</a></li><li><a href="client.html#FakePods.Delete">func (c *FakePods) Delete(name string) error</a></li><li><a href="client.html#FakePods.Get">func (c *FakePods) Get(name string) (*api.Pod, error)</a></li><li><a href="client.html#FakePods.List">func (c *FakePods) List(selector labels.Selector) (*api.PodList, error)</a></li><li><a href="client.html#FakePods.Update">func (c *FakePods) Update(pod *api.Pod) (*api.Pod, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeRESTClient">type FakeRESTClient</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeRESTClient.Delete">func (c *FakeRESTClient) Delete() *Request</a></li><li><a href="client.html#FakeRESTClient.Do">func (c *FakeRESTClient) Do(req *http.Request) (*http.Response, error)</a></li><li><a href="client.html#FakeRESTClient.Get">func (c *FakeRESTClient) Get() *Request</a></li><li><a href="client.html#FakeRESTClient.Post">func (c *FakeRESTClient) Post() *Request</a></li><li><a href="client.html#FakeRESTClient.Put">func (c *FakeRESTClient) Put() *Request</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeReplicationControllers">type FakeReplicationControllers</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeReplicationControllers.Create">func (c *FakeReplicationControllers) Create(controller *api.ReplicationController) (*api.ReplicationController, error)</a></li><li><a href="client.html#FakeReplicationControllers.Delete">func (c *FakeReplicationControllers) Delete(controller string) error</a></li><li><a href="client.html#FakeReplicationControllers.Get">func (c *FakeReplicationControllers) Get(name string) (*api.ReplicationController, error)</a></li><li><a href="client.html#FakeReplicationControllers.List">func (c *FakeReplicationControllers) List(selector labels.Selector) (*api.ReplicationControllerList, error)</a></li><li><a href="client.html#FakeReplicationControllers.Update">func (c *FakeReplicationControllers) Update(controller *api.ReplicationController) (*api.ReplicationController, error)</a></li><li><a href="client.html#FakeReplicationControllers.Watch">func (c *FakeReplicationControllers) Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FakeServices">type FakeServices</a></li>
+            <ul>
+            
+            <li><a href="client.html#FakeServices.Create">func (c *FakeServices) Create(service *api.Service) (*api.Service, error)</a></li><li><a href="client.html#FakeServices.Delete">func (c *FakeServices) Delete(service string) error</a></li><li><a href="client.html#FakeServices.Get">func (c *FakeServices) Get(name string) (*api.Service, error)</a></li><li><a href="client.html#FakeServices.List">func (c *FakeServices) List(selector labels.Selector) (*api.ServiceList, error)</a></li><li><a href="client.html#FakeServices.Update">func (c *FakeServices) Update(service *api.Service) (*api.Service, error)</a></li><li><a href="client.html#FakeServices.Watch">func (c *FakeServices) Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#FlagSet">type FlagSet</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#HTTPClient">type HTTPClient</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#HTTPContainerInfoGetter">type HTTPContainerInfoGetter</a></li>
+            <ul>
+            
+            <li><a href="client.html#HTTPContainerInfoGetter.GetContainerInfo">func (self *HTTPContainerInfoGetter) GetContainerInfo(host, podID, containerID string, req *info.ContainerInfoRequest) (*info.ContainerInfo, error)</a></li><li><a href="client.html#HTTPContainerInfoGetter.GetMachineInfo">func (self *HTTPContainerInfoGetter) GetMachineInfo(host string) (*info.MachineInfo, error)</a></li><li><a href="client.html#HTTPContainerInfoGetter.GetRootInfo">func (self *HTTPContainerInfoGetter) GetRootInfo(host string, req *info.ContainerInfoRequest) (*info.ContainerInfo, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#HTTPKubeletClient">type HTTPKubeletClient</a></li>
+            <ul>
+            
+            <li><a href="client.html#HTTPKubeletClient.GetPodInfo">func (c *HTTPKubeletClient) GetPodInfo(host, podNamespace, podID string) (api.PodInfo, error)</a></li><li><a href="client.html#HTTPKubeletClient.HealthCheck">func (c *HTTPKubeletClient) HealthCheck(host string) (health.Status, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#HttpClientFunc">type HttpClientFunc</a></li>
+            <ul>
+            
+            <li><a href="client.html#HttpClientFunc.Do">func (f HttpClientFunc) Do(req *http.Request) (*http.Response, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#Interface">type Interface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#KubeletClient">type KubeletClient</a></li>
+            <ul>
+            <li><a href="client.html#NewKubeletClient">func NewKubeletClient(config *KubeletConfig) (KubeletClient, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="client.html#KubeletConfig">type KubeletConfig</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#KubeletHealthChecker">type KubeletHealthChecker</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#MinionInterface">type MinionInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#MinionsInterface">type MinionsInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#PodInfoGetter">type PodInfoGetter</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#PodInterface">type PodInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#PodsNamespacer">type PodsNamespacer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#PollFunc">type PollFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#RESTClient">type RESTClient</a></li>
+            <ul>
+            <li><a href="client.html#NewRESTClient">func NewRESTClient(baseURL *url.URL, c runtime.Codec) *RESTClient</a></li><li><a href="client.html#RESTClientFor">func RESTClientFor(config *Config) (*RESTClient, error)</a></li>
+            <li><a href="client.html#RESTClient.DefaultPoll">func (c *RESTClient) DefaultPoll(name string) (*Request, bool)</a></li><li><a href="client.html#RESTClient.Delete">func (c *RESTClient) Delete() *Request</a></li><li><a href="client.html#RESTClient.Get">func (c *RESTClient) Get() *Request</a></li><li><a href="client.html#RESTClient.Operation">func (c *RESTClient) Operation(name string) *Request</a></li><li><a href="client.html#RESTClient.Post">func (c *RESTClient) Post() *Request</a></li><li><a href="client.html#RESTClient.Put">func (c *RESTClient) Put() *Request</a></li><li><a href="client.html#RESTClient.Verb">func (c *RESTClient) Verb(verb string) *Request</a></li>
+            </ul>
+          
+            <li><a href="client.html#ReplicationControllerInterface">type ReplicationControllerInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#ReplicationControllersNamespacer">type ReplicationControllersNamespacer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#Request">type Request</a></li>
+            <ul>
+            <li><a href="client.html#NewRequest">func NewRequest(client HTTPClient, verb string, baseURL *url.URL, codec runtime.Codec) *Request</a></li>
+            <li><a href="client.html#Request.AbsPath">func (r *Request) AbsPath(path string) *Request</a></li><li><a href="client.html#Request.Body">func (r *Request) Body(obj interface{}) *Request</a></li><li><a href="client.html#Request.Do">func (r *Request) Do() Result</a></li><li><a href="client.html#Request.Namespace">func (r *Request) Namespace(namespace string) *Request</a></li><li><a href="client.html#Request.NoPoll">func (r *Request) NoPoll() *Request</a></li><li><a href="client.html#Request.Param">func (r *Request) Param(paramName, s string) *Request</a></li><li><a href="client.html#Request.ParseSelectorParam">func (r *Request) ParseSelectorParam(paramName, item string) *Request</a></li><li><a href="client.html#Request.Path">func (r *Request) Path(item string) *Request</a></li><li><a href="client.html#Request.Poller">func (r *Request) Poller(poller PollFunc) *Request</a></li><li><a href="client.html#Request.SelectorParam">func (r *Request) SelectorParam(paramName string, s labels.Selector) *Request</a></li><li><a href="client.html#Request.Stream">func (r *Request) Stream() (io.ReadCloser, error)</a></li><li><a href="client.html#Request.Sync">func (r *Request) Sync(sync bool) *Request</a></li><li><a href="client.html#Request.Timeout">func (r *Request) Timeout(d time.Duration) *Request</a></li><li><a href="client.html#Request.UintParam">func (r *Request) UintParam(paramName string, u uint64) *Request</a></li><li><a href="client.html#Request.Watch">func (r *Request) Watch() (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="client.html#RequestConstructionError">type RequestConstructionError</a></li>
+            <ul>
+            
+            <li><a href="client.html#RequestConstructionError.Error">func (r *RequestConstructionError) Error() string</a></li>
+            </ul>
+          
+            <li><a href="client.html#Result">type Result</a></li>
+            <ul>
+            
+            <li><a href="client.html#Result.Error">func (r Result) Error() error</a></li><li><a href="client.html#Result.Get">func (r Result) Get() (runtime.Object, error)</a></li><li><a href="client.html#Result.Into">func (r Result) Into(obj runtime.Object) error</a></li><li><a href="client.html#Result.Raw">func (r Result) Raw() ([]byte, error)</a></li><li><a href="client.html#Result.WasCreated">func (r Result) WasCreated(wasCreated *bool) Result</a></li>
+            </ul>
+          
+            <li><a href="client.html#ServiceInterface">type ServiceInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#ServicesNamespacer">type ServicesNamespacer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="client.html#UnexpectedStatusError">type UnexpectedStatusError</a></li>
+            <ul>
+            
+            <li><a href="client.html#UnexpectedStatusError.Error">func (u *UnexpectedStatusError) Error() string</a></li>
+            </ul>
+          
+            <li><a href="client.html#VersionInterface">type VersionInterface</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/client">Package Files</a>
+          <a class="permalink" href="client.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go">client.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/conditions.go">conditions.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go">containerinfo.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/endpoints.go">endpoints.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/events.go">events.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go">fake.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go">fake_endpoints.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go">fake_events.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go">fake_minions.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go">fake_pods.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go">fake_replication_controllers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go">fake_services.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/flags.go">flags.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go">helper.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go">kubelet.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/minions.go">minions.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/pods.go">pods.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/replication_controllers.go">replication_controllers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go">request.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go">restclient.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/services.go">services.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/transport.go">transport.go</a> </p>
+
+        
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="client.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="ErrPodInfoNotAvailable">ErrPodInfoNotAvailable</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;no pod info available&#34;)</pre><p>
+ErrPodInfoNotAvailable may be returned when the requested pod info is not available.
+</p>
+
+        
+
+        
+        
+        
+          <h3 id="BindClientConfigFlags">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/flags.go#L29">BindClientConfigFlags</a> <a class="permalink" href="client.html#BindClientConfigFlags">&para;</a></h3>
+          <pre class="funcdecl">func BindClientConfigFlags(flags <a href="client.html#FlagSet">FlagSet</a>, config *<a href="client.html#Config">Config</a>)</pre><p>
+BindClientConfigFlags registers a standard set of CLI flags for connecting to a Kubernetes API server.
+TODO this method is superceded by pkg/client/clientcmd/client_builder.go
+</p>
+
+          
+  
+
+        
+          <h3 id="BindKubeletClientConfigFlags">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/flags.go#L38">BindKubeletClientConfigFlags</a> <a class="permalink" href="client.html#BindKubeletClientConfigFlags">&para;</a></h3>
+          <pre class="funcdecl">func BindKubeletClientConfigFlags(flags <a href="client.html#FlagSet">FlagSet</a>, config *<a href="client.html#KubeletConfig">KubeletConfig</a>)</pre>
+          
+  
+
+        
+          <h3 id="DefaultServerURL">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L175">DefaultServerURL</a> <a class="permalink" href="client.html#DefaultServerURL">&para;</a></h3>
+          <pre class="funcdecl">func DefaultServerURL(host, prefix, version <a href="http://godoc.org/builtin#string">string</a>, defaultTLS <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="http://godoc.org/net/url">url</a>.<a href="http://godoc.org/net/url#URL">URL</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+DefaultServerURL converts a host, host:port, or URL string to the default base server API path
+to use with a Client at a given API version following the standard conventions for a
+Kubernetes API.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsConfigTransportTLS">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L222">IsConfigTransportTLS</a> <a class="permalink" href="client.html#IsConfigTransportTLS">&para;</a></h3>
+          <pre class="funcdecl">func IsConfigTransportTLS(config *<a href="client.html#Config">Config</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsConfigTransportTLS returns true iff the provided config will result in a protected
+connection to the server when it is passed to client.New() or client.RESTClientFor().
+Use to determine when to send credentials over the wire.
+</p>
+<p>
+Note: the Insecure flag is ignored when testing for this value, so MITM attacks are
+still possible.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewBasicAuthRoundTripper">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/transport.go#L33">NewBasicAuthRoundTripper</a> <a class="permalink" href="client.html#NewBasicAuthRoundTripper">&para;</a></h3>
+          <pre class="funcdecl">func NewBasicAuthRoundTripper(username, password <a href="http://godoc.org/builtin#string">string</a>, rt <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a></pre>
+          
+  
+
+        
+          <h3 id="NewBearerAuthRoundTripper">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/transport.go#L48">NewBearerAuthRoundTripper</a> <a class="permalink" href="client.html#NewBearerAuthRoundTripper">&para;</a></h3>
+          <pre class="funcdecl">func NewBearerAuthRoundTripper(bearer <a href="http://godoc.org/builtin#string">string</a>, rt <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a></pre>
+          
+  
+
+        
+          <h3 id="NewClientCertTLSTransport">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/transport.go#L58">NewClientCertTLSTransport</a> <a class="permalink" href="client.html#NewClientCertTLSTransport">&para;</a></h3>
+          <pre class="funcdecl">func NewClientCertTLSTransport(certFile, keyFile, caFile <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Transport">Transport</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+  
+
+        
+          <h3 id="NewUnsafeTLSTransport">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/transport.go#L81">NewUnsafeTLSTransport</a> <a class="permalink" href="client.html#NewUnsafeTLSTransport">&para;</a></h3>
+          <pre class="funcdecl">func NewUnsafeTLSTransport() *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Transport">Transport</a></pre>
+          
+  
+
+        
+          <h3 id="TransportFor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L134">TransportFor</a> <a class="permalink" href="client.html#TransportFor">&para;</a></h3>
+          <pre class="funcdecl">func TransportFor(config *<a href="client.html#Config">Config</a>) (<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+TransportFor returns an http.RoundTripper that will provide the authentication
+or transport level security defined by the provided Config. Will return the
+default http.DefaultTransport if no special case behavior is needed.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="APIStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L71">APIStatus</a> <a class="permalink" href="client.html#APIStatus">&para;</a></h3>
+          <pre>type APIStatus interface {
+    <span id="APIStatus.Status">Status</span>() <a href="api.html">api</a>.<a href="api.html#Status">Status</a>
+}</pre><p>
+APIStatus is exposed by errors that can be converted to an api.Status object
+for finer grained details.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Client">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L76">Client</a> <a class="permalink" href="client.html#Client">&para;</a></h3>
+          <pre>type Client struct {
+    *<a href="client.html#RESTClient">RESTClient</a>
+}</pre><p>
+Client is the implementation of a Kubernetes client.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="New">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L81">New</a> <a class="permalink" href="client.html#New">&para;</a></h4>
+            <pre class="funcdecl">func New(c *<a href="client.html#Config">Config</a>) (*<a href="client.html#Client">Client</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+New creates a Kubernetes client for the given config. This client works with pods,
+replication controllers and services. It allows operations such as list, get, update
+and delete on these objects. An error is returned if the provided configuration
+is not valid.
+</p>
+
+            
+  
+
+          
+            <h4 id="NewOrDie">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L94">NewOrDie</a> <a class="permalink" href="client.html#NewOrDie">&para;</a></h4>
+            <pre class="funcdecl">func NewOrDie(c *<a href="client.html#Config">Config</a>) *<a href="client.html#Client">Client</a></pre><p>
+NewOrDie creates a Kubernetes client and panics if the provided API version is not recognized.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Client.ControllerHasDesiredReplicas">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/conditions.go#L27">ControllerHasDesiredReplicas</a> <a class="permalink" href="client.html#Client.ControllerHasDesiredReplicas">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) ControllerHasDesiredReplicas(controller <a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>) <a href="util/wait.html">wait</a>.<a href="util/wait.html#ConditionFunc">ConditionFunc</a></pre><p>
+ControllerHasDesiredReplicas returns a condition that will be true iff the desired replica count
+for a controller&#39;s ReplicaSelector equals the Replicas count.
+</p>
+
+            
+  
+
+          
+            <h4 id="Client.Endpoints">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L51">Endpoints</a> <a class="permalink" href="client.html#Client.Endpoints">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) Endpoints(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EndpointsInterface">EndpointsInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Client.Events">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L47">Events</a> <a class="permalink" href="client.html#Client.Events">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) Events(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EventInterface">EventInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Client.Minions">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L43">Minions</a> <a class="permalink" href="client.html#Client.Minions">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) Minions() <a href="client.html#MinionInterface">MinionInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Client.Pods">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L55">Pods</a> <a class="permalink" href="client.html#Client.Pods">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) Pods(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#PodInterface">PodInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Client.ReplicationControllers">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L39">ReplicationControllers</a> <a class="permalink" href="client.html#Client.ReplicationControllers">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) ReplicationControllers(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ReplicationControllerInterface">ReplicationControllerInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Client.ServerAPIVersions">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L95">ServerAPIVersions</a> <a class="permalink" href="client.html#Client.ServerAPIVersions">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) ServerAPIVersions() (*<a href="api.html">api</a>.<a href="api.html#APIVersions">APIVersions</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ServerAPIVersions retrieves and parses the list of API versions the server supports.
+</p>
+
+            
+  
+
+          
+            <h4 id="Client.ServerVersion">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L81">ServerVersion</a> <a class="permalink" href="client.html#Client.ServerVersion">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) ServerVersion() (*<a href="version.html">version</a>.<a href="version.html#Info">Info</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ServerVersion retrieves and parses the server&#39;s version.
+</p>
+
+            
+  
+
+          
+            <h4 id="Client.Services">func (*Client) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L59">Services</a> <a class="permalink" href="client.html#Client.Services">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Client">Client</a>) Services(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ServiceInterface">ServiceInterface</a></pre>
+            
+  
+
+          
+        
+          <h3 id="Config">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L31">Config</a> <a class="permalink" href="client.html#Config">&para;</a></h3>
+          <pre>type Config struct {
+    <span class="com">// Host must be a host string, a host:port pair, or a URL to the base of the API.</span>
+    <span id="Config.Host">Host</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Prefix is the sub path of the server. If not specified, the client will set</span>
+    <span class="com">// a default value.  Use &#34;/&#34; to indicate the server root should be used</span>
+    <span id="Config.Prefix">Prefix</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// Version is the API version to talk to. If not specified, the client will use</span>
+    <span class="com">// the preferred version.</span>
+    <span id="Config.Version">Version</span> <a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Server requires Basic authentication</span>
+    <span id="Config.Username">Username</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Config.Password">Password</span> <a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Server requires Bearer authentication. This client will not attempt to use</span>
+    <span class="com">// refresh tokens for an OAuth2 flow.</span>
+    <span class="com">// TODO: demonstrate an OAuth2 compatible client.</span>
+    <span id="Config.BearerToken">BearerToken</span> <a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Server requires TLS client certificate authentication</span>
+    <span id="Config.CertFile">CertFile</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Config.KeyFile">KeyFile</span>  <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Config.CAFile">CAFile</span>   <a href="http://godoc.org/builtin#string">string</a>
+
+    <span class="com">// Server should be accessed without verifying the TLS</span>
+    <span class="com">// certificate. For testing only.</span>
+    <span id="Config.Insecure">Insecure</span> <a href="http://godoc.org/builtin#bool">bool</a>
+
+    <span class="com">// Transport may be used for custom HTTP behavior. This attribute may not</span>
+    <span class="com">// be specified with the TLS client certificate options.</span>
+    <span id="Config.Transport">Transport</span> <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#RoundTripper">RoundTripper</a>
+}</pre><p>
+Config holds the common attributes that can be passed to a Kubernetes client on
+initialization.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ContainerInfoGetter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go#L31">ContainerInfoGetter</a> <a class="permalink" href="client.html#ContainerInfoGetter">&para;</a></h3>
+          <pre>type ContainerInfoGetter interface {
+    <span class="com">// GetContainerInfo returns information about a container.</span>
+    <span id="ContainerInfoGetter.GetContainerInfo">GetContainerInfo</span>(host, podID, containerID <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// GetRootInfo returns information about the root container on a machine.</span>
+    <span id="ContainerInfoGetter.GetRootInfo">GetRootInfo</span>(host <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// GetMachineInfo returns the machine&#39;s information like number of cores, memory capacity.</span>
+    <span id="ContainerInfoGetter.GetMachineInfo">GetMachineInfo</span>(host <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#MachineInfo">MachineInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EndpointsInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/endpoints.go#L33">EndpointsInterface</a> <a class="permalink" href="client.html#EndpointsInterface">&para;</a></h3>
+          <pre>type EndpointsInterface interface {
+    <span id="EndpointsInterface.Create">Create</span>(endpoints *<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EndpointsInterface.List">List</span>(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EndpointsInterface.Get">Get</span>(id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EndpointsInterface.Update">Update</span>(endpoints *<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EndpointsInterface.Watch">Watch</span>(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+EndpointsInterface has methods to work with Endpoints resources
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EndpointsNamespacer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/endpoints.go#L28">EndpointsNamespacer</a> <a class="permalink" href="client.html#EndpointsNamespacer">&para;</a></h3>
+          <pre>type EndpointsNamespacer interface {
+    <span id="EndpointsNamespacer.Endpoints">Endpoints</span>(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EndpointsInterface">EndpointsInterface</a>
+}</pre><p>
+EndpointsNamespacer has methods to work with Endpoints resources in a namespace
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EventInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/events.go#L34">EventInterface</a> <a class="permalink" href="client.html#EventInterface">&para;</a></h3>
+          <pre>type EventInterface interface {
+    <span id="EventInterface.Create">Create</span>(event *<a href="api.html">api</a>.<a href="api.html#Event">Event</a>) (*<a href="api.html">api</a>.<a href="api.html#Event">Event</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EventInterface.List">List</span>(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#EventList">EventList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EventInterface.Get">Get</span>(id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Event">Event</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="EventInterface.Watch">Watch</span>(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// Search finds events about the specified object</span>
+    <span id="EventInterface.Search">Search</span>(objOrRef <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (*<a href="api.html">api</a>.<a href="api.html#EventList">EventList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+EventInterface has methods to work with Event resources
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EventNamespacer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/events.go#L29">EventNamespacer</a> <a class="permalink" href="client.html#EventNamespacer">&para;</a></h3>
+          <pre>type EventNamespacer interface {
+    <span id="EventNamespacer.Events">Events</span>(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EventInterface">EventInterface</a>
+}</pre><p>
+EventNamespacer can return an EventInterface for the given namespace.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Fake">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L36">Fake</a> <a class="permalink" href="client.html#Fake">&para;</a></h3>
+          <pre>type Fake struct {
+    <span id="Fake.Actions">Actions</span>       []<a href="client.html#FakeAction">FakeAction</a>
+    <span id="Fake.PodsList">PodsList</span>      <a href="api.html">api</a>.<a href="api.html#PodList">PodList</a>
+    <span id="Fake.Ctrl">Ctrl</span>          <a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>
+    <span id="Fake.ServiceList">ServiceList</span>   <a href="api.html">api</a>.<a href="api.html#ServiceList">ServiceList</a>
+    <span id="Fake.EndpointsList">EndpointsList</span> <a href="api.html">api</a>.<a href="api.html#EndpointsList">EndpointsList</a>
+    <span id="Fake.MinionsList">MinionsList</span>   <a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>
+    <span id="Fake.EventsList">EventsList</span>    <a href="api.html">api</a>.<a href="api.html#EventList">EventList</a>
+    <span id="Fake.Err">Err</span>           <a href="http://godoc.org/builtin#error">error</a>
+    <span id="Fake.Watch">Watch</span>         <a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>
+}</pre><p>
+Fake implements Interface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Fake.Endpoints">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L60">Endpoints</a> <a class="permalink" href="client.html#Fake.Endpoints">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) Endpoints(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EndpointsInterface">EndpointsInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Fake.Events">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L56">Events</a> <a class="permalink" href="client.html#Fake.Events">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) Events(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#EventInterface">EventInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Fake.Minions">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L52">Minions</a> <a class="permalink" href="client.html#Fake.Minions">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) Minions() <a href="client.html#MinionInterface">MinionInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Fake.Pods">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L64">Pods</a> <a class="permalink" href="client.html#Fake.Pods">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) Pods(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#PodInterface">PodInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Fake.ReplicationControllers">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L48">ReplicationControllers</a> <a class="permalink" href="client.html#Fake.ReplicationControllers">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) ReplicationControllers(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ReplicationControllerInterface">ReplicationControllerInterface</a></pre>
+            
+  
+
+          
+            <h4 id="Fake.ServerAPIVersions">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L78">ServerAPIVersions</a> <a class="permalink" href="client.html#Fake.ServerAPIVersions">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) ServerAPIVersions() (*<a href="api.html">api</a>.<a href="api.html#APIVersions">APIVersions</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="Fake.ServerVersion">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L72">ServerVersion</a> <a class="permalink" href="client.html#Fake.ServerVersion">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) ServerVersion() (*<a href="version.html">version</a>.<a href="version.html#Info">Info</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="Fake.Services">func (*Fake) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L68">Services</a> <a class="permalink" href="client.html#Fake.Services">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#Fake">Fake</a>) Services(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ServiceInterface">ServiceInterface</a></pre>
+            
+  
+
+          
+        
+          <h3 id="FakeAction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L29">FakeAction</a> <a class="permalink" href="client.html#FakeAction">&para;</a></h3>
+          <pre>type FakeAction struct {
+    <span id="FakeAction.Action">Action</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeAction.Value">Value</span>  interface{}
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeEndpoints">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L27">FakeEndpoints</a> <a class="permalink" href="client.html#FakeEndpoints">&para;</a></h3>
+          <pre>type FakeEndpoints struct {
+    <span id="FakeEndpoints.Fake">Fake</span>      *<a href="client.html#Fake">Fake</a>
+    <span id="FakeEndpoints.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+FakeEndpoints implements EndpointInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeEndpoints.Create">func (*FakeEndpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L32">Create</a> <a class="permalink" href="client.html#FakeEndpoints.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEndpoints">FakeEndpoints</a>) Create(endpoints *<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEndpoints.Get">func (*FakeEndpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L42">Get</a> <a class="permalink" href="client.html#FakeEndpoints.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEndpoints">FakeEndpoints</a>) Get(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEndpoints.List">func (*FakeEndpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L37">List</a> <a class="permalink" href="client.html#FakeEndpoints.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEndpoints">FakeEndpoints</a>) List(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEndpoints.Update">func (*FakeEndpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L52">Update</a> <a class="permalink" href="client.html#FakeEndpoints.Update">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEndpoints">FakeEndpoints</a>) Update(endpoints *<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>) (*<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeEndpoints.Watch">func (*FakeEndpoints) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_endpoints.go#L47">Watch</a> <a class="permalink" href="client.html#FakeEndpoints.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEndpoints">FakeEndpoints</a>) Watch(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeEvents">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L28">FakeEvents</a> <a class="permalink" href="client.html#FakeEvents">&para;</a></h3>
+          <pre>type FakeEvents struct {
+    <span id="FakeEvents.Fake">Fake</span> *<a href="client.html#Fake">Fake</a>
+}</pre><p>
+FakeEvents implements EventInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeEvents.Create">func (*FakeEvents) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L33">Create</a> <a class="permalink" href="client.html#FakeEvents.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEvents">FakeEvents</a>) Create(event *<a href="api.html">api</a>.<a href="api.html#Event">Event</a>) (*<a href="api.html">api</a>.<a href="api.html#Event">Event</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Create makes a new event. Returns the copy of the event the server returns, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeEvents.Get">func (*FakeEvents) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L45">Get</a> <a class="permalink" href="client.html#FakeEvents.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEvents">FakeEvents</a>) Get(id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Event">Event</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Get returns the given event, or an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeEvents.List">func (*FakeEvents) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L39">List</a> <a class="permalink" href="client.html#FakeEvents.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEvents">FakeEvents</a>) List(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#EventList">EventList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+List returns a list of events matching the selectors.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeEvents.Search">func (*FakeEvents) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L57">Search</a> <a class="permalink" href="client.html#FakeEvents.Search">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEvents">FakeEvents</a>) Search(objOrRef <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (*<a href="api.html">api</a>.<a href="api.html#EventList">EventList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Search returns a list of events matching the specified object.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeEvents.Watch">func (*FakeEvents) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_events.go#L51">Watch</a> <a class="permalink" href="client.html#FakeEvents.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeEvents">FakeEvents</a>) Watch(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Watch starts watching for events matching the given selectors.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="FakeKubeletClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L132">FakeKubeletClient</a> <a class="permalink" href="client.html#FakeKubeletClient">&para;</a></h3>
+          <pre>type FakeKubeletClient struct{}</pre><p>
+FakeKubeletClient is a fake implementation of KubeletClient which returns an error
+when called.  It is useful to pass to the master in a test configuration with
+no kubelets.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeKubeletClient.GetPodInfo">func (FakeKubeletClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L135">GetPodInfo</a> <a class="permalink" href="client.html#FakeKubeletClient.GetPodInfo">&para;</a></h4>
+            <pre class="funcdecl">func (c <a href="client.html#FakeKubeletClient">FakeKubeletClient</a>) GetPodInfo(host, podNamespace <a href="http://godoc.org/builtin#string">string</a>, podID <a href="http://godoc.org/builtin#string">string</a>) (<a href="api.html">api</a>.<a href="api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetPodInfo is a fake implementation of PodInfoGetter.GetPodInfo.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeKubeletClient.HealthCheck">func (FakeKubeletClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L139">HealthCheck</a> <a class="permalink" href="client.html#FakeKubeletClient.HealthCheck">&para;</a></h4>
+            <pre class="funcdecl">func (c <a href="client.html#FakeKubeletClient">FakeKubeletClient</a>) HealthCheck(host <a href="http://godoc.org/builtin#string">string</a>) (<a href="health.html">health</a>.<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeMinions">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go#L25">FakeMinions</a> <a class="permalink" href="client.html#FakeMinions">&para;</a></h3>
+          <pre>type FakeMinions struct {
+    <span id="FakeMinions.Fake">Fake</span> *<a href="client.html#Fake">Fake</a>
+}</pre><p>
+FakeMinions implements MinionInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeMinions.Create">func (*FakeMinions) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go#L39">Create</a> <a class="permalink" href="client.html#FakeMinions.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeMinions">FakeMinions</a>) Create(minion *<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeMinions.Delete">func (*FakeMinions) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go#L44">Delete</a> <a class="permalink" href="client.html#FakeMinions.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeMinions">FakeMinions</a>) Delete(id <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakeMinions.Get">func (*FakeMinions) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go#L29">Get</a> <a class="permalink" href="client.html#FakeMinions.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeMinions">FakeMinions</a>) Get(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeMinions.List">func (*FakeMinions) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_minions.go#L34">List</a> <a class="permalink" href="client.html#FakeMinions.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeMinions">FakeMinions</a>) List() (*<a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakePods">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L26">FakePods</a> <a class="permalink" href="client.html#FakePods">&para;</a></h3>
+          <pre>type FakePods struct {
+    <span id="FakePods.Fake">Fake</span>      *<a href="client.html#Fake">Fake</a>
+    <span id="FakePods.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+FakePods implements PodsInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the methods you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakePods.Create">func (*FakePods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L46">Create</a> <a class="permalink" href="client.html#FakePods.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakePods">FakePods</a>) Create(pod *<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakePods.Delete">func (*FakePods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L41">Delete</a> <a class="permalink" href="client.html#FakePods.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakePods">FakePods</a>) Delete(name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakePods.Get">func (*FakePods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L36">Get</a> <a class="permalink" href="client.html#FakePods.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakePods">FakePods</a>) Get(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakePods.List">func (*FakePods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L31">List</a> <a class="permalink" href="client.html#FakePods.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakePods">FakePods</a>) List(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakePods.Update">func (*FakePods) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_pods.go#L51">Update</a> <a class="permalink" href="client.html#FakePods.Update">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakePods">FakePods</a>) Update(pod *<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeRESTClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L90">FakeRESTClient</a> <a class="permalink" href="client.html#FakeRESTClient">&para;</a></h3>
+          <pre>type FakeRESTClient struct {
+    <span id="FakeRESTClient.Client">Client</span> <a href="client.html#HTTPClient">HTTPClient</a>
+    <span id="FakeRESTClient.Codec">Codec</span>  <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>
+    <span id="FakeRESTClient.Req">Req</span>    *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>
+    <span id="FakeRESTClient.Resp">Resp</span>   *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>
+    <span id="FakeRESTClient.Err">Err</span>    <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+FakeRESTClient provides a fake RESTClient interface.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeRESTClient.Delete">func (*FakeRESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L107">Delete</a> <a class="permalink" href="client.html#FakeRESTClient.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeRESTClient">FakeRESTClient</a>) Delete() *<a href="client.html#Request">Request</a></pre>
+            
+  
+
+          
+            <h4 id="FakeRESTClient.Do">func (*FakeRESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L110">Do</a> <a class="permalink" href="client.html#FakeRESTClient.Do">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeRESTClient">FakeRESTClient</a>) Do(req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeRESTClient.Get">func (*FakeRESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L98">Get</a> <a class="permalink" href="client.html#FakeRESTClient.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeRESTClient">FakeRESTClient</a>) Get() *<a href="client.html#Request">Request</a></pre>
+            
+  
+
+          
+            <h4 id="FakeRESTClient.Post">func (*FakeRESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L104">Post</a> <a class="permalink" href="client.html#FakeRESTClient.Post">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeRESTClient">FakeRESTClient</a>) Post() *<a href="client.html#Request">Request</a></pre>
+            
+  
+
+          
+            <h4 id="FakeRESTClient.Put">func (*FakeRESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L101">Put</a> <a class="permalink" href="client.html#FakeRESTClient.Put">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeRESTClient">FakeRESTClient</a>) Put() *<a href="client.html#Request">Request</a></pre>
+            
+  
+
+          
+        
+          <h3 id="FakeReplicationControllers">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L27">FakeReplicationControllers</a> <a class="permalink" href="client.html#FakeReplicationControllers">&para;</a></h3>
+          <pre>type FakeReplicationControllers struct {
+    <span id="FakeReplicationControllers.Fake">Fake</span>      *<a href="client.html#Fake">Fake</a>
+    <span id="FakeReplicationControllers.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+FakeReplicationControllers implements ReplicationControllerInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeReplicationControllers.Create">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L42">Create</a> <a class="permalink" href="client.html#FakeReplicationControllers.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) Create(controller *<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeReplicationControllers.Delete">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L52">Delete</a> <a class="permalink" href="client.html#FakeReplicationControllers.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) Delete(controller <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakeReplicationControllers.Get">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L37">Get</a> <a class="permalink" href="client.html#FakeReplicationControllers.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) Get(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeReplicationControllers.List">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L32">List</a> <a class="permalink" href="client.html#FakeReplicationControllers.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) List(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationControllerList">ReplicationControllerList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeReplicationControllers.Update">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L47">Update</a> <a class="permalink" href="client.html#FakeReplicationControllers.Update">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) Update(controller *<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeReplicationControllers.Watch">func (*FakeReplicationControllers) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_replication_controllers.go#L57">Watch</a> <a class="permalink" href="client.html#FakeReplicationControllers.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeReplicationControllers">FakeReplicationControllers</a>) Watch(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeServices">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L27">FakeServices</a> <a class="permalink" href="client.html#FakeServices">&para;</a></h3>
+          <pre>type FakeServices struct {
+    <span id="FakeServices.Fake">Fake</span>      *<a href="client.html#Fake">Fake</a>
+    <span id="FakeServices.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+Fake implements ServiceInterface. Meant to be embedded into a struct to get a default
+implementation. This makes faking out just the method you want to test easier.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeServices.Create">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L42">Create</a> <a class="permalink" href="client.html#FakeServices.Create">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) Create(service *<a href="api.html">api</a>.<a href="api.html#Service">Service</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeServices.Delete">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L52">Delete</a> <a class="permalink" href="client.html#FakeServices.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) Delete(service <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="FakeServices.Get">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L37">Get</a> <a class="permalink" href="client.html#FakeServices.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) Get(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeServices.List">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L32">List</a> <a class="permalink" href="client.html#FakeServices.List">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) List(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeServices.Update">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L47">Update</a> <a class="permalink" href="client.html#FakeServices.Update">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) Update(service *<a href="api.html">api</a>.<a href="api.html#Service">Service</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeServices.Watch">func (*FakeServices) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake_services.go#L57">Watch</a> <a class="permalink" href="client.html#FakeServices.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#FakeServices">FakeServices</a>) Watch(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FlagSet">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/flags.go#L21">FlagSet</a> <a class="permalink" href="client.html#FlagSet">&para;</a></h3>
+          <pre>type FlagSet interface {
+    <span id="FlagSet.StringVar">StringVar</span>(p *<a href="http://godoc.org/builtin#string">string</a>, name, value, usage <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="FlagSet.BoolVar">BoolVar</span>(p *<a href="http://godoc.org/builtin#bool">bool</a>, name <a href="http://godoc.org/builtin#string">string</a>, value <a href="http://godoc.org/builtin#bool">bool</a>, usage <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="FlagSet.UintVar">UintVar</span>(p *<a href="http://godoc.org/builtin#uint">uint</a>, name <a href="http://godoc.org/builtin#string">string</a>, value <a href="http://godoc.org/builtin#uint">uint</a>, usage <a href="http://godoc.org/builtin#string">string</a>)
+}</pre><p>
+FlagSet abstracts the flag interface for compatibility with both Golang &#34;flag&#34;
+and cobra pflags (Posix style).
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HTTPClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L50">HTTPClient</a> <a class="permalink" href="client.html#HTTPClient">&para;</a></h3>
+          <pre>type HTTPClient interface {
+    <span id="HTTPClient.Do">Do</span>(req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+HTTPClient is an interface for testing a request object.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HTTPContainerInfoGetter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go#L40">HTTPContainerInfoGetter</a> <a class="permalink" href="client.html#HTTPContainerInfoGetter">&para;</a></h3>
+          <pre>type HTTPContainerInfoGetter struct {
+    <span id="HTTPContainerInfoGetter.Client">Client</span> *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Client">Client</a>
+    <span id="HTTPContainerInfoGetter.Port">Port</span>   <a href="http://godoc.org/builtin#int">int</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="HTTPContainerInfoGetter.GetContainerInfo">func (*HTTPContainerInfoGetter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go#L113">GetContainerInfo</a> <a class="permalink" href="client.html#HTTPContainerInfoGetter.GetContainerInfo">&para;</a></h4>
+            <pre class="funcdecl">func (self *<a href="client.html#HTTPContainerInfoGetter">HTTPContainerInfoGetter</a>) GetContainerInfo(host, podID, containerID <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="HTTPContainerInfoGetter.GetMachineInfo">func (*HTTPContainerInfoGetter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go#L45">GetMachineInfo</a> <a class="permalink" href="client.html#HTTPContainerInfoGetter.GetMachineInfo">&para;</a></h4>
+            <pre class="funcdecl">func (self *<a href="client.html#HTTPContainerInfoGetter">HTTPContainerInfoGetter</a>) GetMachineInfo(host <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#MachineInfo">MachineInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="HTTPContainerInfoGetter.GetRootInfo">func (*HTTPContainerInfoGetter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/containerinfo.go#L121">GetRootInfo</a> <a class="permalink" href="client.html#HTTPContainerInfoGetter.GetRootInfo">&para;</a></h4>
+            <pre class="funcdecl">func (self *<a href="client.html#HTTPContainerInfoGetter">HTTPContainerInfoGetter</a>) GetRootInfo(host <a href="http://godoc.org/builtin#string">string</a>, req *<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfoRequest">ContainerInfoRequest</a>) (*<a href="http://godoc.org/github.com/google/cadvisor/info">info</a>.<a href="http://godoc.org/github.com/google/cadvisor/info#ContainerInfo">ContainerInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="HTTPKubeletClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L55">HTTPKubeletClient</a> <a class="permalink" href="client.html#HTTPKubeletClient">&para;</a></h3>
+          <pre>type HTTPKubeletClient struct {
+    <span id="HTTPKubeletClient.Client">Client</span>      *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Client">Client</a>
+    <span id="HTTPKubeletClient.Port">Port</span>        <a href="http://godoc.org/builtin#uint">uint</a>
+    <span id="HTTPKubeletClient.EnableHttps">EnableHttps</span> <a href="http://godoc.org/builtin#bool">bool</a>
+}</pre><p>
+HTTPKubeletClient is the default implementation of PodInfoGetter and KubeletHealthchecker, accesses the kubelet over HTTP.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="HTTPKubeletClient.GetPodInfo">func (*HTTPKubeletClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L92">GetPodInfo</a> <a class="permalink" href="client.html#HTTPKubeletClient.GetPodInfo">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#HTTPKubeletClient">HTTPKubeletClient</a>) GetPodInfo(host, podNamespace, podID <a href="http://godoc.org/builtin#string">string</a>) (<a href="api.html">api</a>.<a href="api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetPodInfo gets information about the specified pod.
+</p>
+
+            
+  
+
+          
+            <h4 id="HTTPKubeletClient.HealthCheck">func (*HTTPKubeletClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L125">HealthCheck</a> <a class="permalink" href="client.html#HTTPKubeletClient.HealthCheck">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#HTTPKubeletClient">HTTPKubeletClient</a>) HealthCheck(host <a href="http://godoc.org/builtin#string">string</a>) (<a href="health.html">health</a>.<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="HttpClientFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L83">HttpClientFunc</a> <a class="permalink" href="client.html#HttpClientFunc">&para;</a></h3>
+          <pre>type HttpClientFunc func(*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="HttpClientFunc.Do">func (HttpClientFunc) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/fake.go#L85">Do</a> <a class="permalink" href="client.html#HttpClientFunc.Do">&para;</a></h4>
+            <pre class="funcdecl">func (f <a href="client.html#HttpClientFunc">HttpClientFunc</a>) Do(req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L29">Interface</a> <a class="permalink" href="client.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <a href="client.html#PodsNamespacer">PodsNamespacer</a>
+    <a href="client.html#ReplicationControllersNamespacer">ReplicationControllersNamespacer</a>
+    <a href="client.html#ServicesNamespacer">ServicesNamespacer</a>
+    <a href="client.html#EndpointsNamespacer">EndpointsNamespacer</a>
+    <a href="client.html#VersionInterface">VersionInterface</a>
+    <a href="client.html#MinionsInterface">MinionsInterface</a>
+    <a href="client.html#EventNamespacer">EventNamespacer</a>
+}</pre><p>
+Interface holds the methods for clients of Kubernetes,
+an interface to allow mock testing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="KubeletClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L36">KubeletClient</a> <a class="permalink" href="client.html#KubeletClient">&para;</a></h3>
+          <pre>type KubeletClient interface {
+    <a href="client.html#KubeletHealthChecker">KubeletHealthChecker</a>
+    <a href="client.html#PodInfoGetter">PodInfoGetter</a>
+}</pre><p>
+KubeletClient is an interface for all kubelet functionality
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewKubeletClient">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L61">NewKubeletClient</a> <a class="permalink" href="client.html#NewKubeletClient">&para;</a></h4>
+            <pre class="funcdecl">func NewKubeletClient(config *<a href="client.html#KubeletConfig">KubeletConfig</a>) (<a href="client.html#KubeletClient">KubeletClient</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+
+          
+        
+          <h3 id="KubeletConfig">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L64">KubeletConfig</a> <a class="permalink" href="client.html#KubeletConfig">&para;</a></h3>
+          <pre>type KubeletConfig struct {
+    <span class="com">// ToDo: Add support for different kubelet instances exposing different ports</span>
+    <span id="KubeletConfig.Port">Port</span>        <a href="http://godoc.org/builtin#uint">uint</a>
+    <span id="KubeletConfig.EnableHttps">EnableHttps</span> <a href="http://godoc.org/builtin#bool">bool</a>
+
+    <span class="com">// TLS Configuration, only applies if EnableHttps is true.</span>
+    <span id="KubeletConfig.CertFile">CertFile</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// TLS Configuration, only applies if EnableHttps is true.</span>
+    <span id="KubeletConfig.KeyFile">KeyFile</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// TLS Configuration, only applies if EnableHttps is true.</span>
+    <span id="KubeletConfig.CAFile">CAFile</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="KubeletHealthChecker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L42">KubeletHealthChecker</a> <a class="permalink" href="client.html#KubeletHealthChecker">&para;</a></h3>
+          <pre>type KubeletHealthChecker interface {
+    <span id="KubeletHealthChecker.HealthCheck">HealthCheck</span>(host <a href="http://godoc.org/builtin#string">string</a>) (<a href="health.html">health</a>.<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+KubeletHealthchecker is an interface for healthchecking kubelets
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="MinionInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/minions.go#L25">MinionInterface</a> <a class="permalink" href="client.html#MinionInterface">&para;</a></h3>
+          <pre>type MinionInterface interface {
+    <span id="MinionInterface.Get">Get</span>(id <a href="http://godoc.org/builtin#string">string</a>) (result *<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MinionInterface.Create">Create</span>(minion *<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MinionInterface.List">List</span>() (*<a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MinionInterface.Delete">Delete</span>(id <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="MinionsInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/minions.go#L21">MinionsInterface</a> <a class="permalink" href="client.html#MinionsInterface">&para;</a></h3>
+          <pre>type MinionsInterface interface {
+    <span id="MinionsInterface.Minions">Minions</span>() <a href="client.html#MinionInterface">MinionInterface</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodInfoGetter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/kubelet.go#L48">PodInfoGetter</a> <a class="permalink" href="client.html#PodInfoGetter">&para;</a></h3>
+          <pre>type PodInfoGetter interface {
+    <span class="com">// GetPodInfo returns information about all containers which are part</span>
+    <span class="com">// Returns an api.PodInfo, or an error if one occurs.</span>
+    <span id="PodInfoGetter.GetPodInfo">GetPodInfo</span>(host, podNamespace, podID <a href="http://godoc.org/builtin#string">string</a>) (<a href="api.html">api</a>.<a href="api.html#PodInfo">PodInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+PodInfoGetter is an interface for things that can get information about a pod&#39;s containers.
+Injectable for easy testing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/pods.go#L32">PodInterface</a> <a class="permalink" href="client.html#PodInterface">&para;</a></h3>
+          <pre>type PodInterface interface {
+    <span id="PodInterface.List">List</span>(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="PodInterface.Get">Get</span>(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="PodInterface.Delete">Delete</span>(name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="PodInterface.Create">Create</span>(pod *<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="PodInterface.Update">Update</span>(pod *<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>) (*<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+PodInterface has methods to work with Pod resources.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PodsNamespacer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/pods.go#L27">PodsNamespacer</a> <a class="permalink" href="client.html#PodsNamespacer">&para;</a></h3>
+          <pre>type PodsNamespacer interface {
+    <span id="PodsNamespacer.Pods">Pods</span>(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#PodInterface">PodInterface</a>
+}</pre><p>
+PodsNamespacer has methods to work with Pod resources in a namespace
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PollFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L47">PollFunc</a> <a class="permalink" href="client.html#PollFunc">&para;</a></h3>
+          <pre>type PollFunc func(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="client.html#Request">Request</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+PollFunc is called when a server operation returns 202 accepted. The name of the
+operation is extracted from the response and passed to this function. Return a
+request to retrieve the result of the operation, or false for the second argument
+if polling should end.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RESTClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L36">RESTClient</a> <a class="permalink" href="client.html#RESTClient">&para;</a></h3>
+          <pre>type RESTClient struct {
+
+    <span class="com">// Codec is the encoding and decoding scheme that applies to a particular set of</span>
+    <span class="com">// REST resources.</span>
+    <span id="RESTClient.Codec">Codec</span> <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>
+
+    <span class="com">// Set specific behavior of the client.  If not set http.DefaultClient will be</span>
+    <span class="com">// used.</span>
+    <span id="RESTClient.Client">Client</span> <a href="client.html#HTTPClient">HTTPClient</a>
+
+    <span class="com">// Set the poll behavior of this client. If not set the DefaultPoll method will</span>
+    <span class="com">// be called.</span>
+    <span id="RESTClient.Poller">Poller</span> <a href="client.html#PollFunc">PollFunc</a>
+
+    <span id="RESTClient.Sync">Sync</span>       <a href="http://godoc.org/builtin#bool">bool</a>
+    <span id="RESTClient.PollPeriod">PollPeriod</span> <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>
+    <span id="RESTClient.Timeout">Timeout</span>    <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+RESTClient imposes common Kubernetes API conventions on a set of resource paths.
+The baseURL is expected to point to an HTTP or HTTPS path that is the parent
+of one or more resources.  The server should return a decodable API resource
+object, or an api.Status object which contains information about the reason for
+any failure.
+</p>
+<p>
+Most consumers should use client.New() to get a Kubernetes API client.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRESTClient">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L59">NewRESTClient</a> <a class="permalink" href="client.html#NewRESTClient">&para;</a></h4>
+            <pre class="funcdecl">func NewRESTClient(baseURL *<a href="http://godoc.org/net/url">url</a>.<a href="http://godoc.org/net/url#URL">URL</a>, c <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>) *<a href="client.html#RESTClient">RESTClient</a></pre><p>
+NewRESTClient creates a new RESTClient. This client performs generic REST functions
+such as Get, Put, Post, and Delete on specified paths.  Codec controls encoding and
+decoding of responses from the server.
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClientFor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/helper.go#L104">RESTClientFor</a> <a class="permalink" href="client.html#RESTClientFor">&para;</a></h4>
+            <pre class="funcdecl">func RESTClientFor(config *<a href="client.html#Config">Config</a>) (*<a href="client.html#RESTClient">RESTClient</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+RESTClientFor returns a RESTClient that satisfies the requested attributes on a client Config
+object.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="RESTClient.DefaultPoll">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L129">DefaultPoll</a> <a class="permalink" href="client.html#RESTClient.DefaultPoll">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) DefaultPoll(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="client.html#Request">Request</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre>
+            
+  
+
+          
+            <h4 id="RESTClient.Delete">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L120">Delete</a> <a class="permalink" href="client.html#RESTClient.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Delete() *<a href="client.html#Request">Request</a></pre><p>
+Delete begins a DELETE request. Short for c.Verb(&#34;DELETE&#34;).
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClient.Get">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L115">Get</a> <a class="permalink" href="client.html#RESTClient.Get">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Get() *<a href="client.html#Request">Request</a></pre><p>
+Get begins a GET request. Short for c.Verb(&#34;GET&#34;).
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClient.Operation">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L125">Operation</a> <a class="permalink" href="client.html#RESTClient.Operation">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Operation(name <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+PollFor makes a request to do a single poll of the completion of the given operation.
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClient.Post">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L105">Post</a> <a class="permalink" href="client.html#RESTClient.Post">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Post() *<a href="client.html#Request">Request</a></pre><p>
+Post begins a POST request. Short for c.Verb(&#34;POST&#34;).
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClient.Put">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L110">Put</a> <a class="permalink" href="client.html#RESTClient.Put">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Put() *<a href="client.html#Request">Request</a></pre><p>
+Put begins a PUT request. Short for c.Verb(&#34;PUT&#34;).
+</p>
+
+            
+  
+
+          
+            <h4 id="RESTClient.Verb">func (*RESTClient) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/restclient.go#L91">Verb</a> <a class="permalink" href="client.html#RESTClient.Verb">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="client.html#RESTClient">RESTClient</a>) Verb(verb <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+Verb begins a request with a verb (GET, POST, PUT, DELETE).
+</p>
+<p>
+Example usage of RESTClient&#39;s request building interface:
+c := NewRESTClient(url, codec)
+resp, err := c.Verb(&#34;GET&#34;).
+</p>
+<pre>Path(&#34;pods&#34;).
+SelectorParam(&#34;labels&#34;, &#34;area=staging&#34;).
+Timeout(10*time.Second).
+Do()
+</pre>
+<p>
+if err != nil { ... }
+list, ok := resp.(*api.PodList)
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="ReplicationControllerInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/replication_controllers.go#L33">ReplicationControllerInterface</a> <a class="permalink" href="client.html#ReplicationControllerInterface">&para;</a></h3>
+          <pre>type ReplicationControllerInterface interface {
+    <span id="ReplicationControllerInterface.List">List</span>(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationControllerList">ReplicationControllerList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ReplicationControllerInterface.Get">Get</span>(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ReplicationControllerInterface.Create">Create</span>(ctrl *<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ReplicationControllerInterface.Update">Update</span>(ctrl *<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>) (*<a href="api.html">api</a>.<a href="api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ReplicationControllerInterface.Delete">Delete</span>(name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="ReplicationControllerInterface.Watch">Watch</span>(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ReplicationControllerInterface has methods to work with ReplicationController resources.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ReplicationControllersNamespacer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/replication_controllers.go#L28">ReplicationControllersNamespacer</a> <a class="permalink" href="client.html#ReplicationControllersNamespacer">&para;</a></h3>
+          <pre>type ReplicationControllersNamespacer interface {
+    <span id="ReplicationControllersNamespacer.ReplicationControllers">ReplicationControllers</span>(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ReplicationControllerInterface">ReplicationControllerInterface</a>
+}</pre><p>
+ReplicationControllersNamespacer has methods to work with ReplicationController resources in a namespace
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Request">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L80">Request</a> <a class="permalink" href="client.html#Request">&para;</a></h3>
+          <pre>type Request struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Request allows for building up a request to a server in a chained fashion.
+Any errors are stored until the end of your call, so you only have to
+check once.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRequest">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L104">NewRequest</a> <a class="permalink" href="client.html#NewRequest">&para;</a></h4>
+            <pre class="funcdecl">func NewRequest(client <a href="client.html#HTTPClient">HTTPClient</a>, verb <a href="http://godoc.org/builtin#string">string</a>, baseURL *<a href="http://godoc.org/net/url">url</a>.<a href="http://godoc.org/net/url#URL">URL</a>, codec <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>) *<a href="client.html#Request">Request</a></pre><p>
+NewRequest creates a new request with the core attributes.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Request.AbsPath">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L145">AbsPath</a> <a class="permalink" href="client.html#Request.AbsPath">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) AbsPath(path <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+AbsPath overwrites an existing path with the path parameter.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Body">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L220">Body</a> <a class="permalink" href="client.html#Request.Body">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Body(obj interface{}) *<a href="client.html#Request">Request</a></pre><p>
+Body makes the request use obj as the body. Optional.
+If obj is a string, try to read a file of that name.
+If obj is a []byte, send it directly.
+If obj is an io.Reader, use it directly.
+If obj is a runtime.Object, marshal it correctly.
+Otherwise, set an error.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Do">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L343">Do</a> <a class="permalink" href="client.html#Request.Do">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Do() <a href="client.html#Result">Result</a></pre><p>
+Do formats and executes the request. Returns a Result object for easy response
+processing. Handles polling the server in the event a continuation was sent.
+</p>
+<p>
+Error type:
+</p>
+<pre>* If the request can&#39;t be constructed, or an error happened earlier while building its
+  arguments: *RequestConstructionError
+* If the server responds with a status: *errors.StatusError or *errors.UnexpectedObjectError
+* If the status code and body don&#39;t make sense together: *UnexpectedStatusError
+* http.Client.Do errors are returned directly.
+</pre>
+
+            
+  
+
+          
+            <h4 id="Request.Namespace">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L134">Namespace</a> <a class="permalink" href="client.html#Request.Namespace">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Namespace(namespace <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+Namespace applies the namespace scope to a request
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.NoPoll">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L250">NoPoll</a> <a class="permalink" href="client.html#Request.NoPoll">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) NoPoll() *<a href="client.html#Request">Request</a></pre><p>
+NoPoll indicates a server &#34;working&#34; response should be returned as an error
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Param">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L185">Param</a> <a class="permalink" href="client.html#Request.Param">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Param(paramName, s <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+Param creates a query parameter with the given string value.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.ParseSelectorParam">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L156">ParseSelectorParam</a> <a class="permalink" href="client.html#Request.ParseSelectorParam">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) ParseSelectorParam(paramName, item <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+ParseSelectorParam parses the given string as a resource label selector.
+This is a convenience function so you don&#39;t have to first check that it&#39;s a
+validly formatted selector.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Path">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L116">Path</a> <a class="permalink" href="client.html#Request.Path">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Path(item <a href="http://godoc.org/builtin#string">string</a>) *<a href="client.html#Request">Request</a></pre><p>
+Path appends an item to the request path. You must call Path at least once.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Poller">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L257">Poller</a> <a class="permalink" href="client.html#Request.Poller">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Poller(poller <a href="client.html#PollFunc">PollFunc</a>) *<a href="client.html#Request">Request</a></pre><p>
+Poller indicates this request should use the specified poll function to determine whether
+a server &#34;working&#34; response should be retried. The poller is responsible for waiting or
+outputting messages to the client.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.SelectorParam">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L169">SelectorParam</a> <a class="permalink" href="client.html#Request.SelectorParam">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) SelectorParam(paramName <a href="http://godoc.org/builtin#string">string</a>, s <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) *<a href="client.html#Request">Request</a></pre><p>
+SelectorParam adds the given selector as a query parameter with the name paramName.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Stream">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L315">Stream</a> <a class="permalink" href="client.html#Request.Stream">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Stream() (<a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#ReadCloser">ReadCloser</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Stream formats and executes the request, and offers streaming of the response.
+Returns io.ReadCloser which could be used for streaming of the response, or an error
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Sync">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L125">Sync</a> <a class="permalink" href="client.html#Request.Sync">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Sync(sync <a href="http://godoc.org/builtin#bool">bool</a>) *<a href="client.html#Request">Request</a></pre><p>
+Sync sets sync/async call status by setting the &#34;sync&#34; parameter to &#34;true&#34;/&#34;false&#34;.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Timeout">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L206">Timeout</a> <a class="permalink" href="client.html#Request.Timeout">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Timeout(d <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>) *<a href="client.html#Request">Request</a></pre><p>
+Timeout makes the request use the given duration as a timeout. Sets the &#34;timeout&#34;
+parameter. Ignored if sync=false.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.UintParam">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L177">UintParam</a> <a class="permalink" href="client.html#Request.UintParam">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) UintParam(paramName <a href="http://godoc.org/builtin#string">string</a>, u <a href="http://godoc.org/builtin#uint64">uint64</a>) *<a href="client.html#Request">Request</a></pre><p>
+UintParam creates a query parameter with the given value.
+</p>
+
+            
+  
+
+          
+            <h4 id="Request.Watch">func (*Request) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L287">Watch</a> <a class="permalink" href="client.html#Request.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#Request">Request</a>) Watch() (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Watch attempts to begin watching the requested location.
+Returns a watch.Interface, or an error.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="RequestConstructionError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L68">RequestConstructionError</a> <a class="permalink" href="client.html#RequestConstructionError">&para;</a></h3>
+          <pre>type RequestConstructionError struct {
+    <span id="RequestConstructionError.Err">Err</span> <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+RequestConstructionError is returned when there&#39;s an error assembling a request.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="RequestConstructionError.Error">func (*RequestConstructionError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L73">Error</a> <a class="permalink" href="client.html#RequestConstructionError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="client.html#RequestConstructionError">RequestConstructionError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Error returns a textual description of &#39;r&#39;.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Result">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L435">Result</a> <a class="permalink" href="client.html#Result">&para;</a></h3>
+          <pre>type Result struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Result contains the result of calling Request.Do().
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Result.Error">func (Result) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L473">Error</a> <a class="permalink" href="client.html#Result.Error">&para;</a></h4>
+            <pre class="funcdecl">func (r <a href="client.html#Result">Result</a>) Error() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Error returns the error executing the request, nil if no error occurred.
+See the Request.Do() comment for what errors you might get.
+</p>
+
+            
+  
+
+          
+            <h4 id="Result.Get">func (Result) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L449">Get</a> <a class="permalink" href="client.html#Result.Get">&para;</a></h4>
+            <pre class="funcdecl">func (r <a href="client.html#Result">Result</a>) Get() (<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Get returns the result as an object.
+</p>
+
+            
+  
+
+          
+            <h4 id="Result.Into">func (Result) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L457">Into</a> <a class="permalink" href="client.html#Result.Into">&para;</a></h4>
+            <pre class="funcdecl">func (r <a href="client.html#Result">Result</a>) Into(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Into stores the result into obj, if possible.
+</p>
+
+            
+  
+
+          
+            <h4 id="Result.Raw">func (Result) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L444">Raw</a> <a class="permalink" href="client.html#Result.Raw">&para;</a></h4>
+            <pre class="funcdecl">func (r <a href="client.html#Result">Result</a>) Raw() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Raw returns the raw result.
+</p>
+
+            
+  
+
+          
+            <h4 id="Result.WasCreated">func (Result) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L466">WasCreated</a> <a class="permalink" href="client.html#Result.WasCreated">&para;</a></h4>
+            <pre class="funcdecl">func (r <a href="client.html#Result">Result</a>) WasCreated(wasCreated *<a href="http://godoc.org/builtin#bool">bool</a>) <a href="client.html#Result">Result</a></pre><p>
+WasCreated updates the provided bool pointer to whether the server returned
+201 created or a different response.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="ServiceInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/services.go#L33">ServiceInterface</a> <a class="permalink" href="client.html#ServiceInterface">&para;</a></h3>
+          <pre>type ServiceInterface interface {
+    <span id="ServiceInterface.List">List</span>(selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (*<a href="api.html">api</a>.<a href="api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ServiceInterface.Get">Get</span>(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ServiceInterface.Create">Create</span>(srv *<a href="api.html">api</a>.<a href="api.html#Service">Service</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ServiceInterface.Update">Update</span>(srv *<a href="api.html">api</a>.<a href="api.html#Service">Service</a>) (*<a href="api.html">api</a>.<a href="api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="ServiceInterface.Delete">Delete</span>(name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+    <span id="ServiceInterface.Watch">Watch</span>(label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ServiceInterface has methods to work with Service resources.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServicesNamespacer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/services.go#L28">ServicesNamespacer</a> <a class="permalink" href="client.html#ServicesNamespacer">&para;</a></h3>
+          <pre>type ServicesNamespacer interface {
+    <span id="ServicesNamespacer.Services">Services</span>(namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="client.html#ServiceInterface">ServiceInterface</a>
+}</pre><p>
+ServicesNamespacer has methods to work with Service resources in a namespace
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="UnexpectedStatusError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L56">UnexpectedStatusError</a> <a class="permalink" href="client.html#UnexpectedStatusError">&para;</a></h3>
+          <pre>type UnexpectedStatusError struct {
+    <span id="UnexpectedStatusError.Request">Request</span>  *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>
+    <span id="UnexpectedStatusError.Response">Response</span> *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>
+    <span id="UnexpectedStatusError.Body">Body</span>     <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+UnexpectedStatusError is returned as an error if a response&#39;s body and HTTP code don&#39;t
+make sense together.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="UnexpectedStatusError.Error">func (*UnexpectedStatusError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/request.go#L63">Error</a> <a class="permalink" href="client.html#UnexpectedStatusError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (u *<a href="client.html#UnexpectedStatusError">UnexpectedStatusError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Error returns a textual description of &#39;u&#39;.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="VersionInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/client.go#L64">VersionInterface</a> <a class="permalink" href="client.html#VersionInterface">&para;</a></h3>
+          <pre>type VersionInterface interface {
+    <span id="VersionInterface.ServerVersion">ServerVersion</span>() (*<a href="version.html">version</a>.<a href="version.html#Info">Info</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="VersionInterface.ServerAPIVersions">ServerAPIVersions</span>() (*<a href="api.html">api</a>.<a href="api.html#APIVersions">APIVersions</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+VersionInterface has a method to retrieve the server version.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="client.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="client/cache.html">cache</a><td>Package cache is a client-side caching mechanism.</td></tr><tr><td><a href="client/clientcmd.html">clientcmd</a><td>Package cmd provides one stop shopping for a command line executable to bind the correct flags, build the client config, and create a working client.</td></tr><tr><td><a href="client/record.html">record</a><td>Package record has all client logic for recording and reporting events.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/client"></form>
+  <p>Package client imports <a href="client@imports.html">28 packages</a> (<a href="client@import-graph.html">graph</a>) and is imported by <a href="client@importers.html">49 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:23Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="client@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="client.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

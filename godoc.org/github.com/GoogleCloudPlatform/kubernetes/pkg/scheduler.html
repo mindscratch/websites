@@ -1,0 +1,624 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>scheduler - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package scheduler">
+    <meta property="og:title" content="Package scheduler">
+    <meta name="description" content="Package scheduler contains a generic Scheduler interface and several implementations.">
+    <meta name="twitter:description" content="Package scheduler contains a generic Scheduler interface and several implementations.">
+    <meta property="og:description" content="Package scheduler contains a generic Scheduler interface and several implementations.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">scheduler</span>
+  
+  <span class="pull-right">
+    <a href="scheduler.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="scheduler.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package scheduler</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/scheduler"</code>
+
+        <p>
+Package scheduler contains a generic Scheduler interface and several
+implementations.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="scheduler.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="scheduler.html#MapPodsToMachines">func MapPodsToMachines(lister PodLister) (map[string][]api.Pod, error)</a></li><li><a href="scheduler.html#NoDiskConflict">func NoDiskConflict(pod api.Pod, existingPods []api.Pod, node string) (bool, error)</a></li><li><a href="scheduler.html#PodFitsPorts">func PodFitsPorts(pod api.Pod, existingPods []api.Pod, node string) (bool, error)</a></li>
+          
+            <li><a href="scheduler.html#ClientNodeInfo">type ClientNodeInfo</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#ClientNodeInfo.GetNodeInfo">func (nodes ClientNodeInfo) GetNodeInfo(nodeID string) (*api.Minion, error)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#FakeMinionLister">type FakeMinionLister</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#FakeMinionLister.List">func (f FakeMinionLister) List() (api.MinionList, error)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#FakePodLister">type FakePodLister</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#FakePodLister.ListPods">func (f FakePodLister) ListPods(s labels.Selector) (selected []api.Pod, err error)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#FitPredicate">type FitPredicate</a></li>
+            <ul>
+            <li><a href="scheduler.html#NewResourceFitPredicate">func NewResourceFitPredicate(info NodeInfo) FitPredicate</a></li><li><a href="scheduler.html#NewSelectorMatchPredicate">func NewSelectorMatchPredicate(info NodeInfo) FitPredicate</a></li>
+            
+            </ul>
+          
+            <li><a href="scheduler.html#HostPriority">type HostPriority</a></li>
+            
+            
+            
+            
+          
+            <li><a href="scheduler.html#HostPriorityList">type HostPriorityList</a></li>
+            <ul>
+            <li><a href="scheduler.html#CalculateSpreadPriority">func CalculateSpreadPriority(pod api.Pod, podLister PodLister, minionLister MinionLister) (HostPriorityList, error)</a></li><li><a href="scheduler.html#EqualPriority">func EqualPriority(pod api.Pod, podLister PodLister, minionLister MinionLister) (HostPriorityList, error)</a></li><li><a href="scheduler.html#LeastRequestedPriority">func LeastRequestedPriority(pod api.Pod, podLister PodLister, minionLister MinionLister) (HostPriorityList, error)</a></li>
+            <li><a href="scheduler.html#HostPriorityList.Len">func (h HostPriorityList) Len() int</a></li><li><a href="scheduler.html#HostPriorityList.Less">func (h HostPriorityList) Less(i, j int) bool</a></li><li><a href="scheduler.html#HostPriorityList.Swap">func (h HostPriorityList) Swap(i, j int)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#MinionLister">type MinionLister</a></li>
+            
+            
+            
+            
+          
+            <li><a href="scheduler.html#NodeInfo">type NodeInfo</a></li>
+            
+            
+            
+            
+          
+            <li><a href="scheduler.html#NodeSelector">type NodeSelector</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#NodeSelector.PodSelectorMatches">func (n *NodeSelector) PodSelectorMatches(pod api.Pod, existingPods []api.Pod, node string) (bool, error)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#PodLister">type PodLister</a></li>
+            
+            
+            
+            
+          
+            <li><a href="scheduler.html#PriorityFunction">type PriorityFunction</a></li>
+            
+            
+            
+            
+          
+            <li><a href="scheduler.html#ResourceFit">type ResourceFit</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#ResourceFit.PodFitsResources">func (r *ResourceFit) PodFitsResources(pod api.Pod, existingPods []api.Pod, node string) (bool, error)</a></li>
+            </ul>
+          
+            <li><a href="scheduler.html#Scheduler">type Scheduler</a></li>
+            <ul>
+            <li><a href="scheduler.html#NewGenericScheduler">func NewGenericScheduler(predicates []FitPredicate, prioritizer PriorityFunction, pods PodLister, random *rand.Rand) Scheduler</a></li><li><a href="scheduler.html#NewSpreadingScheduler">func NewSpreadingScheduler(podLister PodLister, minionLister MinionLister, predicates []FitPredicate, random *rand.Rand) Scheduler</a></li>
+            
+            </ul>
+          
+            <li><a href="scheduler.html#StaticNodeInfo">type StaticNodeInfo</a></li>
+            <ul>
+            
+            <li><a href="scheduler.html#StaticNodeInfo.GetNodeInfo">func (nodes StaticNodeInfo) GetNodeInfo(nodeID string) (*api.Minion, error)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/scheduler">Package Files</a>
+          <a class="permalink" href="scheduler.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/generic_scheduler.go">generic_scheduler.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go">listers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go">predicates.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/priorities.go">priorities.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/scheduler.go">scheduler.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/spreading.go">spreading.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go">types.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="MapPodsToMachines">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L193">MapPodsToMachines</a> <a class="permalink" href="scheduler.html#MapPodsToMachines">&para;</a></h3>
+          <pre class="funcdecl">func MapPodsToMachines(lister <a href="scheduler.html#PodLister">PodLister</a>) (map[<a href="http://godoc.org/builtin#string">string</a>][]<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+MapPodsToMachines obtains a list of pods and pivots that list into a map where the keys are host names
+and the values are the list of pods running on that host.
+</p>
+
+          
+  
+
+        
+          <h3 id="NoDiskConflict">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L75">NoDiskConflict</a> <a class="permalink" href="scheduler.html#NoDiskConflict">&para;</a></h3>
+          <pre class="funcdecl">func NoDiskConflict(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, existingPods []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, node <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NoDiskConflict evaluates if a pod can fit due to the volumes it requests, and those that
+are already mounted. Some times of volumes are mounted onto node machines.  For now, these mounts
+are exclusive so if there is already a volume mounted on that node, another pod can&#39;t schedule
+there. This is GCE specific for now.
+TODO: migrate this into some per-volume specific code?
+</p>
+
+          
+  
+
+        
+          <h3 id="PodFitsPorts">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L165">PodFitsPorts</a> <a class="permalink" href="scheduler.html#PodFitsPorts">&para;</a></h3>
+          <pre class="funcdecl">func PodFitsPorts(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, existingPods []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, node <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ClientNodeInfo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L46">ClientNodeInfo</a> <a class="permalink" href="scheduler.html#ClientNodeInfo">&para;</a></h3>
+          <pre>type ClientNodeInfo struct {
+    *<a href="client.html">client</a>.<a href="client.html#Client">Client</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ClientNodeInfo.GetNodeInfo">func (ClientNodeInfo) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L50">GetNodeInfo</a> <a class="permalink" href="scheduler.html#ClientNodeInfo.GetNodeInfo">&para;</a></h4>
+            <pre class="funcdecl">func (nodes <a href="scheduler.html#ClientNodeInfo">ClientNodeInfo</a>) GetNodeInfo(nodeID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="FakeMinionLister">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L30">FakeMinionLister</a> <a class="permalink" href="scheduler.html#FakeMinionLister">&para;</a></h3>
+          <pre>type FakeMinionLister <a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a></pre><p>
+FakeMinionLister implements MinionLister on a []string for test purposes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeMinionLister.List">func (FakeMinionLister) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L33">List</a> <a class="permalink" href="scheduler.html#FakeMinionLister.List">&para;</a></h4>
+            <pre class="funcdecl">func (f <a href="scheduler.html#FakeMinionLister">FakeMinionLister</a>) List() (<a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+List returns minions as a []string.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="FakePodLister">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L44">FakePodLister</a> <a class="permalink" href="scheduler.html#FakePodLister">&para;</a></h3>
+          <pre>type FakePodLister []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a></pre><p>
+FakePodLister implements PodLister on an []api.Pods for test purposes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakePodLister.ListPods">func (FakePodLister) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L47">ListPods</a> <a class="permalink" href="scheduler.html#FakePodLister.ListPods">&para;</a></h4>
+            <pre class="funcdecl">func (f <a href="scheduler.html#FakePodLister">FakePodLister</a>) ListPods(s <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (selected []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ListPods returns []api.Pod matching a query.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="FitPredicate">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L24">FitPredicate</a> <a class="permalink" href="scheduler.html#FitPredicate">&para;</a></h3>
+          <pre>type FitPredicate func(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, existingPods []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, node <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+FitPredicate is a function that indicates if a pod fits into an existing node.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewResourceFitPredicate">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L135">NewResourceFitPredicate</a> <a class="permalink" href="scheduler.html#NewResourceFitPredicate">&para;</a></h4>
+            <pre class="funcdecl">func NewResourceFitPredicate(info <a href="scheduler.html#NodeInfo">NodeInfo</a>) <a href="scheduler.html#FitPredicate">FitPredicate</a></pre>
+            
+  
+
+          
+            <h4 id="NewSelectorMatchPredicate">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L142">NewSelectorMatchPredicate</a> <a class="permalink" href="scheduler.html#NewSelectorMatchPredicate">&para;</a></h4>
+            <pre class="funcdecl">func NewSelectorMatchPredicate(info <a href="scheduler.html#NodeInfo">NodeInfo</a>) <a href="scheduler.html#FitPredicate">FitPredicate</a></pre>
+            
+  
+
+          
+
+          
+        
+          <h3 id="HostPriority">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L27">HostPriority</a> <a class="permalink" href="scheduler.html#HostPriority">&para;</a></h3>
+          <pre>type HostPriority struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+HostPriority represents the priority of scheduling to a particular host, lower priority is better.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HostPriorityList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L32">HostPriorityList</a> <a class="permalink" href="scheduler.html#HostPriorityList">&para;</a></h3>
+          <pre>type HostPriorityList []<a href="scheduler.html#HostPriority">HostPriority</a></pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="CalculateSpreadPriority">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/spreading.go#L30">CalculateSpreadPriority</a> <a class="permalink" href="scheduler.html#CalculateSpreadPriority">&para;</a></h4>
+            <pre class="funcdecl">func CalculateSpreadPriority(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, podLister <a href="scheduler.html#PodLister">PodLister</a>, minionLister <a href="scheduler.html#MinionLister">MinionLister</a>) (<a href="scheduler.html#HostPriorityList">HostPriorityList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+CalculateSpreadPriority spreads pods by minimizing the number of pods on the same machine with the same labels.
+Importantly, if there are services in the system that span multiple heterogenous sets of pods, this spreading priority
+may not provide optimal spreading for the members of that Service.
+TODO: consider if we want to include Service label sets in the scheduling priority.
+</p>
+
+            
+  
+
+          
+            <h4 id="EqualPriority">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/generic_scheduler.go#L107">EqualPriority</a> <a class="permalink" href="scheduler.html#EqualPriority">&para;</a></h4>
+            <pre class="funcdecl">func EqualPriority(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, podLister <a href="scheduler.html#PodLister">PodLister</a>, minionLister <a href="scheduler.html#MinionLister">MinionLister</a>) (<a href="scheduler.html#HostPriorityList">HostPriorityList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+EqualPriority is a prioritizer function that gives an equal weight of one to all nodes
+</p>
+
+            
+  
+
+          
+            <h4 id="LeastRequestedPriority">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/priorities.go#L58">LeastRequestedPriority</a> <a class="permalink" href="scheduler.html#LeastRequestedPriority">&para;</a></h4>
+            <pre class="funcdecl">func LeastRequestedPriority(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, podLister <a href="scheduler.html#PodLister">PodLister</a>, minionLister <a href="scheduler.html#MinionLister">MinionLister</a>) (<a href="scheduler.html#HostPriorityList">HostPriorityList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+LeastRequestedPriority is a priority function that favors nodes with fewer requested resources.
+It calculates the percentage of memory and CPU requested by pods scheduled on the node, and prioritizes
+based on the minimum of the average of the fraction of requested to capacity.
+Details: (Sum(requested cpu) / Capacity + Sum(requested memory) / Capacity) * 50
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="HostPriorityList.Len">func (HostPriorityList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L34">Len</a> <a class="permalink" href="scheduler.html#HostPriorityList.Len">&para;</a></h4>
+            <pre class="funcdecl">func (h <a href="scheduler.html#HostPriorityList">HostPriorityList</a>) Len() <a href="http://godoc.org/builtin#int">int</a></pre>
+            
+  
+
+          
+            <h4 id="HostPriorityList.Less">func (HostPriorityList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L38">Less</a> <a class="permalink" href="scheduler.html#HostPriorityList.Less">&para;</a></h4>
+            <pre class="funcdecl">func (h <a href="scheduler.html#HostPriorityList">HostPriorityList</a>) Less(i, j <a href="http://godoc.org/builtin#int">int</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="HostPriorityList.Swap">func (HostPriorityList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L45">Swap</a> <a class="permalink" href="scheduler.html#HostPriorityList.Swap">&para;</a></h4>
+            <pre class="funcdecl">func (h <a href="scheduler.html#HostPriorityList">HostPriorityList</a>) Swap(i, j <a href="http://godoc.org/builtin#int">int</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="MinionLister">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L25">MinionLister</a> <a class="permalink" href="scheduler.html#MinionLister">&para;</a></h3>
+          <pre>type MinionLister interface {
+    <span id="MinionLister.List">List</span>() (list <a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+MinionLister interface represents anything that can list minions for a scheduler.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="NodeInfo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L29">NodeInfo</a> <a class="permalink" href="scheduler.html#NodeInfo">&para;</a></h3>
+          <pre>type NodeInfo interface {
+    <span id="NodeInfo.GetNodeInfo">GetNodeInfo</span>(nodeID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="NodeSelector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L149">NodeSelector</a> <a class="permalink" href="scheduler.html#NodeSelector">&para;</a></h3>
+          <pre>type NodeSelector struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="NodeSelector.PodSelectorMatches">func (*NodeSelector) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L153">PodSelectorMatches</a> <a class="permalink" href="scheduler.html#NodeSelector.PodSelectorMatches">&para;</a></h4>
+            <pre class="funcdecl">func (n *<a href="scheduler.html#NodeSelector">NodeSelector</a>) PodSelectorMatches(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, existingPods []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, node <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="PodLister">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/listers.go#L38">PodLister</a> <a class="permalink" href="scheduler.html#PodLister">&para;</a></h3>
+          <pre>type PodLister interface {
+    <span class="com">// TODO: make this exactly the same as client&#39;s ListPods() method...</span>
+    <span id="PodLister.ListPods">ListPods</span>(<a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) ([]<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+PodLister interface represents anything that can list pods for a scheduler.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="PriorityFunction">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/types.go#L49">PriorityFunction</a> <a class="permalink" href="scheduler.html#PriorityFunction">&para;</a></h3>
+          <pre>type PriorityFunction func(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, podLister <a href="scheduler.html#PodLister">PodLister</a>, minionLister <a href="scheduler.html#MinionLister">MinionLister</a>) (<a href="scheduler.html#HostPriorityList">HostPriorityList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ResourceFit">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L87">ResourceFit</a> <a class="permalink" href="scheduler.html#ResourceFit">&para;</a></h3>
+          <pre>type ResourceFit struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ResourceFit.PodFitsResources">func (*ResourceFit) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L106">PodFitsResources</a> <a class="permalink" href="scheduler.html#ResourceFit.PodFitsResources">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="scheduler.html#ResourceFit">ResourceFit</a>) PodFitsResources(pod <a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, existingPods []<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, node <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+PodFitsResources calculates fit based on requested, rather than used resources
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Scheduler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/scheduler.go#L25">Scheduler</a> <a class="permalink" href="scheduler.html#Scheduler">&para;</a></h3>
+          <pre>type Scheduler interface {
+    <span id="Scheduler.Schedule">Schedule</span>(<a href="api.html">api</a>.<a href="api.html#Pod">Pod</a>, <a href="scheduler.html#MinionLister">MinionLister</a>) (selectedMachine <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Scheduler is an interface implemented by things that know how to schedule pods
+onto machines.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewGenericScheduler">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/generic_scheduler.go#L124">NewGenericScheduler</a> <a class="permalink" href="scheduler.html#NewGenericScheduler">&para;</a></h4>
+            <pre class="funcdecl">func NewGenericScheduler(predicates []<a href="scheduler.html#FitPredicate">FitPredicate</a>, prioritizer <a href="scheduler.html#PriorityFunction">PriorityFunction</a>, pods <a href="scheduler.html#PodLister">PodLister</a>, random *<a href="http://godoc.org/math/rand">rand</a>.<a href="http://godoc.org/math/rand#Rand">Rand</a>) <a href="scheduler.html#Scheduler">Scheduler</a></pre>
+            
+  
+
+          
+            <h4 id="NewSpreadingScheduler">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/spreading.go#L52">NewSpreadingScheduler</a> <a class="permalink" href="scheduler.html#NewSpreadingScheduler">&para;</a></h4>
+            <pre class="funcdecl">func NewSpreadingScheduler(podLister <a href="scheduler.html#PodLister">PodLister</a>, minionLister <a href="scheduler.html#MinionLister">MinionLister</a>, predicates []<a href="scheduler.html#FitPredicate">FitPredicate</a>, random *<a href="http://godoc.org/math/rand">rand</a>.<a href="http://godoc.org/math/rand#Rand">Rand</a>) <a href="scheduler.html#Scheduler">Scheduler</a></pre>
+            
+  
+
+          
+
+          
+        
+          <h3 id="StaticNodeInfo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L33">StaticNodeInfo</a> <a class="permalink" href="scheduler.html#StaticNodeInfo">&para;</a></h3>
+          <pre>type StaticNodeInfo struct {
+    *<a href="api.html">api</a>.<a href="api.html#MinionList">MinionList</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="StaticNodeInfo.GetNodeInfo">func (StaticNodeInfo) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/scheduler/predicates.go#L37">GetNodeInfo</a> <a class="permalink" href="scheduler.html#StaticNodeInfo.GetNodeInfo">&para;</a></h4>
+            <pre class="funcdecl">func (nodes <a href="scheduler.html#StaticNodeInfo">StaticNodeInfo</a>) GetNodeInfo(nodeID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="api.html">api</a>.<a href="api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/scheduler"></form>
+  <p>Package scheduler imports <a href="scheduler@imports.html">9 packages</a> (<a href="scheduler@import-graph.html">graph</a>) and is imported by <a href="scheduler@importers.html">5 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:15Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="scheduler@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="scheduler.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

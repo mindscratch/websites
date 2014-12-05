@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>testapi - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package testapi">
+    <meta property="og:title" content="Package testapi">
+    <meta name="description" content="Package testapi provides a helper for retrieving the KUBE_API_VERSION environment variable.">
+    <meta name="twitter:description" content="Package testapi provides a helper for retrieving the KUBE_API_VERSION environment variable.">
+    <meta property="og:description" content="Package testapi provides a helper for retrieving the KUBE_API_VERSION environment variable.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../api.html">api</a><span class="text-muted">/</span><span class="text-muted">testapi</span>
+  
+  <span class="pull-right">
+    <a href="testapi.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="testapi.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package testapi</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/api/testapi"</code>
+
+        <p>
+Package testapi provides a helper for retrieving the KUBE_API_VERSION environment variable.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="testapi.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="testapi.html#Codec">func Codec() runtime.Codec</a></li><li><a href="testapi.html#Converter">func Converter() runtime.ObjectConvertor</a></li><li><a href="testapi.html#MetadataAccessor">func MetadataAccessor() meta.MetadataAccessor</a></li><li><a href="testapi.html#SelfLink">func SelfLink(resource, name string) string</a></li><li><a href="testapi.html#Version">func Version() string</a></li>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/api/testapi">Package Files</a>
+          <a class="permalink" href="testapi.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go">testapi.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="Codec">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go#L40">Codec</a> <a class="permalink" href="testapi.html#Codec">&para;</a></h3>
+          <pre class="funcdecl">func Codec() <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Codec">Codec</a></pre><p>
+Codec returns the codec for the API version to test against, as set by the
+KUBE_API_VERSION env var.
+</p>
+
+          
+  
+
+        
+          <h3 id="Converter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go#L50">Converter</a> <a class="permalink" href="testapi.html#Converter">&para;</a></h3>
+          <pre class="funcdecl">func Converter() <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectConvertor">ObjectConvertor</a></pre><p>
+Converter returns the api.Scheme for the API version to test against, as set by the
+KUBE_API_VERSION env var.
+</p>
+
+          
+  
+
+        
+          <h3 id="MetadataAccessor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go#L60">MetadataAccessor</a> <a class="permalink" href="testapi.html#MetadataAccessor">&para;</a></h3>
+          <pre class="funcdecl">func MetadataAccessor() <a href="meta.html">meta</a>.<a href="meta.html#MetadataAccessor">MetadataAccessor</a></pre><p>
+MetadataAccessor returns the MetadataAccessor for the API version to test against,
+as set by the KUBE_API_VERSION env var.
+</p>
+
+          
+  
+
+        
+          <h3 id="SelfLink">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go#L71">SelfLink</a> <a class="permalink" href="testapi.html#SelfLink">&para;</a></h3>
+          <pre class="funcdecl">func SelfLink(resource, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+SelfLink returns a self link that will appear to be for the version Version().
+&#39;resource&#39; should be the resource path, e.g. &#34;pods&#34; for the Pod type. &#39;name&#39; should be
+empty for lists.
+</p>
+
+          
+  
+
+        
+          <h3 id="Version">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/testapi/testapi.go#L30">Version</a> <a class="permalink" href="testapi.html#Version">&para;</a></h3>
+          <pre class="funcdecl">func Version() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Version returns the API version to test against, as set by the KUBE_API_VERSION env var.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/api/testapi"></form>
+  <p>Package testapi imports <a href="testapi@imports.html">5 packages</a> (<a href="testapi@import-graph.html">graph</a>) and is imported by <a href="testapi@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:08Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="testapi@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="testapi.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,566 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>errors - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package errors">
+    <meta property="og:title" content="Package errors">
+    <meta name="description" content="Package errors provides detailed error types for api field validation.">
+    <meta name="twitter:description" content="Package errors provides detailed error types for api field validation.">
+    <meta property="og:description" content="Package errors provides detailed error types for api field validation.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../api.html">api</a><span class="text-muted">/</span><span class="text-muted">errors</span>
+  
+  <span class="pull-right">
+    <a href="errors.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="errors.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="errors.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package errors</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"</code>
+
+        <p>
+Package errors provides detailed error types for api field validation.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="errors.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="errors.html#FromObject">func FromObject(obj runtime.Object) error</a></li><li><a href="errors.html#IsAlreadyExists">func IsAlreadyExists(err error) bool</a></li><li><a href="errors.html#IsBadRequest">func IsBadRequest(err error) bool</a></li><li><a href="errors.html#IsConflict">func IsConflict(err error) bool</a></li><li><a href="errors.html#IsInvalid">func IsInvalid(err error) bool</a></li><li><a href="errors.html#IsNotFound">func IsNotFound(err error) bool</a></li><li><a href="errors.html#NewAlreadyExists">func NewAlreadyExists(kind, name string) error</a></li><li><a href="errors.html#NewBadRequest">func NewBadRequest(reason string) error</a></li><li><a href="errors.html#NewConflict">func NewConflict(kind, name string, err error) error</a></li><li><a href="errors.html#NewInternalError">func NewInternalError(err error) error</a></li><li><a href="errors.html#NewInvalid">func NewInvalid(kind, name string, errs ValidationErrorList) error</a></li><li><a href="errors.html#NewNotFound">func NewNotFound(kind, name string) error</a></li><li><a href="errors.html#ValueOf">func ValueOf(t ValidationErrorType) string</a></li>
+          
+            <li><a href="errors.html#StatusError">type StatusError</a></li>
+            <ul>
+            
+            <li><a href="errors.html#StatusError.Error">func (e *StatusError) Error() string</a></li><li><a href="errors.html#StatusError.Status">func (e *StatusError) Status() api.Status</a></li>
+            </ul>
+          
+            <li><a href="errors.html#UnexpectedObjectError">type UnexpectedObjectError</a></li>
+            <ul>
+            
+            <li><a href="errors.html#UnexpectedObjectError.Error">func (u *UnexpectedObjectError) Error() string</a></li>
+            </ul>
+          
+            <li><a href="errors.html#ValidationError">type ValidationError</a></li>
+            <ul>
+            <li><a href="errors.html#NewFieldDuplicate">func NewFieldDuplicate(field string, value interface{}) *ValidationError</a></li><li><a href="errors.html#NewFieldForbidden">func NewFieldForbidden(field string, value interface{}) *ValidationError</a></li><li><a href="errors.html#NewFieldInvalid">func NewFieldInvalid(field string, value interface{}, detail string) *ValidationError</a></li><li><a href="errors.html#NewFieldNotFound">func NewFieldNotFound(field string, value interface{}) *ValidationError</a></li><li><a href="errors.html#NewFieldNotSupported">func NewFieldNotSupported(field string, value interface{}) *ValidationError</a></li><li><a href="errors.html#NewFieldRequired">func NewFieldRequired(field string, value interface{}) *ValidationError</a></li>
+            <li><a href="errors.html#ValidationError.Error">func (v *ValidationError) Error() string</a></li>
+            </ul>
+          
+            <li><a href="errors.html#ValidationErrorList">type ValidationErrorList</a></li>
+            <ul>
+            
+            <li><a href="errors.html#ValidationErrorList.Prefix">func (list ValidationErrorList) Prefix(prefix string) ValidationErrorList</a></li><li><a href="errors.html#ValidationErrorList.PrefixIndex">func (list ValidationErrorList) PrefixIndex(index int) ValidationErrorList</a></li><li><a href="errors.html#ValidationErrorList.ToError">func (list ValidationErrorList) ToError() error</a></li>
+            </ul>
+          
+            <li><a href="errors.html#ValidationErrorType">type ValidationErrorType</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/api/errors">Package Files</a>
+          <a class="permalink" href="errors.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go">errors.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go">validation.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="FromObject">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L58">FromObject</a> <a class="permalink" href="errors.html#FromObject">&para;</a></h3>
+          <pre class="funcdecl">func FromObject(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+FromObject generates an StatusError from an api.Status, if that is the type of obj; otherwise,
+returns an UnexpecteObjectError.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsAlreadyExists">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L166">IsAlreadyExists</a> <a class="permalink" href="errors.html#IsAlreadyExists">&para;</a></h3>
+          <pre class="funcdecl">func IsAlreadyExists(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsAlreadyExists determines if the err is an error which indicates that a specified resource already exists.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsBadRequest">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L181">IsBadRequest</a> <a class="permalink" href="errors.html#IsBadRequest">&para;</a></h3>
+          <pre class="funcdecl">func IsBadRequest(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsBadRequest determines if err is an error which indicates that the request is invalid.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsConflict">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L171">IsConflict</a> <a class="permalink" href="errors.html#IsConflict">&para;</a></h3>
+          <pre class="funcdecl">func IsConflict(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsConflict determines if the err is an error which indicates the provided update conflicts.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsInvalid">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L176">IsInvalid</a> <a class="permalink" href="errors.html#IsInvalid">&para;</a></h3>
+          <pre class="funcdecl">func IsInvalid(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsInvalid determines if the err is an error which indicates the provided resource is not valid.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsNotFound">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L161">IsNotFound</a> <a class="permalink" href="errors.html#IsNotFound">&para;</a></h3>
+          <pre class="funcdecl">func IsNotFound(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsNotFound returns true if the specified error was created by NewNotFoundErr.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewAlreadyExists">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L81">NewAlreadyExists</a> <a class="permalink" href="errors.html#NewAlreadyExists">&para;</a></h3>
+          <pre class="funcdecl">func NewAlreadyExists(kind, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewAlreadyExists returns an error indicating the item requested exists by that identifier.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewBadRequest">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L134">NewBadRequest</a> <a class="permalink" href="errors.html#NewBadRequest">&para;</a></h3>
+          <pre class="funcdecl">func NewBadRequest(reason <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewBadRequest creates an error that indicates that the request is invalid and can not be processed.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewConflict">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L95">NewConflict</a> <a class="permalink" href="errors.html#NewConflict">&para;</a></h3>
+          <pre class="funcdecl">func NewConflict(kind, name <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewConflict returns an error indicating the item can&#39;t be updated as provided.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewInternalError">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L148">NewInternalError</a> <a class="permalink" href="errors.html#NewInternalError">&para;</a></h3>
+          <pre class="funcdecl">func NewInternalError(err <a href="http://godoc.org/builtin#error">error</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewInternalError returns an error indicating the item is invalid and cannot be processed.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewInvalid">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L109">NewInvalid</a> <a class="permalink" href="errors.html#NewInvalid">&para;</a></h3>
+          <pre class="funcdecl">func NewInvalid(kind, name <a href="http://godoc.org/builtin#string">string</a>, errs <a href="errors.html#ValidationErrorList">ValidationErrorList</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewInvalid returns an error indicating the item is invalid and cannot be processed.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewNotFound">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L67">NewNotFound</a> <a class="permalink" href="errors.html#NewNotFound">&para;</a></h3>
+          <pre class="funcdecl">func NewNotFound(kind, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+NewNotFound returns a new error which indicates that the resource of the kind and the name was not found.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValueOf">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L56">ValueOf</a> <a class="permalink" href="errors.html#ValueOf">&para;</a></h3>
+          <pre class="funcdecl">func ValueOf(t <a href="errors.html#ValidationErrorType">ValidationErrorType</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+ValueOf converts a ValidationErrorType into its corresponding error message.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="StatusError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L29">StatusError</a> <a class="permalink" href="errors.html#StatusError">&para;</a></h3>
+          <pre>type StatusError struct {
+    <span id="StatusError.ErrStatus">ErrStatus</span> <a href="../api.html">api</a>.<a href="../api.html#Status">Status</a>
+}</pre><p>
+StatusError is an error intended for consumption by a REST API server; it can also be
+reconstructed by clients from a REST response. Public to allow easy type switches.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="StatusError.Error">func (*StatusError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L36">Error</a> <a class="permalink" href="errors.html#StatusError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (e *<a href="errors.html#StatusError">StatusError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Error implements the Error interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="StatusError.Status">func (*StatusError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L42">Status</a> <a class="permalink" href="errors.html#StatusError.Status">&para;</a></h4>
+            <pre class="funcdecl">func (e *<a href="errors.html#StatusError">StatusError</a>) Status() <a href="../api.html">api</a>.<a href="../api.html#Status">Status</a></pre><p>
+Status allows access to e&#39;s status without having to know the detailed workings
+of StatusError. Used by pkg/apiserver.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="UnexpectedObjectError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L47">UnexpectedObjectError</a> <a class="permalink" href="errors.html#UnexpectedObjectError">&para;</a></h3>
+          <pre>type UnexpectedObjectError struct {
+    <span id="UnexpectedObjectError.Object">Object</span> <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>
+}</pre><p>
+UnexpectedObjectError can be returned by FromObject if it&#39;s passed a non-status object.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="UnexpectedObjectError.Error">func (*UnexpectedObjectError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/errors.go#L52">Error</a> <a class="permalink" href="errors.html#UnexpectedObjectError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (u *<a href="errors.html#UnexpectedObjectError">UnexpectedObjectError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Error returns an error message describing &#39;u&#39;.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="ValidationError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L77">ValidationError</a> <a class="permalink" href="errors.html#ValidationError">&para;</a></h3>
+          <pre>type ValidationError struct {
+    <span id="ValidationError.Type">Type</span>     <a href="errors.html#ValidationErrorType">ValidationErrorType</a>
+    <span id="ValidationError.Field">Field</span>    <a href="http://godoc.org/builtin#string">string</a>
+    <span id="ValidationError.BadValue">BadValue</span> interface{}
+    <span id="ValidationError.Detail">Detail</span>   <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+ValidationError is an implementation of the &#39;error&#39; interface, which represents an error of validation.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewFieldDuplicate">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L115">NewFieldDuplicate</a> <a class="permalink" href="errors.html#NewFieldDuplicate">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldDuplicate(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldDuplicate returns a *ValidationError indicating &#34;duplicate value&#34;
+</p>
+
+            
+  
+
+          
+            <h4 id="NewFieldForbidden">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L110">NewFieldForbidden</a> <a class="permalink" href="errors.html#NewFieldForbidden">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldForbidden(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldForbidden returns a *ValidationError indicating &#34;forbidden&#34;
+</p>
+
+            
+  
+
+          
+            <h4 id="NewFieldInvalid">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L100">NewFieldInvalid</a> <a class="permalink" href="errors.html#NewFieldInvalid">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldInvalid(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}, detail <a href="http://godoc.org/builtin#string">string</a>) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldInvalid returns a *ValidationError indicating &#34;invalid value&#34;
+</p>
+
+            
+  
+
+          
+            <h4 id="NewFieldNotFound">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L120">NewFieldNotFound</a> <a class="permalink" href="errors.html#NewFieldNotFound">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldNotFound(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldNotFound returns a *ValidationError indicating &#34;value not found&#34;
+</p>
+
+            
+  
+
+          
+            <h4 id="NewFieldNotSupported">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L105">NewFieldNotSupported</a> <a class="permalink" href="errors.html#NewFieldNotSupported">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldNotSupported(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldNotSupported returns a *ValidationError indicating &#34;unsupported value&#34;
+</p>
+
+            
+  
+
+          
+            <h4 id="NewFieldRequired">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L95">NewFieldRequired</a> <a class="permalink" href="errors.html#NewFieldRequired">&para;</a></h4>
+            <pre class="funcdecl">func NewFieldRequired(field <a href="http://godoc.org/builtin#string">string</a>, value interface{}) *<a href="errors.html#ValidationError">ValidationError</a></pre><p>
+NewFieldRequired returns a *ValidationError indicating &#34;value required&#34;
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="ValidationError.Error">func (*ValidationError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L86">Error</a> <a class="permalink" href="errors.html#ValidationError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (v *<a href="errors.html#ValidationError">ValidationError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="ValidationErrorList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L129">ValidationErrorList</a> <a class="permalink" href="errors.html#ValidationErrorList">&para;</a></h3>
+          <pre>type ValidationErrorList <a href="../util.html">util</a>.<a href="../util.html#ErrorList">ErrorList</a></pre><p>
+ValidationErrorList is a collection of ValidationErrors.  This does not
+implement the error interface to avoid confusion where an empty
+ValidationErrorList would still be an error (non-nil).  To produce a single
+error instance from a ValidationErrorList, use the ToError() method, which
+will return nil for an empty ValidationErrorList.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ValidationErrorList.Prefix">func (ValidationErrorList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L139">Prefix</a> <a class="permalink" href="errors.html#ValidationErrorList.Prefix">&para;</a></h4>
+            <pre class="funcdecl">func (list <a href="errors.html#ValidationErrorList">ValidationErrorList</a>) Prefix(prefix <a href="http://godoc.org/builtin#string">string</a>) <a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+Prefix adds a prefix to the Field of every ValidationError in the list.
+Returns the list for convenience.
+</p>
+
+            
+  
+
+          
+            <h4 id="ValidationErrorList.PrefixIndex">func (ValidationErrorList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L159">PrefixIndex</a> <a class="permalink" href="errors.html#ValidationErrorList.PrefixIndex">&para;</a></h4>
+            <pre class="funcdecl">func (list <a href="errors.html#ValidationErrorList">ValidationErrorList</a>) PrefixIndex(index <a href="http://godoc.org/builtin#int">int</a>) <a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+PrefixIndex adds an index to the Field of every ValidationError in the list.
+Returns the list for convenience.
+</p>
+
+            
+  
+
+          
+            <h4 id="ValidationErrorList.ToError">func (ValidationErrorList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L133">ToError</a> <a class="permalink" href="errors.html#ValidationErrorList.ToError">&para;</a></h4>
+            <pre class="funcdecl">func (list <a href="errors.html#ValidationErrorList">ValidationErrorList</a>) ToError() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ToError converts a ValidationErrorList into a &#34;normal&#34; error, or nil if the
+list is empty.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="ValidationErrorType">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/errors/validation.go#L30">ValidationErrorType</a> <a class="permalink" href="errors.html#ValidationErrorType">&para;</a></h3>
+          <pre>type ValidationErrorType <a href="http://godoc.org/builtin#string">string</a></pre><p>
+ValidationErrorType is a machine readable value providing more detail about why
+a field is invalid.  These values are expected to match 1-1 with
+CauseType in api/types.go.
+</p>
+
+          <pre>const (
+    <span class="com">// ValidationErrorTypeNotFound is used to report failure to find a requested value</span>
+    <span class="com">// (e.g. looking up an ID).</span>
+    <span id="ValidationErrorTypeNotFound">ValidationErrorTypeNotFound</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueNotFound&#34;
+    <span class="com">// ValidationErrorTypeRequired is used to report required values that are not</span>
+    <span class="com">// provided (e.g. empty strings, null values, or empty arrays).</span>
+    <span id="ValidationErrorTypeRequired">ValidationErrorTypeRequired</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueRequired&#34;
+    <span class="com">// ValidationErrorTypeDuplicate is used to report collisions of values that must be</span>
+    <span class="com">// unique (e.g. unique IDs).</span>
+    <span id="ValidationErrorTypeDuplicate">ValidationErrorTypeDuplicate</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueDuplicate&#34;
+    <span class="com">// ValidationErrorTypeInvalid is used to report malformed values (e.g. failed regex</span>
+    <span class="com">// match).</span>
+    <span id="ValidationErrorTypeInvalid">ValidationErrorTypeInvalid</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueInvalid&#34;
+    <span class="com">// ValidationErrorTypeNotSupported is used to report valid (as per formatting rules)</span>
+    <span class="com">// values that can not be handled (e.g. an enumerated string).</span>
+    <span id="ValidationErrorTypeNotSupported">ValidationErrorTypeNotSupported</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueNotSupported&#34;
+    <span class="com">// ValidationErrorTypeForbidden is used to report valid (as per formatting rules)</span>
+    <span class="com">// values which would be accepted by some api instances, but which would invoke behavior</span>
+    <span class="com">// not permitted by this api instance (such as due to stricter security policy).</span>
+    <span id="ValidationErrorTypeForbidden">ValidationErrorTypeForbidden</span> <a href="errors.html#ValidationErrorType">ValidationErrorType</a> = &#34;FieldValueForbidden&#34;
+)</pre><p>
+TODO: These values are duplicated in api/types.go, but there&#39;s a circular dep.  Fix it.
+</p>
+
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="errors.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="errors/etcd.html">etcd</a><td>Package etcd provides conversion of etcd errors to API errors.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"></form>
+  <p>Package errors imports <a href="errors@imports.html">7 packages</a> (<a href="errors@import-graph.html">graph</a>) and is imported by <a href="errors@importers.html">55 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:03Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="errors@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="errors.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

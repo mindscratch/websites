@@ -1,0 +1,325 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>proxy - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package proxy">
+    <meta property="og:title" content="Package proxy">
+    <meta name="description" content="Package proxy implements the layer-3 network proxy.">
+    <meta name="twitter:description" content="Package proxy implements the layer-3 network proxy.">
+    <meta property="og:description" content="Package proxy implements the layer-3 network proxy.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">proxy</span>
+  
+  <span class="pull-right">
+    <a href="proxy.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="proxy.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="proxy.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package proxy</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/proxy"</code>
+
+        <p>
+Package proxy implements the layer-3 network proxy.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="proxy.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          <li><a href="proxy.html#pkg-variables">Variables</a></li>
+          
+          
+            <li><a href="proxy.html#LoadBalancer">type LoadBalancer</a></li>
+            
+            
+            
+            
+          
+            <li><a href="proxy.html#LoadBalancerRR">type LoadBalancerRR</a></li>
+            <ul>
+            <li><a href="proxy.html#NewLoadBalancerRR">func NewLoadBalancerRR() *LoadBalancerRR</a></li>
+            <li><a href="proxy.html#LoadBalancerRR.NextEndpoint">func (lb *LoadBalancerRR) NextEndpoint(service string, srcAddr net.Addr) (string, error)</a></li><li><a href="proxy.html#LoadBalancerRR.OnUpdate">func (lb *LoadBalancerRR) OnUpdate(endpoints []api.Endpoints)</a></li>
+            </ul>
+          
+            <li><a href="proxy.html#Proxier">type Proxier</a></li>
+            <ul>
+            <li><a href="proxy.html#NewProxier">func NewProxier(loadBalancer LoadBalancer, listenAddress net.IP, iptables iptables.Interface) *Proxier</a></li>
+            <li><a href="proxy.html#Proxier.OnUpdate">func (proxier *Proxier) OnUpdate(services []api.Service)</a></li><li><a href="proxy.html#Proxier.SyncLoop">func (proxier *Proxier) SyncLoop()</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/proxy">Package Files</a>
+          <a class="permalink" href="proxy.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/loadbalancer.go">loadbalancer.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/proxier.go">proxier.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/roundrobin.go">roundrobin.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/udp_server.go">udp_server.go</a> </p>
+
+        
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="proxy.html#pkg-variables">&para;</a></h3>
+          <pre>var (
+    <span id="ErrMissingServiceEntry">ErrMissingServiceEntry</span> = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;missing service entry&#34;)
+    <span id="ErrMissingEndpoints">ErrMissingEndpoints</span>    = <a href="http://godoc.org/errors">errors</a>.<a href="http://godoc.org/errors#New">New</a>(&#34;missing endpoints&#34;)
+)</pre>
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="LoadBalancer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/loadbalancer.go#L24">LoadBalancer</a> <a class="permalink" href="proxy.html#LoadBalancer">&para;</a></h3>
+          <pre>type LoadBalancer interface {
+    <span class="com">// NextEndpoint returns the endpoint to handle a request for the given</span>
+    <span class="com">// service and source address.</span>
+    <span id="LoadBalancer.NextEndpoint">NextEndpoint</span>(service <a href="http://godoc.org/builtin#string">string</a>, srcAddr <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#Addr">Addr</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+LoadBalancer is an interface for distributing incoming requests to service endpoints.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="LoadBalancerRR">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/roundrobin.go#L36">LoadBalancerRR</a> <a class="permalink" href="proxy.html#LoadBalancerRR">&para;</a></h3>
+          <pre>type LoadBalancerRR struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+LoadBalancerRR is a round-robin load balancer.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewLoadBalancerRR">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/roundrobin.go#L43">NewLoadBalancerRR</a> <a class="permalink" href="proxy.html#NewLoadBalancerRR">&para;</a></h4>
+            <pre class="funcdecl">func NewLoadBalancerRR() *<a href="proxy.html#LoadBalancerRR">LoadBalancerRR</a></pre><p>
+NewLoadBalancerRR returns a new LoadBalancerRR.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="LoadBalancerRR.NextEndpoint">func (*LoadBalancerRR) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/roundrobin.go#L52">NextEndpoint</a> <a class="permalink" href="proxy.html#LoadBalancerRR.NextEndpoint">&para;</a></h4>
+            <pre class="funcdecl">func (lb *<a href="proxy.html#LoadBalancerRR">LoadBalancerRR</a>) NextEndpoint(service <a href="http://godoc.org/builtin#string">string</a>, srcAddr <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#Addr">Addr</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NextEndpoint returns a service endpoint.
+The service endpoint is chosen using the round-robin algorithm.
+</p>
+
+            
+  
+
+          
+            <h4 id="LoadBalancerRR.OnUpdate">func (*LoadBalancerRR) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/roundrobin.go#L95">OnUpdate</a> <a class="permalink" href="proxy.html#LoadBalancerRR.OnUpdate">&para;</a></h4>
+            <pre class="funcdecl">func (lb *<a href="proxy.html#LoadBalancerRR">LoadBalancerRR</a>) OnUpdate(endpoints []<a href="api.html">api</a>.<a href="api.html#Endpoints">Endpoints</a>)</pre><p>
+OnUpdate manages the registered service endpoints.
+Registered endpoints are updated if found in the update set or
+unregistered if missing from the update set.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Proxier">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/proxier.go#L299">Proxier</a> <a class="permalink" href="proxy.html#Proxier">&para;</a></h3>
+          <pre>type Proxier struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Proxier is a simple proxy for TCP connections between a localhost:lport
+and services that provide the actual implementations.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewProxier">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/proxier.go#L310">NewProxier</a> <a class="permalink" href="proxy.html#NewProxier">&para;</a></h4>
+            <pre class="funcdecl">func NewProxier(loadBalancer <a href="proxy.html#LoadBalancer">LoadBalancer</a>, listenAddress <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, iptables <a href="util/iptables.html">iptables</a>.<a href="util/iptables.html#Interface">Interface</a>) *<a href="proxy.html#Proxier">Proxier</a></pre><p>
+NewProxier returns a new Proxier given a LoadBalancer and an address on
+which to listen.  Because of the iptables logic, It is assumed that there
+is only a single Proxier active on a machine.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Proxier.OnUpdate">func (*Proxier) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/proxier.go#L428">OnUpdate</a> <a class="permalink" href="proxy.html#Proxier.OnUpdate">&para;</a></h4>
+            <pre class="funcdecl">func (proxier *<a href="proxy.html#Proxier">Proxier</a>) OnUpdate(services []<a href="api.html">api</a>.<a href="api.html#Service">Service</a>)</pre><p>
+OnUpdate manages the active set of service proxies.
+Active service proxies are reinitialized if found in the update set or
+shutdown if missing from the update set.
+</p>
+
+            
+  
+
+          
+            <h4 id="Proxier.SyncLoop">func (*Proxier) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/proxy/proxier.go#L335">SyncLoop</a> <a class="permalink" href="proxy.html#Proxier.SyncLoop">&para;</a></h4>
+            <pre class="funcdecl">func (proxier *<a href="proxy.html#Proxier">Proxier</a>) SyncLoop()</pre><p>
+SyncLoop runs periodic work.  This is expected to run as a goroutine or as the main loop of the app.  It does not return.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="proxy.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="proxy/config.html">config</a><td>Package config provides decoupling between various configuration sources (etcd, files,...) and the pieces that actually care about them (loadbalancer, proxy).</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/proxy"></form>
+  <p>Package proxy imports <a href="proxy@imports.html">13 packages</a> (<a href="proxy@import-graph.html">graph</a>) and is imported by <a href="proxy@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:57Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="proxy@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="proxy.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

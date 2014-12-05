@@ -1,0 +1,763 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>kubectl - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package kubectl">
+    <meta property="og:title" content="Package kubectl">
+    <meta name="description" content="Package kubectl is a set of libraries that are used by the kubectl command line tool.">
+    <meta name="twitter:description" content="Package kubectl is a set of libraries that are used by the kubectl command line tool.">
+    <meta property="og:description" content="Package kubectl is a set of libraries that are used by the kubectl command line tool.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">kubectl</span>
+  
+  <span class="pull-right">
+    <a href="kubectl.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="kubectl.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="kubectl.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package kubectl</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl"</code>
+
+        <p>
+Package kubectl is a set of libraries that are used by the kubectl command line tool.
+They are separated out into a library to support unit testing.  Most functionality should
+be included in this package, and the main kubectl should really just be an entry point.
+</p>
+<p>
+A set of common functions needed by cmd/kubectl and pkg/kubectl packages.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="kubectl.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="kubectl.html#ExpandResourceShortcut">func ExpandResourceShortcut(resource string) string</a></li><li><a href="kubectl.html#GetClientVersion">func GetClientVersion(w io.Writer)</a></li><li><a href="kubectl.html#GetKubeClient">func GetKubeClient(config *client.Config, matchVersion bool) (*client.Client, error)</a></li><li><a href="kubectl.html#GetVersion">func GetVersion(w io.Writer, kubeClient client.Interface)</a></li><li><a href="kubectl.html#SaveNamespaceInfo">func SaveNamespaceInfo(path string, ns *NamespaceInfo) error</a></li><li><a href="kubectl.html#WatchLoop">func WatchLoop(w watch.Interface, printer ResourcePrinter, out io.Writer)</a></li>
+          
+            <li><a href="kubectl.html#Describer">type Describer</a></li>
+            <ul>
+            <li><a href="kubectl.html#DescriberFor">func DescriberFor(kind string, c *client.Client) (Describer, bool)</a></li>
+            
+            </ul>
+          
+            <li><a href="kubectl.html#HumanReadablePrinter">type HumanReadablePrinter</a></li>
+            <ul>
+            <li><a href="kubectl.html#NewHumanReadablePrinter">func NewHumanReadablePrinter(noHeaders bool) *HumanReadablePrinter</a></li>
+            <li><a href="kubectl.html#HumanReadablePrinter.Handler">func (h *HumanReadablePrinter) Handler(columns []string, printFunc interface{}) error</a></li><li><a href="kubectl.html#HumanReadablePrinter.PrintObj">func (h *HumanReadablePrinter) PrintObj(obj runtime.Object, output io.Writer) error</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#JSONPrinter">type JSONPrinter</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#JSONPrinter.PrintObj">func (p *JSONPrinter) PrintObj(obj runtime.Object, w io.Writer) error</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#MinionDescriber">type MinionDescriber</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#MinionDescriber.Describe">func (d *MinionDescriber) Describe(namespace, name string) (string, error)</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#NamespaceInfo">type NamespaceInfo</a></li>
+            <ul>
+            <li><a href="kubectl.html#LoadNamespaceInfo">func LoadNamespaceInfo(path string) (*NamespaceInfo, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="kubectl.html#PodDescriber">type PodDescriber</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#PodDescriber.Describe">func (d *PodDescriber) Describe(namespace, name string) (string, error)</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#ProxyServer">type ProxyServer</a></li>
+            <ul>
+            <li><a href="kubectl.html#NewProxyServer">func NewProxyServer(filebase string, cfg *client.Config, port int) (*ProxyServer, error)</a></li>
+            <li><a href="kubectl.html#ProxyServer.Serve">func (s *ProxyServer) Serve() error</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#RESTClient">type RESTClient</a></li>
+            
+            
+            
+            
+          
+            <li><a href="kubectl.html#RESTHelper">type RESTHelper</a></li>
+            <ul>
+            <li><a href="kubectl.html#NewRESTHelper">func NewRESTHelper(client RESTClient, mapping *meta.RESTMapping) *RESTHelper</a></li>
+            <li><a href="kubectl.html#RESTHelper.Create">func (m *RESTHelper) Create(namespace string, modify bool, data []byte) error</a></li><li><a href="kubectl.html#RESTHelper.Delete">func (m *RESTHelper) Delete(namespace, name string) error</a></li><li><a href="kubectl.html#RESTHelper.Get">func (m *RESTHelper) Get(namespace, name string, selector labels.Selector) (runtime.Object, error)</a></li><li><a href="kubectl.html#RESTHelper.Update">func (m *RESTHelper) Update(namespace, name string, overwrite bool, data []byte) error</a></li><li><a href="kubectl.html#RESTHelper.Watch">func (m *RESTHelper) Watch(namespace, resourceVersion string, labelSelector, fieldSelector labels.Selector) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#ReplicationControllerDescriber">type ReplicationControllerDescriber</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#ReplicationControllerDescriber.Describe">func (d *ReplicationControllerDescriber) Describe(namespace, name string) (string, error)</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#ResourcePrinter">type ResourcePrinter</a></li>
+            <ul>
+            <li><a href="kubectl.html#GetPrinter">func GetPrinter(format, formatArgument, version string, convertor runtime.ObjectConvertor, defaultPrinter ResourcePrinter) (ResourcePrinter, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="kubectl.html#ServiceDescriber">type ServiceDescriber</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#ServiceDescriber.Describe">func (d *ServiceDescriber) Describe(namespace, name string) (string, error)</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#TemplatePrinter">type TemplatePrinter</a></li>
+            <ul>
+            <li><a href="kubectl.html#NewTemplatePrinter">func NewTemplatePrinter(tmpl []byte, asVersion string, convertor runtime.ObjectConvertor) (*TemplatePrinter, error)</a></li>
+            <li><a href="kubectl.html#TemplatePrinter.PrintObj">func (p *TemplatePrinter) PrintObj(obj runtime.Object, w io.Writer) error</a></li>
+            </ul>
+          
+            <li><a href="kubectl.html#YAMLPrinter">type YAMLPrinter</a></li>
+            <ul>
+            
+            <li><a href="kubectl.html#YAMLPrinter.PrintObj">func (p *YAMLPrinter) PrintObj(obj runtime.Object, w io.Writer) error</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/kubectl">Package Files</a>
+          <a class="permalink" href="kubectl.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go">describe.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/interfaces.go">interfaces.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go">kubectl.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/proxy_server.go">proxy_server.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go">resource_printer.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go">resthelper.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/version.go">version.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/watchloop.go">watchloop.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="ExpandResourceShortcut">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go#L117">ExpandResourceShortcut</a> <a class="permalink" href="kubectl.html#ExpandResourceShortcut">&para;</a></h3>
+          <pre class="funcdecl">func ExpandResourceShortcut(resource <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+ExpandResourceShortcut will return the expanded version of resource
+(something that a pkg/api/meta.RESTMapper can understand), if it is
+indeed a shortcut. Otherwise, will return resource unmodified.
+TODO: Combine with RESTMapper stuff to provide a general solution
+to this problem.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetClientVersion">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/version.go#L39">GetClientVersion</a> <a class="permalink" href="kubectl.html#GetClientVersion">&para;</a></h3>
+          <pre class="funcdecl">func GetClientVersion(w <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>)</pre>
+          
+  
+
+        
+          <h3 id="GetKubeClient">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go#L37">GetKubeClient</a> <a class="permalink" href="kubectl.html#GetKubeClient">&para;</a></h3>
+          <pre class="funcdecl">func GetKubeClient(config *<a href="client.html">client</a>.<a href="client.html#Config">Config</a>, matchVersion <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="client.html">client</a>.<a href="client.html#Client">Client</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+  
+
+        
+          <h3 id="GetVersion">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/version.go#L28">GetVersion</a> <a class="permalink" href="kubectl.html#GetVersion">&para;</a></h3>
+          <pre class="funcdecl">func GetVersion(w <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>, kubeClient <a href="client.html">client</a>.<a href="client.html#Interface">Interface</a>)</pre>
+          
+  
+
+        
+          <h3 id="SaveNamespaceInfo">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go#L82">SaveNamespaceInfo</a> <a class="permalink" href="kubectl.html#SaveNamespaceInfo">&para;</a></h3>
+          <pre class="funcdecl">func SaveNamespaceInfo(path <a href="http://godoc.org/builtin#string">string</a>, ns *<a href="kubectl.html#NamespaceInfo">NamespaceInfo</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+SaveNamespaceInfo saves a NamespaceInfo object at the specified file path.
+</p>
+
+          
+  
+
+        
+          <h3 id="WatchLoop">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/watchloop.go#L29">WatchLoop</a> <a class="permalink" href="kubectl.html#WatchLoop">&para;</a></h3>
+          <pre class="funcdecl">func WatchLoop(w <a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, printer <a href="kubectl.html#ResourcePrinter">ResourcePrinter</a>, out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>)</pre><p>
+WatchLoop loops, writing objects in the events from w to printer.
+If user sends interrupt signal, shut down cleanly. Otherwise, never return.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Describer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L33">Describer</a> <a class="permalink" href="kubectl.html#Describer">&para;</a></h3>
+          <pre>type Describer interface {
+    <span id="Describer.Describe">Describe</span>(namespace, name <a href="http://godoc.org/builtin#string">string</a>) (output <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Describer generates output for the named resource or an error
+if the output could not be generated.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="DescriberFor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L39">DescriberFor</a> <a class="permalink" href="kubectl.html#DescriberFor">&para;</a></h4>
+            <pre class="funcdecl">func DescriberFor(kind <a href="http://godoc.org/builtin#string">string</a>, c *<a href="client.html">client</a>.<a href="client.html#Client">Client</a>) (<a href="kubectl.html#Describer">Describer</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Describer returns the default describe functions for each of the standard
+Kubernetes types.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="HumanReadablePrinter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L137">HumanReadablePrinter</a> <a class="permalink" href="kubectl.html#HumanReadablePrinter">&para;</a></h3>
+          <pre>type HumanReadablePrinter struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+HumanReadablePrinter is an implementation of ResourcePrinter which attempts to provide
+more elegant output. It is not threadsafe, but you may call PrintObj repeatedly; headers
+will only be printed if the object type changes. This makes it useful for printing items
+recieved from watches.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewHumanReadablePrinter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L144">NewHumanReadablePrinter</a> <a class="permalink" href="kubectl.html#NewHumanReadablePrinter">&para;</a></h4>
+            <pre class="funcdecl">func NewHumanReadablePrinter(noHeaders <a href="http://godoc.org/builtin#bool">bool</a>) *<a href="kubectl.html#HumanReadablePrinter">HumanReadablePrinter</a></pre><p>
+NewHumanReadablePrinter creates a HumanReadablePrinter.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="HumanReadablePrinter.Handler">func (*HumanReadablePrinter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L158">Handler</a> <a class="permalink" href="kubectl.html#HumanReadablePrinter.Handler">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="kubectl.html#HumanReadablePrinter">HumanReadablePrinter</a>) Handler(columns []<a href="http://godoc.org/builtin#string">string</a>, printFunc interface{}) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Handler adds a print handler with a given set of columns to HumanReadablePrinter instance.
+printFunc is the function that will be called to print an object.
+It must be of the following type:
+</p>
+<pre>func printFunc(object ObjectType, w io.Writer) error
+</pre>
+<p>
+where ObjectType is the type of the object that will be printed.
+</p>
+
+            
+  
+
+          
+            <h4 id="HumanReadablePrinter.PrintObj">func (*HumanReadablePrinter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L340">PrintObj</a> <a class="permalink" href="kubectl.html#HumanReadablePrinter.PrintObj">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="kubectl.html#HumanReadablePrinter">HumanReadablePrinter</a>) PrintObj(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, output <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+PrintObj prints the obj in a human-friendly format according to the type of the obj.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="JSONPrinter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L84">JSONPrinter</a> <a class="permalink" href="kubectl.html#JSONPrinter">&para;</a></h3>
+          <pre>type JSONPrinter struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+JSONPrinter is an implementation of ResourcePrinter which outputs an object as JSON.
+The input object is assumed to be in the internal version of an API and is converted
+to the given version first.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="JSONPrinter.PrintObj">func (*JSONPrinter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L90">PrintObj</a> <a class="permalink" href="kubectl.html#JSONPrinter.PrintObj">&para;</a></h4>
+            <pre class="funcdecl">func (p *<a href="kubectl.html#JSONPrinter">JSONPrinter</a>) PrintObj(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, w <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+PrintObj is an implementation of ResourcePrinter.PrintObj which simply writes the object to the Writer.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="MinionDescriber">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L174">MinionDescriber</a> <a class="permalink" href="kubectl.html#MinionDescriber">&para;</a></h3>
+          <pre>type MinionDescriber struct {
+    <a href="client.html">client</a>.<a href="client.html#Interface">Interface</a>
+}</pre><p>
+MinionDescriber generates information about a minion.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="MinionDescriber.Describe">func (*MinionDescriber) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L178">Describe</a> <a class="permalink" href="kubectl.html#MinionDescriber.Describe">&para;</a></h4>
+            <pre class="funcdecl">func (d *<a href="kubectl.html#MinionDescriber">MinionDescriber</a>) Describe(namespace, name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="NamespaceInfo">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go#L58">NamespaceInfo</a> <a class="permalink" href="kubectl.html#NamespaceInfo">&para;</a></h3>
+          <pre>type NamespaceInfo struct {
+    <span id="NamespaceInfo.Namespace">Namespace</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="LoadNamespaceInfo">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/kubectl.go#L63">LoadNamespaceInfo</a> <a class="permalink" href="kubectl.html#LoadNamespaceInfo">&para;</a></h4>
+            <pre class="funcdecl">func LoadNamespaceInfo(path <a href="http://godoc.org/builtin#string">string</a>) (*<a href="kubectl.html#NamespaceInfo">NamespaceInfo</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+LoadNamespaceInfo parses a NamespaceInfo object from a file path. It creates a file at the specified path if it doesn&#39;t exist with the default namespace.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="PodDescriber">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L55">PodDescriber</a> <a class="permalink" href="kubectl.html#PodDescriber">&para;</a></h3>
+          <pre>type PodDescriber struct {
+    <a href="client.html">client</a>.<a href="client.html#Interface">Interface</a>
+}</pre><p>
+PodDescriber generates information about a pod and the replication controllers that
+create it.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="PodDescriber.Describe">func (*PodDescriber) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L59">Describe</a> <a class="permalink" href="kubectl.html#PodDescriber.Describe">&para;</a></h4>
+            <pre class="funcdecl">func (d *<a href="kubectl.html#PodDescriber">PodDescriber</a>) Describe(namespace, name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="ProxyServer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/proxy_server.go#L30">ProxyServer</a> <a class="permalink" href="kubectl.html#ProxyServer">&para;</a></h3>
+          <pre>type ProxyServer struct {
+    <a href="http://godoc.org/net/http/httputil">httputil</a>.<a href="http://godoc.org/net/http/httputil#ReverseProxy">ReverseProxy</a>
+    <span id="ProxyServer.Port">Port</span> <a href="http://godoc.org/builtin#int">int</a>
+}</pre><p>
+ProxyServer is a http.Handler which proxies Kubernetes APIs to remote API server.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewProxyServer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/proxy_server.go#L37">NewProxyServer</a> <a class="permalink" href="kubectl.html#NewProxyServer">&para;</a></h4>
+            <pre class="funcdecl">func NewProxyServer(filebase <a href="http://godoc.org/builtin#string">string</a>, cfg *<a href="client.html">client</a>.<a href="client.html#Config">Config</a>, port <a href="http://godoc.org/builtin#int">int</a>) (*<a href="kubectl.html#ProxyServer">ProxyServer</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewProxyServer creates and installs a new ProxyServer.
+It automatically registers the created ProxyServer to http.DefaultServeMux.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="ProxyServer.Serve">func (*ProxyServer) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/proxy_server.go#L56">Serve</a> <a class="permalink" href="kubectl.html#ProxyServer.Serve">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="kubectl.html#ProxyServer">ProxyServer</a>) Serve() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+Serve starts the server (http.DefaultServeMux) on TCP port 8001, loops forever.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="RESTClient">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/interfaces.go#L25">RESTClient</a> <a class="permalink" href="kubectl.html#RESTClient">&para;</a></h3>
+          <pre>type RESTClient interface {
+    <span id="RESTClient.Get">Get</span>() *<a href="client.html">client</a>.<a href="client.html#Request">Request</a>
+    <span id="RESTClient.Post">Post</span>() *<a href="client.html">client</a>.<a href="client.html#Request">Request</a>
+    <span id="RESTClient.Delete">Delete</span>() *<a href="client.html">client</a>.<a href="client.html#Request">Request</a>
+    <span id="RESTClient.Put">Put</span>() *<a href="client.html">client</a>.<a href="client.html#Request">Request</a>
+}</pre><p>
+RESTClient is a client helper for dealing with RESTful resources
+in a generic way.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RESTHelper">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L28">RESTHelper</a> <a class="permalink" href="kubectl.html#RESTHelper">&para;</a></h3>
+          <pre>type RESTHelper struct {
+    <span id="RESTHelper.Resource">Resource</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// A RESTClient capable of mutating this resource</span>
+    <span id="RESTHelper.RESTClient">RESTClient</span> <a href="kubectl.html#RESTClient">RESTClient</a>
+    <span class="com">// A codec for decoding and encoding objects of this resource type.</span>
+    <span id="RESTHelper.Codec">Codec</span> <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>
+    <span class="com">// An interface for reading or writing the resource version of this</span>
+    <span class="com">// type.</span>
+    <span id="RESTHelper.Versioner">Versioner</span> <a href="runtime.html">runtime</a>.<a href="runtime.html#ResourceVersioner">ResourceVersioner</a>
+}</pre><p>
+RESTHelper provides methods for retrieving or mutating a RESTful
+resource.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRESTHelper">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L40">NewRESTHelper</a> <a class="permalink" href="kubectl.html#NewRESTHelper">&para;</a></h4>
+            <pre class="funcdecl">func NewRESTHelper(client <a href="kubectl.html#RESTClient">RESTClient</a>, mapping *<a href="api/meta.html">meta</a>.<a href="api/meta.html#RESTMapping">RESTMapping</a>) *<a href="kubectl.html#RESTHelper">RESTHelper</a></pre><p>
+NewRESTHelper creates a RESTHelper from a ResourceMapping
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="RESTHelper.Create">func (*RESTHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L68">Create</a> <a class="permalink" href="kubectl.html#RESTHelper.Create">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="kubectl.html#RESTHelper">RESTHelper</a>) Create(namespace <a href="http://godoc.org/builtin#string">string</a>, modify <a href="http://godoc.org/builtin#bool">bool</a>, data []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="RESTHelper.Delete">func (*RESTHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L64">Delete</a> <a class="permalink" href="kubectl.html#RESTHelper.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="kubectl.html#RESTHelper">RESTHelper</a>) Delete(namespace, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="RESTHelper.Get">func (*RESTHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L49">Get</a> <a class="permalink" href="kubectl.html#RESTHelper.Get">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="kubectl.html#RESTHelper">RESTHelper</a>) Get(namespace, name <a href="http://godoc.org/builtin#string">string</a>, selector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="RESTHelper.Update">func (*RESTHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L101">Update</a> <a class="permalink" href="kubectl.html#RESTHelper.Update">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="kubectl.html#RESTHelper">RESTHelper</a>) Update(namespace, name <a href="http://godoc.org/builtin#string">string</a>, overwrite <a href="http://godoc.org/builtin#bool">bool</a>, data []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="RESTHelper.Watch">func (*RESTHelper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resthelper.go#L53">Watch</a> <a class="permalink" href="kubectl.html#RESTHelper.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="kubectl.html#RESTHelper">RESTHelper</a>) Watch(namespace, resourceVersion <a href="http://godoc.org/builtin#string">string</a>, labelSelector, fieldSelector <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="ReplicationControllerDescriber">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L112">ReplicationControllerDescriber</a> <a class="permalink" href="kubectl.html#ReplicationControllerDescriber">&para;</a></h3>
+          <pre>type ReplicationControllerDescriber struct {
+    <a href="client.html">client</a>.<a href="client.html#Interface">Interface</a>
+}</pre><p>
+ReplicationControllerDescriber generates information about a replication controller
+and the pods it has created.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ReplicationControllerDescriber.Describe">func (*ReplicationControllerDescriber) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L116">Describe</a> <a class="permalink" href="kubectl.html#ReplicationControllerDescriber.Describe">&para;</a></h4>
+            <pre class="funcdecl">func (d *<a href="kubectl.html#ReplicationControllerDescriber">ReplicationControllerDescriber</a>) Describe(namespace, name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="ResourcePrinter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L76">ResourcePrinter</a> <a class="permalink" href="kubectl.html#ResourcePrinter">&para;</a></h3>
+          <pre>type ResourcePrinter interface {
+    <span class="com">// Print receives an arbitrary object, formats it and prints it to a writer.</span>
+    <span id="ResourcePrinter.PrintObj">PrintObj</span>(<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+ResourcePrinter is an interface that knows how to print runtime objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="GetPrinter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L39">GetPrinter</a> <a class="permalink" href="kubectl.html#GetPrinter">&para;</a></h4>
+            <pre class="funcdecl">func GetPrinter(format, formatArgument, version <a href="http://godoc.org/builtin#string">string</a>, convertor <a href="runtime.html">runtime</a>.<a href="runtime.html#ObjectConvertor">ObjectConvertor</a>, defaultPrinter <a href="kubectl.html#ResourcePrinter">ResourcePrinter</a>) (<a href="kubectl.html#ResourcePrinter">ResourcePrinter</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetPrinter takes a format type, an optional format argument, a version and a convertor
+to be used if the underlying printer requires the object to be in a specific schema (
+any of the generic formatters), and the default printer to use for this object.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="ServiceDescriber">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L147">ServiceDescriber</a> <a class="permalink" href="kubectl.html#ServiceDescriber">&para;</a></h3>
+          <pre>type ServiceDescriber struct {
+    <a href="client.html">client</a>.<a href="client.html#Interface">Interface</a>
+}</pre><p>
+ServiceDescriber generates information about a service.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ServiceDescriber.Describe">func (*ServiceDescriber) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/describe.go#L151">Describe</a> <a class="permalink" href="kubectl.html#ServiceDescriber.Describe">&para;</a></h4>
+            <pre class="funcdecl">func (d *<a href="kubectl.html#ServiceDescriber">ServiceDescriber</a>) Describe(namespace, name <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="TemplatePrinter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L362">TemplatePrinter</a> <a class="permalink" href="kubectl.html#TemplatePrinter">&para;</a></h3>
+          <pre>type TemplatePrinter struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+TemplatePrinter is an implementation of ResourcePrinter which formats data with a Go Template.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewTemplatePrinter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L369">NewTemplatePrinter</a> <a class="permalink" href="kubectl.html#NewTemplatePrinter">&para;</a></h4>
+            <pre class="funcdecl">func NewTemplatePrinter(tmpl []<a href="http://godoc.org/builtin#byte">byte</a>, asVersion <a href="http://godoc.org/builtin#string">string</a>, convertor <a href="runtime.html">runtime</a>.<a href="runtime.html#ObjectConvertor">ObjectConvertor</a>) (*<a href="kubectl.html#TemplatePrinter">TemplatePrinter</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+
+          
+            <h4 id="TemplatePrinter.PrintObj">func (*TemplatePrinter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L383">PrintObj</a> <a class="permalink" href="kubectl.html#TemplatePrinter.PrintObj">&para;</a></h4>
+            <pre class="funcdecl">func (p *<a href="kubectl.html#TemplatePrinter">TemplatePrinter</a>) PrintObj(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, w <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+PrintObj formats the obj with the Go Template.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="YAMLPrinter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L109">YAMLPrinter</a> <a class="permalink" href="kubectl.html#YAMLPrinter">&para;</a></h3>
+          <pre>type YAMLPrinter struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+YAMLPrinter is an implementation of ResourcePrinter which outputs an object as YAML.
+The input object is assumed to be in the internal version of an API and is converted
+to the given version first.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="YAMLPrinter.PrintObj">func (*YAMLPrinter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/resource_printer.go#L115">PrintObj</a> <a class="permalink" href="kubectl.html#YAMLPrinter.PrintObj">&para;</a></h4>
+            <pre class="funcdecl">func (p *<a href="kubectl.html#YAMLPrinter">YAMLPrinter</a>) PrintObj(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, w <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+PrintObj prints the data as YAML.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="kubectl.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="kubectl/cmd.html">cmd</a><td></td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl"></form>
+  <p>Package kubectl imports <a href="kubectl@imports.html">25 packages</a> (<a href="kubectl@import-graph.html">graph</a>) and is imported by <a href="kubectl@importers.html">5 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:47Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="kubectl@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="kubectl.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

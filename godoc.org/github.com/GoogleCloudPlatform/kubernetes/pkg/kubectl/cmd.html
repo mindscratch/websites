@@ -1,0 +1,426 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>cmd - GoDoc</title>
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../kubectl.html">kubectl</a><span class="text-muted">/</span><span class="text-muted">cmd</span>
+  
+  <span class="pull-right">
+    <a href="cmd.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="cmd.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package cmd</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl/cmd"</code>
+
+        
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="cmd.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="cmd.html#CompareNamespaceFromFile">func CompareNamespaceFromFile(cmd *cobra.Command, namespace string) error</a></li><li><a href="cmd.html#DataToObjects">func DataToObjects(m meta.RESTMapper, t runtime.ObjectTyper, data []byte) (result []runtime.Object, errors util.ErrorList)</a></li><li><a href="cmd.html#FirstNonEmptyString">func FirstNonEmptyString(args ...string) string</a></li><li><a href="cmd.html#GetExplicitKubeNamespace">func GetExplicitKubeNamespace(cmd *cobra.Command) (string, bool)</a></li><li><a href="cmd.html#GetFilesFromDir">func GetFilesFromDir(directory string, fileType string) []string</a></li><li><a href="cmd.html#GetFlagBool">func GetFlagBool(cmd *cobra.Command, flag string) bool</a></li><li><a href="cmd.html#GetFlagBoolPtr">func GetFlagBoolPtr(cmd *cobra.Command, flag string) *bool</a></li><li><a href="cmd.html#GetFlagInt">func GetFlagInt(cmd *cobra.Command, flag string) int</a></li><li><a href="cmd.html#GetFlagString">func GetFlagString(cmd *cobra.Command, flag string) string</a></li><li><a href="cmd.html#GetKubeNamespace">func GetKubeNamespace(cmd *cobra.Command) string</a></li><li><a href="cmd.html#NewCmdNamespace">func NewCmdNamespace(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#ReadConfigData">func ReadConfigData(location string) ([]byte, error)</a></li><li><a href="cmd.html#ReadConfigDataFromLocation">func ReadConfigDataFromLocation(location string) ([]byte, error)</a></li><li><a href="cmd.html#ResourceFromArgs">func ResourceFromArgs(cmd *cobra.Command, args []string, mapper meta.RESTMapper) (mapping *meta.RESTMapping, namespace, name string)</a></li><li><a href="cmd.html#ResourceFromArgsOrFile">func ResourceFromArgsOrFile(cmd *cobra.Command, args []string, filename string, typer runtime.ObjectTyper, mapper meta.RESTMapper) (mapping *meta.RESTMapping, namespace, name string)</a></li><li><a href="cmd.html#ResourceFromFile">func ResourceFromFile(filename string, typer runtime.ObjectTyper, mapper meta.RESTMapper) (mapping *meta.RESTMapping, namespace, name string, data []byte)</a></li><li><a href="cmd.html#ResourceOrTypeFromArgs">func ResourceOrTypeFromArgs(cmd *cobra.Command, args []string, mapper meta.RESTMapper) (mapping *meta.RESTMapping, namespace, name string)</a></li>
+          
+            <li><a href="cmd.html#Factory">type Factory</a></li>
+            <ul>
+            <li><a href="cmd.html#NewFactory">func NewFactory(clientBuilder clientcmd.Builder) *Factory</a></li>
+            <li><a href="cmd.html#Factory.NewCmdCreate">func (f *Factory) NewCmdCreate(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdCreateAll">func (f *Factory) NewCmdCreateAll(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdDelete">func (f *Factory) NewCmdDelete(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdDescribe">func (f *Factory) NewCmdDescribe(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdGet">func (f *Factory) NewCmdGet(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdLog">func (f *Factory) NewCmdLog(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdProxy">func (f *Factory) NewCmdProxy(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdUpdate">func (f *Factory) NewCmdUpdate(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.NewCmdVersion">func (f *Factory) NewCmdVersion(out io.Writer) *cobra.Command</a></li><li><a href="cmd.html#Factory.Run">func (f *Factory) Run(out io.Writer)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/kubectl/cmd">Package Files</a>
+          <a class="permalink" href="cmd.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go">cmd.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/create.go">create.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/createall.go">createall.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/delete.go">delete.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/describe.go">describe.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/get.go">get.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go">helpers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/log.go">log.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/namespace.go">namespace.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/proxy.go">proxy.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go">resource.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/update.go">update.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/version.go">version.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="CompareNamespaceFromFile">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go#L156">CompareNamespaceFromFile</a> <a class="permalink" href="cmd.html#CompareNamespaceFromFile">&para;</a></h3>
+          <pre class="funcdecl">func CompareNamespaceFromFile(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+CompareNamespaceFromFile returns an error if the namespace the user has provided on the CLI
+or via the default namespace file does not match the namespace of an input file. This
+prevents a user from unintentionally updating the wrong namespace.
+</p>
+
+          
+  
+
+        
+          <h3 id="DataToObjects">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/createall.go#L33">DataToObjects</a> <a class="permalink" href="cmd.html#DataToObjects">&para;</a></h3>
+          <pre class="funcdecl">func DataToObjects(m <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>, t <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectTyper">ObjectTyper</a>, data []<a href="http://godoc.org/builtin#byte">byte</a>) (result []<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, errors <a href="../util.html">util</a>.<a href="../util.html#ErrorList">ErrorList</a>)</pre><p>
+DataToObjects converts the raw JSON data into API objects
+</p>
+
+          
+  
+
+        
+          <h3 id="FirstNonEmptyString">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L87">FirstNonEmptyString</a> <a class="permalink" href="cmd.html#FirstNonEmptyString">&para;</a></h3>
+          <pre class="funcdecl">func FirstNonEmptyString(args ...<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+Returns the first non-empty string out of the ones provided. If all
+strings are empty, returns an empty string.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetExplicitKubeNamespace">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go#L149">GetExplicitKubeNamespace</a> <a class="permalink" href="cmd.html#GetExplicitKubeNamespace">&para;</a></h3>
+          <pre class="funcdecl">func GetExplicitKubeNamespace(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+GetExplicitKubeNamespace returns the value of the namespace a
+user explicitly provided on the command line, or false if no
+such namespace was specified.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetFilesFromDir">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L97">GetFilesFromDir</a> <a class="permalink" href="cmd.html#GetFilesFromDir">&para;</a></h3>
+          <pre class="funcdecl">func GetFilesFromDir(directory <a href="http://godoc.org/builtin#string">string</a>, fileType <a href="http://godoc.org/builtin#string">string</a>) []<a href="http://godoc.org/builtin#string">string</a></pre><p>
+Return a list of file names of a certain type within a given directory.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetFlagBool">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L40">GetFlagBool</a> <a class="permalink" href="cmd.html#GetFlagBool">&para;</a></h3>
+          <pre class="funcdecl">func GetFlagBool(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, flag <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+          
+  
+
+        
+          <h3 id="GetFlagBoolPtr">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L53">GetFlagBoolPtr</a> <a class="permalink" href="cmd.html#GetFlagBoolPtr">&para;</a></h3>
+          <pre class="funcdecl">func GetFlagBoolPtr(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, flag <a href="http://godoc.org/builtin#string">string</a>) *<a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+Returns nil if the flag wasn&#39;t set.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetFlagInt">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L73">GetFlagInt</a> <a class="permalink" href="cmd.html#GetFlagInt">&para;</a></h3>
+          <pre class="funcdecl">func GetFlagInt(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, flag <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#int">int</a></pre><p>
+Assumes the flag has a default value.
+</p>
+
+          
+  
+
+        
+          <h3 id="GetFlagString">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L32">GetFlagString</a> <a class="permalink" href="cmd.html#GetFlagString">&para;</a></h3>
+          <pre class="funcdecl">func GetFlagString(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, flag <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre>
+          
+  
+
+        
+          <h3 id="GetKubeNamespace">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go#L129">GetKubeNamespace</a> <a class="permalink" href="cmd.html#GetKubeNamespace">&para;</a></h3>
+          <pre class="funcdecl">func GetKubeNamespace(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+GetKubeNamespace returns the value of the namespace a
+user provided on the command line or use the default
+namespace.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewCmdNamespace">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/namespace.go#L28">NewCmdNamespace</a> <a class="permalink" href="cmd.html#NewCmdNamespace">&para;</a></h3>
+          <pre class="funcdecl">func NewCmdNamespace(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+          
+  
+
+        
+          <h3 id="ReadConfigData">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L113">ReadConfigData</a> <a class="permalink" href="cmd.html#ReadConfigData">&para;</a></h3>
+          <pre class="funcdecl">func ReadConfigData(location <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ReadConfigData reads the bytes from the specified filesytem or network
+location or from stdin if location == &#34;-&#34;.
+</p>
+
+          
+  
+
+        
+          <h3 id="ReadConfigDataFromLocation">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/helpers.go#L136">ReadConfigDataFromLocation</a> <a class="permalink" href="cmd.html#ReadConfigDataFromLocation">&para;</a></h3>
+          <pre class="funcdecl">func ReadConfigDataFromLocation(location <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+          
+  
+
+        
+          <h3 id="ResourceFromArgs">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go#L72">ResourceFromArgs</a> <a class="permalink" href="cmd.html#ResourceFromArgs">&para;</a></h3>
+          <pre class="funcdecl">func ResourceFromArgs(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, args []<a href="http://godoc.org/builtin#string">string</a>, mapper <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>) (mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>, namespace, name <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+ResourceFromArgs expects two arguments with a given type, and extracts the fields necessary
+to uniquely locate a resource. Displays a usageError if that contract is not satisfied, or
+a generic error if any other problems occur.
+</p>
+
+          
+  
+
+        
+          <h3 id="ResourceFromArgsOrFile">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go#L32">ResourceFromArgsOrFile</a> <a class="permalink" href="cmd.html#ResourceFromArgsOrFile">&para;</a></h3>
+          <pre class="funcdecl">func ResourceFromArgsOrFile(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, args []<a href="http://godoc.org/builtin#string">string</a>, filename <a href="http://godoc.org/builtin#string">string</a>, typer <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectTyper">ObjectTyper</a>, mapper <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>) (mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>, namespace, name <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+ResourceFromArgsOrFile expects two arguments or a valid file with a given type, and extracts
+the fields necessary to uniquely locate a resource. Displays a usageError if that contract is
+not satisfied, or a generic error if any other problems occur.
+</p>
+
+          
+  
+
+        
+          <h3 id="ResourceFromFile">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go#L125">ResourceFromFile</a> <a class="permalink" href="cmd.html#ResourceFromFile">&para;</a></h3>
+          <pre class="funcdecl">func ResourceFromFile(filename <a href="http://godoc.org/builtin#string">string</a>, typer <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectTyper">ObjectTyper</a>, mapper <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>) (mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>, namespace, name <a href="http://godoc.org/builtin#string">string</a>, data []<a href="http://godoc.org/builtin#byte">byte</a>)</pre><p>
+ResourceFromFile retrieves the name and namespace from a valid file. If the file does not
+resolve to a known type an error is returned. The returned mapping can be used to determine
+the correct REST endpoint to modify this resource with.
+</p>
+
+          
+  
+
+        
+          <h3 id="ResourceOrTypeFromArgs">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/resource.go#L95">ResourceOrTypeFromArgs</a> <a class="permalink" href="cmd.html#ResourceOrTypeFromArgs">&para;</a></h3>
+          <pre class="funcdecl">func ResourceOrTypeFromArgs(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, args []<a href="http://godoc.org/builtin#string">string</a>, mapper <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>) (mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>, namespace, name <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+ResourceFromArgs expects two arguments with a given type, and extracts the fields necessary
+to uniquely locate a resource. Displays a usageError if that contract is not satisfied, or
+a generic error if any other problems occur.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="Factory">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go#L37">Factory</a> <a class="permalink" href="cmd.html#Factory">&para;</a></h3>
+          <pre>type Factory struct {
+    <span id="Factory.ClientBuilder">ClientBuilder</span> <a href="../client/clientcmd.html">clientcmd</a>.<a href="../client/clientcmd.html#Builder">Builder</a>
+    <span id="Factory.Mapper">Mapper</span>        <a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapper">RESTMapper</a>
+    <span id="Factory.Typer">Typer</span>         <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectTyper">ObjectTyper</a>
+    <span id="Factory.Client">Client</span>        func(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>) (<a href="../kubectl.html">kubectl</a>.<a href="../kubectl.html#RESTClient">RESTClient</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Factory.Describer">Describer</span>     func(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>) (<a href="../kubectl.html">kubectl</a>.<a href="../kubectl.html#Describer">Describer</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Factory.Printer">Printer</span>       func(cmd *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a>, mapping *<a href="../api/meta.html">meta</a>.<a href="../api/meta.html#RESTMapping">RESTMapping</a>, noHeaders <a href="http://godoc.org/builtin#bool">bool</a>) (<a href="../kubectl.html">kubectl</a>.<a href="../kubectl.html#ResourcePrinter">ResourcePrinter</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Factory provides abstractions that allow the Kubectl command to be extended across multiple types
+of resources and different API sets.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewFactory">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go#L47">NewFactory</a> <a class="permalink" href="cmd.html#NewFactory">&para;</a></h4>
+            <pre class="funcdecl">func NewFactory(clientBuilder <a href="../client/clientcmd.html">clientcmd</a>.<a href="../client/clientcmd.html#Builder">Builder</a>) *<a href="cmd.html#Factory">Factory</a></pre><p>
+NewFactory creates a factory with the default Kubernetes resources defined
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Factory.NewCmdCreate">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/create.go#L27">NewCmdCreate</a> <a class="permalink" href="cmd.html#Factory.NewCmdCreate">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdCreate(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdCreateAll">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/createall.go#L64">NewCmdCreateAll</a> <a class="permalink" href="cmd.html#Factory.NewCmdCreateAll">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdCreateAll(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdDelete">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/delete.go#L27">NewCmdDelete</a> <a class="permalink" href="cmd.html#Factory.NewCmdDelete">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdDelete(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdDescribe">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/describe.go#L26">NewCmdDescribe</a> <a class="permalink" href="cmd.html#Factory.NewCmdDescribe">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdDescribe(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdGet">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/get.go#L29">NewCmdGet</a> <a class="permalink" href="cmd.html#Factory.NewCmdGet">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdGet(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdLog">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/log.go#L25">NewCmdLog</a> <a class="permalink" href="cmd.html#Factory.NewCmdLog">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdLog(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdProxy">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/proxy.go#L27">NewCmdProxy</a> <a class="permalink" href="cmd.html#Factory.NewCmdProxy">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdProxy(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdUpdate">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/update.go#L27">NewCmdUpdate</a> <a class="permalink" href="cmd.html#Factory.NewCmdUpdate">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdUpdate(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.NewCmdVersion">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/version.go#L26">NewCmdVersion</a> <a class="permalink" href="cmd.html#Factory.NewCmdVersion">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) NewCmdVersion(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>) *<a href="http://godoc.org/github.com/spf13/cobra">cobra</a>.<a href="http://godoc.org/github.com/spf13/cobra#Command">Command</a></pre>
+            
+  
+
+          
+            <h4 id="Factory.Run">func (*Factory) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go#L72">Run</a> <a class="permalink" href="cmd.html#Factory.Run">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cmd.html#Factory">Factory</a>) Run(out <a href="http://godoc.org/io">io</a>.<a href="http://godoc.org/io#Writer">Writer</a>)</pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl/cmd"></form>
+  <p>Package cmd imports <a href="cmd@imports.html">20 packages</a> (<a href="cmd@import-graph.html">graph</a>) and is imported by <a href="cmd@importers.html">2 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:48Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="cmd@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="cmd.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

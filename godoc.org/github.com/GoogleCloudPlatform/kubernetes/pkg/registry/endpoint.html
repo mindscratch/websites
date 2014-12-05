@@ -1,0 +1,304 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>endpoint - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package endpoint">
+    <meta property="og:title" content="Package endpoint">
+    <meta name="description" content="Package endpoint provides Registry interface and it&#39;s RESTStorage implementation for storing Endpoint api objects.">
+    <meta name="twitter:description" content="Package endpoint provides Registry interface and it&#39;s RESTStorage implementation for storing Endpoint api objects.">
+    <meta property="og:description" content="Package endpoint provides Registry interface and it&#39;s RESTStorage implementation for storing Endpoint api objects.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../registry.html">registry</a><span class="text-muted">/</span><span class="text-muted">endpoint</span>
+  
+  <span class="pull-right">
+    <a href="endpoint.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="endpoint.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package endpoint</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/registry/endpoint"</code>
+
+        <p>
+Package endpoint provides Registry interface and it&#39;s RESTStorage
+implementation for storing Endpoint api objects.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="endpoint.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="endpoint.html#REST">type REST</a></li>
+            <ul>
+            <li><a href="endpoint.html#NewREST">func NewREST(registry Registry) *REST</a></li>
+            <li><a href="endpoint.html#REST.Create">func (rs *REST) Create(ctx api.Context, obj runtime.Object) (&lt;-chan apiserver.RESTResult, error)</a></li><li><a href="endpoint.html#REST.Delete">func (rs *REST) Delete(ctx api.Context, id string) (&lt;-chan apiserver.RESTResult, error)</a></li><li><a href="endpoint.html#REST.Get">func (rs *REST) Get(ctx api.Context, id string) (runtime.Object, error)</a></li><li><a href="endpoint.html#REST.List">func (rs *REST) List(ctx api.Context, label, field labels.Selector) (runtime.Object, error)</a></li><li><a href="endpoint.html#REST.New">func (rs REST) New() runtime.Object</a></li><li><a href="endpoint.html#REST.Update">func (rs *REST) Update(ctx api.Context, obj runtime.Object) (&lt;-chan apiserver.RESTResult, error)</a></li><li><a href="endpoint.html#REST.Watch">func (rs *REST) Watch(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="endpoint.html#Registry">type Registry</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/registry/endpoint">Package Files</a>
+          <a class="permalink" href="endpoint.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/registry.go">registry.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go">rest.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="REST">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L31">REST</a> <a class="permalink" href="endpoint.html#REST">&para;</a></h3>
+          <pre>type REST struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+REST adapts endpoints into apiserver&#39;s RESTStorage model.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewREST">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L36">NewREST</a> <a class="permalink" href="endpoint.html#NewREST">&para;</a></h4>
+            <pre class="funcdecl">func NewREST(registry <a href="endpoint.html#Registry">Registry</a>) *<a href="endpoint.html#REST">REST</a></pre><p>
+NewREST returns a new apiserver.RESTStorage implementation for endpoints
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="REST.Create">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L62">Create</a> <a class="permalink" href="endpoint.html#REST.Create">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) Create(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (&lt;-chan <a href="../apiserver.html">apiserver</a>.<a href="../apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Create satisfies the RESTStorage interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.Delete">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L100">Delete</a> <a class="permalink" href="endpoint.html#REST.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) Delete(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (&lt;-chan <a href="../apiserver.html">apiserver</a>.<a href="../apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Delete satisfies the RESTStorage interface but is unimplemented.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.Get">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L43">Get</a> <a class="permalink" href="endpoint.html#REST.Get">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) Get(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Get satisfies the RESTStorage interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.List">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L48">List</a> <a class="permalink" href="endpoint.html#REST.List">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) List(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>) (<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+List satisfies the RESTStorage interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.New">func (REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L105">New</a> <a class="permalink" href="endpoint.html#REST.New">&para;</a></h4>
+            <pre class="funcdecl">func (rs <a href="endpoint.html#REST">REST</a>) New() <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a></pre><p>
+New implements the RESTStorage interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.Update">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L85">Update</a> <a class="permalink" href="endpoint.html#REST.Update">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) Update(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (&lt;-chan <a href="../apiserver.html">apiserver</a>.<a href="../apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Update satisfies the RESTStorage interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="REST.Watch">func (*REST) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/rest.go#L57">Watch</a> <a class="permalink" href="endpoint.html#REST.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (rs *<a href="endpoint.html#REST">REST</a>) Watch(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Watch returns Endpoint events via a watch.Interface.
+It implements apiserver.ResourceWatcher.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Registry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/endpoint/registry.go#L26">Registry</a> <a class="permalink" href="endpoint.html#Registry">&para;</a></h3>
+          <pre>type Registry interface {
+    <span id="Registry.ListEndpoints">ListEndpoints</span>(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Registry.GetEndpoints">GetEndpoints</span>(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Registry.WatchEndpoints">WatchEndpoints</span>(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, labels, fields <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="Registry.UpdateEndpoints">UpdateEndpoints</span>(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, e *<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>) <a href="http://godoc.org/builtin#error">error</a>
+}</pre><p>
+Registry is an interface for things that know how to store endpoints.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/registry/endpoint"></form>
+  <p>Package endpoint imports <a href="endpoint@imports.html">7 packages</a> (<a href="endpoint@import-graph.html">graph</a>) and is imported by <a href="endpoint@importers.html">5 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:03Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="endpoint@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="endpoint.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

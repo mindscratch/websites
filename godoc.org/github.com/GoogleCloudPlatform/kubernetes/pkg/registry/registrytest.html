@@ -1,0 +1,573 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>registrytest - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package registrytest">
+    <meta property="og:title" content="Package registrytest">
+    <meta name="description" content="Package registrytest provides tests for Registry implementations for storing Minions, Pods, Schedulers and Services.">
+    <meta name="twitter:description" content="Package registrytest provides tests for Registry implementations for storing Minions, Pods, Schedulers and Services.">
+    <meta property="og:description" content="Package registrytest provides tests for Registry implementations for storing Minions, Pods, Schedulers and Services.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../registry.html">registry</a><span class="text-muted">/</span><span class="text-muted">registrytest</span>
+  
+  <span class="pull-right">
+    <a href="registrytest.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="registrytest.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package registrytest</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/registry/registrytest"</code>
+
+        <p>
+Package registrytest provides tests for Registry implementations
+for storing Minions, Pods, Schedulers and Services.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="registrytest.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="registrytest.html#MakeMinionList">func MakeMinionList(minions []string, nodeResources api.NodeResources) *api.MinionList</a></li>
+          
+            <li><a href="registrytest.html#ControllerRegistry">type ControllerRegistry</a></li>
+            <ul>
+            
+            <li><a href="registrytest.html#ControllerRegistry.CreateController">func (r *ControllerRegistry) CreateController(ctx api.Context, controller *api.ReplicationController) error</a></li><li><a href="registrytest.html#ControllerRegistry.DeleteController">func (r *ControllerRegistry) DeleteController(ctx api.Context, ID string) error</a></li><li><a href="registrytest.html#ControllerRegistry.GetController">func (r *ControllerRegistry) GetController(ctx api.Context, ID string) (*api.ReplicationController, error)</a></li><li><a href="registrytest.html#ControllerRegistry.ListControllers">func (r *ControllerRegistry) ListControllers(ctx api.Context) (*api.ReplicationControllerList, error)</a></li><li><a href="registrytest.html#ControllerRegistry.UpdateController">func (r *ControllerRegistry) UpdateController(ctx api.Context, controller *api.ReplicationController) error</a></li><li><a href="registrytest.html#ControllerRegistry.WatchControllers">func (r *ControllerRegistry) WatchControllers(ctx api.Context, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="registrytest.html#GenericRegistry">type GenericRegistry</a></li>
+            <ul>
+            <li><a href="registrytest.html#NewGeneric">func NewGeneric(list runtime.Object) *GenericRegistry</a></li>
+            <li><a href="registrytest.html#GenericRegistry.Create">func (r *GenericRegistry) Create(ctx api.Context, id string, obj runtime.Object) error</a></li><li><a href="registrytest.html#GenericRegistry.Delete">func (r *GenericRegistry) Delete(ctx api.Context, id string) error</a></li><li><a href="registrytest.html#GenericRegistry.Get">func (r *GenericRegistry) Get(ctx api.Context, id string) (runtime.Object, error)</a></li><li><a href="registrytest.html#GenericRegistry.List">func (r *GenericRegistry) List(ctx api.Context, m generic.Matcher) (runtime.Object, error)</a></li><li><a href="registrytest.html#GenericRegistry.Update">func (r *GenericRegistry) Update(ctx api.Context, id string, obj runtime.Object) error</a></li><li><a href="registrytest.html#GenericRegistry.Watch">func (r *GenericRegistry) Watch(ctx api.Context, m generic.Matcher, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="registrytest.html#MinionRegistry">type MinionRegistry</a></li>
+            <ul>
+            <li><a href="registrytest.html#NewMinionRegistry">func NewMinionRegistry(minions []string, nodeResources api.NodeResources) *MinionRegistry</a></li>
+            <li><a href="registrytest.html#MinionRegistry.CreateMinion">func (r *MinionRegistry) CreateMinion(ctx api.Context, minion *api.Minion) error</a></li><li><a href="registrytest.html#MinionRegistry.DeleteMinion">func (r *MinionRegistry) DeleteMinion(ctx api.Context, minionID string) error</a></li><li><a href="registrytest.html#MinionRegistry.GetMinion">func (r *MinionRegistry) GetMinion(ctx api.Context, minionID string) (*api.Minion, error)</a></li><li><a href="registrytest.html#MinionRegistry.ListMinions">func (r *MinionRegistry) ListMinions(ctx api.Context) (*api.MinionList, error)</a></li><li><a href="registrytest.html#MinionRegistry.UpdateMinion">func (r *MinionRegistry) UpdateMinion(ctx api.Context, minion *api.Minion) error</a></li>
+            </ul>
+          
+            <li><a href="registrytest.html#PodRegistry">type PodRegistry</a></li>
+            <ul>
+            <li><a href="registrytest.html#NewPodRegistry">func NewPodRegistry(pods *api.PodList) *PodRegistry</a></li>
+            <li><a href="registrytest.html#PodRegistry.CreatePod">func (r *PodRegistry) CreatePod(ctx api.Context, pod *api.Pod) error</a></li><li><a href="registrytest.html#PodRegistry.DeletePod">func (r *PodRegistry) DeletePod(ctx api.Context, podId string) error</a></li><li><a href="registrytest.html#PodRegistry.GetPod">func (r *PodRegistry) GetPod(ctx api.Context, podId string) (*api.Pod, error)</a></li><li><a href="registrytest.html#PodRegistry.ListPods">func (r *PodRegistry) ListPods(ctx api.Context, selector labels.Selector) (*api.PodList, error)</a></li><li><a href="registrytest.html#PodRegistry.ListPodsPredicate">func (r *PodRegistry) ListPodsPredicate(ctx api.Context, filter func(*api.Pod) bool) (*api.PodList, error)</a></li><li><a href="registrytest.html#PodRegistry.UpdatePod">func (r *PodRegistry) UpdatePod(ctx api.Context, pod *api.Pod) error</a></li><li><a href="registrytest.html#PodRegistry.WatchPods">func (r *PodRegistry) WatchPods(ctx api.Context, resourceVersion string, filter func(*api.Pod) bool) (watch.Interface, error)</a></li>
+            </ul>
+          
+            <li><a href="registrytest.html#Scheduler">type Scheduler</a></li>
+            <ul>
+            
+            <li><a href="registrytest.html#Scheduler.Schedule">func (s *Scheduler) Schedule(pod api.Pod, lister scheduler.MinionLister) (string, error)</a></li>
+            </ul>
+          
+            <li><a href="registrytest.html#ServiceRegistry">type ServiceRegistry</a></li>
+            <ul>
+            <li><a href="registrytest.html#NewServiceRegistry">func NewServiceRegistry() *ServiceRegistry</a></li>
+            <li><a href="registrytest.html#ServiceRegistry.CreateService">func (r *ServiceRegistry) CreateService(ctx api.Context, svc *api.Service) error</a></li><li><a href="registrytest.html#ServiceRegistry.DeleteService">func (r *ServiceRegistry) DeleteService(ctx api.Context, id string) error</a></li><li><a href="registrytest.html#ServiceRegistry.GetEndpoints">func (r *ServiceRegistry) GetEndpoints(ctx api.Context, id string) (*api.Endpoints, error)</a></li><li><a href="registrytest.html#ServiceRegistry.GetService">func (r *ServiceRegistry) GetService(ctx api.Context, id string) (*api.Service, error)</a></li><li><a href="registrytest.html#ServiceRegistry.ListEndpoints">func (r *ServiceRegistry) ListEndpoints(ctx api.Context) (*api.EndpointsList, error)</a></li><li><a href="registrytest.html#ServiceRegistry.ListServices">func (r *ServiceRegistry) ListServices(ctx api.Context) (*api.ServiceList, error)</a></li><li><a href="registrytest.html#ServiceRegistry.UpdateEndpoints">func (r *ServiceRegistry) UpdateEndpoints(ctx api.Context, e *api.Endpoints) error</a></li><li><a href="registrytest.html#ServiceRegistry.UpdateService">func (r *ServiceRegistry) UpdateService(ctx api.Context, svc *api.Service) error</a></li><li><a href="registrytest.html#ServiceRegistry.WatchEndpoints">func (r *ServiceRegistry) WatchEndpoints(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li><li><a href="registrytest.html#ServiceRegistry.WatchServices">func (r *ServiceRegistry) WatchServices(ctx api.Context, label labels.Selector, field labels.Selector, resourceVersion string) (watch.Interface, error)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/registry/registrytest">Package Files</a>
+          <a class="permalink" href="registrytest.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go">controller.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go">generic.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go">minion.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go">pod.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/scheduler.go">scheduler.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go">service.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="MakeMinionList">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L32">MakeMinionList</a> <a class="permalink" href="registrytest.html#MakeMinionList">&para;</a></h3>
+          <pre class="funcdecl">func MakeMinionList(minions []<a href="http://godoc.org/builtin#string">string</a>, nodeResources <a href="../api.html">api</a>.<a href="../api.html#NodeResources">NodeResources</a>) *<a href="../api.html">api</a>.<a href="../api.html#MinionList">MinionList</a></pre>
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ControllerRegistry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L25">ControllerRegistry</a> <a class="permalink" href="registrytest.html#ControllerRegistry">&para;</a></h3>
+          <pre>type ControllerRegistry struct {
+    <span id="ControllerRegistry.Err">Err</span>         <a href="http://godoc.org/builtin#error">error</a>
+    <span id="ControllerRegistry.Controllers">Controllers</span> *<a href="../api.html">api</a>.<a href="../api.html#ReplicationControllerList">ReplicationControllerList</a>
+}</pre><p>
+TODO: Why do we have this AND MemoryRegistry?
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ControllerRegistry.CreateController">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L38">CreateController</a> <a class="permalink" href="registrytest.html#ControllerRegistry.CreateController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) CreateController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controller *<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ControllerRegistry.DeleteController">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L46">DeleteController</a> <a class="permalink" href="registrytest.html#ControllerRegistry.DeleteController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) DeleteController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, ID <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ControllerRegistry.GetController">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L34">GetController</a> <a class="permalink" href="registrytest.html#ControllerRegistry.GetController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) GetController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, ID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ControllerRegistry.ListControllers">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L30">ListControllers</a> <a class="permalink" href="registrytest.html#ControllerRegistry.ListControllers">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) ListControllers(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ReplicationControllerList">ReplicationControllerList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ControllerRegistry.UpdateController">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L42">UpdateController</a> <a class="permalink" href="registrytest.html#ControllerRegistry.UpdateController">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) UpdateController(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, controller *<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ControllerRegistry.WatchControllers">func (*ControllerRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/controller.go#L50">WatchControllers</a> <a class="permalink" href="registrytest.html#ControllerRegistry.WatchControllers">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ControllerRegistry">ControllerRegistry</a>) WatchControllers(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="GenericRegistry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L30">GenericRegistry</a> <a class="permalink" href="registrytest.html#GenericRegistry">&para;</a></h3>
+          <pre>type GenericRegistry struct {
+    <span id="GenericRegistry.Err">Err</span>        <a href="http://godoc.org/builtin#error">error</a>
+    <span id="GenericRegistry.Object">Object</span>     <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>
+    <span id="GenericRegistry.ObjectList">ObjectList</span> <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+
+    <span id="GenericRegistry.Broadcaster">Broadcaster</span> *<a href="../watch.html">watch</a>.<a href="../watch.html#Broadcaster">Broadcaster</a>
+}</pre><p>
+GenericRegistry knows how to store &amp; list any runtime.Object. Events don&#39;t require
+any non-generic features from the storage layer.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewGeneric">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L39">NewGeneric</a> <a class="permalink" href="registrytest.html#NewGeneric">&para;</a></h4>
+            <pre class="funcdecl">func NewGeneric(list <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) *<a href="registrytest.html#GenericRegistry">GenericRegistry</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="GenericRegistry.Create">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L66">Create</a> <a class="permalink" href="registrytest.html#GenericRegistry.Create">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) Create(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>, obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GenericRegistry.Delete">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L82">Delete</a> <a class="permalink" href="registrytest.html#GenericRegistry.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) Delete(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GenericRegistry.Get">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L60">Get</a> <a class="permalink" href="registrytest.html#GenericRegistry.Get">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) Get(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GenericRegistry.List">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L46">List</a> <a class="permalink" href="registrytest.html#GenericRegistry.List">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) List(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, m <a href="generic.html">generic</a>.<a href="generic.html#Matcher">Matcher</a>) (<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GenericRegistry.Update">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L74">Update</a> <a class="permalink" href="registrytest.html#GenericRegistry.Update">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) Update(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>, obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GenericRegistry.Watch">func (*GenericRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/generic.go#L55">Watch</a> <a class="permalink" href="registrytest.html#GenericRegistry.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#GenericRegistry">GenericRegistry</a>) Watch(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, m <a href="generic.html">generic</a>.<a href="generic.html#Matcher">Matcher</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="MinionRegistry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L25">MinionRegistry</a> <a class="permalink" href="registrytest.html#MinionRegistry">&para;</a></h3>
+          <pre>type MinionRegistry struct {
+    <span id="MinionRegistry.Err">Err</span>     <a href="http://godoc.org/builtin#error">error</a>
+    <span id="MinionRegistry.Minion">Minion</span>  <a href="http://godoc.org/builtin#string">string</a>
+    <span id="MinionRegistry.Minions">Minions</span> <a href="../api.html">api</a>.<a href="../api.html#MinionList">MinionList</a>
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewMinionRegistry">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L43">NewMinionRegistry</a> <a class="permalink" href="registrytest.html#NewMinionRegistry">&para;</a></h4>
+            <pre class="funcdecl">func NewMinionRegistry(minions []<a href="http://godoc.org/builtin#string">string</a>, nodeResources <a href="../api.html">api</a>.<a href="../api.html#NodeResources">NodeResources</a>) *<a href="registrytest.html#MinionRegistry">MinionRegistry</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="MinionRegistry.CreateMinion">func (*MinionRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L55">CreateMinion</a> <a class="permalink" href="registrytest.html#MinionRegistry.CreateMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#MinionRegistry">MinionRegistry</a>) CreateMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="MinionRegistry.DeleteMinion">func (*MinionRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L86">DeleteMinion</a> <a class="permalink" href="registrytest.html#MinionRegistry.DeleteMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#MinionRegistry">MinionRegistry</a>) DeleteMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minionID <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="MinionRegistry.GetMinion">func (*MinionRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L75">GetMinion</a> <a class="permalink" href="registrytest.html#MinionRegistry.GetMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#MinionRegistry">MinionRegistry</a>) GetMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minionID <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="MinionRegistry.ListMinions">func (*MinionRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L49">ListMinions</a> <a class="permalink" href="registrytest.html#MinionRegistry.ListMinions">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#MinionRegistry">MinionRegistry</a>) ListMinions(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#MinionList">MinionList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="MinionRegistry.UpdateMinion">func (*MinionRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/minion.go#L63">UpdateMinion</a> <a class="permalink" href="registrytest.html#MinionRegistry.UpdateMinion">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#MinionRegistry">MinionRegistry</a>) UpdateMinion(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+        
+          <h3 id="PodRegistry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L27">PodRegistry</a> <a class="permalink" href="registrytest.html#PodRegistry">&para;</a></h3>
+          <pre>type PodRegistry struct {
+    <span id="PodRegistry.Err">Err</span>  <a href="http://godoc.org/builtin#error">error</a>
+    <span id="PodRegistry.Pod">Pod</span>  *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>
+    <span id="PodRegistry.Pods">Pods</span> *<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewPodRegistry">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L36">NewPodRegistry</a> <a class="permalink" href="registrytest.html#NewPodRegistry">&para;</a></h4>
+            <pre class="funcdecl">func NewPodRegistry(pods *<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>) *<a href="registrytest.html#PodRegistry">PodRegistry</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="PodRegistry.CreatePod">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L77">CreatePod</a> <a class="permalink" href="registrytest.html#PodRegistry.CreatePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) CreatePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, pod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.DeletePod">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L93">DeletePod</a> <a class="permalink" href="registrytest.html#PodRegistry.DeletePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) DeletePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, podId <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.GetPod">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L71">GetPod</a> <a class="permalink" href="registrytest.html#PodRegistry.GetPod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) GetPod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, podId <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.ListPods">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L60">ListPods</a> <a class="permalink" href="registrytest.html#PodRegistry.ListPods">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) ListPods(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, selector <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>) (*<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.ListPodsPredicate">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L43">ListPodsPredicate</a> <a class="permalink" href="registrytest.html#PodRegistry.ListPodsPredicate">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) ListPodsPredicate(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, filter func(*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#bool">bool</a>) (*<a href="../api.html">api</a>.<a href="../api.html#PodList">PodList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.UpdatePod">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L85">UpdatePod</a> <a class="permalink" href="registrytest.html#PodRegistry.UpdatePod">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) UpdatePod(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, pod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="PodRegistry.WatchPods">func (*PodRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/pod.go#L66">WatchPods</a> <a class="permalink" href="registrytest.html#PodRegistry.WatchPods">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#PodRegistry">PodRegistry</a>) WatchPods(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>, filter func(*<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="http://godoc.org/builtin#bool">bool</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="Scheduler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/scheduler.go#L24">Scheduler</a> <a class="permalink" href="registrytest.html#Scheduler">&para;</a></h3>
+          <pre>type Scheduler struct {
+    <span id="Scheduler.Err">Err</span>     <a href="http://godoc.org/builtin#error">error</a>
+    <span id="Scheduler.Pod">Pod</span>     <a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>
+    <span id="Scheduler.Machine">Machine</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Scheduler.Schedule">func (*Scheduler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/scheduler.go#L30">Schedule</a> <a class="permalink" href="registrytest.html#Scheduler.Schedule">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="registrytest.html#Scheduler">Scheduler</a>) Schedule(pod <a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>, lister <a href="../scheduler.html">scheduler</a>.<a href="../scheduler.html#MinionLister">MinionLister</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="ServiceRegistry">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L31">ServiceRegistry</a> <a class="permalink" href="registrytest.html#ServiceRegistry">&para;</a></h3>
+          <pre>type ServiceRegistry struct {
+    <span id="ServiceRegistry.List">List</span>          <a href="../api.html">api</a>.<a href="../api.html#ServiceList">ServiceList</a>
+    <span id="ServiceRegistry.Service">Service</span>       *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>
+    <span id="ServiceRegistry.Err">Err</span>           <a href="http://godoc.org/builtin#error">error</a>
+    <span id="ServiceRegistry.Endpoints">Endpoints</span>     <a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>
+    <span id="ServiceRegistry.EndpointsList">EndpointsList</span> <a href="../api.html">api</a>.<a href="../api.html#EndpointsList">EndpointsList</a>
+
+    <span id="ServiceRegistry.DeletedID">DeletedID</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="ServiceRegistry.GottenID">GottenID</span>  <a href="http://godoc.org/builtin#string">string</a>
+    <span id="ServiceRegistry.UpdatedID">UpdatedID</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewServiceRegistry">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L27">NewServiceRegistry</a> <a class="permalink" href="registrytest.html#NewServiceRegistry">&para;</a></h4>
+            <pre class="funcdecl">func NewServiceRegistry() *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="ServiceRegistry.CreateService">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L55">CreateService</a> <a class="permalink" href="registrytest.html#ServiceRegistry.CreateService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) CreateService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, svc *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.DeleteService">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L73">DeleteService</a> <a class="permalink" href="registrytest.html#ServiceRegistry.DeleteService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) DeleteService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.GetEndpoints">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L105">GetEndpoints</a> <a class="permalink" href="registrytest.html#ServiceRegistry.GetEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) GetEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.GetService">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L65">GetService</a> <a class="permalink" href="registrytest.html#ServiceRegistry.GetService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) GetService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.ListEndpoints">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L98">ListEndpoints</a> <a class="permalink" href="registrytest.html#ServiceRegistry.ListEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) ListEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#EndpointsList">EndpointsList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.ListServices">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L44">ListServices</a> <a class="permalink" href="registrytest.html#ServiceRegistry.ListServices">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) ListServices(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.UpdateEndpoints">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L113">UpdateEndpoints</a> <a class="permalink" href="registrytest.html#ServiceRegistry.UpdateEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) UpdateEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, e *<a href="../api.html">api</a>.<a href="../api.html#Endpoints">Endpoints</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.UpdateService">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L82">UpdateService</a> <a class="permalink" href="registrytest.html#ServiceRegistry.UpdateService">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) UpdateService(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, svc *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.WatchEndpoints">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L121">WatchEndpoints</a> <a class="permalink" href="registrytest.html#ServiceRegistry.WatchEndpoints">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) WatchEndpoints(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="ServiceRegistry.WatchServices">func (*ServiceRegistry) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/registry/registrytest/service.go#L91">WatchServices</a> <a class="permalink" href="registrytest.html#ServiceRegistry.WatchServices">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="registrytest.html#ServiceRegistry">ServiceRegistry</a>) WatchServices(ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>, label <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, field <a href="../labels.html">labels</a>.<a href="../labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/registry/registrytest"></form>
+  <p>Package registrytest imports <a href="registrytest@imports.html">7 packages</a> (<a href="registrytest@import-graph.html">graph</a>).
+  Updated <span class="timeago" title="2014-12-04T23:18:10Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="registrytest@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="registrytest.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>validation - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package validation">
+    <meta property="og:title" content="Package validation">
+    <meta name="description" content="Package validation has functions for validating the correctness of api objects and explaining what is wrong with them when they aren&#39;t valid.">
+    <meta name="twitter:description" content="Package validation has functions for validating the correctness of api objects and explaining what is wrong with them when they aren&#39;t valid.">
+    <meta property="og:description" content="Package validation has functions for validating the correctness of api objects and explaining what is wrong with them when they aren&#39;t valid.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../api.html">api</a><span class="text-muted">/</span><span class="text-muted">validation</span>
+  
+  <span class="pull-right">
+    <a href="validation.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="validation.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package validation</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"</code>
+
+        <p>
+Package validation has functions for validating the correctness of api
+objects and explaining what is wrong with them when they aren&#39;t valid.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="validation.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="validation.html#AccumulateUniquePorts">func AccumulateUniquePorts(containers []api.Container, accumulator map[int]bool, extract func(*api.Port) int) errs.ValidationErrorList</a></li><li><a href="validation.html#NewInvalidTypeError">func NewInvalidTypeError(expected reflect.Kind, observed reflect.Kind, fieldName string) error</a></li><li><a href="validation.html#ValidateBoundPod">func ValidateBoundPod(pod *api.BoundPod) (errors []error)</a></li><li><a href="validation.html#ValidateEvent">func ValidateEvent(event *api.Event) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateManifest">func ValidateManifest(manifest *api.ContainerManifest) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateMinion">func ValidateMinion(minion *api.Minion) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateMinionUpdate">func ValidateMinionUpdate(oldMinion *api.Minion, minion *api.Minion) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidatePod">func ValidatePod(pod *api.Pod) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidatePodSpec">func ValidatePodSpec(spec *api.PodSpec) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidatePodState">func ValidatePodState(podState *api.PodState) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidatePodTemplateSpec">func ValidatePodTemplateSpec(spec *api.PodTemplateSpec) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidatePodUpdate">func ValidatePodUpdate(newPod, oldPod *api.Pod) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateReadOnlyPersistentDisks">func ValidateReadOnlyPersistentDisks(volumes []api.Volume) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateReplicationController">func ValidateReplicationController(controller *api.ReplicationController) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateReplicationControllerSpec">func ValidateReplicationControllerSpec(spec *api.ReplicationControllerSpec) errs.ValidationErrorList</a></li><li><a href="validation.html#ValidateService">func ValidateService(service *api.Service, lister ServiceLister, ctx api.Context) errs.ValidationErrorList</a></li>
+          
+            <li><a href="validation.html#InvalidTypeError">type InvalidTypeError</a></li>
+            <ul>
+            
+            <li><a href="validation.html#InvalidTypeError.Error">func (i *InvalidTypeError) Error() string</a></li>
+            </ul>
+          
+            <li><a href="validation.html#Schema">type Schema</a></li>
+            <ul>
+            <li><a href="validation.html#NewSchemaFromBytes">func NewSchemaFromBytes(data []byte) (*Schema, error)</a></li>
+            <li><a href="validation.html#Schema.ValidateBytes">func (s *Schema) ValidateBytes(data []byte) error</a></li><li><a href="validation.html#Schema.ValidateObject">func (s *Schema) ValidateObject(obj interface{}, apiVersion, fieldName, typeName string) error</a></li>
+            </ul>
+          
+            <li><a href="validation.html#ServiceLister">type ServiceLister</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/api/validation">Package Files</a>
+          <a class="permalink" href="validation.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/events.go">events.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go">schema.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go">validation.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="AccumulateUniquePorts">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L195">AccumulateUniquePorts</a> <a class="permalink" href="validation.html#AccumulateUniquePorts">&para;</a></h3>
+          <pre class="funcdecl">func AccumulateUniquePorts(containers []<a href="../api.html">api</a>.<a href="../api.html#Container">Container</a>, accumulator map[<a href="http://godoc.org/builtin#int">int</a>]<a href="http://godoc.org/builtin#bool">bool</a>, extract func(*<a href="../api.html">api</a>.<a href="../api.html#Port">Port</a>) <a href="http://godoc.org/builtin#int">int</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+AccumulateUniquePorts runs an extraction function on each Port of each Container,
+accumulating the results and returning an error if any ports conflict.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewInvalidTypeError">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L39">NewInvalidTypeError</a> <a class="permalink" href="validation.html#NewInvalidTypeError">&para;</a></h3>
+          <pre class="funcdecl">func NewInvalidTypeError(expected <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Kind">Kind</a>, observed <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Kind">Kind</a>, fieldName <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+          
+  
+
+        
+          <h3 id="ValidateBoundPod">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L542">ValidateBoundPod</a> <a class="permalink" href="validation.html#ValidateBoundPod">&para;</a></h3>
+          <pre class="funcdecl">func ValidateBoundPod(pod *<a href="../api.html">api</a>.<a href="../api.html#BoundPod">BoundPod</a>) (errors []<a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+ValidateBoundPod tests if required fields on a bound pod are set.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateEvent">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/events.go#L26">ValidateEvent</a> <a class="permalink" href="validation.html#ValidateEvent">&para;</a></h3>
+          <pre class="funcdecl">func ValidateEvent(event *<a href="../api.html">api</a>.<a href="../api.html#Event">Event</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateEvent makes sure that the event makes sense.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateManifest">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L315">ValidateManifest</a> <a class="permalink" href="validation.html#ValidateManifest">&para;</a></h3>
+          <pre class="funcdecl">func ValidateManifest(manifest *<a href="../api.html">api</a>.<a href="../api.html#ContainerManifest">ContainerManifest</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateManifest tests that the specified ContainerManifest has valid data.
+This includes checking formatting and uniqueness.  It also canonicalizes the
+structure by setting default values and implementing any backwards-compatibility
+tricks.
+TODO: replaced by ValidatePodSpec
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateMinion">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L564">ValidateMinion</a> <a class="permalink" href="validation.html#ValidateMinion">&para;</a></h3>
+          <pre class="funcdecl">func ValidateMinion(minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateMinion tests if required fields in the minion are set.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateMinionUpdate">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L577">ValidateMinionUpdate</a> <a class="permalink" href="validation.html#ValidateMinionUpdate">&para;</a></h3>
+          <pre class="funcdecl">func ValidateMinionUpdate(oldMinion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>, minion *<a href="../api.html">api</a>.<a href="../api.html#Minion">Minion</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateMinionUpdate tests to make sure a minion update can be applied.  Modifies oldMinion.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidatePod">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L357">ValidatePod</a> <a class="permalink" href="validation.html#ValidatePod">&para;</a></h3>
+          <pre class="funcdecl">func ValidatePod(pod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidatePod tests if required fields in the pod are set.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidatePodSpec">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L374">ValidatePodSpec</a> <a class="permalink" href="validation.html#ValidatePodSpec">&para;</a></h3>
+          <pre class="funcdecl">func ValidatePodSpec(spec *<a href="../api.html">api</a>.<a href="../api.html#PodSpec">PodSpec</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidatePodSpec tests that the specified PodSpec has valid data.
+This includes checking formatting and uniqueness.  It also canonicalizes the
+structure by setting default values and implementing any backwards-compatibility
+tricks.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidatePodState">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L351">ValidatePodState</a> <a class="permalink" href="validation.html#ValidatePodState">&para;</a></h3>
+          <pre class="funcdecl">func ValidatePodState(podState *<a href="../api.html">api</a>.<a href="../api.html#PodState">PodState</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre>
+          
+  
+
+        
+          <h3 id="ValidatePodTemplateSpec">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L521">ValidatePodTemplateSpec</a> <a class="permalink" href="validation.html#ValidatePodTemplateSpec">&para;</a></h3>
+          <pre class="funcdecl">func ValidatePodTemplateSpec(spec *<a href="../api.html">api</a>.<a href="../api.html#PodTemplateSpec">PodTemplateSpec</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidatePodTemplateSpec validates the spec of a pod template
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidatePodUpdate">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L408">ValidatePodUpdate</a> <a class="permalink" href="validation.html#ValidatePodUpdate">&para;</a></h3>
+          <pre class="funcdecl">func ValidatePodUpdate(newPod, oldPod *<a href="../api.html">api</a>.<a href="../api.html#Pod">Pod</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidatePodUpdate tests to see if the update is legal
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateReadOnlyPersistentDisks">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L529">ValidateReadOnlyPersistentDisks</a> <a class="permalink" href="validation.html#ValidateReadOnlyPersistentDisks">&para;</a></h3>
+          <pre class="funcdecl">func ValidateReadOnlyPersistentDisks(volumes []<a href="../api.html">api</a>.<a href="../api.html#Volume">Volume</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre>
+          
+  
+
+        
+          <h3 id="ValidateReplicationController">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L477">ValidateReplicationController</a> <a class="permalink" href="validation.html#ValidateReplicationController">&para;</a></h3>
+          <pre class="funcdecl">func ValidateReplicationController(controller *<a href="../api.html">api</a>.<a href="../api.html#ReplicationController">ReplicationController</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateReplicationController tests if required fields in the replication controller are set.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateReplicationControllerSpec">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L491">ValidateReplicationControllerSpec</a> <a class="permalink" href="validation.html#ValidateReplicationControllerSpec">&para;</a></h3>
+          <pre class="funcdecl">func ValidateReplicationControllerSpec(spec *<a href="../api.html">api</a>.<a href="../api.html#ReplicationControllerSpec">ReplicationControllerSpec</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateReplicationControllerSpec tests if required fields in the replication controller spec are set.
+</p>
+
+          
+  
+
+        
+          <h3 id="ValidateService">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L435">ValidateService</a> <a class="permalink" href="validation.html#ValidateService">&para;</a></h3>
+          <pre class="funcdecl">func ValidateService(service *<a href="../api.html">api</a>.<a href="../api.html#Service">Service</a>, lister <a href="validation.html#ServiceLister">ServiceLister</a>, ctx <a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) <a href="errors.html">errs</a>.<a href="errors.html#ValidationErrorList">ValidationErrorList</a></pre><p>
+ValidateService tests if required fields in the service are set.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="InvalidTypeError">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L29">InvalidTypeError</a> <a class="permalink" href="validation.html#InvalidTypeError">&para;</a></h3>
+          <pre>type InvalidTypeError struct {
+    <span id="InvalidTypeError.ExpectedKind">ExpectedKind</span> <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Kind">Kind</a>
+    <span id="InvalidTypeError.ObservedKind">ObservedKind</span> <a href="http://godoc.org/reflect">reflect</a>.<a href="http://godoc.org/reflect#Kind">Kind</a>
+    <span id="InvalidTypeError.FieldName">FieldName</span>    <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="InvalidTypeError.Error">func (*InvalidTypeError) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L35">Error</a> <a class="permalink" href="validation.html#InvalidTypeError.Error">&para;</a></h4>
+            <pre class="funcdecl">func (i *<a href="validation.html#InvalidTypeError">InvalidTypeError</a>) Error() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="Schema">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L43">Schema</a> <a class="permalink" href="validation.html#Schema">&para;</a></h3>
+          <pre>type Schema struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewSchemaFromBytes">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L47">NewSchemaFromBytes</a> <a class="permalink" href="validation.html#NewSchemaFromBytes">&para;</a></h4>
+            <pre class="funcdecl">func NewSchemaFromBytes(data []<a href="http://godoc.org/builtin#byte">byte</a>) (*<a href="validation.html#Schema">Schema</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+
+          
+            <h4 id="Schema.ValidateBytes">func (*Schema) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L56">ValidateBytes</a> <a class="permalink" href="validation.html#Schema.ValidateBytes">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="validation.html#Schema">Schema</a>) ValidateBytes(data []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="Schema.ValidateObject">func (*Schema) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/schema.go#L68">ValidateObject</a> <a class="permalink" href="validation.html#Schema.ValidateObject">&para;</a></h4>
+            <pre class="funcdecl">func (s *<a href="validation.html#Schema">Schema</a>) ValidateObject(obj interface{}, apiVersion, fieldName, typeName <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+        
+          <h3 id="ServiceLister">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/validation/validation.go#L32">ServiceLister</a> <a class="permalink" href="validation.html#ServiceLister">&para;</a></h3>
+          <pre>type ServiceLister interface {
+    <span id="ServiceLister.ListServices">ListServices</span>(<a href="../api.html">api</a>.<a href="../api.html#Context">Context</a>) (*<a href="../api.html">api</a>.<a href="../api.html#ServiceList">ServiceList</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ServiceLister is an abstract interface for testing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"></form>
+  <p>Package validation imports <a href="validation@imports.html">11 packages</a> (<a href="validation@import-graph.html">graph</a>) and is imported by <a href="validation@importers.html">14 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:13Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="validation@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="validation.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

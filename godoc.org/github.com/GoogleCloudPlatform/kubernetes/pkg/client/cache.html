@@ -1,0 +1,516 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>cache - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package cache">
+    <meta property="og:title" content="Package cache">
+    <meta name="description" content="Package cache is a client-side caching mechanism.">
+    <meta name="twitter:description" content="Package cache is a client-side caching mechanism.">
+    <meta property="og:description" content="Package cache is a client-side caching mechanism.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../client.html">client</a><span class="text-muted">/</span><span class="text-muted">cache</span>
+  
+  <span class="pull-right">
+    <a href="cache.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="cache.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package cache</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/client/cache"</code>
+
+        <p>
+Package cache is a client-side caching mechanism. It is useful for
+reducing the number of server calls you&#39;d otherwise need to make.
+Reflector watches a server and updates a Store. Two stores are provided;
+one that simply caches objects (for example, to allow a scheduler to
+list currently available minions), and one that additionally acts as
+a FIFO queue (for example, to allow a scheduler to process incoming
+pods).</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="cache.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="cache.html#Enumerator">type Enumerator</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cache.html#FIFO">type FIFO</a></li>
+            <ul>
+            <li><a href="cache.html#NewFIFO">func NewFIFO() *FIFO</a></li>
+            <li><a href="cache.html#FIFO.Add">func (f *FIFO) Add(id string, obj interface{})</a></li><li><a href="cache.html#FIFO.ContainedIDs">func (c *FIFO) ContainedIDs() util.StringSet</a></li><li><a href="cache.html#FIFO.Delete">func (f *FIFO) Delete(id string)</a></li><li><a href="cache.html#FIFO.Get">func (f *FIFO) Get(id string) (item interface{}, exists bool)</a></li><li><a href="cache.html#FIFO.List">func (f *FIFO) List() []interface{}</a></li><li><a href="cache.html#FIFO.Pop">func (f *FIFO) Pop() interface{}</a></li><li><a href="cache.html#FIFO.Replace">func (f *FIFO) Replace(idToObj map[string]interface{})</a></li><li><a href="cache.html#FIFO.Update">func (f *FIFO) Update(id string, obj interface{})</a></li>
+            </ul>
+          
+            <li><a href="cache.html#GetFunc">type GetFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cache.html#ListerWatcher">type ListerWatcher</a></li>
+            
+            
+            
+            
+          
+            <li><a href="cache.html#Poller">type Poller</a></li>
+            <ul>
+            <li><a href="cache.html#NewPoller">func NewPoller(getFunc GetFunc, period time.Duration, store Store) *Poller</a></li>
+            <li><a href="cache.html#Poller.Run">func (p *Poller) Run()</a></li>
+            </ul>
+          
+            <li><a href="cache.html#Reflector">type Reflector</a></li>
+            <ul>
+            <li><a href="cache.html#NewReflector">func NewReflector(lw ListerWatcher, expectedType interface{}, store Store) *Reflector</a></li>
+            <li><a href="cache.html#Reflector.Run">func (r *Reflector) Run()</a></li>
+            </ul>
+          
+            <li><a href="cache.html#Store">type Store</a></li>
+            <ul>
+            <li><a href="cache.html#NewStore">func NewStore() Store</a></li>
+            
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/client/cache">Package Files</a>
+          <a class="permalink" href="cache.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go">fifo.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go">poller.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/reflector.go">reflector.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/store.go">store.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="Enumerator">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go#L28">Enumerator</a> <a class="permalink" href="cache.html#Enumerator">&para;</a></h3>
+          <pre>type Enumerator interface {
+    <span id="Enumerator.Len">Len</span>() <a href="http://godoc.org/builtin#int">int</a>
+    <span id="Enumerator.Get">Get</span>(index <a href="http://godoc.org/builtin#int">int</a>) (ID <a href="http://godoc.org/builtin#string">string</a>, object interface{})
+}</pre><p>
+Enumerator should be able to return the list of objects to be synced with
+one object at a time.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FIFO">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L30">FIFO</a> <a class="permalink" href="cache.html#FIFO">&para;</a></h3>
+          <pre>type FIFO struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+FIFO receives adds and updates from a Reflector, and puts them in a queue for
+FIFO order processing. If multiple adds/updates of a single item happen while
+an item is in the queue before it has been processed, it will only be
+processed once, and when it is processed, the most recent version will be
+processed. This can&#39;t be done with a channel.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewFIFO">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L138">NewFIFO</a> <a class="permalink" href="cache.html#NewFIFO">&para;</a></h4>
+            <pre class="funcdecl">func NewFIFO() *<a href="cache.html#FIFO">FIFO</a></pre><p>
+NewFIFO returns a Store which can be used to queue up items to
+process.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="FIFO.Add">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L40">Add</a> <a class="permalink" href="cache.html#FIFO.Add">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Add(id <a href="http://godoc.org/builtin#string">string</a>, obj interface{})</pre><p>
+Add inserts an item, and puts it in the queue. The item is only enqueued
+if it doesn&#39;t already exist in the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.ContainedIDs">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L78">ContainedIDs</a> <a class="permalink" href="cache.html#FIFO.ContainedIDs">&para;</a></h4>
+            <pre class="funcdecl">func (c *<a href="cache.html#FIFO">FIFO</a>) ContainedIDs() <a href="../util.html">util</a>.<a href="../util.html#StringSet">StringSet</a></pre><p>
+ContainedIDs returns a util.StringSet containing all IDs of the stored items.
+This is a snapshot of a moment in time, and one should keep in mind that
+other go routines can add or remove items after you call this.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.Delete">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L58">Delete</a> <a class="permalink" href="cache.html#FIFO.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Delete(id <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+Delete removes an item. It doesn&#39;t add it to the queue, because
+this implementation assumes the consumer only cares about the objects,
+not the order in which they were created/added.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.Get">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L89">Get</a> <a class="permalink" href="cache.html#FIFO.Get">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Get(id <a href="http://godoc.org/builtin#string">string</a>) (item interface{}, exists <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Get returns the requested item, or sets exists=false.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.List">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L65">List</a> <a class="permalink" href="cache.html#FIFO.List">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) List() []interface{}</pre><p>
+List returns a list of all the items.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.Pop">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L100">Pop</a> <a class="permalink" href="cache.html#FIFO.Pop">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Pop() interface{}</pre><p>
+Pop waits until an item is ready and returns it. If multiple items are
+ready, they are returned in the order in which they were added/updated.
+The item is removed from the queue (and the store) before it is returned,
+so if you don&#39;t succesfully process it, you need to add it back with Add().
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.Replace">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L123">Replace</a> <a class="permalink" href="cache.html#FIFO.Replace">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Replace(idToObj map[<a href="http://godoc.org/builtin#string">string</a>]interface{})</pre><p>
+Replace will delete the contents of &#39;f&#39;, using instead the given map.
+&#39;f&#39; takes ownersip of the map, you should not reference the map again
+after calling this function. f&#39;s queue is reset, too; upon return, it
+will contain the items in the map, in no particular order.
+</p>
+
+            
+  
+
+          
+            <h4 id="FIFO.Update">func (*FIFO) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/fifo.go#L51">Update</a> <a class="permalink" href="cache.html#FIFO.Update">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="cache.html#FIFO">FIFO</a>) Update(id <a href="http://godoc.org/builtin#string">string</a>, obj interface{})</pre><p>
+Update is the same as Add in this implementation.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="GetFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go#L34">GetFunc</a> <a class="permalink" href="cache.html#GetFunc">&para;</a></h3>
+          <pre>type GetFunc func() (<a href="cache.html#Enumerator">Enumerator</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+GetFunc should return an enumerator that you wish the Poller to proccess.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ListerWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/reflector.go#L34">ListerWatcher</a> <a class="permalink" href="cache.html#ListerWatcher">&para;</a></h3>
+          <pre>type ListerWatcher interface {
+    <span class="com">// List should return a list type object; the Items field will be extracted, and the</span>
+    <span class="com">// ResourceVersion field will be used to start the watch in the right place.</span>
+    <span id="ListerWatcher.List">List</span>() (<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span class="com">// Watch should begin a watch at the specified version.</span>
+    <span id="ListerWatcher.Watch">Watch</span>(resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="../watch.html">watch</a>.<a href="../watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ListerWatcher is any object that knows how to perform an initial list and start a watch on a resource.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Poller">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go#L39">Poller</a> <a class="permalink" href="cache.html#Poller">&para;</a></h3>
+          <pre>type Poller struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Poller is like Reflector, but it periodically polls instead of watching.
+This is intended to be a workaround for api objects that don&#39;t yet support
+watching.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewPoller">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go#L50">NewPoller</a> <a class="permalink" href="cache.html#NewPoller">&para;</a></h4>
+            <pre class="funcdecl">func NewPoller(getFunc <a href="cache.html#GetFunc">GetFunc</a>, period <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>, store <a href="cache.html#Store">Store</a>) *<a href="cache.html#Poller">Poller</a></pre><p>
+NewPoller constructs a new poller. Note that polling probably doesn&#39;t make much
+sense to use along with the FIFO queue. The returned Poller will call getFunc and
+sync the objects in &#39;store&#39; with the returned Enumerator, waiting &#39;period&#39; between
+each call. It probably only makes sense to use a poller if you&#39;re treating the
+store as read-only.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Poller.Run">func (*Poller) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/poller.go#L59">Run</a> <a class="permalink" href="cache.html#Poller.Run">&para;</a></h4>
+            <pre class="funcdecl">func (p *<a href="cache.html#Poller">Poller</a>) Run()</pre><p>
+Run begins polling. It starts a goroutine and returns immediately.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Reflector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/reflector.go#L43">Reflector</a> <a class="permalink" href="cache.html#Reflector">&para;</a></h3>
+          <pre>type Reflector struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Reflector watches a specified resource and causes all changes to be reflected in the given store.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewReflector">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/reflector.go#L58">NewReflector</a> <a class="permalink" href="cache.html#NewReflector">&para;</a></h4>
+            <pre class="funcdecl">func NewReflector(lw <a href="cache.html#ListerWatcher">ListerWatcher</a>, expectedType interface{}, store <a href="cache.html#Store">Store</a>) *<a href="cache.html#Reflector">Reflector</a></pre><p>
+NewReflector creates a new Reflector object which will keep the given store up to
+date with the server&#39;s contents for the given resource. Reflector promises to
+only put things in the store that have the type of expectedType.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Reflector.Run">func (*Reflector) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/reflector.go#L70">Run</a> <a class="permalink" href="cache.html#Reflector.Run">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="cache.html#Reflector">Reflector</a>) Run()</pre><p>
+Run starts a watch and handles watch events. Will restart the watch if it is closed.
+Run starts a goroutine and returns immediately.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Store">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/store.go#L29">Store</a> <a class="permalink" href="cache.html#Store">&para;</a></h3>
+          <pre>type Store interface {
+    <span id="Store.Add">Add</span>(id <a href="http://godoc.org/builtin#string">string</a>, obj interface{})
+    <span id="Store.Update">Update</span>(id <a href="http://godoc.org/builtin#string">string</a>, obj interface{})
+    <span id="Store.Delete">Delete</span>(id <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Store.List">List</span>() []interface{}
+    <span id="Store.ContainedIDs">ContainedIDs</span>() <a href="../util.html">util</a>.<a href="../util.html#StringSet">StringSet</a>
+    <span id="Store.Get">Get</span>(id <a href="http://godoc.org/builtin#string">string</a>) (item interface{}, exists <a href="http://godoc.org/builtin#bool">bool</a>)
+
+    <span class="com">// Replace will delete the contents of the store, using instead the</span>
+    <span class="com">// given map. Store takes ownership of the map, you should not reference</span>
+    <span class="com">// it after calling this function.</span>
+    <span id="Store.Replace">Replace</span>(idToObj map[<a href="http://godoc.org/builtin#string">string</a>]interface{})
+}</pre><p>
+Store is a generic object storage interface. Reflector knows how to watch a server
+and update a store. A generic store is provided, which allows Reflector to be used
+as a local caching system, and an LRU store, which allows Reflector to work like a
+queue of items yet to be processed.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewStore">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/client/cache/store.go#L113">NewStore</a> <a class="permalink" href="cache.html#NewStore">&para;</a></h4>
+            <pre class="funcdecl">func NewStore() <a href="cache.html#Store">Store</a></pre><p>
+NewStore returns a Store implemented simply with a map and a lock.
+</p>
+
+            
+  
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/client/cache"></form>
+  <p>Package cache imports <a href="cache@imports.html">11 packages</a> (<a href="cache@import-graph.html">graph</a>) and is imported by <a href="cache@importers.html">8 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:24Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="cache@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="cache.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

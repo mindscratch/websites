@@ -1,0 +1,553 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>watch - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package watch">
+    <meta property="og:title" content="Package watch">
+    <meta name="description" content="Package watch contains a generic watchable interface, and a fake for testing code that uses the watch interface.">
+    <meta name="twitter:description" content="Package watch contains a generic watchable interface, and a fake for testing code that uses the watch interface.">
+    <meta property="og:description" content="Package watch contains a generic watchable interface, and a fake for testing code that uses the watch interface.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">watch</span>
+  
+  <span class="pull-right">
+    <a href="watch.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="watch.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="watch.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package watch</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/watch"</code>
+
+        <p>
+Package watch contains a generic watchable interface, and a fake for
+testing code that uses the watch interface.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="watch.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="watch.html#Broadcaster">type Broadcaster</a></li>
+            <ul>
+            <li><a href="watch.html#NewBroadcaster">func NewBroadcaster(queueLength int) *Broadcaster</a></li>
+            <li><a href="watch.html#Broadcaster.Action">func (m *Broadcaster) Action(action EventType, obj runtime.Object)</a></li><li><a href="watch.html#Broadcaster.Shutdown">func (m *Broadcaster) Shutdown()</a></li><li><a href="watch.html#Broadcaster.Watch">func (m *Broadcaster) Watch() Interface</a></li>
+            </ul>
+          
+            <li><a href="watch.html#Decoder">type Decoder</a></li>
+            
+            
+            
+            
+          
+            <li><a href="watch.html#Event">type Event</a></li>
+            
+            
+            
+            
+          
+            <li><a href="watch.html#EventType">type EventType</a></li>
+            
+            
+            
+            
+          
+            <li><a href="watch.html#FakeWatcher">type FakeWatcher</a></li>
+            <ul>
+            <li><a href="watch.html#NewFake">func NewFake() *FakeWatcher</a></li>
+            <li><a href="watch.html#FakeWatcher.Action">func (f *FakeWatcher) Action(action EventType, obj runtime.Object)</a></li><li><a href="watch.html#FakeWatcher.Add">func (f *FakeWatcher) Add(obj runtime.Object)</a></li><li><a href="watch.html#FakeWatcher.Delete">func (f *FakeWatcher) Delete(lastValue runtime.Object)</a></li><li><a href="watch.html#FakeWatcher.Error">func (f *FakeWatcher) Error(errValue runtime.Object)</a></li><li><a href="watch.html#FakeWatcher.Modify">func (f *FakeWatcher) Modify(obj runtime.Object)</a></li><li><a href="watch.html#FakeWatcher.ResultChan">func (f *FakeWatcher) ResultChan() &lt;-chan Event</a></li><li><a href="watch.html#FakeWatcher.Stop">func (f *FakeWatcher) Stop()</a></li>
+            </ul>
+          
+            <li><a href="watch.html#FilterFunc">type FilterFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="watch.html#Interface">type Interface</a></li>
+            <ul>
+            <li><a href="watch.html#Filter">func Filter(w Interface, f FilterFunc) Interface</a></li>
+            
+            </ul>
+          
+            <li><a href="watch.html#StreamWatcher">type StreamWatcher</a></li>
+            <ul>
+            <li><a href="watch.html#NewStreamWatcher">func NewStreamWatcher(d Decoder) *StreamWatcher</a></li>
+            <li><a href="watch.html#StreamWatcher.ResultChan">func (sw *StreamWatcher) ResultChan() &lt;-chan Event</a></li><li><a href="watch.html#StreamWatcher.Stop">func (sw *StreamWatcher) Stop()</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/watch">Package Files</a>
+          <a class="permalink" href="watch.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/filter.go">filter.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go">iowatcher.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go">mux.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go">watch.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="Broadcaster">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go#L27">Broadcaster</a> <a class="permalink" href="watch.html#Broadcaster">&para;</a></h3>
+          <pre>type Broadcaster struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Broadcaster distributes event notifications among any number of watchers. Every event
+is delivered to every watcher.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewBroadcaster">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go#L41">NewBroadcaster</a> <a class="permalink" href="watch.html#NewBroadcaster">&para;</a></h4>
+            <pre class="funcdecl">func NewBroadcaster(queueLength <a href="http://godoc.org/builtin#int">int</a>) *<a href="watch.html#Broadcaster">Broadcaster</a></pre><p>
+NewBroadcaster creates a new Broadcaster. queueLength is the maximum number of events to queue.
+When queueLength is 0, Action will block until any prior event has been
+completely distributed. It is guaranteed that events will be distibuted in the
+order in which they ocurr, but the order in which a single event is distributed
+among all of the watchers is unspecified.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Broadcaster.Action">func (*Broadcaster) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go#L94">Action</a> <a class="permalink" href="watch.html#Broadcaster.Action">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="watch.html#Broadcaster">Broadcaster</a>) Action(action <a href="watch.html#EventType">EventType</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Action distributes the given event among all watchers.
+</p>
+
+            
+  
+
+          
+            <h4 id="Broadcaster.Shutdown">func (*Broadcaster) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go#L100">Shutdown</a> <a class="permalink" href="watch.html#Broadcaster.Shutdown">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="watch.html#Broadcaster">Broadcaster</a>) Shutdown()</pre><p>
+Shutdown disconnects all watchers (but any queued events will still be distributed).
+You must not call Action after calling Shutdown.
+</p>
+
+            
+  
+
+          
+            <h4 id="Broadcaster.Watch">func (*Broadcaster) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/mux.go#L53">Watch</a> <a class="permalink" href="watch.html#Broadcaster.Watch">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="watch.html#Broadcaster">Broadcaster</a>) Watch() <a href="watch.html#Interface">Interface</a></pre><p>
+Watch adds a new watcher to the list and returns an Interface for it.
+Note: new watchers will only receive new events. They won&#39;t get an entire history
+of previous events.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Decoder">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go#L29">Decoder</a> <a class="permalink" href="watch.html#Decoder">&para;</a></h3>
+          <pre>type Decoder interface {
+    <span class="com">// Decode should return the type of event, the decoded object, or an error.</span>
+    <span class="com">// An error will cause StreamWatcher to call Close(). Decode should block until</span>
+    <span class="com">// it has data or an error occurs.</span>
+    <span id="Decoder.Decode">Decode</span>() (action <a href="watch.html#EventType">EventType</a>, object <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Close should close the underlying io.Reader, signalling to the source of</span>
+    <span class="com">// the stream that it is no longer being watched. Close() must cause any</span>
+    <span class="com">// outstanding call to Decode() to return with an error of some sort.</span>
+    <span id="Decoder.Close">Close</span>()
+}</pre><p>
+Decoder allows StreamWatcher to watch any stream for which a Decoder can be written.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Event">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L48">Event</a> <a class="permalink" href="watch.html#Event">&para;</a></h3>
+          <pre>type Event struct {
+    <span id="Event.Type">Type</span> <a href="watch.html#EventType">EventType</a>
+
+    <span class="com">// Object is:</span>
+    <span class="com">//  * If Type is Added or Modified: the new state of the object.</span>
+    <span class="com">//  * If Type is Deleted: the state of the object immediately before deletion.</span>
+    <span class="com">//  * If Type is Error: *api.Status is recommended; other types may make sense</span>
+    <span class="com">//    depending on context.</span>
+    <span id="Event.Object">Object</span> <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>
+}</pre><p>
+Event represents a single event to a watched resource.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="EventType">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L38">EventType</a> <a class="permalink" href="watch.html#EventType">&para;</a></h3>
+          <pre>type EventType <a href="http://godoc.org/builtin#string">string</a></pre><p>
+EventType defines the possible types of events.
+</p>
+
+          <pre>const (
+    <span id="Added">Added</span>    <a href="watch.html#EventType">EventType</a> = &#34;ADDED&#34;
+    <span id="Modified">Modified</span> <a href="watch.html#EventType">EventType</a> = &#34;MODIFIED&#34;
+    <span id="Deleted">Deleted</span>  <a href="watch.html#EventType">EventType</a> = &#34;DELETED&#34;
+    <span id="Error">Error</span>    <a href="watch.html#EventType">EventType</a> = &#34;ERROR&#34;
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="FakeWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L60">FakeWatcher</a> <a class="permalink" href="watch.html#FakeWatcher">&para;</a></h3>
+          <pre>type FakeWatcher struct {
+    <span id="FakeWatcher.Stopped">Stopped</span> <a href="http://godoc.org/builtin#bool">bool</a>
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+FakeWatcher lets you test anything that consumes a watch.Interface; threadsafe.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewFake">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L66">NewFake</a> <a class="permalink" href="watch.html#NewFake">&para;</a></h4>
+            <pre class="funcdecl">func NewFake() *<a href="watch.html#FakeWatcher">FakeWatcher</a></pre>
+            
+  
+
+          
+
+          
+            <h4 id="FakeWatcher.Action">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L107">Action</a> <a class="permalink" href="watch.html#FakeWatcher.Action">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Action(action <a href="watch.html#EventType">EventType</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Action sends an event of the requested type, for table-based testing.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeWatcher.Add">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L87">Add</a> <a class="permalink" href="watch.html#FakeWatcher.Add">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Add(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Add sends an add event.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeWatcher.Delete">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L97">Delete</a> <a class="permalink" href="watch.html#FakeWatcher.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Delete(lastValue <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Delete sends a delete event.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeWatcher.Error">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L102">Error</a> <a class="permalink" href="watch.html#FakeWatcher.Error">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Error(errValue <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Error sends an Error event.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeWatcher.Modify">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L92">Modify</a> <a class="permalink" href="watch.html#FakeWatcher.Modify">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Modify(obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>)</pre><p>
+Modify sends a modify event.
+</p>
+
+            
+  
+
+          
+            <h4 id="FakeWatcher.ResultChan">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L82">ResultChan</a> <a class="permalink" href="watch.html#FakeWatcher.ResultChan">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) ResultChan() &lt;-chan <a href="watch.html#Event">Event</a></pre>
+            
+  
+
+          
+            <h4 id="FakeWatcher.Stop">func (*FakeWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L73">Stop</a> <a class="permalink" href="watch.html#FakeWatcher.Stop">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="watch.html#FakeWatcher">FakeWatcher</a>) Stop()</pre><p>
+Stop implements Interface.Stop().
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="FilterFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/filter.go#L21">FilterFunc</a> <a class="permalink" href="watch.html#FilterFunc">&para;</a></h3>
+          <pre>type FilterFunc func(in <a href="watch.html#Event">Event</a>) (out <a href="watch.html#Event">Event</a>, keep <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+FilterFunc should take an event, possibly modify it in some way, and return
+the modified event. If the event should be ignored, then return keep=false.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/watch.go#L26">Interface</a> <a class="permalink" href="watch.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <span class="com">// Stops watching. Will close the channel returned by ResultChan(). Releases</span>
+    <span class="com">// any resources used by the watch.</span>
+    <span id="Interface.Stop">Stop</span>()
+
+    <span class="com">// Returns a chan which will receive all the events. If an error occurs</span>
+    <span class="com">// or Stop() is called, this channel will be closed, in which case the</span>
+    <span class="com">// watch should be completely cleaned up.</span>
+    <span id="Interface.ResultChan">ResultChan</span>() &lt;-chan <a href="watch.html#Event">Event</a>
+}</pre><p>
+Interface can be implemented by anything that knows how to watch and report changes.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="Filter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/filter.go#L32">Filter</a> <a class="permalink" href="watch.html#Filter">&para;</a></h4>
+            <pre class="funcdecl">func Filter(w <a href="watch.html#Interface">Interface</a>, f <a href="watch.html#FilterFunc">FilterFunc</a>) <a href="watch.html#Interface">Interface</a></pre><p>
+Filter passes all events through f before allowing them to pass on.
+Putting a filter on a watch, as an unavoidable side-effect due to the way
+go channels work, effectively causes the watch&#39;s event channel to have its
+queue length increased by one.
+</p>
+<p>
+WARNING: filter has a fatal flaw, in that it can&#39;t properly update the
+Type field (Add/Modified/Deleted) to reflect items beginning to pass the
+filter when they previously didn&#39;t.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="StreamWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go#L43">StreamWatcher</a> <a class="permalink" href="watch.html#StreamWatcher">&para;</a></h3>
+          <pre>type StreamWatcher struct {
+    <a href="http://godoc.org/sync">sync</a>.<a href="http://godoc.org/sync#Mutex">Mutex</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+StreamWatcher turns any stream for which you can write a Decoder interface
+into a watch.Interface.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewStreamWatcher">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go#L51">NewStreamWatcher</a> <a class="permalink" href="watch.html#NewStreamWatcher">&para;</a></h4>
+            <pre class="funcdecl">func NewStreamWatcher(d <a href="watch.html#Decoder">Decoder</a>) *<a href="watch.html#StreamWatcher">StreamWatcher</a></pre><p>
+NewStreamWatcher creates a StreamWatcher from the given decoder.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="StreamWatcher.ResultChan">func (*StreamWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go#L64">ResultChan</a> <a class="permalink" href="watch.html#StreamWatcher.ResultChan">&para;</a></h4>
+            <pre class="funcdecl">func (sw *<a href="watch.html#StreamWatcher">StreamWatcher</a>) ResultChan() &lt;-chan <a href="watch.html#Event">Event</a></pre><p>
+ResultChan implements Interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="StreamWatcher.Stop">func (*StreamWatcher) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/watch/iowatcher.go#L69">Stop</a> <a class="permalink" href="watch.html#StreamWatcher.Stop">&para;</a></h4>
+            <pre class="funcdecl">func (sw *<a href="watch.html#StreamWatcher">StreamWatcher</a>) Stop()</pre><p>
+Stop implements Interface.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="watch.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="watch/json.html">json</a><td>Package json implements a simple encoder and decoder for streams of watch events over io.Writer/Readers</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/watch"></form>
+  <p>Package watch imports <a href="watch@imports.html">5 packages</a> (<a href="watch@import-graph.html">graph</a>) and is imported by <a href="watch@importers.html">56 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:29Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="watch@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="watch.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

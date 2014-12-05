@@ -1,0 +1,1001 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>util - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package util">
+    <meta property="og:title" content="Package util">
+    <meta name="description" content="Package util implements various utility functions used in both testing and implementation of Kubernetes.">
+    <meta name="twitter:description" content="Package util implements various utility functions used in both testing and implementation of Kubernetes.">
+    <meta property="og:description" content="Package util implements various utility functions used in both testing and implementation of Kubernetes.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">util</span>
+  
+  <span class="pull-right">
+    <a href="util.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="util.html#pkg-files">Files</a>
+    <span class="text-muted">|</span> <a href="util.html#pkg-subdirectories">Directories</a>
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package util</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/util"</code>
+
+        <p>
+Package util implements various utility functions used in both testing and implementation
+of Kubernetes. Package util may not depend on any other package in the Kubernetes
+package tree.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="util.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          <li><a href="util.html#pkg-variables">Variables</a></li>
+          <li><a href="util.html#CompileRegexps">func CompileRegexps(regexpStrings []string) ([]*regexp.Regexp, error)</a></li><li><a href="util.html#FlushLogs">func FlushLogs()</a></li><li><a href="util.html#Forever">func Forever(f func(), period time.Duration)</a></li><li><a href="util.html#HandleCrash">func HandleCrash()</a></li><li><a href="util.html#InitLogs">func InitLogs()</a></li><li><a href="util.html#IsCIdentifier">func IsCIdentifier(value string) bool</a></li><li><a href="util.html#IsDNS1123Label">func IsDNS1123Label(value string) bool</a></li><li><a href="util.html#IsDNS1123Subdomain">func IsDNS1123Subdomain(value string) bool</a></li><li><a href="util.html#IsDNS952Label">func IsDNS952Label(value string) bool</a></li><li><a href="util.html#IsDNSLabel">func IsDNSLabel(value string) bool</a></li><li><a href="util.html#IsDNSSubdomain">func IsDNSSubdomain(value string) bool</a></li><li><a href="util.html#IsValidPortNum">func IsValidPortNum(port int) bool</a></li><li><a href="util.html#NewLogger">func NewLogger(prefix string) *log.Logger</a></li><li><a href="util.html#ObjectDiff">func ObjectDiff(a, b interface{}) string</a></li><li><a href="util.html#ObjectGoPrintDiff">func ObjectGoPrintDiff(a, b interface{}) string</a></li><li><a href="util.html#StringDiff">func StringDiff(a, b string) string</a></li><li><a href="util.html#Until">func Until(f func(), period time.Duration, stopCh &lt;-chan struct{})</a></li>
+          
+            <li><a href="util.html#ErrorList">type ErrorList</a></li>
+            <ul>
+            
+            <li><a href="util.html#ErrorList.ToError">func (list ErrorList) ToError() error</a></li>
+            </ul>
+          
+            <li><a href="util.html#FakeHandler">type FakeHandler</a></li>
+            <ul>
+            
+            <li><a href="util.html#FakeHandler.ServeHTTP">func (f *FakeHandler) ServeHTTP(response http.ResponseWriter, request *http.Request)</a></li><li><a href="util.html#FakeHandler.ValidateRequest">func (f *FakeHandler) ValidateRequest(t TestInterface, expectedPath, expectedMethod string, body *string)</a></li>
+            </ul>
+          
+            <li><a href="util.html#GlogWriter">type GlogWriter</a></li>
+            <ul>
+            
+            <li><a href="util.html#GlogWriter.Write">func (writer GlogWriter) Write(data []byte) (n int, err error)</a></li>
+            </ul>
+          
+            <li><a href="util.html#IP">type IP</a></li>
+            <ul>
+            
+            <li><a href="util.html#IP.Set">func (ip *IP) Set(value string) error</a></li><li><a href="util.html#IP.String">func (ip IP) String() string</a></li>
+            </ul>
+          
+            <li><a href="util.html#IPNet">type IPNet</a></li>
+            <ul>
+            
+            <li><a href="util.html#IPNet.Set">func (ipnet *IPNet) Set(value string) error</a></li><li><a href="util.html#IPNet.String">func (ipnet IPNet) String() string</a></li>
+            </ul>
+          
+            <li><a href="util.html#IntOrString">type IntOrString</a></li>
+            <ul>
+            <li><a href="util.html#NewIntOrStringFromInt">func NewIntOrStringFromInt(val int) IntOrString</a></li><li><a href="util.html#NewIntOrStringFromString">func NewIntOrStringFromString(val string) IntOrString</a></li>
+            <li><a href="util.html#IntOrString.MarshalJSON">func (intstr IntOrString) MarshalJSON() ([]byte, error)</a></li><li><a href="util.html#IntOrString.UnmarshalJSON">func (intstr *IntOrString) UnmarshalJSON(value []byte) error</a></li>
+            </ul>
+          
+            <li><a href="util.html#IntstrKind">type IntstrKind</a></li>
+            
+            
+            
+            
+          
+            <li><a href="util.html#LogInterface">type LogInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="util.html#RateLimiter">type RateLimiter</a></li>
+            <ul>
+            <li><a href="util.html#NewTokenBucketRateLimiter">func NewTokenBucketRateLimiter(qps float32, burst int) RateLimiter</a></li>
+            
+            </ul>
+          
+            <li><a href="util.html#Runner">type Runner</a></li>
+            <ul>
+            <li><a href="util.html#NewRunner">func NewRunner(f ...func(stop chan struct{})) *Runner</a></li>
+            <li><a href="util.html#Runner.Start">func (r *Runner) Start()</a></li><li><a href="util.html#Runner.Stop">func (r *Runner) Stop()</a></li>
+            </ul>
+          
+            <li><a href="util.html#StringList">type StringList</a></li>
+            <ul>
+            
+            <li><a href="util.html#StringList.Set">func (sl *StringList) Set(value string) error</a></li><li><a href="util.html#StringList.String">func (sl *StringList) String() string</a></li>
+            </ul>
+          
+            <li><a href="util.html#StringSet">type StringSet</a></li>
+            <ul>
+            <li><a href="util.html#NewStringSet">func NewStringSet(items ...string) StringSet</a></li>
+            <li><a href="util.html#StringSet.Delete">func (s StringSet) Delete(item string)</a></li><li><a href="util.html#StringSet.Has">func (s StringSet) Has(item string) bool</a></li><li><a href="util.html#StringSet.HasAll">func (s StringSet) HasAll(items ...string) bool</a></li><li><a href="util.html#StringSet.Insert">func (s StringSet) Insert(items ...string)</a></li><li><a href="util.html#StringSet.IsSuperset">func (s1 StringSet) IsSuperset(s2 StringSet) bool</a></li><li><a href="util.html#StringSet.Len">func (s StringSet) Len() int</a></li><li><a href="util.html#StringSet.List">func (s StringSet) List() []string</a></li>
+            </ul>
+          
+            <li><a href="util.html#TestInterface">type TestInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="util.html#Time">type Time</a></li>
+            <ul>
+            <li><a href="util.html#Date">func Date(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) Time</a></li><li><a href="util.html#Now">func Now() Time</a></li><li><a href="util.html#Unix">func Unix(sec int64, nsec int64) Time</a></li>
+            <li><a href="util.html#Time.MarshalJSON">func (t Time) MarshalJSON() ([]byte, error)</a></li><li><a href="util.html#Time.Rfc3339Copy">func (t Time) Rfc3339Copy() Time</a></li><li><a href="util.html#Time.UnmarshalJSON">func (t *Time) UnmarshalJSON(b []byte) error</a></li>
+            </ul>
+          
+            <li><a href="util.html#UUID">type UUID</a></li>
+            <ul>
+            <li><a href="util.html#NewUUID">func NewUUID() UUID</a></li>
+            
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/util">Package Files</a>
+          <a class="permalink" href="util.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/diff.go">diff.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/error_list.go">error_list.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go">fake_handler.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/list.go">list.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go">logs.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go">net.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/runner.go">runner.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go">set.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/throttle.go">throttle.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go">time.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go">util.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/uuid.go">uuid.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go">validation.go</a> </p>
+
+        
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="util.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="ReallyCrash">ReallyCrash</span> <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+For testing, bypass HandleCrash.
+</p>
+
+        
+
+        
+        
+        
+          <h3 id="CompileRegexps">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L126">CompileRegexps</a> <a class="permalink" href="util.html#CompileRegexps">&para;</a></h3>
+          <pre class="funcdecl">func CompileRegexps(regexpStrings []<a href="http://godoc.org/builtin#string">string</a>) ([]*<a href="http://godoc.org/regexp">regexp</a>.<a href="http://godoc.org/regexp#Regexp">Regexp</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Takes a list of strings and compiles them into a list of regular expressions
+</p>
+
+          
+  
+
+        
+          <h3 id="FlushLogs">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go#L52">FlushLogs</a> <a class="permalink" href="util.html#FlushLogs">&para;</a></h3>
+          <pre class="funcdecl">func FlushLogs()</pre><p>
+FlushLogs flushes logs immediately.
+</p>
+
+          
+  
+
+        
+          <h3 id="Forever">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L53">Forever</a> <a class="permalink" href="util.html#Forever">&para;</a></h3>
+          <pre class="funcdecl">func Forever(f func(), period <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>)</pre><p>
+Forever loops forever running f every d.  Catches any panics, and keeps going.
+</p>
+
+          
+  
+
+        
+          <h3 id="HandleCrash">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L33">HandleCrash</a> <a class="permalink" href="util.html#HandleCrash">&para;</a></h3>
+          <pre class="funcdecl">func HandleCrash()</pre><p>
+HandleCrash simply catches a crash and logs an error. Meant to be called via defer.
+</p>
+
+          
+  
+
+        
+          <h3 id="InitLogs">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go#L44">InitLogs</a> <a class="permalink" href="util.html#InitLogs">&para;</a></h3>
+          <pre class="funcdecl">func InitLogs()</pre><p>
+InitLogs initializes logs the way we want for kubernetes.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsCIdentifier">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L77">IsCIdentifier</a> <a class="permalink" href="util.html#IsCIdentifier">&para;</a></h3>
+          <pre class="funcdecl">func IsCIdentifier(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsCIdentifier tests for a string that conforms the definition of an identifier
+in C. This checks the format, but not the length.
+</p>
+
+          
+  
+
+        
+          <h3 id="IsDNS1123Label">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L43">IsDNS1123Label</a> <a class="permalink" href="util.html#IsDNS1123Label">&para;</a></h3>
+          <pre class="funcdecl">func IsDNS1123Label(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsDNS1123Label tests for a string that conforms to the definition of a label in
+DNS (<a href="http://tools.ietf.org/html/rfc1123">RFC 1123</a>).
+</p>
+
+          
+  
+
+        
+          <h3 id="IsDNS1123Subdomain">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L55">IsDNS1123Subdomain</a> <a class="permalink" href="util.html#IsDNS1123Subdomain">&para;</a></h3>
+          <pre class="funcdecl">func IsDNS1123Subdomain(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsDNS1123Subdomain tests for a string that conforms to the definition of a
+subdomain in DNS (<a href="http://tools.ietf.org/html/rfc1123">RFC 1123</a>).
+</p>
+
+          
+  
+
+        
+          <h3 id="IsDNS952Label">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L67">IsDNS952Label</a> <a class="permalink" href="util.html#IsDNS952Label">&para;</a></h3>
+          <pre class="funcdecl">func IsDNS952Label(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsDNS952Label tests for a string that conforms to the definition of a label in
+DNS (<a href="http://tools.ietf.org/html/rfc952">RFC 952</a>).
+</p>
+
+          
+  
+
+        
+          <h3 id="IsDNSLabel">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L25">IsDNSLabel</a> <a class="permalink" href="util.html#IsDNSLabel">&para;</a></h3>
+          <pre class="funcdecl">func IsDNSLabel(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsDNSLabel tests for a string that conforms to the definition of a label in
+DNS (<a href="http://tools.ietf.org/html/rfc1123">RFC 1123</a>).
+</p>
+
+          
+  
+
+        
+          <h3 id="IsDNSSubdomain">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L31">IsDNSSubdomain</a> <a class="permalink" href="util.html#IsDNSSubdomain">&para;</a></h3>
+          <pre class="funcdecl">func IsDNSSubdomain(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsDNSSubdomain tests for a string that conforms to the definition of a
+subdomain in DNS (<a href="http://tools.ietf.org/html/rfc1123">RFC 1123</a>).
+</p>
+
+          
+  
+
+        
+          <h3 id="IsValidPortNum">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/validation.go#L82">IsValidPortNum</a> <a class="permalink" href="util.html#IsValidPortNum">&para;</a></h3>
+          <pre class="funcdecl">func IsValidPortNum(port <a href="http://godoc.org/builtin#int">int</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsValidPortNum tests that the argument is a valid, non-zero port number.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewLogger">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go#L57">NewLogger</a> <a class="permalink" href="util.html#NewLogger">&para;</a></h3>
+          <pre class="funcdecl">func NewLogger(prefix <a href="http://godoc.org/builtin#string">string</a>) *<a href="http://godoc.org/log">log</a>.<a href="http://godoc.org/log#Logger">Logger</a></pre><p>
+NewLogger creates a new log.Logger which sends logs to glog.Info.
+</p>
+
+          
+  
+
+        
+          <h3 id="ObjectDiff">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/diff.go#L49">ObjectDiff</a> <a class="permalink" href="util.html#ObjectDiff">&para;</a></h3>
+          <pre class="funcdecl">func ObjectDiff(a, b interface{}) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+ObjectDiff writes the two objects out as JSON and prints out the identical part of
+the objects followed by the remaining part of &#39;a&#39; and finally the remaining part of &#39;b&#39;.
+For debugging tests.
+</p>
+
+          
+  
+
+        
+          <h3 id="ObjectGoPrintDiff">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/diff.go#L66">ObjectGoPrintDiff</a> <a class="permalink" href="util.html#ObjectGoPrintDiff">&para;</a></h3>
+          <pre class="funcdecl">func ObjectGoPrintDiff(a, b interface{}) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+ObjectGoPrintDiff is like ObjectDiff, but uses go-spew to print the objects,
+which shows absolutely everything by recursing into every single pointer
+(go&#39;s %#v formatters OTOH stop at a certain point). This is needed when you
+can&#39;t figure out why reflect.DeepEqual is returning false and nothing is
+showing you differences. This will.
+</p>
+
+          
+  
+
+        
+          <h3 id="StringDiff">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/diff.go#L27">StringDiff</a> <a class="permalink" href="util.html#StringDiff">&para;</a></h3>
+          <pre class="funcdecl">func StringDiff(a, b <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+StringDiff diffs a and b and returns a human readable diff.
+</p>
+
+          
+  
+
+        
+          <h3 id="Until">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L60">Until</a> <a class="permalink" href="util.html#Until">&para;</a></h3>
+          <pre class="funcdecl">func Until(f func(), period <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>, stopCh &lt;-chan struct{})</pre><p>
+Until loops until stop channel is closed, running f every d.
+Catches any panics, and keeps going. f may not be invoked if
+stop channel is already closed.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="ErrorList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/error_list.go#L27">ErrorList</a> <a class="permalink" href="util.html#ErrorList">&para;</a></h3>
+          <pre>type ErrorList []<a href="http://godoc.org/builtin#error">error</a></pre><p>
+ErrorList is a collection of errors.  This does not implement the error
+interface to avoid confusion where an empty ErrorList would still be an
+error (non-nil).  To produce a single error instance from an ErrorList, use
+the ToError() method, which will return nil for an empty ErrorList.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ErrorList.ToError">func (ErrorList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/error_list.go#L50">ToError</a> <a class="permalink" href="util.html#ErrorList.ToError">&para;</a></h4>
+            <pre class="funcdecl">func (list <a href="util.html#ErrorList">ErrorList</a>) ToError() <a href="http://godoc.org/builtin#error">error</a></pre><p>
+ToError converts an ErrorList into a &#34;normal&#34; error, or nil if the list is empty.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="FakeHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go#L42">FakeHandler</a> <a class="permalink" href="util.html#FakeHandler">&para;</a></h3>
+          <pre>type FakeHandler struct {
+    <span id="FakeHandler.RequestReceived">RequestReceived</span> *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>
+    <span id="FakeHandler.RequestBody">RequestBody</span>     <a href="http://godoc.org/builtin#string">string</a>
+    <span id="FakeHandler.StatusCode">StatusCode</span>      <a href="http://godoc.org/builtin#int">int</a>
+    <span id="FakeHandler.ResponseBody">ResponseBody</span>    <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// For logging - you can use a *testing.T</span>
+    <span class="com">// This will keep log messages associated with the test.</span>
+    <span id="FakeHandler.T">T</span>   <a href="util.html#LogInterface">LogInterface</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+FakeHandler is to assist in testing HTTP requests. Notice that FakeHandler is
+not thread safe and you must not direct traffic to except for the request
+you want to test. You can do this by hiding it in an http.ServeMux.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="FakeHandler.ServeHTTP">func (*FakeHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go#L57">ServeHTTP</a> <a class="permalink" href="util.html#FakeHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="util.html#FakeHandler">FakeHandler</a>) ServeHTTP(response <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, request *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre>
+            
+  
+
+          
+            <h4 id="FakeHandler.ValidateRequest">func (*FakeHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go#L77">ValidateRequest</a> <a class="permalink" href="util.html#FakeHandler.ValidateRequest">&para;</a></h4>
+            <pre class="funcdecl">func (f *<a href="util.html#FakeHandler">FakeHandler</a>) ValidateRequest(t <a href="util.html#TestInterface">TestInterface</a>, expectedPath, expectedMethod <a href="http://godoc.org/builtin#string">string</a>, body *<a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+ValidateRequest verifies that FakeHandler received a request with expected path, method, and body.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="GlogWriter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go#L35">GlogWriter</a> <a class="permalink" href="util.html#GlogWriter">&para;</a></h3>
+          <pre>type GlogWriter struct{}</pre><p>
+GlogWriter serves as a bridge between the standard log package and the glog package.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="GlogWriter.Write">func (GlogWriter) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/logs.go#L38">Write</a> <a class="permalink" href="util.html#GlogWriter.Write">&para;</a></h4>
+            <pre class="funcdecl">func (writer <a href="util.html#GlogWriter">GlogWriter</a>) Write(data []<a href="http://godoc.org/builtin#byte">byte</a>) (n <a href="http://godoc.org/builtin#int">int</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Write implements the io.Writer interface.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="IP">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L26">IP</a> <a class="permalink" href="util.html#IP">&para;</a></h3>
+          <pre>type IP <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a></pre><p>
+IP adapts net.IP for use as a flag.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="IP.Set">func (*IP) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L32">Set</a> <a class="permalink" href="util.html#IP.Set">&para;</a></h4>
+            <pre class="funcdecl">func (ip *<a href="util.html#IP">IP</a>) Set(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="IP.String">func (IP) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L28">String</a> <a class="permalink" href="util.html#IP.String">&para;</a></h4>
+            <pre class="funcdecl">func (ip <a href="util.html#IP">IP</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="IPNet">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L41">IPNet</a> <a class="permalink" href="util.html#IPNet">&para;</a></h3>
+          <pre>type IPNet <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IPNet">IPNet</a></pre><p>
+IPNet adapts net.IPNet for use as a flag.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="IPNet.Set">func (*IPNet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L48">Set</a> <a class="permalink" href="util.html#IPNet.Set">&para;</a></h4>
+            <pre class="funcdecl">func (ipnet *<a href="util.html#IPNet">IPNet</a>) Set(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="IPNet.String">func (IPNet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/net.go#L43">String</a> <a class="permalink" href="util.html#IPNet.String">&para;</a></h4>
+            <pre class="funcdecl">func (ipnet <a href="util.html#IPNet">IPNet</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="IntOrString">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L79">IntOrString</a> <a class="permalink" href="util.html#IntOrString">&para;</a></h3>
+          <pre>type IntOrString struct {
+    <span id="IntOrString.Kind">Kind</span>   <a href="util.html#IntstrKind">IntstrKind</a>
+    <span id="IntOrString.IntVal">IntVal</span> <a href="http://godoc.org/builtin#int">int</a>
+    <span id="IntOrString.StrVal">StrVal</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre><p>
+IntOrString is a type that can hold an int or a string.  When used in
+JSON or YAML marshalling and unmarshalling, it produces or consumes the
+inner type.  This allows you to have, for example, a JSON field that can
+accept a name or number.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewIntOrStringFromInt">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L94">NewIntOrStringFromInt</a> <a class="permalink" href="util.html#NewIntOrStringFromInt">&para;</a></h4>
+            <pre class="funcdecl">func NewIntOrStringFromInt(val <a href="http://godoc.org/builtin#int">int</a>) <a href="util.html#IntOrString">IntOrString</a></pre><p>
+NewIntOrStringFromInt creates an IntOrString object with an int value.
+</p>
+
+            
+  
+
+          
+            <h4 id="NewIntOrStringFromString">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L99">NewIntOrStringFromString</a> <a class="permalink" href="util.html#NewIntOrStringFromString">&para;</a></h4>
+            <pre class="funcdecl">func NewIntOrStringFromString(val <a href="http://godoc.org/builtin#string">string</a>) <a href="util.html#IntOrString">IntOrString</a></pre><p>
+NewIntOrStringFromString creates an IntOrString object with a string value.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="IntOrString.MarshalJSON">func (IntOrString) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L114">MarshalJSON</a> <a class="permalink" href="util.html#IntOrString.MarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (intstr <a href="util.html#IntOrString">IntOrString</a>) MarshalJSON() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+MarshalJSON implements the json.Marshaller interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="IntOrString.UnmarshalJSON">func (*IntOrString) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L104">UnmarshalJSON</a> <a class="permalink" href="util.html#IntOrString.UnmarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (intstr *<a href="util.html#IntOrString">IntOrString</a>) UnmarshalJSON(value []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UnmarshalJSON implements the json.Unmarshaller interface.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="IntstrKind">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/util.go#L86">IntstrKind</a> <a class="permalink" href="util.html#IntstrKind">&para;</a></h3>
+          <pre>type IntstrKind <a href="http://godoc.org/builtin#int">int</a></pre><p>
+IntstrKind represents the stored type of IntOrString.
+</p>
+
+          <pre>const (
+    <span id="IntstrInt">IntstrInt</span>    <a href="util.html#IntstrKind">IntstrKind</a> = <a href="http://godoc.org/builtin#iota">iota</a> <span class="com">// The IntOrString holds an int.</span>
+    <span id="IntstrString">IntstrString</span>                   <span class="com">// The IntOrString holds a string.</span>
+)</pre>
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="LogInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go#L35">LogInterface</a> <a class="permalink" href="util.html#LogInterface">&para;</a></h3>
+          <pre>type LogInterface interface {
+    <span id="LogInterface.Logf">Logf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+}</pre><p>
+LogInterface is a simple interface to allow injection of Logf to report serving errors.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RateLimiter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/throttle.go#L24">RateLimiter</a> <a class="permalink" href="util.html#RateLimiter">&para;</a></h3>
+          <pre>type RateLimiter interface {
+    <span class="com">// CanAccept returns true if the rate is below the limit, false otherwise</span>
+    <span id="RateLimiter.CanAccept">CanAccept</span>() <a href="http://godoc.org/builtin#bool">bool</a>
+    <span class="com">// Stop stops the rate limiter, subsequent calls to CanAccept will return false</span>
+    <span id="RateLimiter.Stop">Stop</span>()
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewTokenBucketRateLimiter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/throttle.go#L45">NewTokenBucketRateLimiter</a> <a class="permalink" href="util.html#NewTokenBucketRateLimiter">&para;</a></h4>
+            <pre class="funcdecl">func NewTokenBucketRateLimiter(qps <a href="http://godoc.org/builtin#float32">float32</a>, burst <a href="http://godoc.org/builtin#int">int</a>) <a href="util.html#RateLimiter">RateLimiter</a></pre><p>
+NewTokenBucketRateLimiter creates a rate limiter which implements a token bucket approach.
+The rate limiter allows bursts of up to &#39;burst&#39; to exceed the QPS, while still maintaining a
+smoothed qps rate of &#39;qps&#39;.
+The bucket is initially filled with &#39;burst&#39; tokens, the rate limiter spawns a go routine
+which refills the bucket with one token at a rate of &#39;qps&#39;.  The maximum number of tokens in
+the bucket is capped at &#39;burst&#39;.
+When done with the limiter, Stop() must be called to halt the associated goroutine.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="Runner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/runner.go#L25">Runner</a> <a class="permalink" href="util.html#Runner">&para;</a></h3>
+          <pre>type Runner struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Runner is an abstraction to make it easy to start and stop groups of things that can be
+described by a single function which waits on a channel close to exit.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRunner">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/runner.go#L33">NewRunner</a> <a class="permalink" href="util.html#NewRunner">&para;</a></h4>
+            <pre class="funcdecl">func NewRunner(f ...func(stop chan struct{})) *<a href="util.html#Runner">Runner</a></pre><p>
+NewRunner makes a runner for the given function(s). The function(s) should loop until
+the channel is closed.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Runner.Start">func (*Runner) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/runner.go#L38">Start</a> <a class="permalink" href="util.html#Runner.Start">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="util.html#Runner">Runner</a>) Start()</pre><p>
+Start begins running.
+</p>
+
+            
+  
+
+          
+            <h4 id="Runner.Stop">func (*Runner) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/runner.go#L51">Stop</a> <a class="permalink" href="util.html#Runner.Stop">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="util.html#Runner">Runner</a>) Stop()</pre><p>
+Stop stops running.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="StringList">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/list.go#L24">StringList</a> <a class="permalink" href="util.html#StringList">&para;</a></h3>
+          <pre>type StringList []<a href="http://godoc.org/builtin#string">string</a></pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="StringList.Set">func (*StringList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/list.go#L30">Set</a> <a class="permalink" href="util.html#StringList.Set">&para;</a></h4>
+            <pre class="funcdecl">func (sl *<a href="util.html#StringList">StringList</a>) Set(value <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="StringList.String">func (*StringList) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/list.go#L26">String</a> <a class="permalink" href="util.html#StringList.String">&para;</a></h4>
+            <pre class="funcdecl">func (sl *<a href="util.html#StringList">StringList</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="StringSet">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L26">StringSet</a> <a class="permalink" href="util.html#StringSet">&para;</a></h3>
+          <pre>type StringSet map[<a href="http://godoc.org/builtin#string">string</a>]empty</pre><p>
+StringSet is a set of strings, implemented via map[string]struct{} for minimal memory consumption.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewStringSet">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L29">NewStringSet</a> <a class="permalink" href="util.html#NewStringSet">&para;</a></h4>
+            <pre class="funcdecl">func NewStringSet(items ...<a href="http://godoc.org/builtin#string">string</a>) <a href="util.html#StringSet">StringSet</a></pre><p>
+NewStringSet creates a StringSet from a list of values.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="StringSet.Delete">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L43">Delete</a> <a class="permalink" href="util.html#StringSet.Delete">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) Delete(item <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+Delete removes item from the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.Has">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L48">Has</a> <a class="permalink" href="util.html#StringSet.Has">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) Has(item <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+Has returns true iff item is contained in the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.HasAll">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L54">HasAll</a> <a class="permalink" href="util.html#StringSet.HasAll">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) HasAll(items ...<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+HasAll returns true iff all items are contained in the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.Insert">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L36">Insert</a> <a class="permalink" href="util.html#StringSet.Insert">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) Insert(items ...<a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+Insert adds items to the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.IsSuperset">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L64">IsSuperset</a> <a class="permalink" href="util.html#StringSet.IsSuperset">&para;</a></h4>
+            <pre class="funcdecl">func (s1 <a href="util.html#StringSet">StringSet</a>) IsSuperset(s2 <a href="util.html#StringSet">StringSet</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsSuperset returns true iff s1 is a superset of s2.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.Len">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L84">Len</a> <a class="permalink" href="util.html#StringSet.Len">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) Len() <a href="http://godoc.org/builtin#int">int</a></pre><p>
+Len returns the size of the set.
+</p>
+
+            
+  
+
+          
+            <h4 id="StringSet.List">func (StringSet) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/set.go#L74">List</a> <a class="permalink" href="util.html#StringSet.List">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="util.html#StringSet">StringSet</a>) List() []<a href="http://godoc.org/builtin#string">string</a></pre><p>
+List returns the contents as a sorted string slice.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="TestInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/fake_handler.go#L29">TestInterface</a> <a class="permalink" href="util.html#TestInterface">&para;</a></h3>
+          <pre>type TestInterface interface {
+    <span id="TestInterface.Errorf">Errorf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+    <span id="TestInterface.Logf">Logf</span>(format <a href="http://godoc.org/builtin#string">string</a>, args ...interface{})
+}</pre><p>
+TestInterface is a simple interface providing Errorf, to make injection for
+testing easier (insert &#39;yo dawg&#39; meme here).
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Time">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L27">Time</a> <a class="permalink" href="util.html#Time">&para;</a></h3>
+          <pre>type Time struct {
+    <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Time">Time</a>
+}</pre><p>
+Time is a wrapper around time.Time which supports correct
+marshaling to YAML and JSON.  Wrappers are provided for many
+of the factory methods that the time package offers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="Date">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L33">Date</a> <a class="permalink" href="util.html#Date">&para;</a></h4>
+            <pre class="funcdecl">func Date(year <a href="http://godoc.org/builtin#int">int</a>, month <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Month">Month</a>, day, hour, min, sec, nsec <a href="http://godoc.org/builtin#int">int</a>, loc *<a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Location">Location</a>) <a href="util.html#Time">Time</a></pre><p>
+Date returns the Time corresponding to the supplied parameters
+by wrapping time.Date.
+</p>
+
+            
+  
+
+          
+            <h4 id="Now">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L38">Now</a> <a class="permalink" href="util.html#Now">&para;</a></h4>
+            <pre class="funcdecl">func Now() <a href="util.html#Time">Time</a></pre><p>
+Now returns the current local time.
+</p>
+
+            
+  
+
+          
+            <h4 id="Unix">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L44">Unix</a> <a class="permalink" href="util.html#Unix">&para;</a></h4>
+            <pre class="funcdecl">func Unix(sec <a href="http://godoc.org/builtin#int64">int64</a>, nsec <a href="http://godoc.org/builtin#int64">int64</a>) <a href="util.html#Time">Time</a></pre><p>
+Unix returns the local time corresponding to the given Unix time
+by wrapping time.Unix.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Time.MarshalJSON">func (Time) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L74">MarshalJSON</a> <a class="permalink" href="util.html#Time.MarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (t <a href="util.html#Time">Time</a>) MarshalJSON() ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+MarshalJSON implements the json.Marshaler interface.
+</p>
+
+            
+  
+
+          
+            <h4 id="Time.Rfc3339Copy">func (Time) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L49">Rfc3339Copy</a> <a class="permalink" href="util.html#Time.Rfc3339Copy">&para;</a></h4>
+            <pre class="funcdecl">func (t <a href="util.html#Time">Time</a>) Rfc3339Copy() <a href="util.html#Time">Time</a></pre><p>
+Rfc3339Copy returns a copy of the Time at second-level precision.
+</p>
+
+            
+  
+
+          
+            <h4 id="Time.UnmarshalJSON">func (*Time) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/time.go#L55">UnmarshalJSON</a> <a class="permalink" href="util.html#Time.UnmarshalJSON">&para;</a></h4>
+            <pre class="funcdecl">func (t *<a href="util.html#Time">Time</a>) UnmarshalJSON(b []<a href="http://godoc.org/builtin#byte">byte</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UnmarshalJSON implements the json.Unmarshaller interface.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="UUID">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/uuid.go#L26">UUID</a> <a class="permalink" href="util.html#UUID">&para;</a></h3>
+          <pre>type UUID interface {
+    <span id="UUID.String">String</span>() <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewUUID">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/util/uuid.go#L38">NewUUID</a> <a class="permalink" href="util.html#NewUUID">&para;</a></h4>
+            <pre class="funcdecl">func NewUUID() <a href="util.html#UUID">UUID</a></pre><p>
+*
+</p>
+<pre>* The UUID package is naive and can generate identical UUIDs if the time interval is quick enough.
+* Block subsequent UUIDs for 200 Nanoseconds, the UUID uses 100 ns increments, we block for 200 to be safe
+* Blocks in a go routine, so that the caller doesn&#39;t have to wait.
+* TODO: save old unused UUIDs so that no one has to block.
+</pre>
+
+            
+  
+
+          
+
+          
+        
+
+        
+        
+        
+<h3 id="pkg-subdirectories">Directories <a class="permalink" href="util.html#pkg-subdirectories">&para;</a></h3>
+    <table class="table table-condensed">
+    <thead><tr><th>Path</th><th>Synopsis</th></tr></thead>
+    <tbody><tr><td><a href="util/config.html">config</a><td>Package config provides utility objects for decoupling sources of configuration and the actual configuration state.</td></tr><tr><td><a href="util/exec.html">exec</a><td>Package exec provides an injectable interface and implementations for running commands.</td></tr><tr><td><a href="util/iptables.html">iptables</a><td>Package iptables provides an interface and implementations for running iptables commands.</td></tr><tr><td><a href="util/wait.html">wait</a><td>Package wait provides tools for polling or listening for changes to a condition.</td></tr></tbody>
+    </table>
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/util"></form>
+  <p>Package util imports <a href="util@imports.html">18 packages</a> (<a href="util@import-graph.html">graph</a>) and is imported by <a href="util@importers.html">109 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:18:20Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="util@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="util.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

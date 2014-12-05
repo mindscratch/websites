@@ -1,0 +1,489 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>meta - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package meta">
+    <meta property="og:title" content="Package meta">
+    <meta name="description" content="Package meta provides functions for retrieving API metadata from objects belonging to the Kubernetes API">
+    <meta name="twitter:description" content="Package meta provides functions for retrieving API metadata from objects belonging to the Kubernetes API">
+    <meta property="og:description" content="Package meta provides functions for retrieving API metadata from objects belonging to the Kubernetes API">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../api.html">api</a><span class="text-muted">/</span><span class="text-muted">meta</span>
+  
+  <span class="pull-right">
+    <a href="meta.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="meta.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package meta</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/api/meta"</code>
+
+        <p>
+Package meta provides functions for retrieving API metadata from objects
+belonging to the Kubernetes API</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="meta.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="meta.html#DefaultRESTMapper">type DefaultRESTMapper</a></li>
+            <ul>
+            <li><a href="meta.html#NewDefaultRESTMapper">func NewDefaultRESTMapper(versions []string, f VersionInterfacesFunc) *DefaultRESTMapper</a></li>
+            <li><a href="meta.html#DefaultRESTMapper.Add">func (m *DefaultRESTMapper) Add(scheme *runtime.Scheme, mixedCase bool, versions ...string)</a></li><li><a href="meta.html#DefaultRESTMapper.RESTMapping">func (m *DefaultRESTMapper) RESTMapping(version, kind string) (*RESTMapping, error)</a></li><li><a href="meta.html#DefaultRESTMapper.VersionAndKindForResource">func (m *DefaultRESTMapper) VersionAndKindForResource(resource string) (defaultVersion, kind string, err error)</a></li>
+            </ul>
+          
+            <li><a href="meta.html#Interface">type Interface</a></li>
+            <ul>
+            <li><a href="meta.html#Accessor">func Accessor(obj interface{}) (Interface, error)</a></li>
+            
+            </ul>
+          
+            <li><a href="meta.html#MetadataAccessor">type MetadataAccessor</a></li>
+            <ul>
+            <li><a href="meta.html#NewAccessor">func NewAccessor() MetadataAccessor</a></li>
+            
+            </ul>
+          
+            <li><a href="meta.html#RESTMapper">type RESTMapper</a></li>
+            
+            
+            
+            
+          
+            <li><a href="meta.html#RESTMapping">type RESTMapping</a></li>
+            
+            
+            
+            
+          
+            <li><a href="meta.html#VersionInterfaces">type VersionInterfaces</a></li>
+            
+            
+            
+            
+          
+            <li><a href="meta.html#VersionInterfacesFunc">type VersionInterfacesFunc</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/api/meta">Package Files</a>
+          <a class="permalink" href="meta.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go">interfaces.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/meta.go">meta.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go">restmapper.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="DefaultRESTMapper">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L45">DefaultRESTMapper</a> <a class="permalink" href="meta.html#DefaultRESTMapper">&para;</a></h3>
+          <pre>type DefaultRESTMapper struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+DefaultRESTMapper exposes mappings between the types defined in a
+runtime.Scheme. It assumes that all types defined the provided scheme
+can be mapped with the provided MetadataAccessor and Codec interfaces.
+</p>
+<p>
+The resource name of a Kind is defined as the lowercase,
+English-plural version of the Kind string in v1beta3 and onwards,
+and as the camelCase version of the name in v1beta1 and v1beta2.
+When converting from resource to Kind, the singular version of the
+resource name is also accepted for convenience.
+</p>
+<p>
+TODO: Only accept plural for some operations for increased control?
+(`get pod bar` vs `get pods bar`)
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewDefaultRESTMapper">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L61">NewDefaultRESTMapper</a> <a class="permalink" href="meta.html#NewDefaultRESTMapper">&para;</a></h4>
+            <pre class="funcdecl">func NewDefaultRESTMapper(versions []<a href="http://godoc.org/builtin#string">string</a>, f <a href="meta.html#VersionInterfacesFunc">VersionInterfacesFunc</a>) *<a href="meta.html#DefaultRESTMapper">DefaultRESTMapper</a></pre><p>
+NewDefaultRESTMapper initializes a mapping between Kind and APIVersion
+to a resource name and back based on the objects in a runtime.Scheme
+and the Kubernetes API conventions. Takes a priority list of the versions to
+search when an object has no default version (set empty to return an error)
+and a function that retrieves the correct codec and metadata for a given version.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="DefaultRESTMapper.Add">func (*DefaultRESTMapper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L78">Add</a> <a class="permalink" href="meta.html#DefaultRESTMapper.Add">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="meta.html#DefaultRESTMapper">DefaultRESTMapper</a>) Add(scheme *<a href="../runtime.html">runtime</a>.<a href="../runtime.html#Scheme">Scheme</a>, mixedCase <a href="http://godoc.org/builtin#bool">bool</a>, versions ...<a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+Add adds objects from a runtime.Scheme and its named versions to this map.
+If mixedCase is true, the legacy v1beta1/v1beta2 Kubernetes resource naming convention
+will be applied (camelCase vs lowercase).
+</p>
+
+            
+  
+
+          
+            <h4 id="DefaultRESTMapper.RESTMapping">func (*DefaultRESTMapper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L128">RESTMapping</a> <a class="permalink" href="meta.html#DefaultRESTMapper.RESTMapping">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="meta.html#DefaultRESTMapper">DefaultRESTMapper</a>) RESTMapping(version, kind <a href="http://godoc.org/builtin#string">string</a>) (*<a href="meta.html#RESTMapping">RESTMapping</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+RESTMapping returns a struct representing the resource path and conversion interfaces a
+RESTClient should use to operate on the provided version and kind. If a version is not
+provided, the search order provided to DefaultRESTMapper will be used to resolve which
+APIVersion should be used to access the named kind.
+</p>
+
+            
+  
+
+          
+            <h4 id="DefaultRESTMapper.VersionAndKindForResource">func (*DefaultRESTMapper) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L116">VersionAndKindForResource</a> <a class="permalink" href="meta.html#DefaultRESTMapper.VersionAndKindForResource">&para;</a></h4>
+            <pre class="funcdecl">func (m *<a href="meta.html#DefaultRESTMapper">DefaultRESTMapper</a>) VersionAndKindForResource(resource <a href="http://godoc.org/builtin#string">string</a>) (defaultVersion, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+VersionAndKindForResource implements RESTMapper
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Interface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go#L34">Interface</a> <a class="permalink" href="meta.html#Interface">&para;</a></h3>
+          <pre>type Interface interface {
+    <span id="Interface.Namespace">Namespace</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetNamespace">SetNamespace</span>(namespace <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.Name">Name</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetName">SetName</span>(name <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.UID">UID</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetUID">SetUID</span>(uid <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.APIVersion">APIVersion</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetAPIVersion">SetAPIVersion</span>(version <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.Kind">Kind</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetKind">SetKind</span>(kind <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.ResourceVersion">ResourceVersion</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetResourceVersion">SetResourceVersion</span>(version <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.SelfLink">SelfLink</span>() <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetSelfLink">SetSelfLink</span>(selfLink <a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.Labels">Labels</span>() map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetLabels">SetLabels</span>(labels map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>)
+    <span id="Interface.Annotations">Annotations</span>() map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>
+    <span id="Interface.SetAnnotations">SetAnnotations</span>(annotations map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>)
+}</pre><p>
+Interface lets you work with object and list metadata from any of the versioned or
+internal API objects. Attempting to set or retrieve a field on an object that does
+not support that field (Name, UID, Namespace on lists) will be a no-op and return
+a default value.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="Accessor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/meta.go#L32">Accessor</a> <a class="permalink" href="meta.html#Accessor">&para;</a></h4>
+            <pre class="funcdecl">func Accessor(obj interface{}) (<a href="meta.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+Accessor takes an arbitary object pointer and returns meta.Interface.
+obj must be a pointer to an API type. An error is returned if the minimum
+required fields are missing. Fields that are not required return the default
+value and are a no-op if set.
+TODO: add a fast path for *TypeMeta and *ObjectMeta for internal objects
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="MetadataAccessor">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go#L61">MetadataAccessor</a> <a class="permalink" href="meta.html#MetadataAccessor">&para;</a></h3>
+          <pre>type MetadataAccessor interface {
+    <span id="MetadataAccessor.APIVersion">APIVersion</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetAPIVersion">SetAPIVersion</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, version <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.Kind">Kind</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetKind">SetKind</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, kind <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.Namespace">Namespace</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetNamespace">SetNamespace</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, namespace <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.Name">Name</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetName">SetName</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, name <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.UID">UID</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetUID">SetUID</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, uid <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.SelfLink">SelfLink</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetSelfLink">SetSelfLink</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, selfLink <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.Labels">Labels</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetLabels">SetLabels</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, labels map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <span id="MetadataAccessor.Annotations">Annotations</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>) (map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="MetadataAccessor.SetAnnotations">SetAnnotations</span>(obj <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Object">Object</a>, annotations map[<a href="http://godoc.org/builtin#string">string</a>]<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a>
+
+    <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ResourceVersioner">ResourceVersioner</a>
+}</pre><p>
+MetadataAccessor lets you work with object and list metadata from any of the versioned or
+internal API objects. Attempting to set or retrieve a field on an object that does
+not support that field (Name, UID, Namespace on lists) will be a no-op and return
+a default value.
+</p>
+<p>
+MetadataAccessor exposes Interface in a way that can be used with multiple objects.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewAccessor">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/meta.go#L79">NewAccessor</a> <a class="permalink" href="meta.html#NewAccessor">&para;</a></h4>
+            <pre class="funcdecl">func NewAccessor() <a href="meta.html#MetadataAccessor">MetadataAccessor</a></pre><p>
+NewAccessor returns a MetadataAccessor that can retrieve
+or manipulate resource version on objects derived from core API
+metadata concepts.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="RESTMapper">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go#L107">RESTMapper</a> <a class="permalink" href="meta.html#RESTMapper">&para;</a></h3>
+          <pre>type RESTMapper interface {
+    <span id="RESTMapper.VersionAndKindForResource">VersionAndKindForResource</span>(resource <a href="http://godoc.org/builtin#string">string</a>) (defaultVersion, kind <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="RESTMapper.RESTMapping">RESTMapping</span>(version, kind <a href="http://godoc.org/builtin#string">string</a>) (*<a href="meta.html#RESTMapping">RESTMapping</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+RESTMapper allows clients to map resources to kind, and map kind and version
+to interfaces for manipulating those objects. It is primarily intended for
+consumers of Kubernetes compatible REST APIs as defined in docs/api-conventions.md.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RESTMapping">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go#L91">RESTMapping</a> <a class="permalink" href="meta.html#RESTMapping">&para;</a></h3>
+          <pre>type RESTMapping struct {
+    <span class="com">// Resource is a string representing the name of this resource as a REST client would see it</span>
+    <span id="RESTMapping.Resource">Resource</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// APIVersion represents the APIVersion that represents the resource as presented. It is provided</span>
+    <span class="com">// for convenience for passing around a consistent mapping.</span>
+    <span id="RESTMapping.APIVersion">APIVersion</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="RESTMapping.Kind">Kind</span>       <a href="http://godoc.org/builtin#string">string</a>
+
+    <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Codec">Codec</a>
+    <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectConvertor">ObjectConvertor</a>
+    <a href="meta.html#MetadataAccessor">MetadataAccessor</a>
+}</pre><p>
+RESTMapping contains the information needed to deal with objects of a specific
+resource and kind in a RESTful manner.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="VersionInterfaces">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/interfaces.go#L24">VersionInterfaces</a> <a class="permalink" href="meta.html#VersionInterfaces">&para;</a></h3>
+          <pre>type VersionInterfaces struct {
+    <a href="../runtime.html">runtime</a>.<a href="../runtime.html#Codec">Codec</a>
+    <a href="../runtime.html">runtime</a>.<a href="../runtime.html#ObjectConvertor">ObjectConvertor</a>
+    <a href="meta.html#MetadataAccessor">MetadataAccessor</a>
+}</pre><p>
+VersionInterfaces contains the interfaces one should use for dealing with types of a particular version.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="VersionInterfacesFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/api/meta/restmapper.go#L54">VersionInterfacesFunc</a> <a class="permalink" href="meta.html#VersionInterfacesFunc">&para;</a></h3>
+          <pre>type VersionInterfacesFunc func(apiVersion <a href="http://godoc.org/builtin#string">string</a>) (*<a href="meta.html#VersionInterfaces">VersionInterfaces</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+VersionInterfacesFunc returns the appropriate codec, typer, and metadata accessor for a
+given api version, or false if no such api version exists.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/api/meta"></form>
+  <p>Package meta imports <a href="meta@imports.html">5 packages</a> (<a href="meta@import-graph.html">graph</a>) and is imported by <a href="meta@importers.html">14 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:06Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="meta@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="meta.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

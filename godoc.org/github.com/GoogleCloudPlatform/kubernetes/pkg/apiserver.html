@@ -1,0 +1,1015 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>apiserver - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package apiserver">
+    <meta property="og:title" content="Package apiserver">
+    <meta name="description" content="Package apiserver contains the code that provides a RESTful api service.">
+    <meta name="twitter:description" content="Package apiserver contains the code that provides a RESTful api service.">
+    <meta property="og:description" content="Package apiserver contains the code that provides a RESTful api service.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">apiserver</span>
+  
+  <span class="pull-right">
+    <a href="apiserver.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="apiserver.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package apiserver</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/apiserver"</code>
+
+        <p>
+Package apiserver contains the code that provides a RESTful api service.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="apiserver.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          <li><a href="apiserver.html#pkg-constants">Constants</a></li>
+          <li><a href="apiserver.html#pkg-variables">Variables</a></li>
+          <li><a href="apiserver.html#APIVersionHandler">func APIVersionHandler(versions ...string) restful.RouteFunction</a></li><li><a href="apiserver.html#CORS">func CORS(handler http.Handler, allowedOriginPatterns []*regexp.Regexp, allowedMethods []string, allowedHeaders []string, allowCredentials string) http.Handler</a></li><li><a href="apiserver.html#Handle">func Handle(storage map[string]RESTStorage, codec runtime.Codec, root string, version string, selfLinker runtime.SelfLinker) http.Handler</a></li><li><a href="apiserver.html#InstallLogsSupport">func InstallLogsSupport(mux Mux)</a></li><li><a href="apiserver.html#InstallSupport">func InstallSupport(container *restful.Container, ws *restful.WebService)</a></li><li><a href="apiserver.html#InstallValidator">func InstallValidator(mux Mux, servers map[string]Server)</a></li><li><a href="apiserver.html#IsReadOnlyReq">func IsReadOnlyReq(req http.Request) bool</a></li><li><a href="apiserver.html#KindFromRequest">func KindFromRequest(req http.Request) string</a></li><li><a href="apiserver.html#MakeAsync">func MakeAsync(fn WorkFunc) &lt;-chan RESTResult</a></li><li><a href="apiserver.html#MakeAsyncResult">func MakeAsyncResult(fn WorkResultFunc) &lt;-chan RESTResult</a></li><li><a href="apiserver.html#NewAlwaysAllowAuthorizer">func NewAlwaysAllowAuthorizer() authorizer.Authorizer</a></li><li><a href="apiserver.html#NewAlwaysDenyAuthorizer">func NewAlwaysDenyAuthorizer() authorizer.Authorizer</a></li><li><a href="apiserver.html#NewAuthenticatorFromTokenFile">func NewAuthenticatorFromTokenFile(tokenAuthFile string) (authenticator.Request, error)</a></li><li><a href="apiserver.html#NewAuthorizerFromAuthorizationConfig">func NewAuthorizerFromAuthorizationConfig(authorizationMode string, authorizationPolicyFile string) (authorizer.Authorizer, error)</a></li><li><a href="apiserver.html#NewValidator">func NewValidator(servers map[string]Server) (http.Handler, error)</a></li><li><a href="apiserver.html#RateLimit">func RateLimit(rl util.RateLimiter, handler http.Handler) http.Handler</a></li><li><a href="apiserver.html#ReadOnly">func ReadOnly(handler http.Handler) http.Handler</a></li><li><a href="apiserver.html#RecoverPanics">func RecoverPanics(handler http.Handler) http.Handler</a></li><li><a href="apiserver.html#WithAuthorizationCheck">func WithAuthorizationCheck(handler http.Handler, getAttribs RequestAttributeGetter, a authorizer.Authorizer) http.Handler</a></li>
+          
+            <li><a href="apiserver.html#APIGroupVersion">type APIGroupVersion</a></li>
+            <ul>
+            <li><a href="apiserver.html#NewAPIGroupVersion">func NewAPIGroupVersion(storage map[string]RESTStorage, codec runtime.Codec, canonicalPrefix string, selfLinker runtime.SelfLinker) *APIGroupVersion</a></li>
+            <li><a href="apiserver.html#APIGroupVersion.InstallREST">func (g *APIGroupVersion) InstallREST(container *restful.Container, root string, version string)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#Attributes">type Attributes</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#Mux">type Mux</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#Operation">type Operation</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#Operation.StatusOrResult">func (op *Operation) StatusOrResult() (description RESTResult, finished bool)</a></li><li><a href="apiserver.html#Operation.WaitFor">func (op *Operation) WaitFor(timeout time.Duration)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#OperationHandler">type OperationHandler</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#OperationHandler.ServeHTTP">func (h *OperationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#Operations">type Operations</a></li>
+            <ul>
+            <li><a href="apiserver.html#NewOperations">func NewOperations() *Operations</a></li>
+            <li><a href="apiserver.html#Operations.Get">func (ops *Operations) Get(id string) *Operation</a></li><li><a href="apiserver.html#Operations.List">func (ops *Operations) List() *api.ServerOpList</a></li><li><a href="apiserver.html#Operations.NewOperation">func (ops *Operations) NewOperation(from &lt;-chan RESTResult, onReceive func(RESTResult)) *Operation</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#ProxyHandler">type ProxyHandler</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#ProxyHandler.ServeHTTP">func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#RESTHandler">type RESTHandler</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#RESTHandler.ServeHTTP">func (h *RESTHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#RESTResult">type RESTResult</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#RESTStorage">type RESTStorage</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#RedirectHandler">type RedirectHandler</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#RedirectHandler.ServeHTTP">func (r *RedirectHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#Redirector">type Redirector</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#RequestAttributeGetter">type RequestAttributeGetter</a></li>
+            <ul>
+            <li><a href="apiserver.html#NewRequestAttributeGetter">func NewRequestAttributeGetter(userContexts authhandlers.RequestContext) RequestAttributeGetter</a></li>
+            
+            </ul>
+          
+            <li><a href="apiserver.html#ResourceWatcher">type ResourceWatcher</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#Server">type Server</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#ServerStatus">type ServerStatus</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#WatchHandler">type WatchHandler</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#WatchHandler.ServeHTTP">func (h *WatchHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#WatchServer">type WatchServer</a></li>
+            <ul>
+            
+            <li><a href="apiserver.html#WatchServer.HandleWS">func (w *WatchServer) HandleWS(ws *websocket.Conn)</a></li><li><a href="apiserver.html#WatchServer.ServeHTTP">func (self *WatchServer) ServeHTTP(w http.ResponseWriter, req *http.Request)</a></li>
+            </ul>
+          
+            <li><a href="apiserver.html#WorkFunc">type WorkFunc</a></li>
+            
+            
+            
+            
+          
+            <li><a href="apiserver.html#WorkResultFunc">type WorkResultFunc</a></li>
+            
+            
+            
+            
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/apiserver">Package Files</a>
+          <a class="permalink" href="apiserver.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go">apiserver.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/async.go">async.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authn.go">authn.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authz.go">authz.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/errors.go">errors.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go">handlers.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/index.go">index.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/interfaces.go">interfaces.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go">operation.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/proxy.go">proxy.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/redirect.go">redirect.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/resthandler.go">resthandler.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/validator.go">validator.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go">watch.go</a> </p>
+
+        
+        
+          <h3 id="pkg-constants">Constants <a class="permalink" href="apiserver.html#pkg-constants">&para;</a></h3>
+          <pre>const (
+    <span id="ModeAlwaysAllow">ModeAlwaysAllow</span> <a href="http://godoc.org/builtin#string">string</a> = &#34;AlwaysAllow&#34;
+    <span id="ModeAlwaysDeny">ModeAlwaysDeny</span>  <a href="http://godoc.org/builtin#string">string</a> = &#34;AlwaysDeny&#34;
+    <span id="ModeABAC">ModeABAC</span>        <a href="http://godoc.org/builtin#string">string</a> = &#34;ABAC&#34;
+)</pre><pre>const (
+    <span id="StatusUnprocessableEntity">StatusUnprocessableEntity</span> = 422
+)</pre>
+        
+
+        
+        
+          <h3 id="pkg-variables">Variables <a class="permalink" href="apiserver.html#pkg-variables">&para;</a></h3>
+          <pre>var <span id="AuthorizationModeChoices">AuthorizationModeChoices</span> = []<a href="http://godoc.org/builtin#string">string</a>{<a href="apiserver.html#ModeAlwaysAllow">ModeAlwaysAllow</a>, <a href="apiserver.html#ModeAlwaysDeny">ModeAlwaysDeny</a>, <a href="apiserver.html#ModeABAC">ModeABAC</a>}</pre><p>
+Keep this list in sync with constant list above.
+</p>
+
+        
+
+        
+        
+        
+          <h3 id="APIVersionHandler">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L275">APIVersionHandler</a> <a class="permalink" href="apiserver.html#APIVersionHandler">&para;</a></h3>
+          <pre class="funcdecl">func APIVersionHandler(versions ...<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/github.com/emicklei/go-restful">restful</a>.<a href="http://godoc.org/github.com/emicklei/go-restful#RouteFunction">RouteFunction</a></pre><p>
+APIVersionHandler returns a handler which will list the provided versions as available.
+</p>
+
+          
+  
+
+        
+          <h3 id="CORS">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L129">CORS</a> <a class="permalink" href="apiserver.html#CORS">&para;</a></h3>
+          <pre class="funcdecl">func CORS(handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>, allowedOriginPatterns []*<a href="http://godoc.org/regexp">regexp</a>.<a href="http://godoc.org/regexp#Regexp">Regexp</a>, allowedMethods []<a href="http://godoc.org/builtin#string">string</a>, allowedHeaders []<a href="http://godoc.org/builtin#string">string</a>, allowCredentials <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+TODO: use restful.CrossOriginResourceSharing
+Simple CORS implementation that wraps an http Handler
+For a more detailed implementation use <a href="https://github.com/martini-contrib/cors">https://github.com/martini-contrib/cors</a>
+or implement CORS at your proxy layer
+Pass nil for allowedMethods and allowedHeaders to use the defaults
+</p>
+
+          
+  
+
+        
+          <h3 id="Handle">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L57">Handle</a> <a class="permalink" href="apiserver.html#Handle">&para;</a></h3>
+          <pre class="funcdecl">func Handle(storage map[<a href="http://godoc.org/builtin#string">string</a>]<a href="apiserver.html#RESTStorage">RESTStorage</a>, codec <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>, root <a href="http://godoc.org/builtin#string">string</a>, version <a href="http://godoc.org/builtin#string">string</a>, selfLinker <a href="runtime.html">runtime</a>.<a href="runtime.html#SelfLinker">SelfLinker</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+Handle returns a Handler function that exposes the provided storage interfaces
+as RESTful resources at prefix, serialized by codec, and also includes the support
+http resources.
+</p>
+
+          
+  
+
+        
+          <h3 id="InstallLogsSupport">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L262">InstallLogsSupport</a> <a class="permalink" href="apiserver.html#InstallLogsSupport">&para;</a></h3>
+          <pre class="funcdecl">func InstallLogsSupport(mux <a href="apiserver.html#Mux">Mux</a>)</pre><p>
+InstallLogsSupport registers the APIServer log support function into a mux.
+</p>
+
+          
+  
+
+        
+          <h3 id="InstallSupport">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L254">InstallSupport</a> <a class="permalink" href="apiserver.html#InstallSupport">&para;</a></h3>
+          <pre class="funcdecl">func InstallSupport(container *<a href="http://godoc.org/github.com/emicklei/go-restful">restful</a>.<a href="http://godoc.org/github.com/emicklei/go-restful#Container">Container</a>, ws *<a href="http://godoc.org/github.com/emicklei/go-restful">restful</a>.<a href="http://godoc.org/github.com/emicklei/go-restful#WebService">WebService</a>)</pre><p>
+TODO: document all handlers
+InstallSupport registers the APIServer support functions
+</p>
+
+          
+  
+
+        
+          <h3 id="InstallValidator">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L241">InstallValidator</a> <a class="permalink" href="apiserver.html#InstallValidator">&para;</a></h3>
+          <pre class="funcdecl">func InstallValidator(mux <a href="apiserver.html#Mux">Mux</a>, servers map[<a href="http://godoc.org/builtin#string">string</a>]<a href="apiserver.html#Server">Server</a>)</pre><p>
+TODO: Convert to go-restful
+</p>
+
+          
+  
+
+        
+          <h3 id="IsReadOnlyReq">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L64">IsReadOnlyReq</a> <a class="permalink" href="apiserver.html#IsReadOnlyReq">&para;</a></h3>
+          <pre class="funcdecl">func IsReadOnlyReq(req <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre><p>
+IsReadOnlyReq() is true for any (or at least many) request which has no observable
+side effects on state of apiserver (though there may be internal side effects like
+caching and logging).
+</p>
+
+          
+  
+
+        
+          <h3 id="KindFromRequest">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L44">KindFromRequest</a> <a class="permalink" href="apiserver.html#KindFromRequest">&para;</a></h3>
+          <pre class="funcdecl">func KindFromRequest(req <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) <a href="http://godoc.org/builtin#string">string</a></pre><p>
+KindFromRequest returns Kind if Kind can be extracted from the request.  Otherwise, the empty string.
+</p>
+
+          
+  
+
+        
+          <h3 id="MakeAsync">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/async.go#L31">MakeAsync</a> <a class="permalink" href="apiserver.html#MakeAsync">&para;</a></h3>
+          <pre class="funcdecl">func MakeAsync(fn <a href="apiserver.html#WorkFunc">WorkFunc</a>) &lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a></pre><p>
+MakeAsync takes a function and executes it, delivering the result in the way required
+by RESTStorage&#39;s Update, Delete, and Create methods.
+</p>
+
+          
+  
+
+        
+          <h3 id="MakeAsyncResult">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/async.go#L56">MakeAsyncResult</a> <a class="permalink" href="apiserver.html#MakeAsyncResult">&para;</a></h3>
+          <pre class="funcdecl">func MakeAsyncResult(fn <a href="apiserver.html#WorkResultFunc">WorkResultFunc</a>) &lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a></pre><p>
+MakeAsync takes a function and executes it, delivering the result in the way required
+by RESTStorage&#39;s Update, Delete, and Create methods.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewAlwaysAllowAuthorizer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authz.go#L40">NewAlwaysAllowAuthorizer</a> <a class="permalink" href="apiserver.html#NewAlwaysAllowAuthorizer">&para;</a></h3>
+          <pre class="funcdecl">func NewAlwaysAllowAuthorizer() <a href="auth/authorizer.html">authorizer</a>.<a href="auth/authorizer.html#Authorizer">Authorizer</a></pre>
+          
+  
+
+        
+          <h3 id="NewAlwaysDenyAuthorizer">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authz.go#L53">NewAlwaysDenyAuthorizer</a> <a class="permalink" href="apiserver.html#NewAlwaysDenyAuthorizer">&para;</a></h3>
+          <pre class="funcdecl">func NewAlwaysDenyAuthorizer() <a href="auth/authorizer.html">authorizer</a>.<a href="auth/authorizer.html#Authorizer">Authorizer</a></pre>
+          
+  
+
+        
+          <h3 id="NewAuthenticatorFromTokenFile">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authn.go#L26">NewAuthenticatorFromTokenFile</a> <a class="permalink" href="apiserver.html#NewAuthenticatorFromTokenFile">&para;</a></h3>
+          <pre class="funcdecl">func NewAuthenticatorFromTokenFile(tokenAuthFile <a href="http://godoc.org/builtin#string">string</a>) (<a href="auth/authenticator.html">authenticator</a>.<a href="auth/authenticator.html#Request">Request</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewAuthenticatorFromTokenFile returns an authenticator.Request or an error
+</p>
+
+          
+  
+
+        
+          <h3 id="NewAuthorizerFromAuthorizationConfig">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authz.go#L68">NewAuthorizerFromAuthorizationConfig</a> <a class="permalink" href="apiserver.html#NewAuthorizerFromAuthorizationConfig">&para;</a></h3>
+          <pre class="funcdecl">func NewAuthorizerFromAuthorizationConfig(authorizationMode <a href="http://godoc.org/builtin#string">string</a>, authorizationPolicyFile <a href="http://godoc.org/builtin#string">string</a>) (<a href="auth/authorizer.html">authorizer</a>.<a href="auth/authorizer.html#Authorizer">Authorizer</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewAuthorizerFromAuthorizationConfig returns the right sort of authorizer.Authorizer
+based on the authorizationMode xor an error.  authorizationMode should be one of AuthorizationModeChoices.
+</p>
+
+          
+  
+
+        
+          <h3 id="NewValidator">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/validator.go#L96">NewValidator</a> <a class="permalink" href="apiserver.html#NewValidator">&para;</a></h3>
+          <pre class="funcdecl">func NewValidator(servers map[<a href="http://godoc.org/builtin#string">string</a>]<a href="apiserver.html#Server">Server</a>) (<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+NewValidator creates a validator for a set of servers.
+</p>
+
+          
+  
+
+        
+          <h3 id="RateLimit">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L85">RateLimit</a> <a class="permalink" href="apiserver.html#RateLimit">&para;</a></h3>
+          <pre class="funcdecl">func RateLimit(rl <a href="util.html">util</a>.<a href="util.html#RateLimiter">RateLimiter</a>, handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+RateLimit uses rl to rate limit accepting requests to &#39;handler&#39;.
+</p>
+
+          
+  
+
+        
+          <h3 id="ReadOnly">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L73">ReadOnly</a> <a class="permalink" href="apiserver.html#ReadOnly">&para;</a></h3>
+          <pre class="funcdecl">func ReadOnly(handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+ReadOnly passes all GET requests on to handler, and returns an error on all other requests.
+</p>
+
+          
+  
+
+        
+          <h3 id="RecoverPanics">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L97">RecoverPanics</a> <a class="permalink" href="apiserver.html#RecoverPanics">&para;</a></h3>
+          <pre class="funcdecl">func RecoverPanics(handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+RecoverPanics wraps an http Handler to recover and log panics.
+</p>
+
+          
+  
+
+        
+          <h3 id="WithAuthorizationCheck">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L201">WithAuthorizationCheck</a> <a class="permalink" href="apiserver.html#WithAuthorizationCheck">&para;</a></h3>
+          <pre class="funcdecl">func WithAuthorizationCheck(handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>, getAttribs <a href="apiserver.html#RequestAttributeGetter">RequestAttributeGetter</a>, a <a href="auth/authorizer.html">authorizer</a>.<a href="auth/authorizer.html#Authorizer">Authorizer</a>) <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a></pre><p>
+WithAuthorizationCheck passes all authorized requests on to handler, and returns a forbidden error otherwise.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="APIGroupVersion">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L76">APIGroupVersion</a> <a class="permalink" href="apiserver.html#APIGroupVersion">&para;</a></h3>
+          <pre>type APIGroupVersion struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+TODO: This is a whole API version right now. Maybe should rename it.
+APIGroupVersion is a http.Handler that exposes multiple RESTStorage objects
+It handles URLs of the form:
+/${storage_key}[/${object_name}]
+Where &#39;storage_key&#39; points to a RESTStorage object stored in storage.
+</p>
+<p>
+TODO: consider migrating this to go-restful which is a more full-featured version of the same thing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewAPIGroupVersion">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L85">NewAPIGroupVersion</a> <a class="permalink" href="apiserver.html#NewAPIGroupVersion">&para;</a></h4>
+            <pre class="funcdecl">func NewAPIGroupVersion(storage map[<a href="http://godoc.org/builtin#string">string</a>]<a href="apiserver.html#RESTStorage">RESTStorage</a>, codec <a href="runtime.html">runtime</a>.<a href="runtime.html#Codec">Codec</a>, canonicalPrefix <a href="http://godoc.org/builtin#string">string</a>, selfLinker <a href="runtime.html">runtime</a>.<a href="runtime.html#SelfLinker">SelfLinker</a>) *<a href="apiserver.html#APIGroupVersion">APIGroupVersion</a></pre><p>
+NewAPIGroupVersion returns an object that will serve a set of REST resources and their
+associated operations.  The provided codec controls serialization and deserialization.
+This is a helper method for registering multiple sets of REST handlers under different
+prefixes onto a server.
+TODO: add multitype codec serialization
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="APIGroupVersion.InstallREST">func (*APIGroupVersion) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L167">InstallREST</a> <a class="permalink" href="apiserver.html#APIGroupVersion.InstallREST">&para;</a></h4>
+            <pre class="funcdecl">func (g *<a href="apiserver.html#APIGroupVersion">APIGroupVersion</a>) InstallREST(container *<a href="http://godoc.org/github.com/emicklei/go-restful">restful</a>.<a href="http://godoc.org/github.com/emicklei/go-restful#Container">Container</a>, root <a href="http://godoc.org/builtin#string">string</a>, version <a href="http://godoc.org/builtin#string">string</a>)</pre><p>
+InstallREST registers the REST handlers (storage, watch, and operations) into a restful Container.
+It is expected that the provided path root prefix will serve all operations. Root MUST NOT end
+in a slash. A restful WebService is created for the group and version.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="Attributes">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/authz.go#L27">Attributes</a> <a class="permalink" href="apiserver.html#Attributes">&para;</a></h3>
+          <pre>type Attributes struct {
+}</pre><p>
+Attributes implements authorizer.Attributes interface.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Mux">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/apiserver.go#L39">Mux</a> <a class="permalink" href="apiserver.html#Mux">&para;</a></h3>
+          <pre>type Mux interface {
+    <span id="Mux.Handle">Handle</span>(pattern <a href="http://godoc.org/builtin#string">string</a>, handler <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Handler">Handler</a>)
+    <span id="Mux.HandleFunc">HandleFunc</span>(pattern <a href="http://godoc.org/builtin#string">string</a>, handler func(<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>))
+}</pre><p>
+mux is an object that can register http handlers.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Operation">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L66">Operation</a> <a class="permalink" href="apiserver.html#Operation">&para;</a></h3>
+          <pre>type Operation struct {
+    <span id="Operation.ID">ID</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Operation represents an ongoing action which the server is performing.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="Operation.StatusOrResult">func (*Operation) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L196">StatusOrResult</a> <a class="permalink" href="apiserver.html#Operation.StatusOrResult">&para;</a></h4>
+            <pre class="funcdecl">func (op *<a href="apiserver.html#Operation">Operation</a>) StatusOrResult() (description <a href="apiserver.html#RESTResult">RESTResult</a>, finished <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+StatusOrResult returns status information or the result of the operation if it is complete,
+with a bool indicating true in the latter case.
+</p>
+
+            
+  
+
+          
+            <h4 id="Operation.WaitFor">func (*Operation) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L177">WaitFor</a> <a class="permalink" href="apiserver.html#Operation.WaitFor">&para;</a></h4>
+            <pre class="funcdecl">func (op *<a href="apiserver.html#Operation">Operation</a>) WaitFor(timeout <a href="http://godoc.org/time">time</a>.<a href="http://godoc.org/time#Duration">Duration</a>)</pre><p>
+WaitFor waits for the specified duration, or until the operation finishes,
+whichever happens first.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="OperationHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L32">OperationHandler</a> <a class="permalink" href="apiserver.html#OperationHandler">&para;</a></h3>
+          <pre>type OperationHandler struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="OperationHandler.ServeHTTP">func (*OperationHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L37">ServeHTTP</a> <a class="permalink" href="apiserver.html#OperationHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="apiserver.html#OperationHandler">OperationHandler</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="Operations">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L77">Operations</a> <a class="permalink" href="apiserver.html#Operations">&para;</a></h3>
+          <pre>type Operations struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+Operations tracks all the ongoing operations.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewOperations">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L87">NewOperations</a> <a class="permalink" href="apiserver.html#NewOperations">&para;</a></h4>
+            <pre class="funcdecl">func NewOperations() *<a href="apiserver.html#Operations">Operations</a></pre><p>
+NewOperations returns a new Operations repository.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Operations.Get">func (*Operations) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L135">Get</a> <a class="permalink" href="apiserver.html#Operations.Get">&para;</a></h4>
+            <pre class="funcdecl">func (ops *<a href="apiserver.html#Operations">Operations</a>) Get(id <a href="http://godoc.org/builtin#string">string</a>) *<a href="apiserver.html#Operation">Operation</a></pre><p>
+Get returns the operation with the given ID, or nil.
+</p>
+
+            
+  
+
+          
+            <h4 id="Operations.List">func (*Operations) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L118">List</a> <a class="permalink" href="apiserver.html#Operations.List">&para;</a></h4>
+            <pre class="funcdecl">func (ops *<a href="apiserver.html#Operations">Operations</a>) List() *<a href="api.html">api</a>.<a href="api.html#ServerOpList">ServerOpList</a></pre><p>
+List lists operations for an API client.
+</p>
+
+            
+  
+
+          
+            <h4 id="Operations.NewOperation">func (*Operations) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/operation.go#L97">NewOperation</a> <a class="permalink" href="apiserver.html#Operations.NewOperation">&para;</a></h4>
+            <pre class="funcdecl">func (ops *<a href="apiserver.html#Operations">Operations</a>) NewOperation(from &lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a>, onReceive func(<a href="apiserver.html#RESTResult">RESTResult</a>)) *<a href="apiserver.html#Operation">Operation</a></pre><p>
+NewOperation adds a new operation. It is lock-free. &#39;onReceive&#39; will be called
+with the value read from &#39;from&#39;, when it is read.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="ProxyHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/proxy.go#L74">ProxyHandler</a> <a class="permalink" href="apiserver.html#ProxyHandler">&para;</a></h3>
+          <pre>type ProxyHandler struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+ProxyHandler provides a http.Handler which will proxy traffic to locations
+specified by items implementing Redirector.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ProxyHandler.ServeHTTP">func (*ProxyHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/proxy.go#L80">ServeHTTP</a> <a class="permalink" href="apiserver.html#ProxyHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="apiserver.html#ProxyHandler">ProxyHandler</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="RESTHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/resthandler.go#L33">RESTHandler</a> <a class="permalink" href="apiserver.html#RESTHandler">&para;</a></h3>
+          <pre>type RESTHandler struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+RESTHandler implements HTTP verbs on a set of RESTful resources identified by name.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="RESTHandler.ServeHTTP">func (*RESTHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/resthandler.go#L43">ServeHTTP</a> <a class="permalink" href="apiserver.html#RESTHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="apiserver.html#RESTHandler">RESTHandler</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre><p>
+ServeHTTP handles requests to all RESTStorage objects.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="RESTResult">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/interfaces.go#L57">RESTResult</a> <a class="permalink" href="apiserver.html#RESTResult">&para;</a></h3>
+          <pre>type RESTResult struct {
+    <span class="com">// The result of this operation. May be nil if the operation has no meaningful</span>
+    <span class="com">// result (like Delete)</span>
+    <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>
+
+    <span class="com">// May be set true to indicate that the Update operation resulted in the object</span>
+    <span class="com">// being created.</span>
+    <span id="RESTResult.Created">Created</span> <a href="http://godoc.org/builtin#bool">bool</a>
+}</pre><p>
+RESTResult indicates the result of a REST transformation.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RESTStorage">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/interfaces.go#L28">RESTStorage</a> <a class="permalink" href="apiserver.html#RESTStorage">&para;</a></h3>
+          <pre>type RESTStorage interface {
+    <span class="com">// New returns an empty object that can be used with Create and Update after request data has been put into it.</span>
+    <span class="com">// This object must be a pointer type for use with Codec.DecodeInto([]byte, runtime.Object)</span>
+    <span id="RESTStorage.New">New</span>() <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>
+
+    <span class="com">// List selects resources in the storage which match to the selector.</span>
+    <span id="RESTStorage.List">List</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>) (<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Get finds a resource in the storage by id and returns it.</span>
+    <span class="com">// Although it can return an arbitrary error value, IsNotFound(err) is true for the</span>
+    <span class="com">// returned error value err when the specified resource is not found.</span>
+    <span id="RESTStorage.Get">Get</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (<a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Delete finds a resource in the storage and deletes it.</span>
+    <span class="com">// Although it can return an arbitrary error value, IsNotFound(err) is true for the</span>
+    <span class="com">// returned error value err when the specified resource is not found.</span>
+    <span id="RESTStorage.Delete">Delete</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (&lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Create creates a new version of a resource.</span>
+    <span id="RESTStorage.Create">Create</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (&lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)
+
+    <span class="com">// Update finds a resource in the storage and updates it. Some implementations</span>
+    <span class="com">// may allow updates creates the object - they should set the Created flag of</span>
+    <span class="com">// the returned RESTResultto true. In the event of an asynchronous error returned</span>
+    <span class="com">// via an api.Status object, the Created flag is ignored.</span>
+    <span id="RESTStorage.Update">Update</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, obj <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>) (&lt;-chan <a href="apiserver.html#RESTResult">RESTResult</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+RESTStorage is a generic interface for RESTful storage services.
+Resources which are exported to the RESTful API of apiserver need to implement this interface.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RedirectHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/redirect.go#L27">RedirectHandler</a> <a class="permalink" href="apiserver.html#RedirectHandler">&para;</a></h3>
+          <pre>type RedirectHandler struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="RedirectHandler.ServeHTTP">func (*RedirectHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/redirect.go#L32">ServeHTTP</a> <a class="permalink" href="apiserver.html#RedirectHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (r *<a href="apiserver.html#RedirectHandler">RedirectHandler</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="Redirector">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/interfaces.go#L78">Redirector</a> <a class="permalink" href="apiserver.html#Redirector">&para;</a></h3>
+          <pre>type Redirector interface {
+    <span class="com">// ResourceLocation should return the remote location of the given resource, or an error.</span>
+    <span id="Redirector.ResourceLocation">ResourceLocation</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, id <a href="http://godoc.org/builtin#string">string</a>) (remoteLocation <a href="http://godoc.org/builtin#string">string</a>, err <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+Redirector know how to return a remote resource&#39;s location.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="RequestAttributeGetter">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L165">RequestAttributeGetter</a> <a class="permalink" href="apiserver.html#RequestAttributeGetter">&para;</a></h3>
+          <pre>type RequestAttributeGetter interface {
+    <span id="RequestAttributeGetter.GetAttribs">GetAttribs</span>(req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>) (attribs <a href="auth/authorizer.html">authorizer</a>.<a href="auth/authorizer.html#Attributes">Attributes</a>)
+}</pre><p>
+RequestAttributeGetter is a function that extracts authorizer.Attributes from an http.Request
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewRequestAttributeGetter">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/handlers.go#L174">NewRequestAttributeGetter</a> <a class="permalink" href="apiserver.html#NewRequestAttributeGetter">&para;</a></h4>
+            <pre class="funcdecl">func NewRequestAttributeGetter(userContexts <a href="auth/handlers.html">authhandlers</a>.<a href="auth/handlers.html#RequestContext">RequestContext</a>) <a href="apiserver.html#RequestAttributeGetter">RequestAttributeGetter</a></pre><p>
+NewAttributeGetter returns an object which implements the RequestAttributeGetter interface.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="ResourceWatcher">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/interfaces.go#L69">ResourceWatcher</a> <a class="permalink" href="apiserver.html#ResourceWatcher">&para;</a></h3>
+          <pre>type ResourceWatcher interface {
+    <span class="com">// &#39;label&#39; selects on labels; &#39;field&#39; selects on the object&#39;s fields. Not all fields</span>
+    <span class="com">// are supported; an error should be returned if &#39;field&#39; tries to select on a field that</span>
+    <span class="com">// isn&#39;t supported. &#39;resourceVersion&#39; allows for continuing/starting a watch at a</span>
+    <span class="com">// particular version.</span>
+    <span id="ResourceWatcher.Watch">Watch</span>(ctx <a href="api.html">api</a>.<a href="api.html#Context">Context</a>, label, field <a href="labels.html">labels</a>.<a href="labels.html#Selector">Selector</a>, resourceVersion <a href="http://godoc.org/builtin#string">string</a>) (<a href="watch.html">watch</a>.<a href="watch.html#Interface">Interface</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+ResourceWatcher should be implemented by all RESTStorage objects that
+want to offer the ability to watch for changes through the watch api.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="Server">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/validator.go#L35">Server</a> <a class="permalink" href="apiserver.html#Server">&para;</a></h3>
+          <pre>type Server struct {
+    <span id="Server.Addr">Addr</span> <a href="http://godoc.org/builtin#string">string</a>
+    <span id="Server.Port">Port</span> <a href="http://godoc.org/builtin#int">int</a>
+    <span id="Server.Path">Path</span> <a href="http://godoc.org/builtin#string">string</a>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ServerStatus">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/validator.go#L65">ServerStatus</a> <a class="permalink" href="apiserver.html#ServerStatus">&para;</a></h3>
+          <pre>type ServerStatus struct {
+    <span id="ServerStatus.Component">Component</span>  <a href="http://godoc.org/builtin#string">string</a>        `json:&#34;component,omitempty&#34;`
+    <span id="ServerStatus.Health">Health</span>     <a href="http://godoc.org/builtin#string">string</a>        `json:&#34;health,omitempty&#34;`
+    <span id="ServerStatus.HealthCode">HealthCode</span> <a href="health.html">health</a>.<a href="health.html#Status">Status</a> `json:&#34;healthCode,omitempty&#34;`
+    <span id="ServerStatus.Msg">Msg</span>        <a href="http://godoc.org/builtin#string">string</a>        `json:&#34;msg,omitempty&#34;`
+    <span id="ServerStatus.Err">Err</span>        <a href="http://godoc.org/builtin#string">string</a>        `json:&#34;err,omitempty&#34;`
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="WatchHandler">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go#L37">WatchHandler</a> <a class="permalink" href="apiserver.html#WatchHandler">&para;</a></h3>
+          <pre>type WatchHandler struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="WatchHandler.ServeHTTP">func (*WatchHandler) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go#L79">ServeHTTP</a> <a class="permalink" href="apiserver.html#WatchHandler.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="apiserver.html#WatchHandler">WatchHandler</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre><p>
+ServeHTTP processes watch requests.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="WatchServer">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go#L122">WatchServer</a> <a class="permalink" href="apiserver.html#WatchServer">&para;</a></h3>
+          <pre>type WatchServer struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+WatchServer serves a watch.Interface over a websocket or vanilla HTTP.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="WatchServer.HandleWS">func (*WatchServer) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go#L129">HandleWS</a> <a class="permalink" href="apiserver.html#WatchServer.HandleWS">&para;</a></h4>
+            <pre class="funcdecl">func (w *<a href="apiserver.html#WatchServer">WatchServer</a>) HandleWS(ws *<a href="http://godoc.org/golang.org/x/net/websocket">websocket</a>.<a href="http://godoc.org/golang.org/x/net/websocket#Conn">Conn</a>)</pre><p>
+HandleWS implements a websocket handler.
+</p>
+
+            
+  
+
+          
+            <h4 id="WatchServer.ServeHTTP">func (*WatchServer) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/watch.go#L166">ServeHTTP</a> <a class="permalink" href="apiserver.html#WatchServer.ServeHTTP">&para;</a></h4>
+            <pre class="funcdecl">func (self *<a href="apiserver.html#WatchServer">WatchServer</a>) ServeHTTP(w <a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#ResponseWriter">ResponseWriter</a>, req *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Request">Request</a>)</pre><p>
+ServeHTTP serves a series of JSON encoded events via straight HTTP with
+Transfer-Encoding: chunked.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="WorkFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/async.go#L27">WorkFunc</a> <a class="permalink" href="apiserver.html#WorkFunc">&para;</a></h3>
+          <pre>type WorkFunc func() (result <a href="runtime.html">runtime</a>.<a href="runtime.html#Object">Object</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WorkFunc is used to perform any time consuming work for an api call, after
+the input has been validated. Pass one of these to MakeAsync to create an
+appropriate return value for the Update, Delete, and Create methods.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="WorkResultFunc">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/apiserver/async.go#L52">WorkResultFunc</a> <a class="permalink" href="apiserver.html#WorkResultFunc">&para;</a></h3>
+          <pre>type WorkResultFunc func() (result <a href="apiserver.html#RESTResult">RESTResult</a>, err <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+WorkFunc is used to perform any time consuming work for an api call, after
+the input has been validated. Pass one of these to MakeAsync to create an
+appropriate return value for the Update, Delete, and Create methods.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/apiserver"></form>
+  <p>Package apiserver imports <a href="apiserver@imports.html">40 packages</a> (<a href="apiserver@import-graph.html">graph</a>) and is imported by <a href="apiserver@importers.html">41 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:14Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="apiserver@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="apiserver.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

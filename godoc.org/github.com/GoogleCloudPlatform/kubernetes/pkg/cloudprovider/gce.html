@@ -1,0 +1,328 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>gce_cloud - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package gce_cloud">
+    <meta property="og:title" content="Package gce_cloud">
+    <meta name="description" content="Package gce_cloud is an implementation of Interface, TCPLoadBalancer and Instances for Google Compute Engine.">
+    <meta name="twitter:description" content="Package gce_cloud is an implementation of Interface, TCPLoadBalancer and Instances for Google Compute Engine.">
+    <meta property="og:description" content="Package gce_cloud is an implementation of Interface, TCPLoadBalancer and Instances for Google Compute Engine.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../../pkg.1.html">pkg</a><span class="text-muted">/</span><a href="../cloudprovider.html">cloudprovider</a><span class="text-muted">/</span><span class="text-muted">gce</span>
+  
+  <span class="pull-right">
+    <a href="gce.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="gce.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package gce_cloud</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/gce"</code>
+
+        <p>
+Package gce_cloud is an implementation of Interface, TCPLoadBalancer
+and Instances for Google Compute Engine.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="gce.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          
+          
+            <li><a href="gce.html#GCECloud">type GCECloud</a></li>
+            <ul>
+            
+            <li><a href="gce.html#GCECloud.AttachDisk">func (gce *GCECloud) AttachDisk(diskName string, readOnly bool) error</a></li><li><a href="gce.html#GCECloud.Clusters">func (gce *GCECloud) Clusters() (cloudprovider.Clusters, bool)</a></li><li><a href="gce.html#GCECloud.CreateTCPLoadBalancer">func (gce *GCECloud) CreateTCPLoadBalancer(name, region string, externalIP net.IP, port int, hosts []string) (net.IP, error)</a></li><li><a href="gce.html#GCECloud.DeleteTCPLoadBalancer">func (gce *GCECloud) DeleteTCPLoadBalancer(name, region string) error</a></li><li><a href="gce.html#GCECloud.DetachDisk">func (gce *GCECloud) DetachDisk(devicePath string) error</a></li><li><a href="gce.html#GCECloud.GetNodeResources">func (gce *GCECloud) GetNodeResources(name string) (*api.NodeResources, error)</a></li><li><a href="gce.html#GCECloud.GetZone">func (gce *GCECloud) GetZone() (cloudprovider.Zone, error)</a></li><li><a href="gce.html#GCECloud.IPAddress">func (gce *GCECloud) IPAddress(instance string) (net.IP, error)</a></li><li><a href="gce.html#GCECloud.Instances">func (gce *GCECloud) Instances() (cloudprovider.Instances, bool)</a></li><li><a href="gce.html#GCECloud.List">func (gce *GCECloud) List(filter string) ([]string, error)</a></li><li><a href="gce.html#GCECloud.ListClusters">func (gce *GCECloud) ListClusters() ([]string, error)</a></li><li><a href="gce.html#GCECloud.Master">func (gce *GCECloud) Master(clusterName string) (string, error)</a></li><li><a href="gce.html#GCECloud.TCPLoadBalancer">func (gce *GCECloud) TCPLoadBalancer() (cloudprovider.TCPLoadBalancer, bool)</a></li><li><a href="gce.html#GCECloud.TCPLoadBalancerExists">func (gce *GCECloud) TCPLoadBalancerExists(name, region string) (bool, error)</a></li><li><a href="gce.html#GCECloud.UpdateTCPLoadBalancer">func (gce *GCECloud) UpdateTCPLoadBalancer(name, region string, hosts []string) error</a></li><li><a href="gce.html#GCECloud.Zones">func (gce *GCECloud) Zones() (cloudprovider.Zones, bool)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/cloudprovider/gce">Package Files</a>
+          <a class="permalink" href="gce.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go">gce.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+
+        
+        
+
+        
+          <h3 id="GCECloud">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L42">GCECloud</a> <a class="permalink" href="gce.html#GCECloud">&para;</a></h3>
+          <pre>type GCECloud struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+GCECloud is an implementation of Interface, TCPLoadBalancer and Instances for Google Compute Engine.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="GCECloud.AttachDisk">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L368">AttachDisk</a> <a class="permalink" href="gce.html#GCECloud.AttachDisk">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) AttachDisk(diskName <a href="http://godoc.org/builtin#string">string</a>, readOnly <a href="http://godoc.org/builtin#bool">bool</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GCECloud.Clusters">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L133">Clusters</a> <a class="permalink" href="gce.html#GCECloud.Clusters">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) Clusters() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Clusters">Clusters</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre>
+            
+  
+
+          
+            <h4 id="GCECloud.CreateTCPLoadBalancer">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L195">CreateTCPLoadBalancer</a> <a class="permalink" href="gce.html#GCECloud.CreateTCPLoadBalancer">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) CreateTCPLoadBalancer(name, region <a href="http://godoc.org/builtin#string">string</a>, externalIP <a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, port <a href="http://godoc.org/builtin#int">int</a>, hosts []<a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+CreateTCPLoadBalancer is an implementation of TCPLoadBalancer.CreateTCPLoadBalancer.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.DeleteTCPLoadBalancer">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L239">DeleteTCPLoadBalancer</a> <a class="permalink" href="gce.html#GCECloud.DeleteTCPLoadBalancer">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) DeleteTCPLoadBalancer(name, region <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+DeleteTCPLoadBalancer is an implementation of TCPLoadBalancer.DeleteTCPLoadBalancer.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.DetachDisk">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L382">DetachDisk</a> <a class="permalink" href="gce.html#GCECloud.DetachDisk">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) DetachDisk(devicePath <a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre>
+            
+  
+
+          
+            <h4 id="GCECloud.GetNodeResources">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L329">GetNodeResources</a> <a class="permalink" href="gce.html#GCECloud.GetNodeResources">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) GetNodeResources(name <a href="http://godoc.org/builtin#string">string</a>) (*<a href="../api.html">api</a>.<a href="../api.html#NodeResources">NodeResources</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GCECloud.GetZone">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L357">GetZone</a> <a class="permalink" href="gce.html#GCECloud.GetZone">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) GetZone() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Zone">Zone</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GCECloud.IPAddress">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L260">IPAddress</a> <a class="permalink" href="gce.html#GCECloud.IPAddress">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) IPAddress(instance <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/net">net</a>.<a href="http://godoc.org/net#IP">IP</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+IPAddress is an implementation of Instances.IPAddress.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.Instances">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L143">Instances</a> <a class="permalink" href="gce.html#GCECloud.Instances">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) Instances() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Instances">Instances</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Instances returns an implementation of Instances for Google Compute Engine.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.List">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L288">List</a> <a class="permalink" href="gce.html#GCECloud.List">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) List(filter <a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+List is an implementation of Instances.List.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.ListClusters">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L414">ListClusters</a> <a class="permalink" href="gce.html#GCECloud.ListClusters">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) ListClusters() ([]<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GCECloud.Master">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L426">Master</a> <a class="permalink" href="gce.html#GCECloud.Master">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) Master(clusterName <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#string">string</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+            <h4 id="GCECloud.TCPLoadBalancer">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L138">TCPLoadBalancer</a> <a class="permalink" href="gce.html#GCECloud.TCPLoadBalancer">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) TCPLoadBalancer() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#TCPLoadBalancer">TCPLoadBalancer</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+TCPLoadBalancer returns an implementation of TCPLoadBalancer for Google Compute Engine.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.TCPLoadBalancerExists">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L189">TCPLoadBalancerExists</a> <a class="permalink" href="gce.html#GCECloud.TCPLoadBalancerExists">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) TCPLoadBalancerExists(name, region <a href="http://godoc.org/builtin#string">string</a>) (<a href="http://godoc.org/builtin#bool">bool</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+TCPLoadBalancerExists is an implementation of TCPLoadBalancer.TCPLoadBalancerExists.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.UpdateTCPLoadBalancer">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L225">UpdateTCPLoadBalancer</a> <a class="permalink" href="gce.html#GCECloud.UpdateTCPLoadBalancer">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) UpdateTCPLoadBalancer(name, region <a href="http://godoc.org/builtin#string">string</a>, hosts []<a href="http://godoc.org/builtin#string">string</a>) <a href="http://godoc.org/builtin#error">error</a></pre><p>
+UpdateTCPLoadBalancer is an implementation of TCPLoadBalancer.UpdateTCPLoadBalancer.
+</p>
+
+            
+  
+
+          
+            <h4 id="GCECloud.Zones">func (*GCECloud) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/cloudprovider/gce/gce.go#L148">Zones</a> <a class="permalink" href="gce.html#GCECloud.Zones">&para;</a></h4>
+            <pre class="funcdecl">func (gce *<a href="gce.html#GCECloud">GCECloud</a>) Zones() (<a href="../cloudprovider.html">cloudprovider</a>.<a href="../cloudprovider.html#Zones">Zones</a>, <a href="http://godoc.org/builtin#bool">bool</a>)</pre><p>
+Zones returns an implementation of Zones for Google Compute Engine.
+</p>
+
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/gce"></form>
+  <p>Package gce_cloud imports <a href="gce@imports.html">18 packages</a> (<a href="gce@import-graph.html">graph</a>) and is imported by <a href="gce@importers.html">3 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:33Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="gce@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="gce.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

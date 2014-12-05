@@ -1,0 +1,439 @@
+<!DOCTYPE html><html lang="en">
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../../../-/site.css@v=77a375cde004447959d56a1c99a85585729361d2.css" rel="stylesheet">
+  
+  
+  <title>health - GoDoc</title>
+  
+    <meta name="twitter:title" content="Package health">
+    <meta property="og:title" content="Package health">
+    <meta name="description" content="Package health contains utilities for health checking, as well as health status information.">
+    <meta name="twitter:description" content="Package health contains utilities for health checking, as well as health status information.">
+    <meta property="og:description" content="Package health contains utilities for health checking, as well as health status information.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@golang">
+  
+  
+
+  
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="http://godoc.org/"><strong>GoDoc</strong></a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li><a href="http://godoc.org/">Home</a></li>
+        <li><a href="http://godoc.org/-/index">Index</a></li>
+        <li><a href="http://godoc.org/-/about">About</a></li>
+    </ul>
+    <form class="navbar-nav navbar-form navbar-right" id="x-search" action="http://godoc.org/" role="search"><input class="form-control" id="x-search-query" type="text" name="q" placeholder="Search"></form>
+  </div>
+</div>
+</nav>
+
+<div class="container">
+  
+  
+
+
+
+        <div class="clearfix" id="x-projnav">
+  <a href="https://github.com/GoogleCloudPlatform/kubernetes"><strong>kubernetes:</strong></a>
+  <a href="../../kubernetes.html">github.com/GoogleCloudPlatform/kubernetes</a><span class="text-muted">/</span><a href="../pkg.1.html">pkg</a><span class="text-muted">/</span><span class="text-muted">health</span>
+  
+  <span class="pull-right">
+    <a href="health.html#pkg-index">Index</a>
+    
+    <span class="text-muted">|</span> <a href="health.html#pkg-files">Files</a>
+    
+  </span>
+  
+</div>
+
+        <h2 id="pkg-overview">package health</h2>
+
+        <p><code>import "github.com/GoogleCloudPlatform/kubernetes/pkg/health"</code>
+
+        <p>
+Package health contains utilities for health checking, as well as health status information.</p>
+
+
+        
+  
+
+
+        
+        <h3 id="pkg-index" class="section-header">Index <a class="permalink" href="health.html#pkg-index">&para;</a></h3>
+
+        
+
+        <ul class="list-unstyled">
+          
+          
+          <li><a href="health.html#AddHealthChecker">func AddHealthChecker(checker HealthChecker)</a></li>
+          
+            <li><a href="health.html#CommandRunner">type CommandRunner</a></li>
+            
+            
+            
+            
+          
+            <li><a href="health.html#ExecHealthChecker">type ExecHealthChecker</a></li>
+            <ul>
+            
+            <li><a href="health.html#ExecHealthChecker.CanCheck">func (e *ExecHealthChecker) CanCheck(probe *api.LivenessProbe) bool</a></li><li><a href="health.html#ExecHealthChecker.HealthCheck">func (e *ExecHealthChecker) HealthCheck(podFullName, podUUID string, currentState api.PodState, container api.Container) (Status, error)</a></li>
+            </ul>
+          
+            <li><a href="health.html#HTTPGetInterface">type HTTPGetInterface</a></li>
+            
+            
+            
+            
+          
+            <li><a href="health.html#HTTPHealthChecker">type HTTPHealthChecker</a></li>
+            <ul>
+            
+            <li><a href="health.html#HTTPHealthChecker.CanCheck">func (h *HTTPHealthChecker) CanCheck(probe *api.LivenessProbe) bool</a></li><li><a href="health.html#HTTPHealthChecker.HealthCheck">func (h *HTTPHealthChecker) HealthCheck(podFullName, podUUID string, currentState api.PodState, container api.Container) (Status, error)</a></li>
+            </ul>
+          
+            <li><a href="health.html#HealthChecker">type HealthChecker</a></li>
+            <ul>
+            <li><a href="health.html#NewExecHealthChecker">func NewExecHealthChecker(runner CommandRunner) HealthChecker</a></li><li><a href="health.html#NewHTTPHealthChecker">func NewHTTPHealthChecker(client *http.Client) HealthChecker</a></li><li><a href="health.html#NewHealthChecker">func NewHealthChecker() HealthChecker</a></li>
+            
+            </ul>
+          
+            <li><a href="health.html#Status">type Status</a></li>
+            <ul>
+            <li><a href="health.html#DoHTTPCheck">func DoHTTPCheck(url string, client HTTPGetInterface) (Status, error)</a></li><li><a href="health.html#DoTCPCheck">func DoTCPCheck(addr string) (Status, error)</a></li>
+            <li><a href="health.html#Status.String">func (s Status) String() string</a></li>
+            </ul>
+          
+            <li><a href="health.html#TCPHealthChecker">type TCPHealthChecker</a></li>
+            <ul>
+            
+            <li><a href="health.html#TCPHealthChecker.CanCheck">func (t *TCPHealthChecker) CanCheck(probe *api.LivenessProbe) bool</a></li><li><a href="health.html#TCPHealthChecker.HealthCheck">func (t *TCPHealthChecker) HealthCheck(podFullName, podUUID string, currentState api.PodState, container api.Container) (Status, error)</a></li>
+            </ul>
+          
+        </ul>
+
+        
+        
+          <span id="pkg-examples"></span>
+        
+
+        
+        <h4 id="pkg-files">
+          <a href="https://github.com/GoogleCloudPlatform/kubernetes/tree/master/pkg/health">Package Files</a>
+          <a class="permalink" href="health.html#pkg-files">&para;</a>
+        </h4>
+
+        <p><a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/doc.go">doc.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go">exec.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go">health.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go">http.go</a> <a href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/tcp.go">tcp.go</a> </p>
+
+        
+        
+
+        
+        
+
+        
+        
+        
+          <h3 id="AddHealthChecker">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go#L48">AddHealthChecker</a> <a class="permalink" href="health.html#AddHealthChecker">&para;</a></h3>
+          <pre class="funcdecl">func AddHealthChecker(checker <a href="health.html#HealthChecker">HealthChecker</a>)</pre><p>
+AddHealthChecker adds a health checker to the list of known HealthChecker objects.
+Any subsequent call to NewHealthChecker will know about this HealthChecker.
+</p>
+
+          
+  
+
+        
+
+        
+        
+
+        
+          <h3 id="CommandRunner">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go#L29">CommandRunner</a> <a class="permalink" href="health.html#CommandRunner">&para;</a></h3>
+          <pre>type CommandRunner interface {
+    <span id="CommandRunner.RunInContainer">RunInContainer</span>(podFullName, uuid, containerName <a href="http://godoc.org/builtin#string">string</a>, cmd []<a href="http://godoc.org/builtin#string">string</a>) ([]<a href="http://godoc.org/builtin#byte">byte</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="ExecHealthChecker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go#L33">ExecHealthChecker</a> <a class="permalink" href="health.html#ExecHealthChecker">&para;</a></h3>
+          <pre>type ExecHealthChecker struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="ExecHealthChecker.CanCheck">func (*ExecHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go#L56">CanCheck</a> <a class="permalink" href="health.html#ExecHealthChecker.CanCheck">&para;</a></h4>
+            <pre class="funcdecl">func (e *<a href="health.html#ExecHealthChecker">ExecHealthChecker</a>) CanCheck(probe *<a href="api.html">api</a>.<a href="api.html#LivenessProbe">LivenessProbe</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="ExecHealthChecker.HealthCheck">func (*ExecHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go#L41">HealthCheck</a> <a class="permalink" href="health.html#ExecHealthChecker.HealthCheck">&para;</a></h4>
+            <pre class="funcdecl">func (e *<a href="health.html#ExecHealthChecker">ExecHealthChecker</a>) HealthCheck(podFullName, podUUID <a href="http://godoc.org/builtin#string">string</a>, currentState <a href="api.html">api</a>.<a href="api.html#PodState">PodState</a>, container <a href="api.html">api</a>.<a href="api.html#Container">Container</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+          <h3 id="HTTPGetInterface">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L33">HTTPGetInterface</a> <a class="permalink" href="health.html#HTTPGetInterface">&para;</a></h3>
+          <pre>type HTTPGetInterface interface {
+    <span id="HTTPGetInterface.Get">Get</span>(url <a href="http://godoc.org/builtin#string">string</a>) (*<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Response">Response</a>, <a href="http://godoc.org/builtin#error">error</a>)
+}</pre><p>
+HTTPGetInterface is an abstract interface for testability. It abstracts the interface of http.Client.Get.
+This is exported because some other packages may want to do direct HTTP checks.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+        
+          <h3 id="HTTPHealthChecker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L38">HTTPHealthChecker</a> <a class="permalink" href="health.html#HTTPHealthChecker">&para;</a></h3>
+          <pre>type HTTPHealthChecker struct {
+    <span class="com">// contains filtered or unexported fields</span>
+}</pre><p>
+HTTPHealthChecker is an implementation of HealthChecker which checks container health by sending HTTP Get requests.
+</p>
+
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="HTTPHealthChecker.CanCheck">func (*HTTPHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L116">CanCheck</a> <a class="permalink" href="health.html#HTTPHealthChecker.CanCheck">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="health.html#HTTPHealthChecker">HTTPHealthChecker</a>) CanCheck(probe *<a href="api.html">api</a>.<a href="api.html#LivenessProbe">LivenessProbe</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="HTTPHealthChecker.HealthCheck">func (*HTTPHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L108">HealthCheck</a> <a class="permalink" href="health.html#HTTPHealthChecker.HealthCheck">&para;</a></h4>
+            <pre class="funcdecl">func (h *<a href="health.html#HTTPHealthChecker">HTTPHealthChecker</a>) HealthCheck(podFullName, podUUID <a href="http://godoc.org/builtin#string">string</a>, currentState <a href="api.html">api</a>.<a href="api.html#PodState">PodState</a>, container <a href="api.html">api</a>.<a href="api.html#Container">Container</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+HealthCheck checks if the container is healthy by trying sending HTTP Get requests to the container.
+</p>
+
+            
+  
+
+          
+        
+          <h3 id="HealthChecker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go#L37">HealthChecker</a> <a class="permalink" href="health.html#HealthChecker">&para;</a></h3>
+          <pre>type HealthChecker interface {
+    <span id="HealthChecker.HealthCheck">HealthCheck</span>(podFullName, podUUID <a href="http://godoc.org/builtin#string">string</a>, currentState <a href="api.html">api</a>.<a href="api.html#PodState">PodState</a>, container <a href="api.html">api</a>.<a href="api.html#Container">Container</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)
+    <span id="HealthChecker.CanCheck">CanCheck</span>(probe *<a href="api.html">api</a>.<a href="api.html#LivenessProbe">LivenessProbe</a>) <a href="http://godoc.org/builtin#bool">bool</a>
+}</pre><p>
+HealthChecker defines an abstract interface for checking container health.
+</p>
+
+          
+          
+          
+  
+
+
+          
+            <h4 id="NewExecHealthChecker">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/exec.go#L37">NewExecHealthChecker</a> <a class="permalink" href="health.html#NewExecHealthChecker">&para;</a></h4>
+            <pre class="funcdecl">func NewExecHealthChecker(runner <a href="health.html#CommandRunner">CommandRunner</a>) <a href="health.html#HealthChecker">HealthChecker</a></pre>
+            
+  
+
+          
+            <h4 id="NewHTTPHealthChecker">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L42">NewHTTPHealthChecker</a> <a class="permalink" href="health.html#NewHTTPHealthChecker">&para;</a></h4>
+            <pre class="funcdecl">func NewHTTPHealthChecker(client *<a href="http://godoc.org/net/http">http</a>.<a href="http://godoc.org/net/http#Client">Client</a>) <a href="health.html#HealthChecker">HealthChecker</a></pre>
+            
+  
+
+          
+            <h4 id="NewHealthChecker">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go#L55">NewHealthChecker</a> <a class="permalink" href="health.html#NewHealthChecker">&para;</a></h4>
+            <pre class="funcdecl">func NewHealthChecker() <a href="health.html#HealthChecker">HealthChecker</a></pre><p>
+NewHealthChecker creates a new HealthChecker which supports multiple types of liveness probes.
+</p>
+
+            
+  
+
+          
+
+          
+        
+          <h3 id="Status">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go#L27">Status</a> <a class="permalink" href="health.html#Status">&para;</a></h3>
+          <pre>type Status <a href="http://godoc.org/builtin#int">int</a></pre><p>
+Status represents the result of a single health-check operation.
+</p>
+
+          <pre>const (
+    <span id="Healthy">Healthy</span> <a href="health.html#Status">Status</a> = <a href="http://godoc.org/builtin#iota">iota</a>
+    <span id="Unhealthy">Unhealthy</span>
+    <span id="Unknown">Unknown</span>
+)</pre><p>
+Status values must be one of these constants.
+</p>
+
+          
+          
+  
+
+
+          
+            <h4 id="DoHTTPCheck">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/http.go#L94">DoHTTPCheck</a> <a class="permalink" href="health.html#DoHTTPCheck">&para;</a></h4>
+            <pre class="funcdecl">func DoHTTPCheck(url <a href="http://godoc.org/builtin#string">string</a>, client <a href="health.html#HTTPGetInterface">HTTPGetInterface</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+DoHTTPCheck checks if a GET request to the url succeeds.
+If the HTTP response code is successful (i.e. 400 &gt; code &gt;= 200), it returns Healthy.
+If the HTTP response code is unsuccessful, it returns Unhealthy.
+It returns Unknown and err if the HTTP communication itself fails.
+This is exported because some other packages may want to do direct HTTP checks.
+</p>
+
+            
+  
+
+          
+            <h4 id="DoTCPCheck">func <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/tcp.go#L65">DoTCPCheck</a> <a class="permalink" href="health.html#DoTCPCheck">&para;</a></h4>
+            <pre class="funcdecl">func DoTCPCheck(addr <a href="http://godoc.org/builtin#string">string</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre><p>
+DoTCPCheck checks that a TCP socket to the address can be opened.
+If the socket can be opened, it returns Healthy.
+If the socket fails to open, it returns Unhealthy.
+This is exported because some other packages may want to do direct TCP checks.
+</p>
+
+            
+  
+
+          
+
+          
+            <h4 id="Status.String">func (Status) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/health.go#L105">String</a> <a class="permalink" href="health.html#Status.String">&para;</a></h4>
+            <pre class="funcdecl">func (s <a href="health.html#Status">Status</a>) String() <a href="http://godoc.org/builtin#string">string</a></pre>
+            
+  
+
+          
+        
+          <h3 id="TCPHealthChecker">type <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/tcp.go#L29">TCPHealthChecker</a> <a class="permalink" href="health.html#TCPHealthChecker">&para;</a></h3>
+          <pre>type TCPHealthChecker struct{}</pre>
+          
+          
+          
+  
+
+
+          
+
+          
+            <h4 id="TCPHealthChecker.CanCheck">func (*TCPHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/tcp.go#L85">CanCheck</a> <a class="permalink" href="health.html#TCPHealthChecker.CanCheck">&para;</a></h4>
+            <pre class="funcdecl">func (t *<a href="health.html#TCPHealthChecker">TCPHealthChecker</a>) CanCheck(probe *<a href="api.html">api</a>.<a href="api.html#LivenessProbe">LivenessProbe</a>) <a href="http://godoc.org/builtin#bool">bool</a></pre>
+            
+  
+
+          
+            <h4 id="TCPHealthChecker.HealthCheck">func (*TCPHealthChecker) <a title="View Source" href="https://github.com/GoogleCloudPlatform/kubernetes/blob/master/pkg/health/tcp.go#L77">HealthCheck</a> <a class="permalink" href="health.html#TCPHealthChecker.HealthCheck">&para;</a></h4>
+            <pre class="funcdecl">func (t *<a href="health.html#TCPHealthChecker">TCPHealthChecker</a>) HealthCheck(podFullName, podUUID <a href="http://godoc.org/builtin#string">string</a>, currentState <a href="api.html">api</a>.<a href="api.html#PodState">PodState</a>, container <a href="api.html">api</a>.<a href="api.html#Container">Container</a>) (<a href="health.html#Status">Status</a>, <a href="http://godoc.org/builtin#error">error</a>)</pre>
+            
+  
+
+          
+        
+
+        
+        
+        
+
+<div id="x-pkginfo">
+
+  <form name="x-refresh" method="POST" action="http://godoc.org/-/refresh"><input type="hidden" name="path" value="github.com/GoogleCloudPlatform/kubernetes/pkg/health"></form>
+  <p>Package health imports <a href="health@imports.html">10 packages</a> (<a href="health@import-graph.html">graph</a>) and is imported by <a href="health@importers.html">8 packages</a>.
+  Updated <span class="timeago" title="2014-12-04T23:17:43Z">2014-12-04</span>.
+  <a href="javascript:document.getElementsByName('x-refresh')[0].submit();" title="Refresh this page from the source.">Refresh now</a>.
+  <a href="health@tools.html">Tools</a> for package owners.
+  
+
+
+</div>
+
+
+
+
+  
+
+</div>
+<div id="x-footer" class="clearfix">
+  <div class="container">
+    <a href="https://github.com/golang/gddo/issues">Website Issues</a>
+    <span class="text-muted">|</span> <a href="http://golang.org/">Go Language</a>
+    <span class="pull-right"><a href="health.html#">Back to top</a></span>
+  </div>
+</div>
+
+<div id="x-shortcuts" tabindex="-1" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Keyboard shortcuts</h4>
+        </div>
+        <div class="modal-body">
+          <table>
+          <tr><td align="right"><b>?</b></td><td> : This menu</td></tr>
+          <tr><td align="right"><b>/</b></td><td> : Search site</td></tr>
+          <tr><td align="right"><b>g</b> then <b>g</b></td><td> : Go to top of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>b</b></td><td> : Go to end of page</td></tr>
+          <tr><td align="right"><b>g</b> then <b>i</b></td><td> : Go to index</td></tr>
+          <tr><td align="right"><b>g</b> then <b>e</b></td><td> : Go to examples</td></tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script><script src="../../../../-/site.js@v=fee4524d1fe25f85f48781007ab8f34f2de49aa5"></script><script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-11222381-8']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>
